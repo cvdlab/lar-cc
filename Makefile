@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = morph
+NAME = boolean
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
@@ -14,7 +14,7 @@ DOCPDF = doc/pdf/
 all: 
 	echo building $(NAME)
 	make pdf
-	make clear
+	make clean
 	open $(DOCPDF)$(NAME).pdf
 
 exec:
