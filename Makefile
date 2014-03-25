@@ -14,7 +14,7 @@ DOCPDF = doc/pdf/
 all: 
 	echo building $(NAME)
 	make pdf
-	make clear
+	make clean
 	open $(DOCPDF)$(NAME).pdf
 
 exec:
