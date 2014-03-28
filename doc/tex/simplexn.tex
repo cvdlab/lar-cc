@@ -1,57 +1,57 @@
-%% -------------------------------------------------------------------------
-%% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
-%% -------------------------------------------------------------------------
-%\providecommand{\NWtxtMacroDefBy}{Macro defined by}
-%\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
-%\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
-%\providecommand{\NWtxtDefBy}{Defined by}
-%\providecommand{\NWtxtRefIn}{Referenced in}
-%\providecommand{\NWtxtNoRef}{Not referenced}
-%\providecommand{\NWtxtFileDefBy}{File defined by}
-%\providecommand{\NWsep}{${\diamond}$}
-%\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
-%\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
-%  \raisebox{\baselineskip}[1.5ex][0ex]{%
-%    \mbox{%
-%      \hypertarget{#1}{%
-%        \raisebox{-1\baselineskip}[0ex][0ex]{%
-%          \mbox{#2}%
-%}}}}}
-%% -------------------------------------------------------------------------
-%
-%\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-%\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-%\geometry{letterpaper}		%...ora4paperora5paperor...
-%%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-%\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-%								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
-%\usepackage{amssymb}
-%\usepackage{amsmath}
-%\usepackage{amsthm}
-%\newtheorem{definition}{Definition}
-%\newtheorem{theorem}{Theorem}
-%
-%\usepackage[colorlinks]{hyperref}
-%
-%\input{macros}
-%
-\chapter{The \texttt{smplxn} module
-%\footnote{This document is part of the framework~\cite{cclar-proj:2013:00}. \today}
+% -------------------------------------------------------------------------
+% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
+% -------------------------------------------------------------------------
+\providecommand{\NWtxtMacroDefBy}{Macro defined by}
+\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
+\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
+\providecommand{\NWtxtDefBy}{Defined by}
+\providecommand{\NWtxtRefIn}{Referenced in}
+\providecommand{\NWtxtNoRef}{Not referenced}
+\providecommand{\NWtxtFileDefBy}{File defined by}
+\providecommand{\NWsep}{${\diamond}$}
+\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
+\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
+  \raisebox{\baselineskip}[1.5ex][0ex]{%
+    \mbox{%
+      \hypertarget{#1}{%
+        \raisebox{-1\baselineskip}[0ex][0ex]{%
+          \mbox{#2}%
+}}}}}
+% -------------------------------------------------------------------------
+
+\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}		%...ora4paperora5paperor...
+%\geometry{landscape}		%Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+
+\usepackage[colorlinks]{hyperref}
+
+\input{macros}
+
+\title{The \texttt{smplxn} module
+\footnote{This document is part of the framework~\cite{cclar-proj:2013:00}. \today}
 }
-%\author{Alberto Paoluzzi}
-%%\date{}							%Activatetodisplayagivendateornodate
-%
-%\begin{document}
-%\maketitle
-%\nonstopmode
+\author{Alberto Paoluzzi}
+%\date{}							%Activatetodisplayagivendateornodate
+
+\begin{document}
+\maketitle
+\nonstopmode
 
 \begin{abstract}
 This module defines a minimal set of functions to generate a dimension-independent grid of simplices.
 The name of the library was firstly used by our CAD Lab at University of Rome ``La Sapienza'' in years 1987/88 when we started working with dimension-independent simplicial complexes~\cite{Paoluzzi:1993:DMS:169728.169719}. This one in turn imports some functions from the \texttt{scipy} package and the geometric library \texttt{pyplasm}~\cite{}.
 \end{abstract}
 
-%\tableofcontents\newpage
+\tableofcontents\newpage
 
 \section{Introduction}
 
@@ -303,7 +303,7 @@ to define a predefinite constant \texttt{VOID}.
 
 The generation of simplicial grids of any dimension and shape using the \texttt{larSimplexGrid}
 is amazingly simple. The input parameter \texttt{shape} is either a tuple or a list of integers used to specify the \emph{shape} of the created array, i.e.~both the number of its dimensions (given by \texttt{len(shape)}) and the \texttt{size} of each dimension $k$ (given by the \texttt{shape[k]} element).
-The implementation starts from the LAR model of the void simplicial complex (denoted as \texttt{VOID}, a predefined constant) and updates the \texttt{model} variable extruding it iteratively according to the specs given by \texttt{shape}.
+The implementation starts from the LAR model of the VOID simplicial complex (denoted as \texttt{VOID}, a predefined constant) and updates the \texttt{model} variable extruding it iteratively according to the specs given by \texttt{shape}.
 Just notice that the returned grid \texttt{model} has vertices with integer coordinates, that can be subsequently scaled and/or translated and/or mapped in any other way, according to the user needs.
 
 %-------------------------------------------------------------------------------
@@ -445,11 +445,12 @@ The current version of the \texttt{simplexn} library is exported here. Next vers
 \begin{list}{}{} \item
 \mbox{}\verb@# -*- coding: utf-8 -*-@\\
 \mbox{}\verb@"""Module for facet extraction, extrusion and simplicial grids"""@\\
+\mbox{}\verb@from pyplasm import *@\\
 \mbox{}\verb@from lar2psm import *@\\
 \mbox{}\verb@from scipy import *@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@VOID = V0,CV0 = [[]],[[0]]    # the empty simplicial model@\\
-\mbox{}\verb@@\hbox{$\langle\,$Cumulative sum\nobreak\ {\footnotesize \NWlink{nuweb12}{12}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Cumulative sum\nobreak\ {\footnotesize \NWlink{nuweb12a}{12a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Simplicial model extrusion in accord with a 1D pattern\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generation of simplicial grids\nobreak\ {\footnotesize \NWlink{nuweb7}{7}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Facets extraction from a set of simplices\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
@@ -521,11 +522,11 @@ We are finally able to generate and output a complete test file, including the v
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap13}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/test01.py"@\nobreak\ {\footnotesize 10c }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/simplexn/test01.py"@\nobreak\ {\footnotesize 10c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Inport the $Simple_X^n$ library\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Inport the $Simple_X^n$ library\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^2$ domain\nobreak\ {\footnotesize \NWlink{nuweb10a}{10a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Extract the edges of the 2D decomposition\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
@@ -585,11 +586,11 @@ and finally export a new test file:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap16}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/test02.py"@\nobreak\ {\footnotesize 11c }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/simplexn/test02.py"@\nobreak\ {\footnotesize 11c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Inport the $Simple_X^n$ library\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Inport the $Simple_X^n$ library\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^3$ domain\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Extract the faces and edges of the 3D decomposition\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
@@ -608,14 +609,14 @@ and finally export a new test file:
 \subsubsection{3D example}
 
 
-%\appendix
+\appendix
 \section{Utilities}
 
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap17}
-\protect\makebox[0ex][r]{\NWtarget{nuweb12}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cumulative sum\nobreak\ {\footnotesize 12}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb12a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cumulative sum\nobreak\ {\footnotesize 12a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -639,7 +640,27 @@ and finally export a new test file:
 %-------------------------------------------------------------------------------
 
 
+\begin{flushleft} \small
+\begin{minipage}{\linewidth} \label{scrap18}
+\protect\makebox[0ex][r]{\NWtarget{nuweb12b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Inport the $Simple_X^n$ library\nobreak\ {\footnotesize 12b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from pyplasm import *@\\
+\mbox{}\verb@from lar2psm import *@\\
+\mbox{}\verb@from simplexn import *@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10c}{10c}\NWlink{nuweb11c}{, 11c}.
+\end{list}
+\end{minipage}\\[4ex]
+\end{flushleft}
 \bibliographystyle{amsalpha}
-\bibliography{smplxn}
+\bibliography{simplexn}
 
-%\end{document}
+\end{document}

@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = boolean
+NAME = simplexn
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
