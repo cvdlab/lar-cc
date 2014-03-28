@@ -1,4 +1,4 @@
-""" test program for the boolean module """
+""" test example with general LAR cells for the boolean module """
 from pyplasm import *
 from scipy import *
 import os,sys
@@ -24,15 +24,9 @@ blue = V1,CV1
 V2 = [[3,6],[7,6],[0,5],[3,5],[3,4],[7,4],[3,2],[7,2],[0,0],[3,0],[6,0],[6,2]]
 CV2 = [[0,1,3,4,5],[2,3,4,6,8,9],[6,9,10,11],[4,5,6,7,11]]
 red = V2,CV2
-
-VIEW(STRUCT([
-COLOR(RED)(EXPLODE(1.2,1.2,1)(MKPOLS(red))),
-COLOR(BLUE)(EXPLODE(1.2,1.2,1)(MKPOLS(blue)))
-]))
-
 V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)
 CV = Delaunay(array(V)).vertices
-
+""" Visualization of first Boolean step  """
 if n12==0:
    hpc0 = STRUCT([ COLOR(RED)(EXPLODE(1.5,1.5,1)(AA(MK)(V[:n1-n12]) )), 
             COLOR(CYAN)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1:]) )) ])
@@ -44,3 +38,4 @@ else:
 hpc1 = COLOR(RED)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_un)) ))
 hpc2 = COLOR(CYAN)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_int)) ))
 VIEW(STRUCT([hpc0, hpc1, hpc2]))
+

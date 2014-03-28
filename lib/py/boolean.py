@@ -76,7 +76,7 @@ def boolOps(lar1,lar2):
    V1,CV1 = lar1
    V2,CV2 = lar2
    n1,n2 = len(V1),len(V2)
-   V, CV1, CV2, n12 = vertexRenumbering(lar1, lar2)
+   V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
 
    CV = Delaunay(array(V)).vertices
    CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)
@@ -94,7 +94,7 @@ def xor(lar1,lar2):
 """ First step of Boolen Algorithm """
 from collections import defaultdict, OrderedDict
 
-def vertexRenumbering(model1, model2):
+def vertexSieve(model1, model2):
    V1,CV1 = model1; V2,CV2 = model2
    n = len(V1); m = len(V2)
    def shift(CV, n): 

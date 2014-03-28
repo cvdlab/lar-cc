@@ -22,16 +22,11 @@ from larcc import *
 import largrid
 from largrid import *
 
-blue = larSimplexGrid([2,4])
-red = larSimplexGrid([4,3])
-VIEW(STRUCT([
-COLOR(RED)(EXPLODE(1.2,1.2,1)(MKPOLS(red))),
-COLOR(BLUE)(EXPLODE(1.2,1.2,1)(MKPOLS(blue)))
-]))
-
+blue = larSimplexGrid([2,6])
+red = larSimplexGrid([5,3])
 V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)
 CV = Delaunay(array(V)).vertices
-
+""" Visualization of first Boolean step  """
 if n12==0:
    hpc0 = STRUCT([ COLOR(RED)(EXPLODE(1.5,1.5,1)(AA(MK)(V[:n1-n12]) )), 
             COLOR(CYAN)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1:]) )) ])
@@ -43,3 +38,4 @@ else:
 hpc1 = COLOR(RED)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_un)) ))
 hpc2 = COLOR(CYAN)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_int)) ))
 VIEW(STRUCT([hpc0, hpc1, hpc2]))
+

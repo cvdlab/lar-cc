@@ -19,7 +19,6 @@ model1 = V1,CV1; model2 = V2,CV2
 VIEW(STRUCT([ 
    COLOR(CYAN)(SKEL_1(STRUCT(MKPOLS(model1)))), 
    COLOR(RED)(SKEL_1(STRUCT(MKPOLS(model2)))) ]))
-# V, CV1, CV2, n12 = vertexRenumbering(model1, model2)
-(V,CV),n1,n2,n12 = boolOps(model1,model2)
-VIEW(SKEL_1(STRUCT(MKPOLS((V,CV1)))))
-VIEW(SKEL_1(STRUCT(MKPOLS((V,CV2)))))
+V,CV_un, CV_int, n1,n2,n12 = boolOps(model1,model2)
+VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[:n1]+CV_int )))))
+VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[n1-n12:]+CV_int )))))

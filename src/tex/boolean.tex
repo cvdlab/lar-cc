@@ -49,7 +49,7 @@
 %----macros end-----------------------------------------------------------------
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 \begin{abstract}
-Boolean operations are a major addition to every geometric package. Union, intersection, difference and complementation of decomposed spaces are discussed and implemented in this module by making use of the Linear Algebraic Representation (LAR) introduced in~\cite{Dicarlo:2014:TNL:2543138.2543294}. First, the two finite decompositions are merged, by merging their vertices (0-cells of support spaces); then a Delaunay complex based on the vertex set union is computed, and the shared $d$-chain is extracted and splitted, according to the cell structure of the input $d$-chains. The results of a Boolean operation are finally computed by sum, product or difference of the (binary) coordinate representation of the (splitted) argument chains, by using the novel chain-basis resulted from a splitting stage. Differently from the totality of algorithms known to the authors, no search or traversal of some (complicated) data structure is performed by this algorithm. 
+Boolean operations are a major addition to every geometric package. Union, intersection, difference and complementation of decomposed spaces are discussed and implemented in this module by making use of the Linear Algebraic Representation (LAR) introduced in~\cite{Dicarlo:2014:TNL:2543138.2543294}. First, the two finite decompositions are merged, by merging their vertices (0-cells of support spaces); then a Delaunay complex based on the vertex set union is computed, and the shared $d$-chain is extracted and split, according to the cellular structure of the input $d$-chains. The results of a Boolean operation are finally computed by sum, product or difference of the (binary) coordinate representation of the (split) argument chains, by using the novel chain-basis resulted from the splitting step. Differently from the totality of algorithms known to the authors, neither search nor traversal of some (complicated) data structure is performed by this algorithm. 
 \end{abstract}
 
 \tableofcontents
@@ -62,6 +62,7 @@ In this section we introduce and shortly outline our novel algorithm for Boolean
 The input objects are denoted in the remainder as $X_1$ and $X_2$, and their finite cell decompositions as $\Lambda_1$ and $\Lambda_1$. Our goal is to compute $X = X_1\, op\, X_2$, where $op \in \{\cup ,\cap , - ,\ominus \}$ or $\complement X$, based on a common decomposition $\Lambda = \Lambda_1\, op\, \Lambda_2$, with $\Lambda$ being a suitably fragmented decomposition of the X space.
 
 Of course, we aim to compute a minimal (in some sense) decomposition, making the best use of the LAR framework, based on CSR representation of sparse binary matrices and standard matrix algebra operations.
+However, in this first implementation of the chain approach to Boolean operations, we are satisfied with a solution using simplicial triangulations of input spaces. Future revisions of our algorithm will be based on more general cellular complexes.
 
 \subsection{User interface}
 
@@ -94,7 +95,7 @@ def boolOps(lar1,lar2):
 	V1,CV1 = lar1
 	V2,CV2 = lar2
 	n1,n2 = len(V1),len(V2)
-	V, CV1, CV2, n12 = vertexRenumbering(lar1, lar2)
+	V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
 
 	CV = Delaunay(array(V)).vertices
 	CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)
@@ -133,7 +134,7 @@ The input LAR models are located in a common space by (implicitly) joining \text
 @D Initial indexing of vertex positions
 @{from collections import defaultdict, OrderedDict
 
-def vertexRenumbering(model1, model2):
+def vertexSieve(model1, model2):
 	V1,CV1 = model1; V2,CV2 = model2
 	n = len(V1); m = len(V2)
 	def shift(CV, n): 
@@ -209,7 +210,7 @@ The new indices of vertices are computed according with their position within th
 \paragraph{Return the single reordered pointset and the two $d$-cell arrays}
 We are now finally ready to return two reordered LAR models defined over the same set \texttt{V} of vertices, and where (a) the vertex array \texttt{V} can be written as the union of three disjoint sets of points $C_1,C_{12},C_2$; (b) the $d$-cell array \texttt{CV1} is indexed over $C_1\cup C_{12}$; (b) the $d$-cell array \texttt{CV2} is indexed over $C_{12}\cup C_{2}$. 
 
-The \texttt{vertexRenumbering} function will return the new reordered vertex set $V = (V_1 \cup V_2) \setminus (V_1 \cap V_2)$, the two renumbered $s$-cell sets \texttt{CV1} and \texttt{CV2}, and the size \texttt{len(case12)} of $V_1 \cap V_2$.
+The \texttt{vertexSieve} function will return the new reordered vertex set $V = (V_1 \cup V_2) \setminus (V_1 \cap V_2)$, the two renumbered $s$-cell sets \texttt{CV1} and \texttt{CV2}, and the size \texttt{len(case12)} of $V_1 \cap V_2$.
 %-------------------------------------------------------------------------------
 @D Return the single reordered pointset and the two $d$-cell arrays
 @{
@@ -224,8 +225,9 @@ The \texttt{vertexRenumbering} function will return the new reordered vertex set
 
 
 \subsubsection{Example of input with some coincident vertices}
-In this example we give two very simple LAR representations of 2D cell complexes, with some coincident vertices, and go ahead to re-index the vertices, according to the method implemented by the function \texttt{vertexRenumbering}.
+In this example we give two very simple LAR representations of 2D cell complexes, with some coincident vertices, and go ahead to re-index the vertices, according to the method implemented by the function \texttt{vertexSieve}.
 
+%-------------------------------------------------------------------------------
 @o test/py/boolean/test02.py
 @{@< Initial import of modules @>
 @< Import the module @(lar2psm@) @>
@@ -238,15 +240,14 @@ model1 = V1,CV1; model2 = V2,CV2
 VIEW(STRUCT([ 
 	COLOR(CYAN)(SKEL_1(STRUCT(MKPOLS(model1)))), 
 	COLOR(RED)(SKEL_1(STRUCT(MKPOLS(model2)))) ]))
-# V, CV1, CV2, n12 = vertexRenumbering(model1, model2)
-(V,CV),n1,n2,n12 = boolOps(model1,model2)
-VIEW(SKEL_1(STRUCT(MKPOLS((V,CV1)))))
-VIEW(SKEL_1(STRUCT(MKPOLS((V,CV2)))))
+V,CV_un, CV_int, n1,n2,n12 = boolOps(model1,model2)
+VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[:n1]+CV_int )))))
+VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[n1-n12:]+CV_int )))))
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{Example discussion} 
-The aim of the \texttt{vertexRenumbering} function is twofold: (a) eliminate vertex duplicates before entering the main part of the Boolean algorithm; (b) reorder the input representations so that it becomes less expensive to check whether a 0-cell can be shared by both the arguments of a Boolean expression, so that its coboundaries must be eventually split. Remember that for any set you have:
+The aim of the \texttt{vertexSieve} function is twofold: (a) eliminate vertex duplicates before entering the main part of the Boolean algorithm; (b) reorder the input representations so that it becomes less expensive to check whether a 0-cell can be shared by both the arguments of a Boolean expression, so that its coboundaries must be eventually split. Remember that for any set you have:
 \[
 |A\cup B| = |A|+|B|-|A\cap B|.
 \]
@@ -367,33 +368,6 @@ We found useful to drive the development of new modules using randomly generated
 
 \paragraph{Write the test executable file}
 
-%------------------------------------------------------------------
-@o test/py/boolean/test01.py
-@{""" test program for the boolean module """
-@< Initial import of modules @>
-@< Import the module @(boolean@) @>
-@< Import the module @(lar2psm@) @>
-@< Import the module @(simplexn@) @>
-@< Import the module @(larcc@) @>
-model1 = randomTriangulation(100,2,'disk')
-VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)))
-model2 = randomTriangulation(100,2,'cuboid')
-V2,CV2 = model2
-V2 = scalePoints(V2, [2,2])
-model2 = V2,CV2 
-VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)))
-V,CV_un, CV_int, n1,n2,n12 = boolOps(model1,model2)
-model = V,CV_int
-
-hpc0 = STRUCT([ COLOR(RED)(EXPLODE(1.5,1.5,1)(AA(MK)(V[:n1-n12]) )), 
-				COLOR(CYAN)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1:]) ))#, 
-				#COLOR(WHITE)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1-n12:n1]) )) 
-				])
-hpc1 = COLOR(RED)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_un)) ))
-hpc2 = COLOR(CYAN)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_int)) ))
-VIEW(STRUCT([hpc0, hpc1, hpc2]))
-@}
-%------------------------------------------------------------------
 
 
 
@@ -461,9 +435,59 @@ if __name__=="__main__":
 \subsection{Unit tests}
 %-------------------------------------------------------------------------------
 
+\subsubsection{First Boolean stage}
 
-@o test/py/boolean/test03.py
+Some unit tests of the first Boolean stage are discussed in the following. They are mainly aimed to check a correct execution of the filtering of common vertices with renumbering of the union set of vertices, and to the consequential redefinition of the $d$-cell basis.
+
+\paragraph{Union of non-structured grids}
+
+%------------------------------------------------------------------
+@o test/py/boolean/test01.py
 @{""" test program for the boolean module """
+@< Initial import of modules @>
+@< Import the module @(boolean@) @>
+@< Import the module @(lar2psm@) @>
+@< Import the module @(simplexn@) @>
+@< Import the module @(larcc@) @>
+model1 = randomTriangulation(100,2,'disk')
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)))
+model2 = randomTriangulation(100,2,'cuboid')
+V2,CV2 = model2
+V2 = scalePoints(V2, [2,2])
+model2 = V2,CV2 
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)))
+V,CV_un, CV_int, n1,n2,n12 = boolOps(model1,model2)
+model = V,CV_int
+@< Visualization of first Boolean step @>
+@}
+%------------------------------------------------------------------
+
+
+\paragraph{Union of structured grids}
+
+%------------------------------------------------------------------
+@o test/py/boolean/test04.py
+@{""" test program for the boolean module """
+from pyplasm import *
+@< Initial import of modules @>
+@< Import the module @(boolean@) @>
+@< Import the module @(lar2psm@) @>
+@< Import the module @(simplexn@) @>
+@< Import the module @(larcc@) @>
+@< Import the module @(largrid@) @>
+blue = larSimplexGrid([2,6])
+red = larSimplexGrid([5,3])
+V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)
+CV = Delaunay(array(V)).vertices
+@< Visualization of first Boolean step @>
+@}
+%------------------------------------------------------------------
+
+\paragraph{Boolean operations with general LAR cells}
+
+%------------------------------------------------------------------
+@o test/py/boolean/test03.py
+@{""" test example with general LAR cells for the boolean module """
 @< Initial import of modules @>
 @< Import the module @(boolean@) @>
 @< Import the module @(lar2psm@) @>
@@ -475,15 +499,19 @@ blue = V1,CV1
 V2 = [[3,6],[7,6],[0,5],[3,5],[3,4],[7,4],[3,2],[7,2],[0,0],[3,0],[6,0],[6,2]]
 CV2 = [[0,1,3,4,5],[2,3,4,6,8,9],[6,9,10,11],[4,5,6,7,11]]
 red = V2,CV2
-
-VIEW(STRUCT([
-COLOR(RED)(EXPLODE(1.2,1.2,1)(MKPOLS(red))),
-COLOR(BLUE)(EXPLODE(1.2,1.2,1)(MKPOLS(blue)))
-]))
-
 V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)
 CV = Delaunay(array(V)).vertices
+@< Visualization of first Boolean step @>
+@}
+%------------------------------------------------------------------
 
+\subsection{Visualization of the Boolean algorithm}
+
+\paragraph{First step of visualization}
+
+%------------------------------------------------------------------
+@d Visualization of first Boolean step
+@{""" Visualization of first Boolean step  """
 if n12==0:
 	hpc0 = STRUCT([ COLOR(RED)(EXPLODE(1.5,1.5,1)(AA(MK)(V[:n1-n12]) )), 
 				COLOR(CYAN)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1:]) )) ])
@@ -496,39 +524,7 @@ hpc1 = COLOR(RED)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_un)) ))
 hpc2 = COLOR(CYAN)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_int)) ))
 VIEW(STRUCT([hpc0, hpc1, hpc2]))
 @}
-
-
-@o test/py/boolean/test04.py
-@{""" test program for the boolean module """
-from pyplasm import *
-@< Initial import of modules @>
-@< Import the module @(boolean@) @>
-@< Import the module @(lar2psm@) @>
-@< Import the module @(simplexn@) @>
-@< Import the module @(larcc@) @>
-@< Import the module @(largrid@) @>
-blue = larSimplexGrid([2,4])
-red = larSimplexGrid([4,3])
-VIEW(STRUCT([
-COLOR(RED)(EXPLODE(1.2,1.2,1)(MKPOLS(red))),
-COLOR(BLUE)(EXPLODE(1.2,1.2,1)(MKPOLS(blue)))
-]))
-
-V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)
-CV = Delaunay(array(V)).vertices
-
-if n12==0:
-	hpc0 = STRUCT([ COLOR(RED)(EXPLODE(1.5,1.5,1)(AA(MK)(V[:n1-n12]) )), 
-				COLOR(CYAN)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1:]) )) ])
-else:
-	hpc0 = STRUCT([ COLOR(RED)(EXPLODE(1.5,1.5,1)(AA(MK)(V[:n1-n12]) )), 
-				COLOR(CYAN)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1:]) )), 
-				COLOR(WHITE)(EXPLODE(1.5,1.5,1)(AA(MK)(V[n1-n12:n1]) )) ])
-
-hpc1 = COLOR(RED)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_un)) ))
-hpc2 = COLOR(CYAN)(EXPLODE(1.5,1.5,1)(MKPOLS((V,CV_int)) ))
-VIEW(STRUCT([hpc0, hpc1, hpc2]))
-@}
+%------------------------------------------------------------------
 
 %<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
