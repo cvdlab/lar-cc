@@ -91,7 +91,7 @@ The API will contain the high-level binary functions \texttt{union}, \texttt{int
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap1}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$High-level boolean operations\nobreak\ {\footnotesize 2a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb2}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$High-level boolean operations\nobreak\ {\footnotesize 2}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def union(lar1,lar2):@\\
@@ -107,7 +107,7 @@ The API will contain the high-level binary functions \texttt{union}, \texttt{int
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ The real work is performed by the function \texttt{boolOps}, that will procede s
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap2}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boolean subdivided complex\nobreak\ {\footnotesize 2b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boolean subdivided complex\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" High level Boolean Application Programming Interface """@\\
@@ -130,17 +130,25 @@ The real work is performed by the function \texttt{boolOps}, that will procede s
 \mbox{}\verb@   V1,CV1 = lar1@\\
 \mbox{}\verb@   V2,CV2 = lar2@\\
 \mbox{}\verb@   n1,n2 = len(V1),len(V2)@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   # First stage of Boolean algorithm@\\
 \mbox{}\verb@   V, CV1, CV2, n12 = vertexSieve(lar1, lar2)@\\
-\mbox{}\verb@@\\
 \mbox{}\verb@   CV = Delaunay(array(V)).vertices@\\
 \mbox{}\verb@   CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)@\\
-\mbox{}\verb@   return V,CV_un, CV_int, n1,n2,n12@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   # Second stage of Boolean algorithm@\\
+\mbox{}\verb@   B1,B2 = boundaryVertices( V, CV1, CV2 )@\\
+\mbox{}\verb@   print "\n B1 =",B1@\\
+\mbox{}\verb@   print "\n B2 =",B2@\\
+\mbox{}\verb@   ## Extraction of $(d-1)$-star of boundary vertices@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   return V,CV_un, CV_int, n1,n2,n12, B1,B2@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -159,21 +167,21 @@ The union set of vertices is finally reordered using the three subsets of vertic
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap3}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Place the vertices of Boolean arguments in a common space\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb3b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Place the vertices of Boolean arguments in a common space\nobreak\ {\footnotesize 3b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" First step of Boolen Algorithm """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial indexing of vertex positions\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Merge two dictionaries with keys the point locations\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Filter the common dictionary into three subsets\nobreak\ {\footnotesize \NWlink{nuweb4b}{4b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Compute an inverted index to reorder the vertices of Boolean arguments\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Return the single reordered pointset and the two $d$-cell arrays\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial indexing of vertex positions\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Merge two dictionaries with keys the point locations\nobreak\ {\footnotesize \NWlink{nuweb4b}{4b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Filter the common dictionary into three subsets\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Compute an inverted index to reorder the vertices of Boolean arguments\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Return the single reordered pointset and the two $d$-cell arrays\nobreak\ {\footnotesize \NWlink{nuweb6a}{6a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -187,7 +195,7 @@ The union set of vertices is finally reordered using the three subsets of vertic
 The input LAR models are located in a common space by (implicitly) joining \texttt{V1} and \texttt{V2} in a same array, and (explicitly) shifting the vertex indices in \texttt{CV2} by the length of \texttt{V1}.
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap4}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial indexing of vertex positions\nobreak\ {\footnotesize 3b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial indexing of vertex positions\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from collections import defaultdict, OrderedDict@\\
@@ -203,7 +211,7 @@ The input LAR models are located in a common space by (implicitly) joining \text
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb3a}{3a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb3b}{3b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -213,7 +221,7 @@ Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger 
 \texttt{V1} and \texttt{V2}, we index the set $\texttt{V1} \cup \texttt{V2}$ using a Python \texttt{defaultdict} dictionary, in order to avoid errors of "missing key". As dictionary keys, we use the string representation of the vertex position vector provided by the \texttt{vcode} function given in the Appendix.
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap5}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Merge two dictionaries with keys the point locations\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Merge two dictionaries with keys the point locations\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -230,7 +238,7 @@ Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb3a}{3a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb3b}{3b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -251,7 +259,7 @@ An example of coding is given below. The \emph{precision} of the string represen
 The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of vertices respectively stored in each repository.
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap6}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Filter the common dictionary into three subsets\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Filter the common dictionary into three subsets\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -267,7 +275,7 @@ The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb3a}{3a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb3b}{3b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -276,7 +284,7 @@ The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of 
 The new indices of vertices are computed according with their position within the storage repositories \texttt{case1}, \texttt{case2}, and \texttt{case12}. Notice that every \texttt{item[1]} stored in \texttt{case1} or \texttt{case2} is a list with only one integer member. Two such values are conversely stored in each \texttt{item[1]} within \texttt{case12}.
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap7}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute an inverted index to reorder the vertices of Boolean arguments\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute an inverted index to reorder the vertices of Boolean arguments\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -293,7 +301,7 @@ The new indices of vertices are computed according with their position within th
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb3a}{3a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb3b}{3b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -308,7 +316,7 @@ We are now finally ready to return two reordered LAR models defined over the sam
 The \texttt{vertexSieve} function will return the new reordered vertex set $V = (V_1 \cup V_2) \setminus (V_1 \cap V_2)$, the two renumbered $s$-cell sets \texttt{CV1} and \texttt{CV2}, and the size \texttt{len(case12)} of $V_1 \cap V_2$.
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap8}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Return the single reordered pointset and the two $d$-cell arrays\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Return the single reordered pointset and the two $d$-cell arrays\nobreak\ {\footnotesize 6a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -323,7 +331,7 @@ The \texttt{vertexSieve} function will return the new reordered vertex set $V = 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb3a}{3a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb3b}{3b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -335,14 +343,12 @@ In this example we give two very simple LAR representations of 2D cell complexes
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap9}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test02.py"@\nobreak\ {\footnotesize 6a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test02.py"@\nobreak\ {\footnotesize 6b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb6b}{6b}\label{scrap10}
- }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb6c}{6c}\label{scrap11}
- }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb13b}{13b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb6c}{6c}\label{scrap10}
+ }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@V1 = [[1,1],[3,3],[3,1],[2,3],[2,1],[1,3]]@\\
 \mbox{}\verb@V2 = [[1,1],[1,3],[2,3],[2,2],[3,2],[0,1],[0,0],[2,0],[3,0]]@\\
 \mbox{}\verb@CV1 = [[0,3,4,5],[1,2,3,4]]@\\
@@ -351,7 +357,7 @@ In this example we give two very simple LAR representations of 2D cell complexes
 \mbox{}\verb@VIEW(STRUCT([ @\\
 \mbox{}\verb@   COLOR(CYAN)(SKEL_1(STRUCT(MKPOLS(model1)))), @\\
 \mbox{}\verb@   COLOR(RED)(SKEL_1(STRUCT(MKPOLS(model2)))) ]))@\\
-\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12 = boolOps(model1,model2)@\\
+\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(model1,model2)@\\
 \mbox{}\verb@VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[:n1]+CV_int )))))@\\
 \mbox{}\verb@VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[n1-n12:]+CV_int )))))@\\
 \mbox{}\verb@@{\NWsep}
@@ -362,7 +368,7 @@ In this example we give two very simple LAR representations of 2D cell complexes
 %-------------------------------------------------------------------------------
 
 \paragraph{Example discussion} 
-The aim of the \texttt{vertexSieve} function is twofold: (a) eliminate vertex duplicates before entering the main part of the Boolean algorithm; (b) reorder the input representations so that it becomes less expensive to check whether a 0-cell can be shared by both the arguments of a Boolean expression, so that its coboundaries must be eventually split. Remember that for any set you have:
+The aim of the \texttt{vertexSieve} function is twofold: (a) eliminate vertex duplicates before entering the main part of the Boolean algorithm; (b) reorder the input representations so that it becomes less expensive to check whether a 0-cell can be shared by both the arguments of a Boolean expression, so that its coboundaries must be eventually split. Remind that for any set it is:
 \[
 |A\cup B| = |A|+|B|-|A\cap B|.
 \]
@@ -377,8 +383,8 @@ and that
 where $C_{12}$ is the subset of vertices with duplicated instances.
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap12}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Output from \texttt{test/py/boolean/test02.py}\nobreak\ {\footnotesize 6d}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap11}
+\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Output from \texttt{test/py/boolean/test02.py}\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V   = [[3.0,1.0],[2.0,1.0],[3.0,3.0],[1.0,1.0],[1.0,3.0],[2.0,3.0],@\\
@@ -398,8 +404,8 @@ where $C_{12}$ is the subset of vertices with duplicated instances.
 Notice also that \texttt{V} has been reordered in three consecutive subsets $C_{1},C_{12},C_{2}$ such that \texttt{CV1} is indexed within $C_{1}\cup C_{12}$, whereas \texttt{CV2} is indexed within $C_{12}\cup C_{2}$. In our example we have  $C_{12}=\{\texttt{3,4,5}\}$: 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap13}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Reordering of vertex indexing of cells\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap12}
+\protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Reordering of vertex indexing of cells\nobreak\ {\footnotesize 7b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -430,23 +436,31 @@ The total cost of such pre-processing, executed using dictionaries, is $O(n\ln n
 The aim of this section is to compute a (minimal) set of $d$-cells, extracted from the Delaunay complex generated by $V_1 \cup V_2$, that we call \emph{pivot cells}, that will be split using the boundary cells of both $V_1$ and $V_2$.
 
 %-------------------------------------------------------------------------------
-\subsection{Computation of Delaunay complex $\Sigma$}
+\subsection{Partition of Delaunay complex $\Sigma$ into $\Sigma_\cup$ and $\Sigma_\cap$}
 %-------------------------------------------------------------------------------
 
 The Delaunay complex is computed on the (joint) vertex set $V$, using some efficient package for dimensional-independent Delaunay computation. Here we utilize the \texttt{scipy.spatial.Delaunay} sub-package, that can be used with both 2D and 3D points. 
 
+\paragraph{Partition of the joint Delaunay complex} 
 
-%-------------------------------------------------------------------------------
-\subsection{Partition of $\Sigma$ into $\Sigma_\Delta$ and $\Sigma_\Omega$}
-%-------------------------------------------------------------------------------
-
-
-
+The \texttt{splitDelaunayComplex} function is used to partition the Delaunay complex $\Sigma\equiv\texttt{CV}$, previously computed on $V_1 \cup V_2$, into two subcomplexes $\Sigma_\cup$ and $\Sigma_\cap$, respectively characterised by the fact that the cells  are either supported by (i.e.~are convex combination of)  $d+1$ vertices belonging to the same argument, or by vertices in both arguments.
+The two sets of cells returned by the function are respectively denoted \texttt{cells\_union} and \texttt{cells\_intersection}. They are computed efficiently in time $O(n)$ by using the previous reordering of vertices, i.e.~the vertex partition in three disjoint subsets:
+\[
+V_1 \cup V_2 = 
+\{v_k\ |\ k_0\leq k< k_1\} \cup
+\{v_k\ |\ k_1\leq k< k_2\} \cup
+\{v_k\ |\ k_2\leq k< k_3\}
+\]
+where
+\[
+k_0 =0, \quad k_1 =n_1-n_{12}, \quad k_2 =n_1, \quad  k_3=n_1+n_2-n_{12},
+\]
+with $n_1=|V_1|$, $n_2=|V_2|$, and $n_{12}=|V_1\cap V_2|$.
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap14}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Partition of the Delaunay complex in two sub complexes\nobreak\ {\footnotesize 7b}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap13}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Partition of the Delaunay complex in two sub complexes\nobreak\ {\footnotesize 8}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def splitDelaunayComplex(CV,n1,n2,n12):@\\
@@ -462,7 +476,7 @@ The Delaunay complex is computed on the (joint) vertex set $V$, using some effic
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -473,7 +487,50 @@ The Delaunay complex is computed on the (joint) vertex set $V$, using some effic
 \section{Splitting argument chains}
 %<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 %-------------------------------------------------------------------------------
-\subsection{Matching cells in $\Sigma_\Delta$ with spanning chains in $\Lambda_1$, $\Lambda_2$}
+\subsection{Boundary computation}
+%-------------------------------------------------------------------------------
+The matrix of the boundary operators of the boolean arguments $\Lambda_1$ and $\Lambda_2$ are computed here as supported by the novel vertex set $V := V_1 \cup V_2$. Both the characteristic matrices $M_d$ and $M_{d-1}$ are needed to compute a $[\partial_d]$ matrix (see Reference~\cite{Dicarlo:2014:TNL:2543138.2543294}). Hence we start this section by computing the new basis of $(d-1)$-faces $\texttt{FV} := \texttt{CSR}(M_{d-1})$, and then compute the two subsets $B_1,B_2 \subset V$ of boundary vertices (upon the joint Delaunay complex \texttt{V}), where
+\[
+B_1 = [\mathcal{VF}^1]\, [\partial_d^1]\,\mathbf{1},
+\quad\mbox{and}\quad
+B_2 = [\mathcal{VF}^2]\, [\partial_d^2]\,\mathbf{1}.
+\]
+where $[\mathcal{VF}^1]^\top = \texttt{CSR(FV1)}$ and $[\mathcal{VF}^2]^\top = \texttt{CSR(FV2)}$,
+and where \texttt{FV1} and \texttt{FV2} are the relations \emph{face-vertices} computed from the relation \texttt{CV} supported by the \emph{joint} Delaunay vertex set. 
+
+\paragraph{Compute the boundary vertices of both arguments}
+The two $d$-cell bases given as input to the \texttt{boundaryVertices} function are already renumbered. In other words, their vertices belong to the common Delaunay complex. Therefore, the subsequent calls to \texttt{larSimplexFacets} also return two sets of facets supported by the Delaunay complex. 
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap14}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute boundary vertices of both arguments\nobreak\ {\footnotesize 9}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Second stage of Boolean operations """@\\
+\mbox{}\verb@def boundaryVertices( V, CV1,CV2 ):@\\
+\mbox{}\verb@   FV1 = larSimplexFacets(CV1)@\\
+\mbox{}\verb@   FV2 = larSimplexFacets(CV2)@\\
+\mbox{}\verb@   BF1 = boundaryCells(CV1,FV1)@\\
+\mbox{}\verb@   BF2 = boundaryCells(CV2,FV2)@\\
+\mbox{}\verb@   BV1 = list(set([ v for f in BF1 for v in FV1[f] ]))@\\
+\mbox{}\verb@   BV2 = list(set([ v for f in BF2 for v in FV2[f] ]))@\\
+\mbox{}\verb@   VIEW(STRUCT([ @\\
+\mbox{}\verb@      COLOR(GREEN)(STRUCT(AA(MK)([V[v] for v in BV1]))), @\\
+\mbox{}\verb@      COLOR(MAGENTA)(STRUCT(AA(MK)([V[v] for v in BV2]))) ]))@\\
+\mbox{}\verb@   return BV1, BV2@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\subsection{Matching cells in $\Sigma_\cap$ with spanning chains in $\Lambda_1$, $\Lambda_2$}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 \subsection{Splitting cells}
@@ -493,21 +550,22 @@ The \texttt{boolean.py} module is exported to the library \texttt{lar-cc/lib}. T
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap15}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/boolean.py"@\nobreak\ {\footnotesize 8 }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/boolean.py"@\nobreak\ {\footnotesize 10a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Module with Boolean operators using chains and CSR matrices """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb14}{14}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Affine transformations of $n$ points\nobreak\ {\footnotesize \NWlink{nuweb13}{13}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Generation of $n$ random points in the unit $d$-disk\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Generation of $n$ random points in the standard $d$-cuboid\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Triangulation of random points\nobreak\ {\footnotesize \NWlink{nuweb9c}{9c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Boolean subdivided complex\nobreak\ {\footnotesize \NWlink{nuweb2b}{2b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$High-level boolean operations\nobreak\ {\footnotesize \NWlink{nuweb2a}{2a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Place the vertices of Boolean arguments in a common space\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb13b}{13b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb15}{15}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Affine transformations of $n$ points\nobreak\ {\footnotesize \NWlink{nuweb14}{14}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generation of $n$ random points in the unit $d$-disk\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generation of $n$ random points in the standard $d$-cuboid\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Triangulation of random points\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Boolean subdivided complex\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$High-level boolean operations\nobreak\ {\footnotesize \NWlink{nuweb2}{2}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Place the vertices of Boolean arguments in a common space\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Show vertices of arguments\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Partition of the Delaunay complex in two sub complexes\nobreak\ {\footnotesize \NWlink{nuweb7b}{7b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Partition of the Delaunay complex in two sub complexes\nobreak\ {\footnotesize \NWlink{nuweb8}{8}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Compute boundary vertices of both arguments\nobreak\ {\footnotesize \NWlink{nuweb9}{9}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -538,7 +596,7 @@ First we generate a  set of $n$ random points in the unit $D^d$ disk centred on 
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap16}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation of $n$ random points in the unit $d$-disk\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation of $n$ random points in the unit $d$-disk\nobreak\ {\footnotesize 10b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def randomPointsInUnitCircle(n=100,d=2, r=1):@\\
@@ -553,7 +611,7 @@ First we generate a  set of $n$ random points in the unit $D^d$ disk centred on 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -565,7 +623,7 @@ A set of $n$ random $d$-points is then generated within the standard $d$-cuboid,
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap17}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation of $n$ random points in the standard $d$-cuboid\nobreak\ {\footnotesize 9b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation of $n$ random points in the standard $d$-cuboid\nobreak\ {\footnotesize 11a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def randomPointsInUnitCuboid(n=100,d=2):@\\
@@ -578,7 +636,7 @@ A set of $n$ random $d$-points is then generated within the standard $d$-cuboid,
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -592,7 +650,7 @@ A set of $n$ random $d$-points is then generated within the standard $d$-cuboid,
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap18}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Triangulation of random points\nobreak\ {\footnotesize 9c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Triangulation of random points\nobreak\ {\footnotesize 11b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from scipy.spatial import Delaunay@\\
@@ -613,7 +671,7 @@ A set of $n$ random $d$-points is then generated within the standard $d$-cuboid,
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -639,19 +697,13 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap19}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test01.py"@\nobreak\ {\footnotesize 10a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb12a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test01.py"@\nobreak\ {\footnotesize 12a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" test program for the boolean module """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb10b}{10b}\label{scrap20}
- }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb10c}{10c}\label{scrap21}
- }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb10d}{10d}\label{scrap22}
- }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb10e}{10e}\label{scrap23}
- }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb13b}{13b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb12b}{12b}\label{scrap20}
+ }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@model1 = randomTriangulation(100,2,'disk')@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)))@\\
 \mbox{}\verb@model2 = randomTriangulation(100,2,'cuboid')@\\
@@ -659,9 +711,9 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \mbox{}\verb@V2 = scalePoints(V2, [2,2])@\\
 \mbox{}\verb@model2 = V2,CV2 @\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)))@\\
-\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12 = boolOps(model1,model2)@\\
+\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(model1,model2)@\\
 \mbox{}\verb@model = V,CV_int@\\
-\mbox{}\verb@@\hbox{$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize \NWlink{nuweb12a}{12a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize \NWlink{nuweb13a}{13a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -674,28 +726,20 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test04.py"@\nobreak\ {\footnotesize 11a }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap21}
+\protect\makebox[0ex][r]{\NWtarget{nuweb12c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test04.py"@\nobreak\ {\footnotesize 12c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" test program for the boolean module """@\\
-\mbox{}\verb@from pyplasm import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11b}{11b}\label{scrap25}
- }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11c}{11c}\label{scrap26}
- }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11d}{11d}\label{scrap27}
- }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11e}{11e}\label{scrap28}
- }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11f}{11f}\label{scrap29}
- }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb13b}{13b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb12d}{12d}\label{scrap22}
+ }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@blue = larSimplexGrid([2,6])@\\
 \mbox{}\verb@red = larSimplexGrid([5,3])@\\
-\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)@\\
+\mbox{}\verb@_, CV1, CV2, n12 = vertexSieve(red,blue)@\\
+\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(red,blue)@\\
 \mbox{}\verb@CV = Delaunay(array(V)).vertices@\\
-\mbox{}\verb@@\hbox{$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize \NWlink{nuweb12a}{12a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize \NWlink{nuweb13a}{13a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -707,29 +751,23 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap30}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11g}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test03.py"@\nobreak\ {\footnotesize 11g }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap23}
+\protect\makebox[0ex][r]{\NWtarget{nuweb12e}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/boolean/test03.py"@\nobreak\ {\footnotesize 12e }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" test example with general LAR cells for the boolean module """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11h}{11h}\label{scrap31}
- }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11i}{11i}\label{scrap32}
- }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11j}{11j}\label{scrap33}
- }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb11k}{11k}\label{scrap34}
- }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb12c}{12c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb13b}{13b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb12f}{12f}\label{scrap24}
+ }\mbox{}\verb@boolean@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@V1 = [[0,5],[6,5],[0,2],[3,2],[6,2],[0,0],[3,0],[3,-2],[6,-2]]@\\
 \mbox{}\verb@CV1 = [[2,3,5,6],[0,1,2,3,4],[3,4,6,7,8]]@\\
 \mbox{}\verb@blue = V1,CV1@\\
 \mbox{}\verb@V2 = [[3,6],[7,6],[0,5],[3,5],[3,4],[7,4],[3,2],[7,2],[0,0],[3,0],[6,0],[6,2]]@\\
 \mbox{}\verb@CV2 = [[0,1,3,4,5],[2,3,4,6,8,9],[6,9,10,11],[4,5,6,7,11]]@\\
 \mbox{}\verb@red = V2,CV2@\\
-\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)@\\
+\mbox{}\verb@V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(red,blue)@\\
 \mbox{}\verb@CV = Delaunay(array(V)).vertices@\\
-\mbox{}\verb@@\hbox{$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize \NWlink{nuweb12a}{12a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize \NWlink{nuweb13a}{13a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -743,8 +781,8 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap35}
-\protect\makebox[0ex][r]{\NWtarget{nuweb12a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize 12a}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap25}
+\protect\makebox[0ex][r]{\NWtarget{nuweb13a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Visualization of first Boolean step\nobreak\ {\footnotesize 13a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Visualization of first Boolean step  """@\\
@@ -764,7 +802,7 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}\NWlink{nuweb11a}{, 11a}\NWlink{nuweb11g}{g}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb12a}{12a}\NWlink{nuweb12c}{c}\NWlink{nuweb12e}{e}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -777,8 +815,8 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap36}
-\protect\makebox[0ex][r]{\NWtarget{nuweb12b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 12b}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap26}
+\protect\makebox[0ex][r]{\NWtarget{nuweb13b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 13b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import *@\\
@@ -787,12 +825,20 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \mbox{}\verb@@\\
 \mbox{}\verb@""" import modules from larcc/lib """@\\
 \mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb13c}{13c}\label{scrap27}
+ }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb13d}{13d}\label{scrap28}
+ }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb13e}{13e}\label{scrap29}
+ }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb13f}{13f}\label{scrap30}
+ }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb13g}{13g}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6a}{6a}\NWlink{nuweb8}{, 8}\NWlink{nuweb10a}{, 10a}\NWlink{nuweb11a}{, 11a}\NWlink{nuweb11g}{g}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb6b}{6b}\NWlink{nuweb10a}{, 10a}\NWlink{nuweb12a}{, 12a}\NWlink{nuweb12c}{c}\NWlink{nuweb12e}{e}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -800,8 +846,8 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap37}
-\protect\makebox[0ex][r]{\NWtarget{nuweb12c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 12c}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap31}
+\protect\makebox[0ex][r]{\NWtarget{nuweb13g}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 13g}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import @@1\verb@@\\
@@ -811,7 +857,7 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6a}{6a}\NWlink{nuweb10a}{, 10a}\NWlink{nuweb11a}{, 11a}\NWlink{nuweb11g}{g}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb6b}{6b}\NWlink{nuweb12a}{, 12a}\NWlink{nuweb12c}{c}\NWlink{nuweb12e}{e}\NWlink{nuweb13b}{, 13b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -821,8 +867,8 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap38}
-\protect\makebox[0ex][r]{\NWtarget{nuweb13}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Affine transformations of $n$ points\nobreak\ {\footnotesize 13}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap32}
+\protect\makebox[0ex][r]{\NWtarget{nuweb14}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Affine transformations of $n$ points\nobreak\ {\footnotesize 14}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def translatePoints (points, tvect):@\\
@@ -838,7 +884,7 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -850,8 +896,8 @@ A small set of utilityy functions is used to transform a point representation as
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap39}
-\protect\makebox[0ex][r]{\NWtarget{nuweb14}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 14}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap33}
+\protect\makebox[0ex][r]{\NWtarget{nuweb15}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 15}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\
@@ -886,7 +932,7 @@ A small set of utilityy functions is used to transform a point representation as
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8}{8}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10a}{10a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}

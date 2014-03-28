@@ -5,10 +5,6 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-
-import boolean
-from boolean import *
-
 import lar2psm
 from lar2psm import *
 
@@ -18,6 +14,13 @@ from simplexn import *
 import larcc
 from larcc import *
 
+import largrid
+from largrid import *
+
+
+import boolean
+from boolean import *
+
 model1 = randomTriangulation(100,2,'disk')
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)))
 model2 = randomTriangulation(100,2,'cuboid')
@@ -25,7 +28,7 @@ V2,CV2 = model2
 V2 = scalePoints(V2, [2,2])
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)))
-V,CV_un, CV_int, n1,n2,n12 = boolOps(model1,model2)
+V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(model1,model2)
 model = V,CV_int
 """ Visualization of first Boolean step  """
 if n12==0:

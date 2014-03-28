@@ -5,6 +5,18 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+import lar2psm
+from lar2psm import *
+
+import simplexn
+from simplexn import *
+
+import larcc
+from larcc import *
+
+import largrid
+from largrid import *
+
 
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 ROUND_ZERO = 1E-07
@@ -76,11 +88,19 @@ def boolOps(lar1,lar2):
    V1,CV1 = lar1
    V2,CV2 = lar2
    n1,n2 = len(V1),len(V2)
+   
+   # First stage of Boolean algorithm
    V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
-
    CV = Delaunay(array(V)).vertices
    CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)
-   return V,CV_un, CV_int, n1,n2,n12
+   
+   # Second stage of Boolean algorithm
+   B1,B2 = boundaryVertices( V, CV1, CV2 )
+   print "\n B1 =",B1
+   print "\n B2 =",B2
+   ## Extraction of $(d-1)$-star of boundary vertices
+   
+   return V,CV_un, CV_int, n1,n2,n12, B1,B2
 
 def union(lar1,lar2):
    lar = boolOps(lar1,lar2)
@@ -148,4 +168,17 @@ def splitDelaunayComplex(CV,n1,n2,n12):
       if test(cell): cells_intersection.append(cell)
       else: cells_union.append(cell)
    return cells_union,cells_intersection
+
+""" Second stage of Boolean operations """
+def boundaryVertices( V, CV1,CV2 ):
+   FV1 = larSimplexFacets(CV1)
+   FV2 = larSimplexFacets(CV2)
+   BF1 = boundaryCells(CV1,FV1)
+   BF2 = boundaryCells(CV2,FV2)
+   BV1 = list(set([ v for f in BF1 for v in FV1[f] ]))
+   BV2 = list(set([ v for f in BF2 for v in FV2[f] ]))
+   VIEW(STRUCT([ 
+      COLOR(GREEN)(STRUCT(AA(MK)([V[v] for v in BV1]))), 
+      COLOR(MAGENTA)(STRUCT(AA(MK)([V[v] for v in BV2]))) ]))
+   return BV1, BV2
 

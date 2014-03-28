@@ -1,15 +1,10 @@
 """ test program for the boolean module """
 from pyplasm import *
-from pyplasm import *
 from scipy import *
 import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-
-import boolean
-from boolean import *
-
 import lar2psm
 from lar2psm import *
 
@@ -22,9 +17,14 @@ from larcc import *
 import largrid
 from largrid import *
 
+
+import boolean
+from boolean import *
+
 blue = larSimplexGrid([2,6])
 red = larSimplexGrid([5,3])
-V,CV_un, CV_int, n1,n2,n12 = boolOps(red,blue)
+_, CV1, CV2, n12 = vertexSieve(red,blue)
+V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(red,blue)
 CV = Delaunay(array(V)).vertices
 """ Visualization of first Boolean step  """
 if n12==0:
