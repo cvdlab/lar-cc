@@ -1,4 +1,4 @@
-""" test program for the boolean module """
+""" Union of 3D non-structured grids """
 from pyplasm import *
 from scipy import *
 import os,sys
@@ -30,10 +30,13 @@ from lar2psm import *
 import myfont
 from myfont import *
 
-model1 = randomTriangulation(1000,3,'disk')
+model1 = randomTriangulation(100,3,'cuboid')
 V1,CV1 = model1
+V1 = scalePoints(V1, [2,2,2])
+V1 = translatePoints(V1, [-1,-1,-1])
+model1 = V1,CV1 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
-model2 = randomTriangulation(1000,3,'cuboid')
+model2 = randomTriangulation(100,3,'cuboid')
 V2,CV2 = model2
 V2 = scalePoints(V2, [2,2,2])
 model2 = V2,CV2 

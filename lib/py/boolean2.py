@@ -89,11 +89,8 @@ if __name__=="__main__":
 """ High level Boolean Application Programming Interface """
 
 def boolOps(lar1,lar2):
-   V1,CV1 = lar1
-   V2,CV2 = lar2
+   (V1,CV1),(V2,CV2) = lar1,lar2
    n1,n2 = len(V1),len(V2)
-   
-   # First stage of Boolean algorithm
    V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
    CV = Delaunay(array(V)).vertices
    setCV = set([tuple(sorted(cell)) for cell in CV])
@@ -102,6 +99,7 @@ def boolOps(lar1,lar2):
    # Extraction of coboundary of boundary chains
    BSupCells1 = boundarySuperCells( V, CV1 )
    BSupCells2 = boundarySuperCells( V, CV2 )
+   
    VIEW(STRUCT([ 
       COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in BSupCells1]))))), 
       COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in BSupCells2]))))) 
@@ -117,23 +115,23 @@ def boolOps(lar1,lar2):
    invSupCells1 = invariantSuperCells(V,BSupCells1,CV1,setCV)
    invSupCells2 = invariantSuperCells(V,BSupCells2,CV2,setCV)
    
-   pivot1 = set(BSupCells1).difference(invSupCells1)
-   pivot2 = set(BSupCells2).difference(invSupCells2)
+   divisor1 = set(BSupCells1).difference(invSupCells1)
+   divisor2 = set(BSupCells2).difference(invSupCells2)
    VIEW(STRUCT([ 
-      COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in pivot1]))))), 
-      COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in pivot2]))))) 
+      COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in divisor1]))))), 
+      COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in divisor2]))))) 
    ]))
    
    """ Minimal covering chains of divisors """
-   def minimalCovers(V,pivots,CV1,CV,setCV):
-      covers = [selectIncidentChain( V, CV )(v) for cell in pivots for v in CV1[cell] ]
+   def minimalCovers(V,divisors,CV1,CV,setCV):
+      covers = [selectIncidentChain( V, CV )(v) for cell in divisors for v in CV1[cell] ]
       print "\n covers =",covers
       return covers
    
    
    # Covers of divisors computation
-   covers1 = minimalCovers(V,pivot1,CV1,CV,setCV)
-   covers2 = minimalCovers(V,pivot2,CV2,CV,setCV)  
+   covers1 = minimalCovers(V,divisor1,CV1,CV,setCV)
+   covers2 = minimalCovers(V,divisor2,CV2,CV,setCV)   
    VIEW(STRUCT([ 
       EXPLODE(1.2,1.2,1)(MKPOLS(((V,CV)))), 
       COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV[c] for c in CAT(covers1)]))))), 

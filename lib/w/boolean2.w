@@ -59,7 +59,7 @@ Boolean operations are a major addition to every geometric package. Union, inter
 
 In this section we introduce and shortly outline our novel algorithm for Boolean operations with chain of cells from different space decompositions implemented in this LAR-CC software module.
 
-The input objects are denoted in the remainder as $X_1$ and $X_2$, and their finite cell decompositions as $\Lambda_1$ and $\Lambda_1$. Our goal is to compute $X = X_1\, op\, X_2$, where $op \in \{\cup ,\cap , - ,\ominus \}$ or $\complement X$, based on a common decomposition $\Lambda = \Lambda_1\, op\, \Lambda_2$, with $\Lambda$ being a suitably fragmented decomposition of the X space.
+The input objects are denoted in the remainder as $X_1$ and $X_2$, and their finite cell decompositions as $\Lambda^1$ and $\Lambda^1$. Our goal is to compute $X = X_1\, op\, X_2$, where $op \in \{\cup ,\cap , - ,\ominus \}$ or $\complement X$, based on a common decomposition $\Lambda = \Lambda^1\, op\, \Lambda^2$, with $\Lambda$ being a suitably fragmented decomposition of the X space.
 
 Of course, we aim to compute a minimal (in some sense) decomposition, making the best use of the LAR framework, based on CSR representation of sparse binary matrices and standard matrix algebra operations.
 However, in this first implementation of the chain approach to Boolean operations, we are satisfied with a solution using simplicial triangulations of input spaces. Future revisions of our algorithm will be based on more general cellular complexes.
@@ -267,23 +267,23 @@ The total cost of such pre-processing, executed using dictionaries, is $O(n\ln n
 
 
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-\section{Extracting pivot $d$-cells}
+\section{Extracting divisor $d$-cells}
 %<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 It is well-known that, in order to compute any Boolean operation with cell-decomposed arguments, either using a decompositive or a boundary scheme, the intersection of boundaries must be computed~\cite{Paoluzzi:1989:BAO:70248.70249}. In this section we develop the preparatory work for such a task, aiming to compute in the end the coboundary of boundary of each Boolean argument. We call the $d$-cells in such two sets, namely
 \[
-\Delta_1 = (\delta_{d-1}\circ\partial_d)(\Lambda_1)
+\Delta^1 = (\delta_{d-1}\circ\partial_d)(\Lambda^1_d)
 \quad\mbox{and}\quad
-\Delta_2 = (\delta_{d-1}\circ\partial_d)(\Lambda_2),
+\Delta^2 = (\delta_{d-1}\circ\partial_d)(\Lambda^2_d),
 \]
-as the \emph{divisors} of $\Lambda_2$ and $\Lambda_1$, respectively.
+as the \emph{divisors} of $\Lambda^2$ and $\Lambda^1$, respectively.
 
 
 \paragraph{Coboundary of boundary}
 
 The function \texttt{coboundaryOfBoundaryCells} returns the $d$-cells of the coboundary of boundary, providing as input the \texttt{BRC} representation of the $d$-cells and the $(d-1)$-cells. In other words, it computes the set of $d$-cells
 \[
-\Delta = (\delta_{d-1}\circ\partial_d)(\Lambda)
+\Delta = (\delta_{d-1}\circ\partial_d)(\Lambda_d)
 \]
 where $\texttt{cells} := \texttt{BRC}(\Lambda_d)$, and $\texttt{facets} := \texttt{BRC}(\Lambda_{d-1})$.
 
@@ -305,7 +305,7 @@ where $\texttt{cells} := \texttt{BRC}(\Lambda_d)$, and $\texttt{facets} := \text
 
 
 \paragraph{Boundary divisors}
-The actual computation of the two sets of boundary divisors $\Delta_1$ and $\Delta_2$ is performed by the \texttt{boundarySuperCells} function below.
+The actual computation of the two sets of boundary divisors $\Delta^1$ and $\Delta^2$ is performed by the \texttt{boundarySuperCells} function below.
 
 %-------------------------------------------------------------------------------
 @D Compute the boundary divisors of both arguments
@@ -323,8 +323,8 @@ By definition, a \emph{divisor} is a single $d$-cell and, in the present impleme
 %-------------------------------------------------------------------------------
 @D Minimal covering of divisors
 @{""" Minimal covering chains of divisors """
-def minimalCovers(V,pivots,CV1,CV,setCV):
-	covers = [selectIncidentChain( V, CV )(v) for cell in pivots for v in CV1[cell] ]
+def minimalCovers(V,divisors,CV1,CV,setCV):
+	covers = [selectIncidentChain( V, CV )(v) for cell in divisors for v in CV1[cell] ]
 	print "\n covers =",covers
 	return covers
 @}
@@ -336,11 +336,11 @@ def minimalCovers(V,pivots,CV1,CV,setCV):
 %-------------------------------------------------------------------------------
 \subsection{Boundary computation}
 %-------------------------------------------------------------------------------
-The matrix of the boundary operators of the boolean arguments $\Lambda_1$ and $\Lambda_2$ are computed here as supported by the novel vertex set $V := V_1 \cup V_2$. Both the characteristic matrices $M_d$ and $M_{d-1}$ are needed to compute a $[\partial_d]$ matrix (see Reference~\cite{Dicarlo:2014:TNL:2543138.2543294}). Hence we start this section by computing the new basis of $(d-1)$-faces $\texttt{FV} := \texttt{CSR}(M_{d-1})$, and then compute the two subsets $B_1,B_2 \subset V$ of boundary vertices (upon the joint Delaunay complex \texttt{V}), where
+The matrices of the boundary operators of the boolean arguments $\Lambda^1$ and $\Lambda^2$ are computed here as supported by the novel vertex set $V := V_1 \cup V_2$. Both the characteristic matrices $M_d$ and $M_{d-1}$ are needed to compute a $[\partial_d]$ matrix (see Reference~\cite{Dicarlo:2014:TNL:2543138.2543294}). Hence we start this section by computing the new basis of $(d-1)$-faces $\texttt{FV} := \texttt{CSR}(M_{d-1})$, and then compute the two subsets $B^1,B^2 \subset V$ of boundary vertices (upon the joint Delaunay complex \texttt{V}), where
 \[
-B_1 = [\mathcal{VF}^1]\, [\partial_d^1]\,\mathbf{1},
+B^1 = [\mathcal{VF}^1]\, [\partial_d^1]\,\mathbf{1},
 \quad\mbox{and}\quad
-B_2 = [\mathcal{VF}^2]\, [\partial_d^2]\,\mathbf{1}.
+B^2 = [\mathcal{VF}^2]\, [\partial_d^2]\,\mathbf{1}.
 \]
 where $[\mathcal{VF}^1]^\top = \texttt{CSR(FV1)}$ and $[\mathcal{VF}^2]^\top = \texttt{CSR(FV2)}$,
 and where \texttt{FV1} and \texttt{FV2} are the relations \emph{face-vertices} computed from the relation \texttt{CV} supported by the \emph{joint} Delaunay vertex set. 
@@ -390,35 +390,33 @@ The \texttt{boolOps} function is the main procedure of the Boolean algorithm.
 Its steps give an outline of the computations to be performed in sequence. The input LAR representations are first decomposed in their geometric and topological components, and embedded in the same space, so obtaining a global renumbering as \texttt{V}, \texttt{CV1}, \texttt{CV2}. Then the global Delaunay's triangulation \texttt{CV} and its set representation \texttt{setCV} are computed. In due order, the following steps are:  
 \begin{enumerate}
 \item 
-the extraction of $\gamma_1,\gamma_2\subseteq\Lambda_d$, the coboundary of the boundaries of the Boolean arguments:
+the extraction of $\gamma^1,\gamma^2\subseteq\Lambda_d$, the coboundary of the boundaries of the Boolean arguments:
 \[
-\gamma_1 = (\delta_{d-1}\circ\partial_d) (\Lambda_d^1), \qquad
-\gamma_2 = (\delta_{d-1}\circ\partial_d) (\Lambda_d^2);
+\gamma^1 = (\delta_{d-1}\circ\partial_d) (\Lambda_d^1), \qquad
+\gamma^2 = (\delta_{d-1}\circ\partial_d) (\Lambda_d^2);
 \]  
 \item 
 the selection of the two invariant sub-chains, i.e.~of the subsets of $\Lambda_d^1, \Lambda_d^2$ that were not changed by the re-triangulation, and hence continue to contain some facets of the original boundaries:
 \[
-\gamma^{'}_1 \subseteq \gamma_1, \qquad
-\gamma^{'}_2 \subseteq \gamma_2
+\gamma^{1'} \subseteq \gamma^1, \qquad
+\gamma^{2'} \subseteq \gamma^2
 \]
 \end{enumerate}
 
+\paragraph{The top-level algorithm}
 
 %-------------------------------------------------------------------------------
 @D Boolean subdivided complex
 @{""" High level Boolean Application Programming Interface """
 @< Minimal covering chains of divisors @>
 def boolOps(lar1,lar2):
-	V1,CV1 = lar1
-	V2,CV2 = lar2
+	(V1,CV1),(V2,CV2) = lar1,lar2
 	n1,n2 = len(V1),len(V2)
-	
-	# First stage of Boolean algorithm
 	V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
 	CV = Delaunay(array(V)).vertices
 	setCV = set([tuple(sorted(cell)) for cell in CV])
 	@< Extraction of coboundary of boundary chains @>
-	@< Computation invariant supercells @>
+	@< Computation of invariant supercells @>
 	@< Invariant subsets of supercells @>
 	@< Minimal covering of divisors @>
 	@< Covers of divisors computation @>
@@ -427,6 +425,9 @@ def boolOps(lar1,lar2):
 %-------------------------------------------------------------------------------
 
 \paragraph{Extraction of coboundary of boundary chains}
+
+After the embedding of the two topologies in the same coordinate space and the Delaunay's re-triangulation, the two $\gamma^1,\gamma^2$ $d$-chains are computed by the following macro, and stored in the \texttt{BSupCells1} and \texttt{BSupCells2} variables.
+
 %-------------------------------------------------------------------------------
 @D Extraction of coboundary of boundary chains
 @{# Second stage of Boolean algorithm
@@ -434,16 +435,20 @@ B1,B2 = boundaryVertices( V, CV1, CV2 )
 # Extraction of coboundary of boundary chains
 BSupCells1 = boundarySuperCells( V, CV1 )
 BSupCells2 = boundarySuperCells( V, CV2 )
+
 VIEW(STRUCT([ 
 	COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in BSupCells1]))))), 
 	COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in BSupCells2]))))) 
 ])) 
 @}
 %-------------------------------------------------------------------------------
+
 \paragraph{Invariant subsets of supercells}
 
+Then the sub-chains $\gamma^{1'},\gamma^{2'}$ (those not changed by the Boolean merging) are computed by the \texttt{invariantSuperCells} function, and stored in \texttt{invSupCells1} and \texttt{invSupCells2} variables, in order to compute, by chain difference, the \texttt{divisor1} and \texttt{divisor2} $d$-chains.
+
 %-------------------------------------------------------------------------------
-@D Computation invariant supercells
+@D Computation of invariant supercells
 @{def invariantSuperCells(V,BSupCells1,CV1,setCV):
 	out = []
 	for cell in BSupCells1:
@@ -458,21 +463,21 @@ VIEW(STRUCT([
 invSupCells1 = invariantSuperCells(V,BSupCells1,CV1,setCV)
 invSupCells2 = invariantSuperCells(V,BSupCells2,CV2,setCV)
 
-pivot1 = set(BSupCells1).difference(invSupCells1)
-pivot2 = set(BSupCells2).difference(invSupCells2)
+divisor1 = set(BSupCells1).difference(invSupCells1)
+divisor2 = set(BSupCells2).difference(invSupCells2)
 VIEW(STRUCT([ 
-	COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in pivot1]))))), 
-	COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in pivot2]))))) 
+	COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in divisor1]))))), 
+	COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in divisor2]))))) 
 ]))
 @}
 %-------------------------------------------------------------------------------
-paragraph{Covers of divisors computation}
+\paragraph{Covers of divisors computation}
 %-------------------------------------------------------------------------------
 @D Covers of divisors computation
 @{
 # Covers of divisors computation
-covers1 = minimalCovers(V,pivot1,CV1,CV,setCV)
-covers2 = minimalCovers(V,pivot2,CV2,CV,setCV)	
+covers1 = minimalCovers(V,divisor1,CV1,CV,setCV)
+covers2 = minimalCovers(V,divisor2,CV2,CV,setCV)	
 VIEW(STRUCT([ 
 	EXPLODE(1.2,1.2,1)(MKPOLS(((V,CV)))), 
 	COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV[c] for c in CAT(covers1)]))))), 
@@ -483,7 +488,7 @@ VIEW(STRUCT([
 
 
 %-------------------------------------------------------------------------------
-\subsection{Matching cells in $\Sigma_\cap$ with spanning chains in $\Lambda_1$, $\Lambda_2$}
+\subsection{Matching cells in $\Sigma_\cap$ with spanning chains in $\Lambda^1$, $\Lambda^2$}
 %-------------------------------------------------------------------------------
 
 The next step of the \emph{Boolean Chains} algorithm retrieves and compare the chains of $d$-cells incident on $\texttt{V}(\partial_d(\Lambda^1)), \texttt{V}(\partial_d(\Lambda^2))$ and on $\texttt{V}(\partial_d(\Sigma^\cap))$. A filtering step working in $O(n)$ is performed in regard to this.
@@ -623,11 +628,11 @@ if __name__=="__main__":
 
 Some unit tests of the first Boolean stage are discussed in the following. They are mainly aimed to check a correct execution of the filtering of common vertices with renumbering of the union set of vertices, and to the consequential redefinition of the $d$-cell basis.
 
-\paragraph{Union of non-structured grids}
+\paragraph{Union of 2D non-structured grids}
 
 %------------------------------------------------------------------
 @o test/py/boolean2/test01.py
-@{""" test program for the boolean module """
+@{""" Union of 2D non-structured grids """
 @< Initial import of modules @>
 @< Import the module @(boolean2@) @>
 @< Import the module @(lar2psm@) @>
@@ -640,6 +645,31 @@ V2,CV2 = model2
 V2 = scalePoints(V2, [2,2])
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
+V, n1,n2,n12, B1,B2 = boolOps(model1,model2)
+@< Visualization of first Boolean step @>
+@}
+%------------------------------------------------------------------
+
+\paragraph{Union of 3D non-structured grids}
+
+%------------------------------------------------------------------
+@o test/py/boolean2/test05.py
+@{""" Union of 3D non-structured grids """
+@< Initial import of modules @>
+@< Import the module @(boolean2@) @>
+@< Import the module @(lar2psm@) @>
+@< Import the module @(myfont@) @>
+model1 = randomTriangulation(100,3,'cuboid')
+V1,CV1 = model1
+V1 = scalePoints(V1, [2,2,2])
+V1 = translatePoints(V1, [-1,-1,-1])
+model1 = V1,CV1 
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
+model2 = randomTriangulation(100,3,'cuboid')
+V2,CV2 = model2
+V2 = scalePoints(V2, [2,2,2])
+model2 = V2,CV2 
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
 V, n1,n2,n12, B1,B2 = boolOps(model1,model2)
 @< Visualization of first Boolean step @>
 @}

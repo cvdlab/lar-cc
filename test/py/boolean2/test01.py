@@ -1,4 +1,4 @@
-""" test program for the boolean module """
+""" Union of 2D non-structured grids """
 from pyplasm import *
 from scipy import *
 import os,sys
