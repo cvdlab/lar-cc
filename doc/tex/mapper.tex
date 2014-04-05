@@ -1,0 +1,378 @@
+% -------------------------------------------------------------------------
+% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
+% -------------------------------------------------------------------------
+\providecommand{\NWtxtMacroDefBy}{Macro defined by}
+\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
+\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
+\providecommand{\NWtxtDefBy}{Defined by}
+\providecommand{\NWtxtRefIn}{Referenced in}
+\providecommand{\NWtxtNoRef}{Not referenced}
+\providecommand{\NWtxtFileDefBy}{File defined by}
+\providecommand{\NWsep}{${\diamond}$}
+\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
+\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
+  \raisebox{\baselineskip}[1.5ex][0ex]{%
+    \mbox{%
+      \hypertarget{#1}{%
+        \raisebox{-1\baselineskip}[0ex][0ex]{%
+          \mbox{#2}%
+}}}}}
+% -------------------------------------------------------------------------
+
+\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}		%...ora4paperora5paperor...
+%\geometry{landscape}		%Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\usepackage{amssymb}
+\usepackage{hyperref}
+
+%----macros begin---------------------------------------------------------------
+\usepackage{color}
+\usepackage{amsthm}
+
+\def\conv{\mbox{\textrm{conv}\,}}
+\def\aff{\mbox{\textrm{aff}\,}}
+\def\E{\mathbb{E}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\tex{\TeX}
+\def\latex{\LaTeX}
+\def\v#1{{\bf #1}}
+\def\p#1{{\bf #1}}
+\def\T#1{{\bf #1}}
+
+\def\vet#1{{\left(\begin{array}{cccccccccccccccccccc}#1\end{array}\right)}}
+\def\mat#1{{\left(\begin{array}{cccccccccccccccccccc}#1\end{array}\right)}}
+
+\def\lin{\mbox{\rm lin}\,}
+\def\aff{\mbox{\rm aff}\,}
+\def\pos{\mbox{\rm pos}\,}
+\def\cone{\mbox{\rm cone}\,}
+\def\conv{\mbox{\rm conv}\,}
+\newcommand{\homog}[0]{\mbox{\rm homog}\,}
+\newcommand{\relint}[0]{\mbox{\rm relint}\,}
+
+%----macros end-----------------------------------------------------------------
+
+\title{Domain mapping with LAR
+\footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
+}
+\author{Alberto Paoluzzi}
+%\date{}							%Activatetodisplayagivendateornodate
+
+\begin{document}
+\maketitle
+\nonstopmode
+
+\begin{abstract}
+In this module a first implementation (no optimisations) is done of the \texttt{LARMAP} operator, reproducing the behaviour of the plasm \texttt{MAP} primitive, but with better handling of the topology, including the sewing of decomposed (simplicial domains) about their possible sewing.
+\end{abstract}
+
+\tableofcontents
+
+%===============================================================================
+\section{Domain decomposition}
+%===============================================================================
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small
+\begin{minipage}{\linewidth} \label{scrap1}
+\protect\makebox[0ex][r]{\NWtarget{nuweb1}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize 1}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larDomain(shape):@\\
+\mbox{}\verb@   V,CV = larSimplexGrid(shape)@\\
+\mbox{}\verb@   V = scalePoints(V, [1./d for d in shape])@\\
+\mbox{}\verb@   return V,CV@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@if __name__=="__main__":@\\
+\mbox{}\verb@   V,EV = larDomain([5])@\\
+\mbox{}\verb@   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@   V,FV = larDomain([5,3])@\\
+\mbox{}\verb@   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@   V,CV = larDomain([5,3,1])@\\
+\mbox{}\verb@   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb4a}{4a}.
+\end{list}
+\end{minipage}\\[4ex]
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%===============================================================================
+\section{Embedding via coordinate functions}
+%===============================================================================
+%===============================================================================
+\section{Primitive objets}
+%===============================================================================
+%-------------------------------------------------------------------------------
+\subsection{1D primitives}
+%-------------------------------------------------------------------------------
+
+\paragraph{Curved line}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap2}
+\protect\makebox[0ex][r]{\NWtarget{nuweb2a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 2a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Circle}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap3}
+\protect\makebox[0ex][r]{\NWtarget{nuweb2b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 2b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{2D primitives}
+%-------------------------------------------------------------------------------
+
+\paragraph{Disk}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap4}
+\protect\makebox[0ex][r]{\NWtarget{nuweb2c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 2c}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Sphere surface}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap5}
+\protect\makebox[0ex][r]{\NWtarget{nuweb2d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 2d}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Cylinder surface}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap6}
+\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Torus surface}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap7}
+\protect\makebox[0ex][r]{\NWtarget{nuweb3b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{3D primitives}
+%-------------------------------------------------------------------------------
+
+\paragraph{Ball}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap8}
+\protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Solid cylinder}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap9}
+\protect\makebox[0ex][r]{\NWtarget{nuweb3d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3d}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Solid torus}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap10}
+\protect\makebox[0ex][r]{\NWtarget{nuweb3e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3e}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroDefBy\ \NWlink{nuweb2a}{2a}\NWlink{nuweb2b}{b}\NWlink{nuweb2c}{c}\NWlink{nuweb2d}{d}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}.
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%===============================================================================
+\section{Exporting the library}
+%===============================================================================
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap11}
+\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/mapper.py"@\nobreak\ {\footnotesize 4a }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Mapping functions and primitive objects """@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb4b}{4b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb1}{1}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+%===============================================================================
+\section{Examples}
+%===============================================================================
+%===============================================================================
+\section{Tests}
+%===============================================================================
+
+%===============================================================================
+\appendix
+\section{Utility functions}
+%===============================================================================
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap12}
+\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@from pyplasm import *@\\
+\mbox{}\verb@from scipy import *@\\
+\mbox{}\verb@import os,sys@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb4c}{4c}\label{scrap13}
+ }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb4h}{4h}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb4d}{4d}\label{scrap14}
+ }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb4h}{4h}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb4e}{4e}\label{scrap15}
+ }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb4h}{4h}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb4f}{4f}\label{scrap16}
+ }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb4h}{4h}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb4g}{4g}\label{scrap17}
+ }\mbox{}\verb@boolean2@ ) {\footnotesize \NWlink{nuweb4h}{4h}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb4a}{4a}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap18}
+\protect\makebox[0ex][r]{\NWtarget{nuweb4h}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 4h}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@import @@1\verb@@\\
+\mbox{}\verb@from @@1\verb@ import *@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb4b}{4b}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
+\bibliographystyle{amsalpha}
+\bibliography{mapper}
+
+\end{document}
