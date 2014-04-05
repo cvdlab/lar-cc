@@ -240,7 +240,7 @@ The \texttt{vertexSieve} function will return the new reordered vertex set $V = 
 In this example we give two very simple LAR representations of 2D cell complexes, with some coincident vertices, and go ahead to re-index the vertices, according to the method implemented by the function \texttt{vertexSieve}.
 
 %-------------------------------------------------------------------------------
-@o test/py/boolean/test02.py
+@o test/py/boolean1/test02.py
 @{@< Initial import of modules @>
 @< Import the module @(boolean@) @>
 V1 = [[1,1],[3,3],[3,1],[2,3],[2,1],[1,3]]
@@ -272,7 +272,7 @@ and that
 \]
 where $C_{12}$ is the subset of vertices with duplicated instances.
 %-------------------------------------------------------------------------------
-@d Output from \texttt{test/py/boolean/test02.py}
+@d Output from \texttt{test/py/boolean1/test02.py}
 @{V   = [[3.0,1.0],[2.0,1.0],[3.0,3.0],[1.0,1.0],[1.0,3.0],[2.0,3.0],
 		 [3.0,2.0],[2.0,0.0],[2.0,2.0],[0.0,0.0],[3.0,0.0],[0.0,1.0]]
 CV1 = [[3,5,1,4],[2,0,5,1]]
@@ -533,7 +533,7 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \paragraph{Union of non-structured grids}
 
 %------------------------------------------------------------------
-@o test/py/boolean/test01.py
+@o test/py/boolean1/test01.py
 @{""" test program for the boolean module """
 @< Initial import of modules @>
 @< Import the module @(boolean@) @>
@@ -554,7 +554,7 @@ model = V,CV_int
 \paragraph{Union of structured grids}
 
 %------------------------------------------------------------------
-@o test/py/boolean/test04.py
+@o test/py/boolean1/test04.py
 @{""" test program for the boolean module """
 @< Initial import of modules @>
 @< Import the module @(boolean@) @>
@@ -572,7 +572,7 @@ CV = Delaunay(array(V)).vertices
 \paragraph{Boolean operations with general LAR cells}
 
 %------------------------------------------------------------------
-@o test/py/boolean/test03.py
+@o test/py/boolean1/test03.py
 @{""" test example with general LAR cells for the boolean module """
 @< Initial import of modules @>
 @< Import the module @(boolean@) @>
@@ -691,6 +691,6 @@ def vcode (vect):
 
 
 \bibliographystyle{amsalpha}
-\bibliography{boolean}
+\bibliography{boolean1}
 
 \end{document}

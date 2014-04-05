@@ -123,13 +123,13 @@ def totalChain(cells):
    return csrCreate([[0] for cell in cells])
 
 def boundaryCells(cells,facets):
-   csrBoundaryMat = boundary(cells,facets)
-   csrChain = totalChain(cells)
-   csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
-   for k,value in enumerate(csrBoundaryChain.data):
-      if value % 2 == 0: csrBoundaryChain.data[k] = 0
-   boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-   return boundaryCells
+    csrBoundaryMat = boundary(cells,facets)
+    csrChain = totalChain(cells)
+    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
+    for k,value in enumerate(csrBoundaryChain.data):
+        if value % 2 == 0: csrBoundaryChain.data[k] = 0
+    boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+    return boundaryCells
 
 def signedBoundary (V,CV,FV):
    # compute the set of pairs of indices to [boundary face,incident coface]

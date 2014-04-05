@@ -21,8 +21,10 @@ from largrid import *
 import boolean
 from boolean import *
 
-blue = larSimplexGrid([2,6])
-red = larSimplexGrid([5,3])
+blue = larSimplexGrid([3,6])
+red = larSimplexGrid([7,4])
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(blue) ))
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(red) ))
 _, CV1, CV2, n12 = vertexSieve(red,blue)
 V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(red,blue)
 CV = Delaunay(array(V)).vertices

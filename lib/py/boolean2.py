@@ -17,6 +17,9 @@ from larcc import *
 import largrid
 from largrid import *
 
+import myfont
+from myfont import *
+
 
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 ROUND_ZERO = 1E-07
@@ -55,7 +58,7 @@ def rotatePoints (points, angle):
 def scalePoints (points, svect):
    return [AA(PROD)(TRANS([p,svect])) for p in points]
 
-def randomPointsInUnitCircle(n=100,d=2, r=1):
+def randomPointsInUnitCircle(n=200,d=2, r=1):
    points = random.random((n,d)) * ([2*math.pi]+[1]*(d-1))
    return [[SQRT(p[1])*COS(p[0]),SQRT(p[1])*SIN(p[0])] for p in points]
    ## TODO: correct for $d$-sphere
@@ -63,14 +66,14 @@ def randomPointsInUnitCircle(n=100,d=2, r=1):
 if __name__=="__main__":
    VIEW(STRUCT(AA(MK)(randomPointsInUnitCircle()))) 
 
-def randomPointsInUnitCuboid(n=100,d=2):
+def randomPointsInUnitCuboid(n=200,d=2):
    return random.random((n,d)).tolist()
 
 if __name__=="__main__":
    VIEW(STRUCT(AA(MK)(randomPointsInUnitCuboid()))) 
 
 from scipy.spatial import Delaunay
-def randomTriangulation(n=100,d=2,out='disk'):
+def randomTriangulation(n=200,d=2,out='disk'):
    if out == 'disk':
       V = randomPointsInUnitCircle(n,d)
    elif out == 'cuboid':
@@ -84,6 +87,7 @@ if __name__=="__main__":
    VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model)))
 
 """ High level Boolean Application Programming Interface """
+
 def boolOps(lar1,lar2):
    V1,CV1 = lar1
    V2,CV2 = lar2
@@ -92,18 +96,50 @@ def boolOps(lar1,lar2):
    # First stage of Boolean algorithm
    V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
    CV = Delaunay(array(V)).vertices
-   # CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)
-   
+   setCV = set([tuple(sorted(cell)) for cell in CV])
    # Second stage of Boolean algorithm
    B1,B2 = boundaryVertices( V, CV1, CV2 )
-   # Extraction of $(d)$-star of boundary vertices
+   # Extraction of coboundary of boundary chains
    BSupCells1 = boundarySuperCells( V, CV1 )
    BSupCells2 = boundarySuperCells( V, CV2 )
    VIEW(STRUCT([ 
-      COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV1[c] for c in BSupCells1]))))), 
-      COLOR(MAGENTA)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV2[c] for c in BSupCells2]))))) ]))
+      COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in BSupCells1]))))), 
+      COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in BSupCells2]))))) 
+   ])) 
    
-   # return V,CV_un, CV_int, n1,n2,n12, B1,B2
+   def invariantSuperCells(V,BSupCells1,CV1,setCV):
+      out = []
+      for cell in BSupCells1:
+         if tuple(CV1[cell]) in setCV: out += [cell]
+      return out
+   
+   # Invariant subsets of supercells
+   invSupCells1 = invariantSuperCells(V,BSupCells1,CV1,setCV)
+   invSupCells2 = invariantSuperCells(V,BSupCells2,CV2,setCV)
+   
+   pivot1 = set(BSupCells1).difference(invSupCells1)
+   pivot2 = set(BSupCells2).difference(invSupCells2)
+   VIEW(STRUCT([ 
+      COLOR(GREEN)(STRUCT(MKPOLS(((V,[CV1[c] for c in pivot1]))))), 
+      COLOR(MAGENTA)(STRUCT(MKPOLS(((V,[CV2[c] for c in pivot2]))))) 
+   ]))
+   
+   """ Minimal covering chains of divisors """
+   def minimalCovers(V,pivots,CV1,CV,setCV):
+      covers = [selectIncidentChain( V, CV )(v) for cell in pivots for v in CV1[cell] ]
+      print "\n covers =",covers
+      return covers
+   
+   
+   # Covers of divisors computation
+   covers1 = minimalCovers(V,pivot1,CV1,CV,setCV)
+   covers2 = minimalCovers(V,pivot2,CV2,CV,setCV)  
+   VIEW(STRUCT([ 
+      EXPLODE(1.2,1.2,1)(MKPOLS(((V,CV)))), 
+      COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV[c] for c in CAT(covers1)]))))), 
+      COLOR(MAGENTA)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV[c] for c in CAT(covers2)])))))
+       ]))
+   
    return V,n1,n2,n12, B1,B2
 
 def union(lar1,lar2):
@@ -157,9 +193,8 @@ def vertexSieve(model1, model2):
 
    V = [eval(p[0]) for p in case1] + [eval(p[0]) for p in case12] + [eval(
             p[0]) for p in case2]
-   CV1 = [[invertedindex[v] for v in cell] for cell in CV1]
-   CV2 = [[invertedindex[v] for v in cell] for cell in CV2]
-   
+   CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]
+   CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]
    return V, CV1, CV2, len(case12)
 
 
@@ -178,17 +213,10 @@ def boundaryVertices( V, CV1,CV2 ):
    return BV1, BV2
 
 """ Select the $d$-chain incident on a $0$-chain """
-def selectIncidentChain( V, cells, vertices ):
-   csrMatrix = scipy.sparse.csr_matrix((len(cells),len(V)))
-   for k,cell in enumerate(cells):
-      for v in cell:
-         csrMatrix[k,v] = 1
-   csrChain = scipy.sparse.csr_matrix((len(V),1))
-   for v in vertices: csrChain[v,0] = 1
-   cooOutChain = matrixProduct(csrMatrix, csrChain).tocoo()
-   outChain = [cooOutChain.row[h]
-      for h,val in enumerate(cooOutChain.data) if int(val) > 0]
-   return outChain 
+def selectIncidentChain( V, CV ):
+   def selectIncidentChain0( v ):
+      return [k for k in range(len(CV)) if v in CV[k] ]
+   return selectIncidentChain0
 
 def coboundaryOfBoundaryCells(cells,facets):
     csrBoundaryMat = boundary(cells,facets)
@@ -207,4 +235,16 @@ def boundarySuperCells( V, CV ):
    FV = larSimplexFacets(CV)
    BSupCells = coboundaryOfBoundaryCells(CV,FV)
    return BSupCells
+
+def cellNames(model,cells, color=BLACK):
+   V,CV= model
+   print "\n CV =",CV
+   print "\n cells =",cells
+   texts = []
+   for k,cell in enumerate(cells):
+      centroid = CCOMB([V[v] for v in cell])
+      print "centroid =",centroid
+      d = len(centroid)
+      texts += [T(range(1,d+1))(centroid)(S(range(1,d+1))([0.005 for k in range(d)])(TEXT(str(k))))]
+   return AA(COLOR(color))(texts)
 

@@ -92,19 +92,21 @@ def boolOps(lar1,lar2):
    # First stage of Boolean algorithm
    V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
    CV = Delaunay(array(V)).vertices
-   # CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)
+   CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)
    
    # Second stage of Boolean algorithm
    B1,B2 = boundaryVertices( V, CV1, CV2 )
    # Extraction of $(d)$-star of boundary vertices
-   BSupCells1 = boundarySuperCells( V, CV1 )
-   BSupCells2 = boundarySuperCells( V, CV2 )
+   cells1 = selectIncidentChain( V, CV1, B1 )
+   cells2 = selectIncidentChain( V, CV2, B2 )
+   cells = selectIncidentChain( V, CV_int, B1+B2 )
    VIEW(STRUCT([ 
-      COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV1[c] for c in BSupCells1]))))), 
-      COLOR(MAGENTA)(EXPLODE(1.2,1.2,1)(MKPOLS(((V,[CV2[c] for c in BSupCells2]))))) ]))
+      COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((V,[CV1[k] for k in cells1])))), 
+      COLOR(MAGENTA)(EXPLODE(1.2,1.2,1)(MKPOLS((V,[CV2[k] for k in cells2])))),
+      COLOR(WHITE)(EXPLODE(1.2,1.2,1)(MKPOLS((V,[CV_int[k] for k in cells])))) 
+      ]))
    
-   # return V,CV_un, CV_int, n1,n2,n12, B1,B2
-   return V,n1,n2,n12, B1,B2
+   return V,CV_un, CV_int, n1,n2,n12, B1,B2
 
 def union(lar1,lar2):
    lar = boolOps(lar1,lar2)
@@ -164,6 +166,15 @@ def vertexSieve(model1, model2):
 
 
 
+def splitDelaunayComplex(CV,n1,n2,n12):
+   def test(cell):
+      return any([v<n1 for v in cell]) and any([v>=(n1-n12) for v in cell])
+   cells_intersection, cells_union = [],[]
+   for cell in CV: 
+      if test(cell): cells_intersection.append(cell)
+      else: cells_union.append(cell)
+   return cells_union,cells_intersection
+
 """ Second stage of Boolean operations """
 def boundaryVertices( V, CV1,CV2 ):
    FV1 = larSimplexFacets(CV1)
@@ -189,22 +200,4 @@ def selectIncidentChain( V, cells, vertices ):
    outChain = [cooOutChain.row[h]
       for h,val in enumerate(cooOutChain.data) if int(val) > 0]
    return outChain 
-
-def coboundaryOfBoundaryCells(cells,facets):
-    csrBoundaryMat = boundary(cells,facets)
-    csrChain = totalChain(cells)
-    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
-    boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist())
-                               if val == 1]
-    csrCoboundaryBoundaryChain = matrixProduct(csrBoundaryMat.T, csrBoundaryChain)
-    coboundaryBoundaryCells = [k for k in csrCoboundaryBoundaryChain.indices.tolist()]
-    return coboundaryBoundaryCells
-
-""" Second stage of Boolean operations """
-def boundarySuperCells( V, CV ):
-   FV = larSimplexFacets(CV)
-   BSupCells = coboundaryOfBoundaryCells(CV,FV)
-   return BSupCells
 

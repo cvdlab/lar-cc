@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = boolean
+NAME = boolean2
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
