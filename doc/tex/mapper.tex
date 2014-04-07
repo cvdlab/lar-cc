@@ -101,7 +101,7 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb4c}{4c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -111,6 +111,7 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \section{Embedding via coordinate functions}
 %===============================================================================
 
+\subsection{Mapping domain vertices}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap2}
 \protect\makebox[0ex][r]{\NWtarget{nuweb2a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Primitive mapping function\nobreak\ {\footnotesize 2a}$\,\rangle\equiv$
@@ -127,10 +128,42 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb4c}{4c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
+
+\subsection{Identify close or coincident points}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap3}
+\protect\makebox[0ex][r]{\NWtarget{nuweb2b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize 2b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def checkModel(model):@\\
+\mbox{}\verb@   V,CV = model; n = len(V)@\\
+\mbox{}\verb@   vertDict = defaultdict(list)@\\
+\mbox{}\verb@   for k,v in enumerate(V): vertDict[vcode(v)].append(k) @\\
+\mbox{}\verb@   verts = (vertDict.values())@\\
+\mbox{}\verb@   invertedindex = [None]*n@\\
+\mbox{}\verb@   for k,value in enumerate(verts):@\\
+\mbox{}\verb@      print "\n len(value) =",len(value)@\\
+\mbox{}\verb@      for i in value:@\\
+\mbox{}\verb@         invertedindex[i]=value[0]  @\\
+\mbox{}\verb@   CV = [[invertedindex[v] for v in cell] for cell in CV]@\\
+\mbox{}\verb@   # filter out degenerate cells@\\
+\mbox{}\verb@   CV = [list(set(cell)) for cell in CV if len(set(cell))==len(cell)]@\\
+\mbox{}\verb@   return V, CV@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
 
 %===============================================================================
 \section{Primitive objets}
@@ -141,8 +174,8 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 
 \paragraph{Curved line}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap3}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 2b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap4}
+\protect\makebox[0ex][r]{\NWtarget{nuweb2c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 2c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -152,7 +185,6 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
 \item {\NWtxtMacroNoRef}.
 \end{list}
 \end{flushleft}
@@ -160,8 +192,8 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 
 \paragraph{Circle}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap4}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Circumference of unit radius\nobreak\ {\footnotesize 2c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap5}
+\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Circle centered in the origin\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larCircle(radius=1.):@\\
@@ -173,13 +205,12 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \mbox{}\verb@      mapping = [x,y]@\\
 \mbox{}\verb@      return larMap(mapping)(domain)@\\
 \mbox{}\verb@   return larCircle0@\\
-\mbox{}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb4c}{4c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -188,77 +219,177 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 %-------------------------------------------------------------------------------
 
 \paragraph{Disk}
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap5}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
-\item {\NWtxtMacroNoRef}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
-
-\paragraph{Sphere surface}
-%-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap6}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb3b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Disk centered in the origin\nobreak\ {\footnotesize 3b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
+\mbox{}\verb@def larDisk(radius=1.):@\\
+\mbox{}\verb@   def larDisk0(shape=[36,1]):@\\
+\mbox{}\verb@      domain = larIntervals(shape)([2*PI,radius])@\\
+\mbox{}\verb@      V,CV = domain@\\
+\mbox{}\verb@      x = lambda V : [p[1]*COS(p[0]) for p in V]@\\
+\mbox{}\verb@      y = lambda V : [p[1]*SIN(p[0]) for p in V]@\\
+\mbox{}\verb@      mapping = [x,y]@\\
+\mbox{}\verb@      return larMap(mapping)(domain)@\\
+\mbox{}\verb@   return larDisk0@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
-\item {\NWtxtMacroNoRef}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
+\paragraph{Ring}
+-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap7}
+\protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Ring centered in the origin\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larRing(params):@\\
+\mbox{}\verb@   r1,r2 = params@\\
+\mbox{}\verb@   def larDisk0(shape=[36,1]):@\\
+\mbox{}\verb@      V,CV = larIntervals(shape)([2*PI,r2-r1])@\\
+\mbox{}\verb@      V = translatePoints(V,[0,r1])@\\
+\mbox{}\verb@      domain = V,CV@\\
+\mbox{}\verb@      VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,CV))))@\\
+\mbox{}\verb@      x = lambda V : [p[1] * COS(p[0]) for p in V]@\\
+\mbox{}\verb@      y = lambda V : [p[1] * SIN(p[0]) for p in V]@\\
+\mbox{}\verb@      mapping = [x,y]@\\
+\mbox{}\verb@      return larMap(mapping)(domain)@\\
+\mbox{}\verb@   return larDisk0@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
 \paragraph{Cylinder surface}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap7}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap8}
+\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cylinder surface with $z$ axis\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@@\\
+\mbox{}\verb@from scipy.linalg import det@\\
+\mbox{}\verb@"""@\\
+\mbox{}\verb@def makeOriented(model):@\\
+\mbox{}\verb@   V,CV = model@\\
+\mbox{}\verb@   out = []@\\
+\mbox{}\verb@   for cell in CV: @\\
+\mbox{}\verb@      mat = scipy.array([V[v]+[1] for v in cell]+[[0,0,0,1]])@\\
+\mbox{}\verb@      if det(mat) < 0.0:@\\
+\mbox{}\verb@         out.append(cell)@\\
+\mbox{}\verb@      else:@\\
+\mbox{}\verb@         out.append([cell[1]]+[cell[0]]+cell[2:])@\\
+\mbox{}\verb@      print "\n det(mat) =",det(mat)@\\
+\mbox{}\verb@   return V,out@\\
+\mbox{}\verb@"""@\\
+\mbox{}\verb@def larCylinder(params):@\\
+\mbox{}\verb@   radius,height= params@\\
+\mbox{}\verb@   def larCylinder0(shape=[36,1]):@\\
+\mbox{}\verb@      domain = larIntervals(shape)([2*PI,1])@\\
+\mbox{}\verb@      V,CV = domain@\\
+\mbox{}\verb@      x = lambda V : [radius*COS(p[0]) for p in V]@\\
+\mbox{}\verb@      y = lambda V : [radius*SIN(p[0]) for p in V]@\\
+\mbox{}\verb@      z = lambda V : [height*p[1] for p in V]@\\
+\mbox{}\verb@      mapping = [x,y,z]@\\
+\mbox{}\verb@      model = larMap(mapping)(domain)@\\
+\mbox{}\verb@      # model = makeOriented(model)@\\
+\mbox{}\verb@      return model@\\
+\mbox{}\verb@   return larCylinder0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
-\item {\NWtxtMacroNoRef}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
-
-\paragraph{Torus surface}
+\paragraph{Spherical surface of given radius}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap8}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3d}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap9}
+\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Spherical surface of given radius\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@@\\
+\mbox{}\verb@def larSphere(radius=1):@\\
+\mbox{}\verb@   def larSphere0(shape=[18,36]):@\\
+\mbox{}\verb@      V,CV = larIntervals(shape)([PI,2*PI])@\\
+\mbox{}\verb@      V = translatePoints(V,[-PI/2,-PI])@\\
+\mbox{}\verb@      domain = V,CV@\\
+\mbox{}\verb@      x = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]@\\
+\mbox{}\verb@      y = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]@\\
+\mbox{}\verb@      z = lambda V : [radius*SIN(p[0]) for p in V]@\\
+\mbox{}\verb@      mapping = [x,y,z]@\\
+\mbox{}\verb@      return larMap(mapping)(domain)@\\
+\mbox{}\verb@   return larSphere0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
-\item {\NWtxtMacroNoRef}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+\paragraph{Toroidal surface}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap10}
+\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Toroidal surface of given radiuses\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larToroidal(params):@\\
+\mbox{}\verb@   r,R = params@\\
+\mbox{}\verb@   def larToroidal0(shape=[24,36]):@\\
+\mbox{}\verb@      domain = larIntervals(shape)([2*PI,2*PI])@\\
+\mbox{}\verb@      V,CV = domain@\\
+\mbox{}\verb@      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]@\\
+\mbox{}\verb@      y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]@\\
+\mbox{}\verb@      z = lambda V : [-r * SIN(p[0]) for p in V]@\\
+\mbox{}\verb@      mapping = [x,y,z]@\\
+\mbox{}\verb@      return larMap(mapping)(domain)@\\
+\mbox{}\verb@   return larToroidal0@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+\paragraph{Crown surface}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap11}
+\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larCrown(params):@\\
+\mbox{}\verb@   r,R = params@\\
+\mbox{}\verb@   def larCrown0(shape=[24,36]):@\\
+\mbox{}\verb@      V,CV = larIntervals(shape)([PI,2*PI])@\\
+\mbox{}\verb@      V = translatePoints(V,[-PI/2,0])@\\
+\mbox{}\verb@      domain = V,CV@\\
+\mbox{}\verb@      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]@\\
+\mbox{}\verb@      y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]@\\
+\mbox{}\verb@      z = lambda V : [-r * SIN(p[0]) for p in V]@\\
+\mbox{}\verb@      mapping = [x,y,z]@\\
+\mbox{}\verb@      return larMap(mapping)(domain)@\\
+\mbox{}\verb@   return larCrown0@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -269,57 +400,95 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 
 \paragraph{Ball}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap9}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 3e}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap12}
+\protect\makebox[0ex][r]{\NWtarget{nuweb6a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize 6a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@@\\
+\mbox{}\verb@def larBall(radius=1):@\\
+\mbox{}\verb@   def larBall0(shape=[18,36]):@\\
+\mbox{}\verb@      V,CV = checkModel(larSphere(radius)(shape))@\\
+\mbox{}\verb@      VIEW(STRUCT(MKPOLS((V,CV))))@\\
+\mbox{}\verb@      return V,[range(len(V))]@\\
+\mbox{}\verb@   return larBall0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
-\item {\NWtxtMacroNoRef}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Solid cylinder}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap10}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap13}
+\protect\makebox[0ex][r]{\NWtarget{nuweb6b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize 6b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@@\\
+\mbox{}\verb@def larRod(params):@\\
+\mbox{}\verb@   radius,height= params@\\
+\mbox{}\verb@   def larRod0(shape=[36,1]):@\\
+\mbox{}\verb@      V,CV = checkModel(larCylinder(params)(shape))@\\
+\mbox{}\verb@      VIEW(STRUCT(MKPOLS((V,CV))))@\\
+\mbox{}\verb@      return V,[range(len(V))]@\\
+\mbox{}\verb@   return larRod0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
-\item {\NWtxtMacroNoRef}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Solid torus}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap11}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$aaaa\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap14}
+\protect\makebox[0ex][r]{\NWtarget{nuweb6c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize 6c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@@\\
+\mbox{}\verb@def larTorus(params):@\\
+\mbox{}\verb@   r,R = params@\\
+\mbox{}\verb@   def larTorus0(shape=[24,36,1]):@\\
+\mbox{}\verb@      domain = larIntervals(shape)([2*PI,2*PI,r])@\\
+\mbox{}\verb@      V,CV = domain@\\
+\mbox{}\verb@      x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]@\\
+\mbox{}\verb@      y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]@\\
+\mbox{}\verb@      z = lambda V : [-p[2] * SIN(p[0]) for p in V]@\\
+\mbox{}\verb@      mapping = [x,y,z]@\\
+\mbox{}\verb@      return larMap(mapping)(domain)@\\
+\mbox{}\verb@   return larTorus0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb2b}{2b}\NWlink{nuweb3a}{, 3a}\NWlink{nuweb3b}{b}\NWlink{nuweb3c}{c}\NWlink{nuweb3d}{d}\NWlink{nuweb3e}{e}\NWlink{nuweb4a}{, 4a}\NWlink{nuweb4b}{b}.
-\item {\NWtxtMacroNoRef}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Solid pizza}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap15}
+\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larPizza(params):@\\
+\mbox{}\verb@   r,R= params@\\
+\mbox{}\verb@   def larPizza0(shape=[24,36]):@\\
+\mbox{}\verb@      V,CV = checkModel(larCrown(params)(shape))@\\
+\mbox{}\verb@      VIEW(STRUCT(MKPOLS((V,CV))))@\\
+\mbox{}\verb@      return V,[range(len(V))]@\\
+\mbox{}\verb@   return larPizza0@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -328,16 +497,27 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \section{Exporting the library}
 %===============================================================================
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap12}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/mapper.py"@\nobreak\ {\footnotesize 4c }$\equiv$
+\begin{flushleft} \small \label{scrap16}
+\protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/mapper.py"@\nobreak\ {\footnotesize 7b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Mapping functions and primitive objects """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb1}{1}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb2b}{2b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Primitive mapping function\nobreak\ {\footnotesize \NWlink{nuweb2a}{2a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize \NWlink{nuweb4d}{4d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Circumference of unit radius\nobreak\ {\footnotesize \NWlink{nuweb2c}{2c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize \NWlink{nuweb7c}{7c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Circle centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Disk centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Ring centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb3c}{3c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Spherical surface of given radius\nobreak\ {\footnotesize \NWlink{nuweb4b}{4b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Cylinder surface with $z$ axis\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize \NWlink{nuweb6a}{6a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize \NWlink{nuweb6b}{6b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb6c}{6c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7a}{7a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -352,8 +532,8 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 
 	
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap13}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize 4d}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap17}
+\protect\makebox[0ex][r]{\NWtarget{nuweb7c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize 7c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@if __name__=="__main__":@\\
@@ -376,7 +556,7 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb4c}{4c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -384,16 +564,37 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \paragraph{Circumference of unit radius}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap14}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test01.py"@\nobreak\ {\footnotesize 5a }$\equiv$
+\begin{flushleft} \small \label{scrap18}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test01.py"@\nobreak\ {\footnotesize 8 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Circumference of unit radius """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@import mapper@\\
-\mbox{}\verb@from mapper import larCircle@\\
-\mbox{}\verb@model = larCircle(1)()@\\
-\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@from mapper import *@\\
+\mbox{}\verb@"""@\\
+\mbox{}\verb@model = checkModel(larCircle(1)())@\\
+\mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
+\mbox{}\verb@model = checkModel(larDisk(1)([36,4]))@\\
+\mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
+\mbox{}\verb@model = checkModel(larRing([.9, 1.])([36,2]))@\\
+\mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
+\mbox{}\verb@model = checkModel(larCylinder([.5,2.])([32,1]))@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
+\mbox{}\verb@model = checkModel(larSphere(1)())@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
+\mbox{}\verb@model = larBall(1)()@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
+\mbox{}\verb@model = larRod([.25,2.])([32,1])@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
+\mbox{}\verb@model = checkModel(larToroidal([0.5,1])())@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
+\mbox{}\verb@model = checkModel(larCrown([0.125,1])([8,48]))@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
+\mbox{}\verb@model = larPizza([0.05,1])([8,48])@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
+\mbox{}\verb@"""@\\
+\mbox{}\verb@model = checkModel(larTorus([0.5,1])())@\\
+\mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -407,8 +608,8 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 %===============================================================================
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap15}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap19}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import *@\\
@@ -417,29 +618,29 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \mbox{}\verb@@\\
 \mbox{}\verb@""" import modules from larcc/lib """@\\
 \mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb5c}{5c}\label{scrap16}
- }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb5h}{5h}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb5d}{5d}\label{scrap17}
- }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb5h}{5h}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb5e}{5e}\label{scrap18}
- }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb5h}{5h}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb5f}{5f}\label{scrap19}
- }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb5h}{5h}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb5g}{5g}\label{scrap20}
- }\mbox{}\verb@boolean2@ ) {\footnotesize \NWlink{nuweb5h}{5h}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb9b}{9b}\label{scrap20}
+ }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb9g}{9g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb9c}{9c}\label{scrap21}
+ }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb9g}{9g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb9d}{9d}\label{scrap22}
+ }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb9g}{9g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb9e}{9e}\label{scrap23}
+ }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb9g}{9g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb9f}{9f}\label{scrap24}
+ }\mbox{}\verb@boolean2@ ) {\footnotesize \NWlink{nuweb9g}{9g}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb4c}{4c}\NWlink{nuweb5a}{, 5a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7b}{7b}\NWlink{nuweb8}{, 8}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap21}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5h}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 5h}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap25}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9g}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 9g}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import @@1\verb@@\\
@@ -449,10 +650,58 @@ In this module a first implementation (no optimisations) is done of the \texttt{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb5b}{5b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb9a}{9a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
+
+
+\subsection{Numeric utilities}
+
+A small set of utilityy functions is used to transform a point representation as array of coordinates into a string of fixed format to be used as point key into python dictionaries.
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap26}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9h}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 9h}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\
+\mbox{}\verb@ROUND_ZERO = 1E-07@\\
+\mbox{}\verb@def round_or_zero (x,prec=7):@\\
+\mbox{}\verb@   """@\\
+\mbox{}\verb@   Decision procedure to approximate a small number to zero.@\\
+\mbox{}\verb@   Return either the input number or zero.@\\
+\mbox{}\verb@   """@\\
+\mbox{}\verb@   def myround(x):@\\
+\mbox{}\verb@      return eval(('%.'+str(prec)+'f') % round(x,prec))@\\
+\mbox{}\verb@   xx = myround(x)@\\
+\mbox{}\verb@   if abs(xx) < ROUND_ZERO: return 0.0@\\
+\mbox{}\verb@   else: return xx@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def prepKey (args): return "["+", ".join(args)+"]"@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def fixedPrec(value):@\\
+\mbox{}\verb@   if abs(value - int(value))<ROUND_ZERO: value = int(value)@\\
+\mbox{}\verb@   out = ('%0.7f'% value).rstrip('0')@\\
+\mbox{}\verb@   if out == '-0.': out = '0.'@\\
+\mbox{}\verb@   return out@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@def vcode (vect): @\\
+\mbox{}\verb@   """@\\
+\mbox{}\verb@   To generate a string representation of a number array.@\\
+\mbox{}\verb@   Used to generate the vertex keys in PointSet dictionary, and other similar operations.@\\
+\mbox{}\verb@   """@\\
+\mbox{}\verb@   return prepKey(AA(fixedPrec)(vect))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
 
 \bibliographystyle{amsalpha}
 \bibliography{mapper}

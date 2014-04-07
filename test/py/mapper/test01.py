@@ -21,7 +21,28 @@ import boolean2
 from boolean2 import *
 
 
-import mapper
-from mapper import larCircle
-model = larCircle(1)()
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
+from mapper import *
+"""
+model = checkModel(larCircle(1)())
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+model = checkModel(larDisk(1)([36,4]))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+model = checkModel(larRing([.9, 1.])([36,2]))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+model = checkModel(larCylinder([.5,2.])([32,1]))
+VIEW(STRUCT(MKPOLS(model)))
+model = checkModel(larSphere(1)())
+VIEW(STRUCT(MKPOLS(model)))
+model = larBall(1)()
+VIEW(STRUCT(MKPOLS(model)))
+model = larRod([.25,2.])([32,1])
+VIEW(STRUCT(MKPOLS(model)))
+model = checkModel(larToroidal([0.5,1])())
+VIEW(STRUCT(MKPOLS(model)))
+model = checkModel(larCrown([0.125,1])([8,48]))
+VIEW(STRUCT(MKPOLS(model)))
+model = larPizza([0.05,1])([8,48])
+VIEW(STRUCT(MKPOLS(model)))
+"""
+model = checkModel(larTorus([0.5,1])())
+VIEW(STRUCT(MKPOLS(model)))
