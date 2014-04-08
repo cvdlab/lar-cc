@@ -84,7 +84,7 @@ def larIntervals(shape):
 @{def larMap(coordFuncs):
 	def larMap0(domain):
 		V,CV = domain
-		V = TRANS(CONS(coordFuncs)(V))
+		V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
 		return V,CV
 	return larMap0
 @}
@@ -101,7 +101,6 @@ def larIntervals(shape):
 	verts = (vertDict.values())
 	invertedindex = [None]*n
 	for k,value in enumerate(verts):
-		print "\n len(value) =",len(value)
 		for i in value:
 			invertedindex[i]=value[0]	
 	CV = [[invertedindex[v] for v in cell] for cell in CV]
@@ -157,7 +156,6 @@ def larIntervals(shape):
 		mapping = [x,y]
 		return larMap(mapping)(domain)
 	return larDisk0
-
 @}
 %-------------------------------------------------------------------------------
 
@@ -176,7 +174,6 @@ def larIntervals(shape):
 		mapping = [x,y]
 		return larMap(mapping)(domain)
 	return larDisk0
-
 @}
 %-------------------------------------------------------------------------------
 \paragraph{Cylinder surface}

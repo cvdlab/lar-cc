@@ -783,15 +783,16 @@ from @1 import *
 @}
 %------------------------------------------------------------------
 
-\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinate.
+\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates.
 
 %------------------------------------------------------------------
-@D Affine transformations of $n$ points
+@D Affine transformations of $d$-points
 @{def translatePoints (points, tvect):
 	return [VECTSUM([p,tvect]) for p in points]
 
-def rotatePoints (points, angle):
-	return [[COS(x),-SIN(y)] for x,y in points]
+def rotatePoints (points, angle):		# 2-dimensional !! TODO: n-dim
+	a = angle
+	return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
 
 def scalePoints (points, svect):
 	return [AA(PROD)(TRANS([p,svect])) for p in points]
