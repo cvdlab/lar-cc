@@ -22,9 +22,9 @@ from boolean2 import *
 
 
 from mapper import *
-"""
 model = checkModel(larCircle(1)())
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+"""
 model = checkModel(larDisk(1)([36,4]))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = checkModel(larRing([.9, 1.])([36,2]))
@@ -43,6 +43,6 @@ model = checkModel(larCrown([0.125,1])([8,48]))
 VIEW(STRUCT(MKPOLS(model)))
 model = larPizza([0.05,1])([8,48])
 VIEW(STRUCT(MKPOLS(model)))
-"""
 model = checkModel(larTorus([0.5,1])())
 VIEW(STRUCT(MKPOLS(model)))
+"""

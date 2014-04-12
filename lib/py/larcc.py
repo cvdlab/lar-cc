@@ -316,7 +316,7 @@ if __name__ == "__main__":
    print "\ncoboundary_0 =\n", csr2DenseMatrix(coboundary(EV,AA(LIST)(range(len(V)))))
    
    boundaryCells_2 = boundaryCells(CV,FV)
-   boundaryCells_1 = boundaryCells([FV[k] for k in boundaryCells_2],EV)
+   
    
    print "\nboundaryCells_2 =\n", boundaryCells_2
    print "\nboundaryCells_1 =\n", boundaryCells_1

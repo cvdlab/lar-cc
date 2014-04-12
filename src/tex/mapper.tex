@@ -112,6 +112,35 @@ def larIntervals(shape):
 
 
 %===============================================================================
+\section{Embedding/Projecting models}
+%===============================================================================
+%-------------------------------------------------------------------------------
+
+In order apply 3D transformations to a two-dimensional LAR model, we must embed it in 3D space, by adding one more coordinate to its vertices. 
+
+\paragraph{Embedding and projecting a geometric model}
+
+This task is performed by the following function \texttt{larEmbed} with parameter $k$, that inserts its $d$-dimensional geometric argument in the $x_{d+1}, \ldots, x_{d+k}=0$ subspace.
+A reverse transformation of projection, removing the last $k$ coordinate of vertices without changing the object topology, is performed by the function \texttt{larEmbed} with \emph{negative} integer parameter.
+
+
+%-------------------------------------------------------------------------------
+@D Embedding and projecting a geometric model
+@{def larEmbed(k):
+	def larEmbed0(model):
+		V,CV = model
+		if k>0:
+			V = [v+[0.]*k for v in V] 
+		elif k<0:
+			V = [v[:-k] for v in V] 
+		return V,CV
+	return larEmbed0
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+%===============================================================================
 \section{Primitive objets}
 %===============================================================================
 %-------------------------------------------------------------------------------
@@ -133,10 +162,9 @@ def larIntervals(shape):
 	def larCircle0(shape=36):
 		domain = larIntervals([shape])([2*PI])
 		V,CV = domain
-		x = lambda coords : [radius*COS(p[0]) for p in V]
-		y = lambda coords : [radius*SIN(p[0]) for p in V]
-		mapping = [x,y]
-		return larMap(mapping)(domain)
+		x = lambda V : [radius*COS(p[0]) for p in V]
+		y = lambda V : [radius*SIN(p[0]) for p in V]
+		return larMap([x,y])(domain)
 	return larCircle0
 @}
 %-------------------------------------------------------------------------------
@@ -153,8 +181,7 @@ def larIntervals(shape):
 		V,CV = domain
 		x = lambda V : [p[1]*COS(p[0]) for p in V]
 		y = lambda V : [p[1]*SIN(p[0]) for p in V]
-		mapping = [x,y]
-		return larMap(mapping)(domain)
+		return larMap([x,y])(domain)
 	return larDisk0
 @}
 %-------------------------------------------------------------------------------
@@ -164,16 +191,14 @@ def larIntervals(shape):
 @D Ring centered in the origin
 @{def larRing(params):
 	r1,r2 = params
-	def larDisk0(shape=[36,1]):
+	def larRing0(shape=[36,1]):
 		V,CV = larIntervals(shape)([2*PI,r2-r1])
 		V = translatePoints(V,[0,r1])
 		domain = V,CV
-		VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,CV))))
 		x = lambda V : [p[1] * COS(p[0]) for p in V]
 		y = lambda V : [p[1] * SIN(p[0]) for p in V]
-		mapping = [x,y]
-		return larMap(mapping)(domain)
-	return larDisk0
+		return larMap([x,y])(domain)
+	return larRing0
 @}
 %-------------------------------------------------------------------------------
 \paragraph{Cylinder surface}
@@ -216,11 +241,10 @@ def larCylinder(params):
 		V,CV = larIntervals(shape)([PI,2*PI])
 		V = translatePoints(V,[-PI/2,-PI])
 		domain = V,CV
-		x = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
-		y = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
+		x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
+		y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
 		z = lambda V : [radius*SIN(p[0]) for p in V]
-		mapping = [x,y,z]
-		return larMap(mapping)(domain)
+		return larMap([x,y,z])(domain)
 	return larSphere0
 @}
 %-------------------------------------------------------------------------------
@@ -235,8 +259,7 @@ def larCylinder(params):
 		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
 		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
 		z = lambda V : [-r * SIN(p[0]) for p in V]
-		mapping = [x,y,z]
-		return larMap(mapping)(domain)
+		return larMap([x,y,z])(domain)
 	return larToroidal0
 @}
 %-------------------------------------------------------------------------------
@@ -252,8 +275,7 @@ def larCylinder(params):
 		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
 		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
 		z = lambda V : [-r * SIN(p[0]) for p in V]
-		mapping = [x,y,z]
-		return larMap(mapping)(domain)
+		return larMap([x,y,z])(domain)
 	return larCrown0
 @}
 %-------------------------------------------------------------------------------
@@ -268,7 +290,6 @@ def larCylinder(params):
 @{def larBall(radius=1):
 	def larBall0(shape=[18,36]):
 		V,CV = checkModel(larSphere(radius)(shape))
-		VIEW(STRUCT(MKPOLS((V,CV))))
 		return V,[range(len(V))]
 	return larBall0
 @}
@@ -281,7 +302,6 @@ def larCylinder(params):
 	radius,height= params
 	def larRod0(shape=[36,1]):
 		V,CV = checkModel(larCylinder(params)(shape))
-		VIEW(STRUCT(MKPOLS((V,CV))))
 		return V,[range(len(V))]
 	return larRod0
 @}
@@ -298,8 +318,7 @@ def larCylinder(params):
 		x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]
 		y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]
 		z = lambda V : [-p[2] * SIN(p[0]) for p in V]
-		mapping = [x,y,z]
-		return larMap(mapping)(domain)
+		return larMap([x,y,z])(domain)
 	return larTorus0
 @}
 %-------------------------------------------------------------------------------
@@ -311,12 +330,243 @@ def larCylinder(params):
 	r,R= params
 	def larPizza0(shape=[24,36]):
 		V,CV = checkModel(larCrown(params)(shape))
-		VIEW(STRUCT(MKPOLS((V,CV))))
 		return V,[range(len(V))]
 	return larPizza0
 @}
 %-------------------------------------------------------------------------------
+%===============================================================================
+\section{Affine transformations}
+%===============================================================================
+%-------------------------------------------------------------------------------
+\subsection{Design decision}
+%-------------------------------------------------------------------------------
+First we state the general rules that will be satisfied by the matrices used in this module, mainly devoted to apply affine transformations to vertices of models in structure environments:
+\begin{enumerate}
+\item assume the scipy \texttt{ndarray} as the type of vertices, stored in row-major order;
+\item use the last coordinate as the homogeneous coordinate of vertices, but do not store it explicitly;
+\item store explicitly the homogeneous coordinate of transformation matrices.
+\item use labels '\texttt{verts}' and '\texttt{mat}' to distinguish between vertices and transformation matrices.
+\item transformation matrices are dimension-independent, and their dimension is computed as the length of the parameter vector passed to the generating function.
+\end{enumerate}
 
+
+%-------------------------------------------------------------------------------
+\subsection{map}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Apply an affine transformation to a LAR model 
+@{def larApply(affineMatrix):
+	def larApply0(model):
+		V,CV = model
+		V = scipy.dot([v+[1.0] for v in V], affineMatrix).tolist()
+		return [v[:-1] for v in V],CV
+	return larApply0
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\subsection{Structure types handling}
+%-------------------------------------------------------------------------------
+
+In order to implement a structure as a list of models and transformations, we need to be able to distinguish between two different types of scipy arrays. The first type is the one of arrays of vertices, the second one is the matrix array used to represent the fine transformations.
+
+%-------------------------------------------------------------------------------
+@D types Mat and Verts
+@{""" class definitions for LAR """
+class Mat(scipy.ndarray): pass
+class Verts(scipy.ndarray): pass
+class Struct(list): pass
+class Cells(list): pass
+def isModel(pair): 
+	return type(pair[0])==Verts and type(pair[1])==Cells
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Elementary matrices}
+%-------------------------------------------------------------------------------
+Elementary matrices for affine transformation of vectors in any dimensional vector space are defined here. They include translation, scaling, rotation and shearing. 
+
+\paragraph{Translation}
+%-------------------------------------------------------------------------------
+@D Translation matrices
+@{def t(*args): 
+	d = len(args)
+	mat = scipy.identity(d+1)
+	for k in range(d): 
+		mat[k,d] = args[k]
+	return mat.view(Mat)
+@}
+%-------------------------------------------------------------------------------
+\paragraph{Scaling}
+%-------------------------------------------------------------------------------
+@D Scaling matrices
+@{def s(*args): 
+	d = len(args)
+	print "d =",d
+	mat = scipy.identity(d+1)
+	print "mat =",mat
+	for k in range(d): 
+		print "k,args[k] =",(k,args[k])
+		mat[k,k] = args[k]
+	return mat.view(Mat)
+@}
+%-------------------------------------------------------------------------------
+\paragraph{Rotation}
+%-------------------------------------------------------------------------------
+@D Rotation matrices
+@{def r(*args): 
+	args = list(args)
+	n = len(args)
+	@< plane rotation (in 2D) @>
+	@< space rotation (in 3D) @>
+	return mat.view(Mat)
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@D plane rotation (in 2D)
+@{if n == 1: # rotation in 2D
+	angle = args[0]; cos = COS(angle); sin = SIN(angle)
+	mat = scipy.identity(3)
+	mat[0,0] = cos;	mat[0,1] = -sin;
+	mat[1,0] = sin;	mat[1,1] = cos;
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@D space rotation (in 3D)
+@{if n == 3: # rotation in 2D
+	mat = scipy.identity(4)
+	angle = VECTNORM(args); axis = UNITVECT(args)
+	cos = COS(angle); sin = SIN(angle)
+	@< elementary rotations (in 3D) @>
+	@< general rotations (in 3D) @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@D elementary rotations (in 3D)
+@{if axis[1]==axis[2]==0.0:	# rotation about x
+	mat[1,1] = cos;	mat[1,2] = -sin;
+	mat[2,1] = sin;	mat[2,2] = cos;
+elif axis[0]==axis[2]==0.0:	# rotation about y
+	mat[0,0] = cos;	mat[0,2] = sin;
+	mat[2,0] = -sin;	mat[2,2] = cos;
+elif axis[0]==axis[1]==0.0:	# rotation about z
+	mat[0,0] = cos;	mat[0,1] = -sin;
+	mat[1,0] = sin;	mat[1,1] = cos;
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@D general rotations (in 3D)
+@{else:		# general 3D rotation (Rodrigues' rotation formula)	
+	I = scipy.identity(3) ; u = axis
+	Ux = scipy.array([
+		[0,		-u[2], 	 u[1]],
+		[u[2],		0, 	-u[0]],
+		[-u[1],	 u[0], 		0]])
+	UU = scipy.array([
+		[u[0]*u[0],	u[0]*u[1],	u[0]*u[2]],
+		[u[1]*u[0],	u[1]*u[1],	u[1]*u[2]],
+		[u[2]*u[0],	u[2]*u[1],	u[2]*u[2]]])
+	mat[:3,:3] = cos*I + sin*Ux + (1.0-cos)*UU
+@}
+
+
+%===============================================================================
+\section{Hierarchical complexes}
+%===============================================================================
+Hierarchical models of complex assemblies are generated by an aggregation
+of subassemblies, each one defined in a local coordinate system, and
+relocated by affine transformations of coordinates.  This operation
+may be repeated hierarchically, with some subassemblies defined by
+aggregation of simpler parts, and so on, until one obtains a set of
+elementary components, which cannot be further decomposed.
+
+Two main advantages can be found in a hierarchical modeling approach. Each elementary part and each assembly, at every hierarchical level, are defined independently from each other, using a local coordinate frame, suitably chosen to make its definition easier. Furthermore, only one copy of each component is stored in the memory, and may be instanced in different locations and orientations how many times it is needed.
+
+%-------------------------------------------------------------------------------
+\subsection{Traversal}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Traversal of a multigraph}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.8\linewidth]{images/traversal} 
+   \caption{Traversal algorithm of a multigraph.}
+   \label{fig:example}
+\end{figure}
+
+
+\subsubsection{Traversal of nested lists}
+
+\paragraph{show the pattern of calls and returned values}
+
+%-------------------------------------------------------------------------------
+@D Traversal of a multigraph
+@{def traverse(CTM, stack, o, flag):
+    i = 0
+    while i < len(o):
+        #print "lunghezza lista", len(o)
+        if ISNUM(o[i]): print o[i], REVERSE(CTM)
+        if ISSTRING(o[i]): 
+            #print "E' una lettera " + o[i]
+            CTM.append(o[i])
+            #print "trasformazione attuale", CTM
+            if flag: stack.append(o[i])
+        if ISLIST(o[i]):
+            stack = [] 
+            #print "E' una sottolista", o[i]
+            traverse(CTM, stack, o[i], True)
+            CTM = CTM[:-len(stack)]
+            stack = []
+            flag = False
+        i = i + 1
+
+def algorithm(data):
+    CTM,stack = ["I"],[]
+    traverse(CTM, stack, data, False)  
+@}
+%-------------------------------------------------------------------------------
+  
+%-------------------------------------------------------------------------------
+@D Examples of multigraph traversal
+@{data = [1,"A", 2, 3, "B", [4, "C", 5], [6,"D", "E", 7, 8], 9]  
+data = [1,"A", [2, 3, "B", 4, "C", 5, 6,"D"], "E", 7, 8, 9]  
+data = [2, 3, "B", 4, "C", 5, 6,"D"]
+data = [1,"A", dat, "E", 7, 8, 9]
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{show the pattern of calls and returned values}
+
+%-------------------------------------------------------------------------------
+@D Let us explore the pattern even better
+@{
+data = [
+	(1,6,
+		(7,1,
+			(8,"12"))),
+	(2,9,10),
+	(3,),
+	4,
+	(5,
+		(11,
+		("13",)))]
+
+
+print list(traverse(data))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{aaaaaa}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{aaaaaa}
+%-------------------------------------------------------------------------------
 %===============================================================================
 \section{Exporting the library}
 %===============================================================================
@@ -339,11 +589,50 @@ def larCylinder(params):
 @< Solid cylinder of given radius and height @>
 @< Solid torus of given radiuses @>
 @< Solid pizza of given radiuses @>
+@< types Mat and Verts @>
+@< Translation matrices @>
+@< Scaling matrices @>
+@< Rotation matrices @>
+@< Embedding and projecting a geometric model @>
+@< Apply an affine transformation to a LAR model @>
 @}
 %-------------------------------------------------------------------------------
 %===============================================================================
 \section{Examples}
 %===============================================================================
+
+\paragraph{3D rotation about a general axis}
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test02.py
+@{""" General 3D rotation of a toroidal surface """
+@< Initial import of modules @>
+from mapper import *
+model = checkModel(larToroidal([0.2,1])())
+a,b,c = SCALARVECTPROD([PI/2,UNITVECT([1,1,0]) ])
+model = larApply(r(a,b,c))(model)
+VIEW(STRUCT(MKPOLS(model)))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{3D rotation of a 2D circle}
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test03.py
+@{""" Elementary 3D rotation of a 2D circle """
+@< Initial import of modules @>
+from mapper import *
+model = checkModel(larCircle(1)())
+model = larEmbed(1)(model)
+model = larApply(r(PI/2,0,0))(model)
+VIEW(STRUCT(MKPOLS(model)))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
 %===============================================================================
 \section{Tests}
 %===============================================================================
@@ -376,9 +665,9 @@ def larCylinder(params):
 @{""" Circumference of unit radius """
 @< Initial import of modules @>
 from mapper import *
-"""
 model = checkModel(larCircle(1)())
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+"""
 model = checkModel(larDisk(1)([36,4]))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = checkModel(larRing([.9, 1.])([36,2]))
@@ -397,9 +686,9 @@ model = checkModel(larCrown([0.125,1])([8,48]))
 VIEW(STRUCT(MKPOLS(model)))
 model = larPizza([0.05,1])([8,48])
 VIEW(STRUCT(MKPOLS(model)))
-"""
 model = checkModel(larTorus([0.5,1])())
 VIEW(STRUCT(MKPOLS(model)))
+"""
 @}
 %-------------------------------------------------------------------------------
 

@@ -40,7 +40,6 @@ def checkModel(model):
    verts = (vertDict.values())
    invertedindex = [None]*n
    for k,value in enumerate(verts):
-      print "\n len(value) =",len(value)
       for i in value:
          invertedindex[i]=value[0]  
    CV = [[invertedindex[v] for v in cell] for cell in CV]
@@ -51,7 +50,7 @@ def checkModel(model):
 def larMap(coordFuncs):
    def larMap0(domain):
       V,CV = domain
-      V = TRANS(CONS(coordFuncs)(V))
+      V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
       return V,CV
    return larMap0
 
@@ -75,10 +74,9 @@ def larCircle(radius=1.):
    def larCircle0(shape=36):
       domain = larIntervals([shape])([2*PI])
       V,CV = domain
-      x = lambda coords : [radius*COS(p[0]) for p in V]
-      y = lambda coords : [radius*SIN(p[0]) for p in V]
-      mapping = [x,y]
-      return larMap(mapping)(domain)
+      x = lambda V : [radius*COS(p[0]) for p in V]
+      y = lambda V : [radius*SIN(p[0]) for p in V]
+      return larMap([x,y])(domain)
    return larCircle0
 
 def larDisk(radius=1.):
@@ -87,35 +85,29 @@ def larDisk(radius=1.):
       V,CV = domain
       x = lambda V : [p[1]*COS(p[0]) for p in V]
       y = lambda V : [p[1]*SIN(p[0]) for p in V]
-      mapping = [x,y]
-      return larMap(mapping)(domain)
+      return larMap([x,y])(domain)
    return larDisk0
-
 
 def larRing(params):
    r1,r2 = params
-   def larDisk0(shape=[36,1]):
+   def larRing0(shape=[36,1]):
       V,CV = larIntervals(shape)([2*PI,r2-r1])
       V = translatePoints(V,[0,r1])
       domain = V,CV
-      VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,CV))))
       x = lambda V : [p[1] * COS(p[0]) for p in V]
       y = lambda V : [p[1] * SIN(p[0]) for p in V]
-      mapping = [x,y]
-      return larMap(mapping)(domain)
-   return larDisk0
-
+      return larMap([x,y])(domain)
+   return larRing0
 
 def larSphere(radius=1):
    def larSphere0(shape=[18,36]):
       V,CV = larIntervals(shape)([PI,2*PI])
       V = translatePoints(V,[-PI/2,-PI])
       domain = V,CV
-      x = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
-      y = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
+      x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
+      y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
       z = lambda V : [radius*SIN(p[0]) for p in V]
-      mapping = [x,y,z]
-      return larMap(mapping)(domain)
+      return larMap([x,y,z])(domain)
    return larSphere0
 
 from scipy.linalg import det
@@ -154,8 +146,7 @@ def larToroidal(params):
       x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
       y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
       z = lambda V : [-r * SIN(p[0]) for p in V]
-      mapping = [x,y,z]
-      return larMap(mapping)(domain)
+      return larMap([x,y,z])(domain)
    return larToroidal0
 
 def larCrown(params):
@@ -167,14 +158,12 @@ def larCrown(params):
       x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
       y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
       z = lambda V : [-r * SIN(p[0]) for p in V]
-      mapping = [x,y,z]
-      return larMap(mapping)(domain)
+      return larMap([x,y,z])(domain)
    return larCrown0
 
 def larBall(radius=1):
    def larBall0(shape=[18,36]):
       V,CV = checkModel(larSphere(radius)(shape))
-      VIEW(STRUCT(MKPOLS((V,CV))))
       return V,[range(len(V))]
    return larBall0
 
@@ -182,7 +171,6 @@ def larRod(params):
    radius,height= params
    def larRod0(shape=[36,1]):
       V,CV = checkModel(larCylinder(params)(shape))
-      VIEW(STRUCT(MKPOLS((V,CV))))
       return V,[range(len(V))]
    return larRod0
 
@@ -194,15 +182,93 @@ def larTorus(params):
       x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]
       y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]
       z = lambda V : [-p[2] * SIN(p[0]) for p in V]
-      mapping = [x,y,z]
-      return larMap(mapping)(domain)
+      return larMap([x,y,z])(domain)
    return larTorus0
 
 def larPizza(params):
    r,R= params
    def larPizza0(shape=[24,36]):
       V,CV = checkModel(larCrown(params)(shape))
-      VIEW(STRUCT(MKPOLS((V,CV))))
       return V,[range(len(V))]
    return larPizza0
+
+""" class definitions for LAR """
+class Mat(scipy.ndarray): pass
+class Verts(scipy.ndarray): pass
+class Struct(list): pass
+class Cells(list): pass
+def isModel(pair): 
+   return type(pair[0])==Verts and type(pair[1])==Cells
+
+def t(*args): 
+   d = len(args)
+   mat = scipy.identity(d+1)
+   for k in range(d): 
+      mat[k,d] = args[k]
+   return mat.view(Mat)
+
+def s(*args): 
+   d = len(args)
+   print "d =",d
+   mat = scipy.identity(d+1)
+   print "mat =",mat
+   for k in range(d): 
+      print "k,args[k] =",(k,args[k])
+      mat[k,k] = args[k]
+   return mat.view(Mat)
+
+def r(*args): 
+   args = list(args)
+   n = len(args)
+   if n == 1: # rotation in 2D
+      angle = args[0]; cos = COS(angle); sin = SIN(angle)
+      mat = scipy.identity(3)
+      mat[0,0] = cos;   mat[0,1] = -sin;
+      mat[1,0] = sin;   mat[1,1] = cos;
+   
+   if n == 3: # rotation in 2D
+      mat = scipy.identity(4)
+      angle = VECTNORM(args); axis = UNITVECT(args)
+      cos = COS(angle); sin = SIN(angle)
+      if axis[1]==axis[2]==0.0:  # rotation about x
+         mat[1,1] = cos;   mat[1,2] = -sin;
+         mat[2,1] = sin;   mat[2,2] = cos;
+      elif axis[0]==axis[2]==0.0:   # rotation about y
+         mat[0,0] = cos;   mat[0,2] = sin;
+         mat[2,0] = -sin;  mat[2,2] = cos;
+      elif axis[0]==axis[1]==0.0:   # rotation about z
+         mat[0,0] = cos;   mat[0,1] = -sin;
+         mat[1,0] = sin;   mat[1,1] = cos;
+      
+      else:    # general 3D rotation (Rodrigues' rotation formula)   
+         I = scipy.identity(3) ; u = axis
+         Ux = scipy.array([
+            [0,      -u[2],    u[1]],
+            [u[2],      0,    -u[0]],
+            [-u[1],   u[0],      0]])
+         UU = scipy.array([
+            [u[0]*u[0], u[0]*u[1],  u[0]*u[2]],
+            [u[1]*u[0], u[1]*u[1],  u[1]*u[2]],
+            [u[2]*u[0], u[2]*u[1],  u[2]*u[2]]])
+         mat[:3,:3] = cos*I + sin*Ux + (1.0-cos)*UU
+      
+   
+   return mat.view(Mat)
+
+def larEmbed(k):
+   def larEmbed0(model):
+      V,CV = model
+      if k>0:
+         V = [v+[0.]*k for v in V] 
+      elif k<0:
+         V = [v[:-k] for v in V] 
+      return V,CV
+   return larEmbed0
+
+def larApply(affineMatrix):
+   def larApply0(model):
+      V,CV = model
+      V = scipy.dot([v+[1.0] for v in V], affineMatrix).tolist()
+      return [v[:-1] for v in V],CV
+   return larApply0
 
