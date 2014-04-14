@@ -116,7 +116,10 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 %------------------------------------------------------------------
 @d MaKe a list of HPC objects from a LAR model
 @{def MKPOLS (model):
-    V, FV = model
+    if isinstance(model,Model):
+        V, FV = model.verts.tolist(), model.cells
+    elif isinstance(model,tuple):
+        V, FV = model
     pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
     return pols  
 @| MKPOLS @}
@@ -193,6 +196,9 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 @< Import the module @(simplexn@) @>
 @< Function to import a generic module @>
 @< Compute the convex combination of a list of vectors @>
+@< types Mat and Verts @>
+@< Model class @>
+@< Struct class @>
 @< MaKe a list of HPC objects from a LAR model @>
 @< Explode the scene using \texttt{sx,sy,sz} scaling parameters @>
 @}
@@ -265,5 +271,67 @@ assert( CCOMB([VECTSUM(vects)]) == \
 
 \bibliographystyle{amsalpha}
 \bibliography{lar2psm}
+
+
+%-------------------------------------------------------------------------------
+\subsection{Structure types handling}
+%-------------------------------------------------------------------------------
+
+In order to implement a structure as a list of models and transformations, we need to be able to distinguish between two different types of scipy arrays. The first type is the one of arrays of vertices, the second one is the matrix array used to represent the fine transformations.
+
+\paragraph{\texttt{Mat} and \texttt{Verts} classes}
+%-------------------------------------------------------------------------------
+@D types Mat and Verts
+@{""" class definitions for LAR """
+import scipy
+class Mat(scipy.ndarray): pass
+class Verts(scipy.ndarray): pass
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{\texttt{Model} class}
+%-------------------------------------------------------------------------------
+@D Model class
+@{class Model:
+	""" A pair (geometry, topology) of the LAR package """
+	def __init__(self,(verts,cells),dim):
+		self.n = len(verts[0])
+		self.d = dim
+		self.verts = scipy.array(verts).view(Verts)
+		self.cells = cells
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{\texttt{Struct} iterable class}
+%-------------------------------------------------------------------------------
+@D Struct class
+@{def checkStruct(data):	
+	def visit(o):
+	    if isinstance(o, (list,Struct)):
+	        for value in o:
+	            for subvalue in visit(value):
+	                yield subvalue
+	    elif isinstance(o, Model) or isinstance(o, Mat): 
+	    	yield o		
+	flatten = list(visit(data))
+	dims = [ o.n for o in flatten if isinstance(o, Model) ]
+	if EQ(dims): return dims[0] 
+	else:return None
+
+class Struct:
+    """ The assembly type of the LAR package """
+    def __init__(self,data):
+        self.n = checkStruct(data)
+        self.body = data
+    def __iter__(self):
+        return iter(self.body)
+    def __len__(self):
+        return len(list(self.body))
+    def __getitem__(self,i):
+        return list(self.body)[i]
+@}
+%-------------------------------------------------------------------------------
+
+
 
 \end{document}

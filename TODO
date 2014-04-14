@@ -1,3 +1,4 @@
+*  move the definitions of classes in their own file
 *  topological queries
 *  signed incidence in boundary operator for polytopal complexes
 *  domain integrals of polynomials

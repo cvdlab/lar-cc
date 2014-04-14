@@ -47,7 +47,7 @@
 \nonstopmode
 
 \begin{abstract}
-In this module a first implementation (no optimisations) is done of the \texttt{LARMAP} operator, reproducing the behaviour of the plasm \texttt{MAP} primitive, but with better handling of the topology, including the sewing of decomposed (simplicial domains) about their possible sewing.
+In this module a first implementation (no optimisations) is done of several \texttt{LAR} operators, reproducing the behaviour of the plasm  \texttt{STRUCT} and \texttt{MAP} primitives, but with better handling of the topology, including the stitching of decomposed (simplicial domains) about their possible sewing. A definition of specialised classes \texttt{Model}, \texttt{Mat} and \texttt{Verts} is also contained in this module, together with the design and the implementation of the \emph{traversal} algorithms for networks of structures.
 \end{abstract}
 
 \tableofcontents
@@ -118,7 +118,7 @@ def larIntervals(shape):
 
 In order apply 3D transformations to a two-dimensional LAR model, we must embed it in 3D space, by adding one more coordinate to its vertices. 
 
-\paragraph{Embedding and projecting a geometric model}
+\paragraph{Embedding or projecting a geometric model}
 
 This task is performed by the following function \texttt{larEmbed} with parameter $k$, that inserts its $d$-dimensional geometric argument in the $x_{d+1}, \ldots, x_{d+k}=0$ subspace.
 A reverse transformation of projection, removing the last $k$ coordinate of vertices without changing the object topology, is performed by the function \texttt{larEmbed} with \emph{negative} integer parameter.
@@ -147,14 +147,6 @@ A reverse transformation of projection, removing the last $k$ coordinate of vert
 \subsection{1D primitives}
 %-------------------------------------------------------------------------------
 
-\paragraph{Curved line}
-%-------------------------------------------------------------------------------
-@D aaaa
-@{
-
-@}
-%-------------------------------------------------------------------------------
-
 \paragraph{Circle}
 %-------------------------------------------------------------------------------
 @D Circle centered in the origin
@@ -171,9 +163,10 @@ A reverse transformation of projection, removing the last $k$ coordinate of vert
 %-------------------------------------------------------------------------------
 \subsection{2D primitives}
 %-------------------------------------------------------------------------------
+Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defined here, including 2D disks and rings, as well as cylindrical, spherical and toroidal surfaces.
 
 \paragraph{Disk}
--------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 @D Disk centered in the origin
 @{def larDisk(radius=1.):
 	def larDisk0(shape=[36,1]):
@@ -187,7 +180,7 @@ A reverse transformation of projection, removing the last $k$ coordinate of vert
 %-------------------------------------------------------------------------------
 
 \paragraph{Ring}
--------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 @D Ring centered in the origin
 @{def larRing(params):
 	r1,r2 = params
@@ -358,31 +351,23 @@ First we state the general rules that will be satisfied by the matrices used in 
 @D Apply an affine transformation to a LAR model 
 @{def larApply(affineMatrix):
 	def larApply0(model):
-		V,CV = model
-		V = scipy.dot([v+[1.0] for v in V], affineMatrix).tolist()
-		return [v[:-1] for v in V],CV
+		if isinstance(model,Model):
+			V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
+			V = [v[:-1] for v in V]
+			CV = copy(model.cells)
+			d = copy(model.d)
+			print "\n V =",V
+			print "\n CV =",CV
+			print "\n d =",d
+			return Model((V,CV),d)
+		elif isinstance(model,tuple):
+			V,CV = model
+			V = scipy.dot([v+[1.0] for v in V], affineMatrix.T).tolist()
+			return [v[:-1] for v in V],CV
 	return larApply0
 @}
 %-------------------------------------------------------------------------------
 
-
-%-------------------------------------------------------------------------------
-\subsection{Structure types handling}
-%-------------------------------------------------------------------------------
-
-In order to implement a structure as a list of models and transformations, we need to be able to distinguish between two different types of scipy arrays. The first type is the one of arrays of vertices, the second one is the matrix array used to represent the fine transformations.
-
-%-------------------------------------------------------------------------------
-@D types Mat and Verts
-@{""" class definitions for LAR """
-class Mat(scipy.ndarray): pass
-class Verts(scipy.ndarray): pass
-class Struct(list): pass
-class Cells(list): pass
-def isModel(pair): 
-	return type(pair[0])==Verts and type(pair[1])==Cells
-@}
-%-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \subsection{Elementary matrices}
@@ -405,11 +390,8 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 @D Scaling matrices
 @{def s(*args): 
 	d = len(args)
-	print "d =",d
 	mat = scipy.identity(d+1)
-	print "mat =",mat
 	for k in range(d): 
-		print "k,args[k] =",(k,args[k])
 		mat[k,k] = args[k]
 	return mat.view(Mat)
 @}
@@ -505,7 +487,7 @@ Two main advantages can be found in a hierarchical modeling approach. Each eleme
 
 %-------------------------------------------------------------------------------
 @D Traversal of a multigraph
-@{def traverse(CTM, stack, o, flag):
+@{def __traverse(CTM, stack, o, flag):
     i = 0
     while i < len(o):
         #print "lunghezza lista", len(o)
@@ -526,16 +508,88 @@ Two main advantages can be found in a hierarchical modeling approach. Each eleme
 
 def algorithm(data):
     CTM,stack = ["I"],[]
-    traverse(CTM, stack, data, False)  
+    __traverse(CTM, stack, data, False)  
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Traversal of a scene multigraph}
+
+The previous traversal algorithm is here customised for scene multigraph, where the objects are LAR models, i.e.~pairs of vertices of type '\texttt{Verts} and cells, and where the transformations are matrix transformations of type '\texttt{Mat}'.
+
+\paragraph{Check models for common dimension}
+The input list of a call to \texttt{larStruct} primitive is preliminary checked for uniform dimensionality of the enclosed LAR models and transformations. The common dimension \texttt{dim} of models and matrices is returned by the function \texttt{checkStruct}. Otherwise, an exception is generated (TODO).
+
+%-------------------------------------------------------------------------------
+@D check LAR models in input struct for common dimension
+@{""" Check models for common dimension """
+
+
+data = [Model(larDomain((3,2)),2), 
+		r(PI), 
+		Struct([ Model(larDomain((1,4)),2), 
+		  t(1,1), 
+		  Model(larDomain((4,2)),2) ]), 
+		Model(larDomain((5,4)),2)] 
+		
+a = Struct(data)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Initialization}
+
+%-------------------------------------------------------------------------------
+@D Traversal of a scene multigraph
+@{""" Traversal of a scene multigraph """
+@< Structure traversal algorithm @>
+
+def evalStruct(struct):
+    dim = struct.n
+    CTM, stack = scipy.identity(dim+1), []
+    print "\n CTM,stack =",(CTM,stack)
+    scene = traverse(CTM, stack, struct) 
+    print "\n scene =", scene
+    return scene
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Structure traversal algorithm}
+
+%-------------------------------------------------------------------------------
+@D Structure traversal algorithm 
+@{def traverse(CTM, stack, o, scene=[]):
+    i = 0
+    while i < len(o):
+        print "lunghezza lista", len(o)
+        if isinstance(o[i],Model): 
+            print "i, o[i] = ",(i, o[i])
+            scene += [larApply(CTM)(o[i])]
+        elif isinstance(o[i],Mat): 
+            print "\no[i] =\n",o[i]
+            print "\nCTM =\n",CTM
+            CTM = scipy.dot(CTM, o[i])
+            print "\nCTM =\n",CTM,"\n"
+            print "trasformazione attuale: \n", CTM
+        elif isinstance(o[i],Struct):
+            stack.append(CTM) 
+            print "E' una sottolista", o[i]
+            traverse(CTM, stack, o[i], scene)
+            CTM = stack.pop()
+        i = i + 1
+    return scene
 @}
 %-------------------------------------------------------------------------------
   
 %-------------------------------------------------------------------------------
 @D Examples of multigraph traversal
 @{data = [1,"A", 2, 3, "B", [4, "C", 5], [6,"D", "E", 7, 8], 9]  
+print algorithm(data)
 data = [1,"A", [2, 3, "B", 4, "C", 5, 6,"D"], "E", 7, 8, 9]  
+print algorithm(data)
 data = [2, 3, "B", 4, "C", 5, 6,"D"]
+print algorithm(data)
+dat = [2, 3, "B", 4, "C", 5, 6,"D"]
 data = [1,"A", dat, "E", 7, 8, 9]
+print algorithm(data)
 @}
 %-------------------------------------------------------------------------------
 
@@ -544,8 +598,7 @@ data = [1,"A", dat, "E", 7, 8, 9]
 
 %-------------------------------------------------------------------------------
 @D Let us explore the pattern even better
-@{
-data = [
+@{data = [
 	(1,6,
 		(7,1,
 			(8,"12"))),
@@ -562,8 +615,63 @@ print list(traverse(data))
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\subsection{aaaaaa}
+\subsection{Example}
 %-------------------------------------------------------------------------------
+Some simple examples of structures as combinations of LAR models and affine transformations are given in this section. 
+
+\paragraph{Global coordinates}
+We start with a simple 2D example of a non-nested list of translated 2D object instances and rotation about the origin.
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test04.py
+@{""" Example of non-nested structure with translation and rotations """
+@< Initial import of modules @>
+from mapper import *
+square = larCuboids([1,1])
+table = larApply( t(-.5,-.5) )(square)
+chair = larApply( s(.35,.35) )(table)
+chair1 = larApply( t(.75, 0) )(chair)
+chair2 = larApply( r(PI/2) )(chair1)
+chair3 = larApply( r(PI/2) )(chair2)
+chair4 = larApply( r(PI/2) )(chair3)
+VIEW(SKEL_1(STRUCT(MKPOLS(table)+MKPOLS(chair1)+MKPOLS(chair2)+MKPOLS(chair3)+MKPOLS(chair4))))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Local coordinates}
+A different composition of transformations, from local to global coordinate frames, is used in yje following example.
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test05.py
+@{""" Example of non-nested structure with translation and rotations """
+@< Initial import of modules @>
+from mapper import *
+square = larCuboids([1,1])
+square = Model(square,2)
+table = larApply( t(-.5,-.5) )(square)
+chair = larApply( s(.35,.35) )(table)
+chair = larApply( t(.75, 0) )(chair)
+struct = Struct([table] + 4*[chair, r(PI/2)])
+scene = evalStruct(struct)
+VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test06.py
+@{""" Example of nested structures with translation and rotations """
+@< Initial import of modules @>
+from mapper import *
+square = larCuboids([1,1])
+square = Model(square,2)
+table = larApply( t(-.5,-.5) )(square)
+chair = Struct([ t(.75, 0), s(.35,.35), table ])
+struct = Struct( [table] + 4*[r(PI/2), chair])
+scene = evalStruct(struct)
+VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
+@}
+%-------------------------------------------------------------------------------
+
 %-------------------------------------------------------------------------------
 \subsection{aaaaaa}
 %-------------------------------------------------------------------------------
@@ -589,12 +697,12 @@ print list(traverse(data))
 @< Solid cylinder of given radius and height @>
 @< Solid torus of given radiuses @>
 @< Solid pizza of given radiuses @>
-@< types Mat and Verts @>
 @< Translation matrices @>
 @< Scaling matrices @>
 @< Rotation matrices @>
 @< Embedding and projecting a geometric model @>
 @< Apply an affine transformation to a LAR model @>
+@< Traversal of a scene multigraph @>
 @}
 %-------------------------------------------------------------------------------
 %===============================================================================

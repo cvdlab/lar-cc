@@ -192,14 +192,6 @@ def larPizza(params):
       return V,[range(len(V))]
    return larPizza0
 
-""" class definitions for LAR """
-class Mat(scipy.ndarray): pass
-class Verts(scipy.ndarray): pass
-class Struct(list): pass
-class Cells(list): pass
-def isModel(pair): 
-   return type(pair[0])==Verts and type(pair[1])==Cells
-
 def t(*args): 
    d = len(args)
    mat = scipy.identity(d+1)
@@ -209,11 +201,8 @@ def t(*args):
 
 def s(*args): 
    d = len(args)
-   print "d =",d
    mat = scipy.identity(d+1)
-   print "mat =",mat
    for k in range(d): 
-      print "k,args[k] =",(k,args[k])
       mat[k,k] = args[k]
    return mat.view(Mat)
 
@@ -267,8 +256,49 @@ def larEmbed(k):
 
 def larApply(affineMatrix):
    def larApply0(model):
-      V,CV = model
-      V = scipy.dot([v+[1.0] for v in V], affineMatrix).tolist()
-      return [v[:-1] for v in V],CV
+      if isinstance(model,Model):
+         V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
+         V = [v[:-1] for v in V]
+         CV = copy(model.cells)
+         d = copy(model.d)
+         print "\n V =",V
+         print "\n CV =",CV
+         print "\n d =",d
+         return Model((V,CV),d)
+      elif isinstance(model,tuple):
+         V,CV = model
+         V = scipy.dot([v+[1.0] for v in V], affineMatrix.T).tolist()
+         return [v[:-1] for v in V],CV
    return larApply0
+
+""" Traversal of a scene multigraph """
+def traverse(CTM, stack, o, scene=[]):
+    i = 0
+    while i < len(o):
+        print "lunghezza lista", len(o)
+        if isinstance(o[i],Model): 
+            print "i, o[i] = ",(i, o[i])
+            scene += [larApply(CTM)(o[i])]
+        elif isinstance(o[i],Mat): 
+            print "\no[i] =\n",o[i]
+            print "\nCTM =\n",CTM
+            CTM = scipy.dot(CTM, o[i])
+            print "\nCTM =\n",CTM,"\n"
+            print "trasformazione attuale: \n", CTM
+        elif isinstance(o[i],Struct):
+            stack.append(CTM) 
+            print "E' una sottolista", o[i]
+            traverse(CTM, stack, o[i], scene)
+            CTM = stack.pop()
+        i = i + 1
+    return scene
+
+
+def evalStruct(struct):
+    dim = struct.n
+    CTM, stack = scipy.identity(dim+1), []
+    print "\n CTM,stack =",(CTM,stack)
+    scene = traverse(CTM, stack, struct) 
+    print "\n scene =", scene
+    return scene
 
