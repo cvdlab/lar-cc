@@ -21,6 +21,7 @@ import boolean2
 from boolean2 import *
 
 
+""" simplicial decomposition of the unit d-cube """
 def larDomain(shape):
    V,CV = larSimplexGrid(shape)
    V = scalePoints(V, [1./d for d in shape])
@@ -37,11 +38,13 @@ def checkModel(model):
    V,CV = model; n = len(V)
    vertDict = defaultdict(list)
    for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
-   verts = (vertDict.values())
+   points,verts = TRANS(vertDict.items())
    invertedindex = [None]*n
+   V = []
    for k,value in enumerate(verts):
+      V.append(eval(points[k]))
       for i in value:
-         invertedindex[i]=value[0]  
+         invertedindex[i]=k   
    CV = [[invertedindex[v] for v in cell] for cell in CV]
    # filter out degenerate cells
    CV = [list(set(cell)) for cell in CV if len(set(cell))==len(cell)]
@@ -51,7 +54,7 @@ def larMap(coordFuncs):
    def larMap0(domain):
       V,CV = domain
       V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
-      return V,CV
+      return checkModel((V,CV))
    return larMap0
 
 if __name__=="__main__":
@@ -121,7 +124,6 @@ def makeOriented(model):
          out.append(cell)
       else:
          out.append([cell[1]]+[cell[0]]+cell[2:])
-      print "\n det(mat) =",det(mat)
    return V,out
 """
 def larCylinder(params):
@@ -261,9 +263,6 @@ def larApply(affineMatrix):
          V = [v[:-1] for v in V]
          CV = copy(model.cells)
          d = copy(model.d)
-         print "\n V =",V
-         print "\n CV =",CV
-         print "\n d =",d
          return Model((V,CV),d)
       elif isinstance(model,tuple):
          V,CV = model
@@ -273,32 +272,21 @@ def larApply(affineMatrix):
 
 """ Traversal of a scene multigraph """
 def traverse(CTM, stack, o, scene=[]):
-    i = 0
-    while i < len(o):
-        print "lunghezza lista", len(o)
+    for i in range(len(o)):
         if isinstance(o[i],Model): 
-            print "i, o[i] = ",(i, o[i])
             scene += [larApply(CTM)(o[i])]
         elif isinstance(o[i],Mat): 
-            print "\no[i] =\n",o[i]
-            print "\nCTM =\n",CTM
             CTM = scipy.dot(CTM, o[i])
-            print "\nCTM =\n",CTM,"\n"
-            print "trasformazione attuale: \n", CTM
         elif isinstance(o[i],Struct):
             stack.append(CTM) 
-            print "E' una sottolista", o[i]
             traverse(CTM, stack, o[i], scene)
             CTM = stack.pop()
-        i = i + 1
     return scene
 
 
 def evalStruct(struct):
     dim = struct.n
     CTM, stack = scipy.identity(dim+1), []
-    print "\n CTM,stack =",(CTM,stack)
     scene = traverse(CTM, stack, struct) 
-    print "\n scene =", scene
     return scene
 

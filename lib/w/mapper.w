@@ -53,19 +53,50 @@ In this module a first implementation (no optimisations) is done of several \tex
 \tableofcontents
 
 %===============================================================================
-\section{Domain decomposition}
+\section{Introduction}
 %===============================================================================
 
+The \texttt{mapper} module, introduced here, aims to provide the tools needed to apply both dimension-independent affine transformations and general simplicial maps to geometric objects and assemblies developed within the LAR scheme. 
+
+For this purpose, a simplicial decomposition of the $[0,1]^d$ hypercube ($d \geq 1$) with any possible \texttt{shape} is firstly given, followed by its scaled version with any  according $\texttt{size}\in\E^d$, being its position vector the mapped image of the point $\mathbf{1}\in\E^d$. A general mapping mechanism is specified, to map any domain decomposition (either simplicial or not) with a given set of ccordinate functions, providing a piecewise-linear approximation of any curved embedding of a $d$-dimensional domain in any $\E^n$ space, with $n \geq d$. 
+A suitable function is therefore given to identify corresponding vertices when mapping a domain decomposition of the fundamental polygon of a closed manifold. 
+
+The geometric tools given in this chapter employ a normalised homogeneous representation of vertices of the represented shapes, where the added coordinate is the \emph{last} of the ordered list of vertex coordinates. The homogeneous representation of vertices is used \emph{implicitly}, by inserting the extra coordinate only when needed by the operation at hand, mainly for computing the product of the object's vertices times the matrix of an affine tensor. 
+
+A set of primitive surface and solid shapes is also provided, via the mapping mechanism of a simplicial decomposition of a $d$-dimensional chart. A simplified version of the PLaSM specification of dimension-independent elementary affine transformation is given as well.
+
+The second part of this module is dedicated to the development of a complete framework for the implementation of hierarchical assemblies of shapes and scene graphs, by using the simplest possible set of computing tools. In this case no hierarchical graphs or multigraph are employed, i.e.~no specialised data structures are produced. The ordered list model of hierarchical structures, inherited from PHIGS and PLaSM, is employed in this context. A recursive traversal is used to transform all the component parts of a hierarchical assembly into the reference frame of the first object of the assembly, i.e.~in world coordinates.
+
+%===============================================================================
+\section{Piecewise-linear mapping of topological spaces}
+%===============================================================================
+
+A very simple but foundational software subsystem is developed in this section, by giving a general mechanism to produce curved maps of topological spaces, via the simplicial decomposition of a chart, i.e.~of a planar embedding of the fundamental polygon of a $d$-dimensional manifold, and the definition of coordinate functions to be applied to its vertices ($0$-cells of the decomposition) to generate an embedding of the manifold.
+
+\subsection{Domain decomposition}
+%-------------------------------------------------------------------------------
+
+A simplicial map is a map between simplicial complexes with the property that the images of the vertices of a simplex always span a simplex.  Simplicial maps are thus determined by their effects on vertices, and provide a piecewise-linear approximation of their underlying polyhedra.
+
+
 \paragraph{Standard and scaled decomposition of unit domain}
+The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimplexGrid} as an hypercube of dimension $d \equiv\texttt{len(shape)}$, where the \texttt{shape} tuple provides the number or row, columns, pages, etc.~of the decomposition.
 
 %-------------------------------------------------------------------------------
-@d Generate a simplicial decomposition ot the $[0,1]^d$ domain
-@{def larDomain(shape):
+@D Generate a simplicial decomposition ot the $[0,1]^d$ domain
+@{""" simplicial decomposition of the unit d-cube """
+def larDomain(shape):
 	V,CV = larSimplexGrid(shape)
 	V = scalePoints(V, [1./d for d in shape])
 	return V,CV
+@}
+%-------------------------------------------------------------------------------
 
-def larIntervals(shape):
+A scaled simplicial decomposition is provided by the second-order  \texttt{larIntervals} function, with \texttt{len(shape)} and \texttt{len(size)} parameters, where the $d$-dimensionale vector \texttt{len(size)} is assumed as the scaling vector to be applied to the point $\mathbf{1}\in\E^d$.
+
+%-------------------------------------------------------------------------------
+@D Scaled simplicial decomposition ot the $[0,1]^d$ domain
+@{def larIntervals(shape):
 	def larIntervals0(size):
 		V,CV = larDomain(shape)
 		V = scalePoints(V, [scaleFactor for scaleFactor in size])
@@ -74,23 +105,25 @@ def larIntervals(shape):
 @}
 %-------------------------------------------------------------------------------
 
-%===============================================================================
-\section{Embedding via coordinate functions}
-%===============================================================================
-
 \subsection{Mapping domain vertices}
+The second-order texttt{larMap} function is the LAR implementation of the PLaSM primitive \texttt{MAP}.
+It is applied to the array \texttt{coordFuncs} of coordinate functions and to the simplicially decomposed  \texttt{domain}, returning an embedded and/or curved \texttt{domain} instance.
+
 %-------------------------------------------------------------------------------
 @D Primitive mapping function 
 @{def larMap(coordFuncs):
 	def larMap0(domain):
 		V,CV = domain
 		V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
-		return V,CV
+		return checkModel((V,CV))
 	return larMap0
 @}
 %-------------------------------------------------------------------------------
 
 \subsection{Identify close or coincident points}
+
+The function \texttt{checkModel}, applied to a \texttt{model} parameter, i.e.~to a (vertices, cells)  pair, returns the model after identification of vertices with coincident or very close position vectors.
+The \texttt{checkModel} function works as follows: first a dictionary \texttt{vertDict} is created, with key a suitably approximated position converted into a string by the \texttt{vcode} converter (given in the Appendix), and with value the list of vertex indices with the same (approximated) position. Then, an \texttt{invertedindex} array is created, associating each original vertex index with the new index produced by enumerating the (distinct) keys of the dictionary. Finally, a new list \texttt{CV} of cells is created, by substituting the new vertex indices for the old ones. 
 
 %-------------------------------------------------------------------------------
 @D Create a dictionary with key the point location
@@ -98,11 +131,13 @@ def larIntervals(shape):
 	V,CV = model; n = len(V)
 	vertDict = defaultdict(list)
 	for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
-	verts = (vertDict.values())
+	points,verts = TRANS(vertDict.items())
 	invertedindex = [None]*n
+	V = []
 	for k,value in enumerate(verts):
+		V.append(eval(points[k]))
 		for i in value:
-			invertedindex[i]=value[0]	
+			invertedindex[i]=k	
 	CV = [[invertedindex[v] for v in cell] for cell in CV]
 	# filter out degenerate cells
 	CV = [list(set(cell)) for cell in CV if len(set(cell))==len(cell)]
@@ -110,18 +145,15 @@ def larIntervals(shape):
 @}
 %-------------------------------------------------------------------------------
 
-
-%===============================================================================
-\section{Embedding/Projecting models}
-%===============================================================================
+\subsection{Embedding or projecting LAR models}
 %-------------------------------------------------------------------------------
 
-In order apply 3D transformations to a two-dimensional LAR model, we must embed it in 3D space, by adding one more coordinate to its vertices. 
+In order to apply 3D transformations to a two-dimensional LAR model, we must embed it in 3D space, by adding one more coordinate to its vertices. 
 
 \paragraph{Embedding or projecting a geometric model}
 
-This task is performed by the following function \texttt{larEmbed} with parameter $k$, that inserts its $d$-dimensional geometric argument in the $x_{d+1}, \ldots, x_{d+k}=0$ subspace.
-A reverse transformation of projection, removing the last $k$ coordinate of vertices without changing the object topology, is performed by the function \texttt{larEmbed} with \emph{negative} integer parameter.
+This task is performed by the function \texttt{larEmbed} with parameter $k$, that inserts its $d$-dimensional geometric argument in the $x_{d+1}, \ldots, x_{d+k}=0$ subspace of $\E^{d+k}$.
+A projection transformation, that removes the last $k$ coordinate of vertices, without changing the object topology, is performed by the function \texttt{larEmbed} with \emph{negative} integer parameter.
 
 
 %-------------------------------------------------------------------------------
@@ -141,8 +173,11 @@ A reverse transformation of projection, removing the last $k$ coordinate of vert
 
 %-------------------------------------------------------------------------------
 %===============================================================================
-\section{Primitive objets}
+\section{Primitive objects}
 %===============================================================================
+
+A large number of primitive surfaces or solids is defined in this section, using the \texttt{larMap} mechanism and the coordinate functions of a suitable chart.
+
 %-------------------------------------------------------------------------------
 \subsection{1D primitives}
 %-------------------------------------------------------------------------------
@@ -208,7 +243,6 @@ def makeOriented(model):
 			out.append(cell)
 		else:
 			out.append([cell[1]]+[cell[0]]+cell[2:])
-		print "\n det(mat) =",det(mat)
 	return V,out
 """
 def larCylinder(params):
@@ -356,9 +390,6 @@ First we state the general rules that will be satisfied by the matrices used in 
 			V = [v[:-1] for v in V]
 			CV = copy(model.cells)
 			d = copy(model.d)
-			print "\n V =",V
-			print "\n CV =",CV
-			print "\n d =",d
 			return Model((V,CV),d)
 		elif isinstance(model,tuple):
 			V,CV = model
@@ -468,117 +499,53 @@ elementary components, which cannot be further decomposed.
 Two main advantages can be found in a hierarchical modeling approach. Each elementary part and each assembly, at every hierarchical level, are defined independently from each other, using a local coordinate frame, suitably chosen to make its definition easier. Furthermore, only one copy of each component is stored in the memory, and may be instanced in different locations and orientations how many times it is needed.
 
 %-------------------------------------------------------------------------------
-\subsection{Traversal}
+\subsection{Traversal of hierarchical structures}
 %-------------------------------------------------------------------------------
 
-\subsubsection{Traversal of a multigraph}
+Of course, the main algorithm with hierarchical structures is the \emph{traversal} of the structure network, whose aim is to transform every encountered object from local to global coordinates, where the global coordinates are those of the network root (the only node with indegree zero).
+
+A structure network can be modelled using a directed acyclic multigraph, i.e.~a triple $(N,A,f)$
+made by a set $N$ of nodes, a set $A$ of arcs, and a function $f:A \to N^2$ from arcs to ordered pairs of nodes. Conversely that in standard oriented graphs, in this kind of structure more than one oriented arc is allowed between a pair on nodes.
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
    \includegraphics[width=0.8\linewidth]{images/traversal} 
-   \caption{Traversal algorithm of a multigraph.}
-   \label{fig:example}
+   \caption{Traversal algorithm of an acyclic multigraph.}
+   \label{fig:traversal}
 \end{figure}
 
+A simple modification of a DFS (Depth First Search) visit of a graph can be used to traverse the structure network This algorithm is given in Figure~\ref{fig:traversal} from Reference~\cite{Paoluzzi2003a}. 
 
 \subsubsection{Traversal of nested lists}
 
-\paragraph{show the pattern of calls and returned values}
+The representation chosen for structure networks with LAR is the serialised one, consisting in ordered sequences (lists) of either LAR models, or affine transformations, or references to other structures, either directly nested within some given structure, or called by reference (name) from within the list.
+
+The aim of a structure network traversal is, of course, to transform every component structure, usually defined in a local coordinate system, into the reference frame of the structure as a whole, normally corresponding with the reference system of the structure's root, called the \emph{world coordinate} system.
+
+\paragraph{The pattern of calls and returned values}
+
+In order to better understand the task of the traversal algorithm, where every transformation is applied to all the following models, --- only if included in the same list (i.e.~structure) --- it is very useful to start with some \emph{algorithm emulation}. In particular, the recursive script below discriminate between three different cases (number, string, or sequence) as the actual traversal must do with Models, Matrices, and Structures, respectively.
 
 %-------------------------------------------------------------------------------
-@D Traversal of a multigraph
-@{def __traverse(CTM, stack, o, flag):
-    i = 0
-    while i < len(o):
-        #print "lunghezza lista", len(o)
+@D Emulation of scene multigraph traversal
+@{from pyplasm import *
+def __traverse(CTM, stack, o):
+    for i in range(len(o)):
         if ISNUM(o[i]): print o[i], REVERSE(CTM)
-        if ISSTRING(o[i]): 
-            #print "E' una lettera " + o[i]
+        elif ISSTRING(o[i]): 
             CTM.append(o[i])
-            #print "trasformazione attuale", CTM
-            if flag: stack.append(o[i])
-        if ISLIST(o[i]):
-            stack = [] 
-            #print "E' una sottolista", o[i]
-            traverse(CTM, stack, o[i], True)
-            CTM = CTM[:-len(stack)]
-            stack = []
-            flag = False
-        i = i + 1
+        elif ISSEQ(o[i]):
+            stack.append(o[i])				# push the stack
+            __traverse(CTM, stack, o[i])
+            CTM = CTM[:-len(stack)] 		# pop the stack
 
 def algorithm(data):
     CTM,stack = ["I"],[]
-    __traverse(CTM, stack, data, False)  
+    __traverse(CTM, stack, data)  
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Traversal of a scene multigraph}
-
-The previous traversal algorithm is here customised for scene multigraph, where the objects are LAR models, i.e.~pairs of vertices of type '\texttt{Verts} and cells, and where the transformations are matrix transformations of type '\texttt{Mat}'.
-
-\paragraph{Check models for common dimension}
-The input list of a call to \texttt{larStruct} primitive is preliminary checked for uniform dimensionality of the enclosed LAR models and transformations. The common dimension \texttt{dim} of models and matrices is returned by the function \texttt{checkStruct}. Otherwise, an exception is generated (TODO).
-
-%-------------------------------------------------------------------------------
-@D check LAR models in input struct for common dimension
-@{""" Check models for common dimension """
-
-
-data = [Model(larDomain((3,2)),2), 
-		r(PI), 
-		Struct([ Model(larDomain((1,4)),2), 
-		  t(1,1), 
-		  Model(larDomain((4,2)),2) ]), 
-		Model(larDomain((5,4)),2)] 
-		
-a = Struct(data)
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Initialization}
-
-%-------------------------------------------------------------------------------
-@D Traversal of a scene multigraph
-@{""" Traversal of a scene multigraph """
-@< Structure traversal algorithm @>
-
-def evalStruct(struct):
-    dim = struct.n
-    CTM, stack = scipy.identity(dim+1), []
-    print "\n CTM,stack =",(CTM,stack)
-    scene = traverse(CTM, stack, struct) 
-    print "\n scene =", scene
-    return scene
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Structure traversal algorithm}
-
-%-------------------------------------------------------------------------------
-@D Structure traversal algorithm 
-@{def traverse(CTM, stack, o, scene=[]):
-    i = 0
-    while i < len(o):
-        print "lunghezza lista", len(o)
-        if isinstance(o[i],Model): 
-            print "i, o[i] = ",(i, o[i])
-            scene += [larApply(CTM)(o[i])]
-        elif isinstance(o[i],Mat): 
-            print "\no[i] =\n",o[i]
-            print "\nCTM =\n",CTM
-            CTM = scipy.dot(CTM, o[i])
-            print "\nCTM =\n",CTM,"\n"
-            print "trasformazione attuale: \n", CTM
-        elif isinstance(o[i],Struct):
-            stack.append(CTM) 
-            print "E' una sottolista", o[i]
-            traverse(CTM, stack, o[i], scene)
-            CTM = stack.pop()
-        i = i + 1
-    return scene
-@}
-%-------------------------------------------------------------------------------
-  
+Some use example of the above algorithm are provided below. The printout produced at run time is shown from the \texttt{emulation of traversal algorithm} macro.
 %-------------------------------------------------------------------------------
 @D Examples of multigraph traversal
 @{data = [1,"A", 2, 3, "B", [4, "C", 5], [6,"D", "E", 7, 8], 9]  
@@ -592,27 +559,86 @@ data = [1,"A", dat, "E", 7, 8, 9]
 print algorithm(data)
 @}
 %-------------------------------------------------------------------------------
-
-
-\paragraph{show the pattern of calls and returned values}
-
 %-------------------------------------------------------------------------------
-@D Let us explore the pattern even better
-@{data = [
-	(1,6,
-		(7,1,
-			(8,"12"))),
-	(2,9,10),
-	(3,),
-	4,
-	(5,
-		(11,
-		("13",)))]
-
-
-print list(traverse(data))
+@D Emulation of traversal algorithm
+@{1 ['I']
+2 ['A', 'I']
+3 ['A', 'I']
+4 ['B', 'A', 'I']
+5 ['C', 'B', 'A', 'I']
+6 ['B', 'A', 'I']
+7 ['E', 'D', 'B', 'A', 'I']
+8 ['E', 'D', 'B', 'A', 'I']
+9 ['B', 'A', 'I']
+None
+1 ['I']
+2 ['A', 'I']
+3 ['A', 'I']
+4 ['B', 'A', 'I']
+5 ['C', 'B', 'A', 'I']
+6 ['C', 'B', 'A', 'I']
+7 ['E', 'A', 'I']
+8 ['E', 'A', 'I']
+9 ['E', 'A', 'I']
+None
+2 ['I']
+3 ['I']
+4 ['B', 'I']
+5 ['C', 'B', 'I']
+6 ['C', 'B', 'I']
+None
+1 ['I']
+2 ['A', 'I']
+3 ['A', 'I']
+4 ['B', 'A', 'I']
+5 ['C', 'B', 'A', 'I']
+6 ['C', 'B', 'A', 'I']
+7 ['E', 'A', 'I']
+8 ['E', 'A', 'I']
+9 ['E', 'A', 'I']
 @}
 %-------------------------------------------------------------------------------
+
+\paragraph{Traversal of a scene multigraph}
+
+The previous traversal algorithm is here customised for scene multigraph, where the objects are LAR models, i.e.~pairs of vertices of type '\texttt{Verts} and cells, and where the transformations are matrix transformations of type '\texttt{Mat}'.
+
+\paragraph{Check models for common dimension}
+The input list of a call to \texttt{larStruct} primitive is preliminary checked for uniform dimensionality of the enclosed LAR models and transformations. The common dimension \texttt{dim} of models and matrices is returned by the function \texttt{checkStruct}, within the class definition \texttt{Struct} in the module \texttt{lar2psm}. Otherwise, an exception is generated (TODO).
+
+\paragraph{Initialization and call of the algorithm}
+
+%-------------------------------------------------------------------------------
+@D Traversal of a scene multigraph
+@{""" Traversal of a scene multigraph """
+@< Structure traversal algorithm @>
+
+def evalStruct(struct):
+    dim = struct.n
+    CTM, stack = scipy.identity(dim+1), []
+    scene = traverse(CTM, stack, struct) 
+    return scene
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Structure traversal algorithm}
+
+%-------------------------------------------------------------------------------
+@D Structure traversal algorithm 
+@{def traverse(CTM, stack, o, scene=[]):
+    for i in range(len(o)):
+        if isinstance(o[i],Model): 
+            scene += [larApply(CTM)(o[i])]
+        elif isinstance(o[i],Mat): 
+            CTM = scipy.dot(CTM, o[i])
+        elif isinstance(o[i],Struct):
+            stack.append(CTM) 
+            traverse(CTM, stack, o[i], scene)
+            CTM = stack.pop()
+    return scene
+@}
+%-------------------------------------------------------------------------------
+
 
 %-------------------------------------------------------------------------------
 \subsection{Example}
@@ -659,30 +685,29 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test06.py
-@{""" Example of non-nested structure with translation and rotations """
+@{""" Example of nested structures with translation and rotations """
 @< Initial import of modules @>
 from mapper import *
 square = larCuboids([1,1])
 square = Model(square,2)
 table = larApply( t(-.5,-.5) )(square)
 chair = Struct([ t(.75, 0), s(.35,.35), table ])
-struct = Struct( [table] + 4*[r(PI/2), chair])
+struct = Struct( [t(2,1)] + [table] + 4*[r(PI/2), chair])
 scene = evalStruct(struct)
 VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @}
 %-------------------------------------------------------------------------------
 
-%-------------------------------------------------------------------------------
-\subsection{aaaaaa}
-%-------------------------------------------------------------------------------
 %===============================================================================
-\section{Exporting the library}
+\section{Computational framework}
 %===============================================================================
+\subsection{Exporting the library}
 %-------------------------------------------------------------------------------
 @O lib/py/mapper.py
 @{""" Mapping functions and primitive objects """
 @< Initial import of modules @>
 @< Generate a simplicial decomposition ot the $[0,1]^d$ domain @>
+@< Scaled simplicial decomposition ot the $[0,1]^d$ domain @>
 @< Create a dictionary with key the point location @>
 @< Primitive mapping function @>
 @< Basic tests of mapper module @>
@@ -706,7 +731,7 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @}
 %-------------------------------------------------------------------------------
 %===============================================================================
-\section{Examples}
+\subsection{Examples}
 %===============================================================================
 
 \paragraph{3D rotation about a general axis}
@@ -742,7 +767,7 @@ VIEW(STRUCT(MKPOLS(model)))
 
 
 %===============================================================================
-\section{Tests}
+\subsection{Tests}
 %===============================================================================
 
 	
@@ -775,7 +800,6 @@ VIEW(STRUCT(MKPOLS(model)))
 from mapper import *
 model = checkModel(larCircle(1)())
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
-"""
 model = checkModel(larDisk(1)([36,4]))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = checkModel(larRing([.9, 1.])([36,2]))
@@ -796,7 +820,6 @@ model = larPizza([0.05,1])([8,48])
 VIEW(STRUCT(MKPOLS(model)))
 model = checkModel(larTorus([0.5,1])())
 VIEW(STRUCT(MKPOLS(model)))
-"""
 @}
 %-------------------------------------------------------------------------------
 
