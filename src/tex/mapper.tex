@@ -378,7 +378,7 @@ First we state the general rules that will be satisfied by the matrices used in 
 
 
 %-------------------------------------------------------------------------------
-\subsection{map}
+\subsection{Affine mapping}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
@@ -449,7 +449,7 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 @D space rotation (in 3D)
-@{if n == 3: # rotation in 2D
+@{if n == 3: # rotation in 3D
 	mat = scipy.identity(4)
 	angle = VECTNORM(args); axis = UNITVECT(args)
 	cos = COS(angle); sin = SIN(angle)
@@ -505,7 +505,7 @@ Two main advantages can be found in a hierarchical modeling approach. Each eleme
 Of course, the main algorithm with hierarchical structures is the \emph{traversal} of the structure network, whose aim is to transform every encountered object from local to global coordinates, where the global coordinates are those of the network root (the only node with indegree zero).
 
 A structure network can be modelled using a directed acyclic multigraph, i.e.~a triple $(N,A,f)$
-made by a set $N$ of nodes, a set $A$ of arcs, and a function $f:A \to N^2$ from arcs to ordered pairs of nodes. Conversely that in standard oriented graphs, in this kind of structure more than one oriented arc is allowed between a pair on nodes.
+made by a set $N$ of nodes, a set $A$ of arcs, and a function $f:A \to N^2$ from arcs to ordered pairs of nodes. Conversely that in standard oriented graphs, in this kind of structure more than one oriented arc is allowed between the same pair on nodes.
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
@@ -514,17 +514,17 @@ made by a set $N$ of nodes, a set $A$ of arcs, and a function $f:A \to N^2$ from
    \label{fig:traversal}
 \end{figure}
 
-A simple modification of a DFS (Depth First Search) visit of a graph can be used to traverse the structure network This algorithm is given in Figure~\ref{fig:traversal} from Reference~\cite{Paoluzzi2003a}. 
+A simple modification of a DFS (Depth First Search) visit of a graph can be used to traverse the structure network This algorithm is given in Figure~\ref{fig:traversal} from~\cite{Paoluzzi2003a}. 
 
 \subsubsection{Traversal of nested lists}
 
-The representation chosen for structure networks with LAR is the serialised one, consisting in ordered sequences (lists) of either LAR models, or affine transformations, or references to other structures, either directly nested within some given structure, or called by reference (name) from within the list.
+The representation chosen for structure networks with LAR is the serialised one, consisting in ordered sequences (lists) of either (a) LAR models, or (b) affine transformations, or (c) references to other structures, either directly nested within some given structure, or called by reference (name) from within the list.
 
 The aim of a structure network traversal is, of course, to transform every component structure, usually defined in a local coordinate system, into the reference frame of the structure as a whole, normally corresponding with the reference system of the structure's root, called the \emph{world coordinate} system.
 
 \paragraph{The pattern of calls and returned values}
 
-In order to better understand the task of the traversal algorithm, where every transformation is applied to all the following models, --- only if included in the same list (i.e.~structure) --- it is very useful to start with some \emph{algorithm emulation}. In particular, the recursive script below discriminate between three different cases (number, string, or sequence) as the actual traversal must do with Models, Matrices, and Structures, respectively.
+In order to better understand the behaviour of the traversal algorithm, where every transformation is applied to all the following models, --- but only if included in the same structure  (i.e.~list) --- it may be very useful to start with an \emph{algorithm emulation}. In particular, the recursive script below discriminates between three different cases (number, string, or sequence), whereas the actual traversal must do with (a) Models, (b) Matrices, and (c) Structures, respectively.
 
 %-------------------------------------------------------------------------------
 @D Emulation of scene multigraph traversal
@@ -550,52 +550,49 @@ Some use example of the above algorithm are provided below. The printout produce
 @D Examples of multigraph traversal
 @{data = [1,"A", 2, 3, "B", [4, "C", 5], [6,"D", "E", 7, 8], 9]  
 print algorithm(data)
+>>> 1 ['I']
+	2 ['A', 'I']
+	3 ['A', 'I']
+	4 ['B', 'A', 'I']
+	5 ['C', 'B', 'A', 'I']
+	6 ['B', 'A', 'I']
+	7 ['E', 'D', 'B', 'A', 'I']
+	8 ['E', 'D', 'B', 'A', 'I']
+	9 ['B', 'A', 'I']
+
 data = [1,"A", [2, 3, "B", 4, "C", 5, 6,"D"], "E", 7, 8, 9]  
 print algorithm(data)
-data = [2, 3, "B", 4, "C", 5, 6,"D"]
-print algorithm(data)
-dat = [2, 3, "B", 4, "C", 5, 6,"D"]
-data = [1,"A", dat, "E", 7, 8, 9]
-print algorithm(data)
+>>> 1 ['I']
+	2 ['A', 'I']
+	3 ['A', 'I']
+	4 ['B', 'A', 'I']
+	5 ['C', 'B', 'A', 'I']
+	6 ['C', 'B', 'A', 'I']
+	7 ['E', 'A', 'I']
+	8 ['E', 'A', 'I']
+	9 ['E', 'A', 'I']
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 @D Emulation of traversal algorithm
-@{1 ['I']
-2 ['A', 'I']
-3 ['A', 'I']
-4 ['B', 'A', 'I']
-5 ['C', 'B', 'A', 'I']
-6 ['B', 'A', 'I']
-7 ['E', 'D', 'B', 'A', 'I']
-8 ['E', 'D', 'B', 'A', 'I']
-9 ['B', 'A', 'I']
-None
-1 ['I']
-2 ['A', 'I']
-3 ['A', 'I']
-4 ['B', 'A', 'I']
-5 ['C', 'B', 'A', 'I']
-6 ['C', 'B', 'A', 'I']
-7 ['E', 'A', 'I']
-8 ['E', 'A', 'I']
-9 ['E', 'A', 'I']
-None
-2 ['I']
-3 ['I']
-4 ['B', 'I']
-5 ['C', 'B', 'I']
-6 ['C', 'B', 'I']
-None
-1 ['I']
-2 ['A', 'I']
-3 ['A', 'I']
-4 ['B', 'A', 'I']
-5 ['C', 'B', 'A', 'I']
-6 ['C', 'B', 'A', 'I']
-7 ['E', 'A', 'I']
-8 ['E', 'A', 'I']
-9 ['E', 'A', 'I']
+@{dat = [2, 3, "B", 4, "C", 5, 6,"D"]
+print algorithm(dat)
+>>> 2 ['I']
+	3 ['I']
+	4 ['B', 'I']
+	5 ['C', 'B', 'I']
+	6 ['C', 'B', 'I']
+data = [1,"A", dat, "E", 7, 8, 9]
+print algorithm(data)
+>>> 1 ['I']
+	2 ['A', 'I']
+	3 ['A', 'I']
+	4 ['B', 'A', 'I']
+	5 ['C', 'B', 'A', 'I']
+	6 ['C', 'B', 'A', 'I']
+	7 ['E', 'A', 'I']
+	8 ['E', 'A', 'I']
+	9 ['E', 'A', 'I']
 @}
 %-------------------------------------------------------------------------------
 
@@ -608,32 +605,36 @@ The input list of a call to \texttt{larStruct} primitive is preliminary checked 
 
 \paragraph{Initialization and call of the algorithm}
 
+The function \texttt{evalStruct} is used to evaluate a structure network, i.e.~to return a \texttt{scene}
+list of objects of type \texttt{Model}, all referenced in the world coordinate system. The input variable \texttt{struct} must contain an object of class \texttt{Struct}, i.e.~a reference to an unevaluated structure network. The variable \texttt{dim}  contains the embedding dimension of the structure, i.e.~the number of doordinates of its vertices (normally either 2 or 3), the CTM (Current Transformation Matrix) is initialised to the (homogeneous) identity matrix, and  the \texttt{scene} is returned by calling the \texttt{traverse} algorithm.
+
 %-------------------------------------------------------------------------------
 @D Traversal of a scene multigraph
 @{""" Traversal of a scene multigraph """
 @< Structure traversal algorithm @>
-
 def evalStruct(struct):
     dim = struct.n
     CTM, stack = scipy.identity(dim+1), []
-    scene = traverse(CTM, stack, struct) 
+    scene = traversal(CTM, stack, struct) 
     return scene
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{Structure traversal algorithm}
 
+The \texttt{traversal} algorithm decides between three different cases, depending on the type of the currently inspected object. If the object is a \texttt{Model} instance, then it applies to it the \texttt{CTM} matrix; else if the object is a \texttt{Mat} instance, then the \texttt{CTM} matrix is updated by (right) product with it; else if the object is a \texttt{Struct} instance, then the \texttt{CTM} is pushed on the stack, initially empty, then the \texttt{traversal} is called (recursion), and finally, at (each) return from recursion, the \texttt{CTM} is recovered by popping the stack.
+
 %-------------------------------------------------------------------------------
 @D Structure traversal algorithm 
-@{def traverse(CTM, stack, o, scene=[]):
-    for i in range(len(o)):
-        if isinstance(o[i],Model): 
-            scene += [larApply(CTM)(o[i])]
-        elif isinstance(o[i],Mat): 
-            CTM = scipy.dot(CTM, o[i])
-        elif isinstance(o[i],Struct):
+@{def traversal(CTM, stack, obj, scene=[]):
+    for i in range(len(obj)):
+        if isinstance(obj[i],Model): 
+            scene += [larApply(CTM)(obj[i])]
+        elif isinstance(obj[i],Mat): 
+            CTM = scipy.dot(CTM, obj[i])
+        elif isinstance(obj[i],Struct):
             stack.append(CTM) 
-            traverse(CTM, stack, o[i], scene)
+            traversal(CTM, stack, obj[i], scene)
             CTM = stack.pop()
     return scene
 @}
@@ -643,7 +644,7 @@ def evalStruct(struct):
 %-------------------------------------------------------------------------------
 \subsection{Example}
 %-------------------------------------------------------------------------------
-Some simple examples of structures as combinations of LAR models and affine transformations are given in this section. 
+Some examples of structures as combinations of LAR models and affine transformations are given in this section. 
 
 \paragraph{Global coordinates}
 We start with a simple 2D example of a non-nested list of translated 2D object instances and rotation about the origin.
@@ -660,7 +661,8 @@ chair1 = larApply( t(.75, 0) )(chair)
 chair2 = larApply( r(PI/2) )(chair1)
 chair3 = larApply( r(PI/2) )(chair2)
 chair4 = larApply( r(PI/2) )(chair3)
-VIEW(SKEL_1(STRUCT(MKPOLS(table)+MKPOLS(chair1)+MKPOLS(chair2)+MKPOLS(chair3)+MKPOLS(chair4))))
+VIEW(SKEL_1(STRUCT(MKPOLS(table)+MKPOLS(chair1)+
+				   MKPOLS(chair2)+MKPOLS(chair3)+MKPOLS(chair4))))
 @}
 %-------------------------------------------------------------------------------
 

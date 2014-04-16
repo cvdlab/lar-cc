@@ -217,7 +217,7 @@ def r(*args):
       mat[0,0] = cos;   mat[0,1] = -sin;
       mat[1,0] = sin;   mat[1,1] = cos;
    
-   if n == 3: # rotation in 2D
+   if n == 3: # rotation in 3D
       mat = scipy.identity(4)
       angle = VECTNORM(args); axis = UNITVECT(args)
       cos = COS(angle); sin = SIN(angle)
@@ -271,22 +271,21 @@ def larApply(affineMatrix):
    return larApply0
 
 """ Traversal of a scene multigraph """
-def traverse(CTM, stack, o, scene=[]):
-    for i in range(len(o)):
-        if isinstance(o[i],Model): 
-            scene += [larApply(CTM)(o[i])]
-        elif isinstance(o[i],Mat): 
-            CTM = scipy.dot(CTM, o[i])
-        elif isinstance(o[i],Struct):
+def traversal(CTM, stack, obj, scene=[]):
+    for i in range(len(obj)):
+        if isinstance(obj[i],Model): 
+            scene += [larApply(CTM)(obj[i])]
+        elif isinstance(obj[i],Mat): 
+            CTM = scipy.dot(CTM, obj[i])
+        elif isinstance(obj[i],Struct):
             stack.append(CTM) 
-            traverse(CTM, stack, o[i], scene)
+            traversal(CTM, stack, obj[i], scene)
             CTM = stack.pop()
     return scene
-
 
 def evalStruct(struct):
     dim = struct.n
     CTM, stack = scipy.identity(dim+1), []
-    scene = traverse(CTM, stack, struct) 
+    scene = traversal(CTM, stack, struct) 
     return scene
 
