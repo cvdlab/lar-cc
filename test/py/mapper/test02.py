@@ -23,6 +23,7 @@ from boolean2 import *
 
 from mapper import *
 model = checkModel(larToroidal([0.2,1])())
-a,b,c = SCALARVECTPROD([PI/2,UNITVECT([1,1,0]) ])
+angle = PI/2; axis = UNITVECT([1,1,0])
+a,b,c = SCALARVECTPROD([ angle, axis ])
 model = larApply(r(a,b,c))(model)
 VIEW(STRUCT(MKPOLS(model)))

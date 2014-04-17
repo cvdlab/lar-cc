@@ -79,8 +79,8 @@ In this module a first implementation (no optimisations) is done of several \tex
 
 The \texttt{mapper} module, introduced here, aims to provide the tools needed to apply both dimension-independent affine transformations and general simplicial maps to geometric objects and assemblies developed within the LAR scheme. 
 
-For this purpose, a simplicial decomposition of the $[0,1]^d$ hypercube ($d \geq 1$) with any possible \texttt{shape} is firstly given, followed by its scaled version with any  according $\texttt{size}\in\E^d$, being its position vector the mapped image of the point $\mathbf{1}\in\E^d$. A general mapping mechanism is specified, to map any domain decomposition (either simplicial or not) with a given set of ccordinate functions, providing a piecewise-linear approximation of any curved embedding of a $d$-dimensional domain in any $\E^n$ space, with $n \geq d$. 
-A suitable function is therefore given to identify corresponding vertices when mapping a domain decomposition of the fundamental polygon of a closed manifold. 
+For this purpose, a simplicial decomposition of the $[0,1]^d$ hypercube ($d \geq 1$) with any possible \texttt{shape} is firstly given, followed by its scaled version with any  according $\texttt{size}\in\E^d$, being its position vector the mapped image of the point $\mathbf{1}\in\E^d$. A general mapping mechanism is specified, to map any domain decomposition (either simplicial or not) with a given set of coordinate functions, providing a piecewise-linear approximation of any curved embedding of a $d$-dimensional domain in any $\E^n$ space, with $n \geq d$. 
+A suitable function is also given to identify corresponding vertices when mapping a domain decomposition of the fundamental polygon (or polyhedron) of a closed manifold. 
 
 The geometric tools given in this chapter employ a normalised homogeneous representation of vertices of the represented shapes, where the added coordinate is the \emph{last} of the ordered list of vertex coordinates. The homogeneous representation of vertices is used \emph{implicitly}, by inserting the extra coordinate only when needed by the operation at hand, mainly for computing the product of the object's vertices times the matrix of an affine tensor. 
 
@@ -245,6 +245,7 @@ A projection transformation, that removes the last $k$ coordinate of vertices, w
 %-------------------------------------------------------------------------------
 %===============================================================================
 \section{Primitive objects}
+\label{sec:generators}
 %===============================================================================
 
 A large number of primitive surfaces or solids is defined in this section, using the \texttt{larMap} mechanism and the coordinate functions of a suitable chart.
@@ -281,15 +282,15 @@ A large number of primitive surfaces or solids is defined in this section, using
 %-------------------------------------------------------------------------------
 Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defined here, including 2D disks and rings, as well as cylindrical, spherical and toroidal surfaces.
 
-\paragraph{Disk}
+\paragraph{Disk surface}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap7}
 \protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Disk centered in the origin\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larDisk(radius=1.):@\\
+\mbox{}\verb@def larDisk(radius=1.,angle=2*PI):@\\
 \mbox{}\verb@   def larDisk0(shape=[36,1]):@\\
-\mbox{}\verb@      domain = larIntervals(shape)([2*PI,radius])@\\
+\mbox{}\verb@      domain = larIntervals(shape)([angle,radius])@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      x = lambda V : [p[1]*COS(p[0]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [p[1]*SIN(p[0]) for p in V]@\\
@@ -305,16 +306,15 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
-\paragraph{Ring}
+\paragraph{Ring surface}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap8}
 \protect\makebox[0ex][r]{\NWtarget{nuweb5c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Ring centered in the origin\nobreak\ {\footnotesize 5c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larRing(params):@\\
-\mbox{}\verb@   r1,r2 = params@\\
+\mbox{}\verb@def larRing(r1,r2,angle=2*PI):@\\
 \mbox{}\verb@   def larRing0(shape=[36,1]):@\\
-\mbox{}\verb@      V,CV = larIntervals(shape)([2*PI,r2-r1])@\\
+\mbox{}\verb@      V,CV = larIntervals(shape)([angle,r2-r1])@\\
 \mbox{}\verb@      V = translatePoints(V,[0,r1])@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda V : [p[1] * COS(p[0]) for p in V]@\\
@@ -333,7 +333,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \paragraph{Cylinder surface}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap9}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cylinder surface with $z$ axis\nobreak\ {\footnotesize 6}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cylinder surface with $z$ axis\nobreak\ {\footnotesize 6a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from scipy.linalg import det@\\
@@ -349,10 +349,9 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \mbox{}\verb@         out.append([cell[1]]+[cell[0]]+cell[2:])@\\
 \mbox{}\verb@   return V,out@\\
 \mbox{}\verb@"""@\\
-\mbox{}\verb@def larCylinder(params):@\\
-\mbox{}\verb@   radius,height= params@\\
+\mbox{}\verb@def larCylinder(radius,height,angle=2*PI):@\\
 \mbox{}\verb@   def larCylinder0(shape=[36,1]):@\\
-\mbox{}\verb@      domain = larIntervals(shape)([2*PI,1])@\\
+\mbox{}\verb@      domain = larIntervals(shape)([angle,1])@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      x = lambda V : [radius*COS(p[0]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [radius*SIN(p[0]) for p in V]@\\
@@ -374,13 +373,13 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \paragraph{Spherical surface of given radius}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap10}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Spherical surface of given radius\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Spherical surface of given radius\nobreak\ {\footnotesize 6b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larSphere(radius=1):@\\
+\mbox{}\verb@def larSphere(radius=1,angle1=PI,angle2=2*PI):@\\
 \mbox{}\verb@   def larSphere0(shape=[18,36]):@\\
-\mbox{}\verb@      V,CV = larIntervals(shape)([PI,2*PI])@\\
-\mbox{}\verb@      V = translatePoints(V,[-PI/2,-PI])@\\
+\mbox{}\verb@      V,CV = larIntervals(shape)([angle1,angle2])@\\
+\mbox{}\verb@      V = translatePoints(V,[-angle1/2,-angle2/2])@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]@\\
@@ -399,13 +398,12 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \paragraph{Toroidal surface}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap11}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Toroidal surface of given radiuses\nobreak\ {\footnotesize 7b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Toroidal surface of given radiuses\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larToroidal(params):@\\
-\mbox{}\verb@   r,R = params@\\
+\mbox{}\verb@def larToroidal(r,R,angle1=2*PI,angle2=2*PI):@\\
 \mbox{}\verb@   def larToroidal0(shape=[24,36]):@\\
-\mbox{}\verb@      domain = larIntervals(shape)([2*PI,2*PI])@\\
+\mbox{}\verb@      domain = larIntervals(shape)([angle1,angle2])@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]@\\
@@ -424,13 +422,12 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \paragraph{Crown surface}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap12}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize 7c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize 7b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larCrown(params):@\\
-\mbox{}\verb@   r,R = params@\\
+\mbox{}\verb@def larCrown(r,R,angle=2*PI):@\\
 \mbox{}\verb@   def larCrown0(shape=[24,36]):@\\
-\mbox{}\verb@      V,CV = larIntervals(shape)([PI,2*PI])@\\
+\mbox{}\verb@      V,CV = larIntervals(shape)([PI,angle])@\\
 \mbox{}\verb@      V = translatePoints(V,[-PI/2,0])@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]@\\
@@ -458,9 +455,9 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larBall(radius=1):@\\
+\mbox{}\verb@def larBall(radius=1,angle1=PI,angle2=2*PI):@\\
 \mbox{}\verb@   def larBall0(shape=[18,36]):@\\
-\mbox{}\verb@      V,CV = checkModel(larSphere(radius)(shape))@\\
+\mbox{}\verb@      V,CV = checkModel(larSphere(radius,angle1,angle2)(shape))@\\
 \mbox{}\verb@      return V,[range(len(V))]@\\
 \mbox{}\verb@   return larBall0@\\
 \mbox{}\verb@@{\NWsep}
@@ -479,10 +476,9 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larRod(params):@\\
-\mbox{}\verb@   radius,height= params@\\
+\mbox{}\verb@def larRod(radius,height,angle=2*PI):@\\
 \mbox{}\verb@   def larRod0(shape=[36,1]):@\\
-\mbox{}\verb@      V,CV = checkModel(larCylinder(params)(shape))@\\
+\mbox{}\verb@      V,CV = checkModel(larCylinder(radius,height,angle)(shape))@\\
 \mbox{}\verb@      return V,[range(len(V))]@\\
 \mbox{}\verb@   return larRod0@\\
 \mbox{}\verb@@{\NWsep}
@@ -501,10 +497,9 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \protect\makebox[0ex][r]{\NWtarget{nuweb8c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize 8c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larTorus(params):@\\
-\mbox{}\verb@   r,R = params@\\
+\mbox{}\verb@def larTorus(r,R,angle1=2*PI,angle2=2*PI):@\\
 \mbox{}\verb@   def larTorus0(shape=[24,36,1]):@\\
-\mbox{}\verb@      domain = larIntervals(shape)([2*PI,2*PI,r])@\\
+\mbox{}\verb@      domain = larIntervals(shape)([angle1,angle2,r])@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]@\\
@@ -524,13 +519,14 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \paragraph{Solid pizza}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap16}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize 8d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larPizza(params):@\\
-\mbox{}\verb@   r,R= params@\\
+\mbox{}\verb@def larPizza(r,R,angle=2*PI):@\\
+\mbox{}\verb@   assert angle <= PI@\\
 \mbox{}\verb@   def larPizza0(shape=[24,36]):@\\
-\mbox{}\verb@      V,CV = checkModel(larCrown(params)(shape))@\\
+\mbox{}\verb@      V,CV = checkModel(larCrown(r,R,angle)(shape))@\\
+\mbox{}\verb@      V += [[0,0,-r],[0,0,r]]@\\
 \mbox{}\verb@      return V,[range(len(V))]@\\
 \mbox{}\verb@   return larPizza0@\\
 \mbox{}\verb@@{\NWsep}
@@ -564,7 +560,7 @@ First we state the general rules that will be satisfied by the matrices used in 
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap17}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize 9b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb9}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize 9}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larApply(affineMatrix):@\\
@@ -921,7 +917,7 @@ list of objects of type \texttt{Model}, all referenced in the world coordinate s
 
 \paragraph{Structure traversal algorithm}
 
-The \texttt{traversal} algorithm decides between three different cases, depending on the type of the currently inspected object. If the object is a \texttt{Model} instance, then it applies to it the \texttt{CTM} matrix; else if the object is a \texttt{Mat} instance, then the \texttt{CTM} matrix is updated by (right) product with it; else if the object is a \texttt{Struct} instance, then the \texttt{CTM} is pushed on the stack, initially empty, then the \texttt{traversal} is called (recursion), and finally, at (each) return from recursion, the \texttt{CTM} is recovered by popping the stack.
+The \texttt{traversal} algorithm decides between three different cases, depending on the type of the currently inspected object. If the object is a \texttt{Model} instance, then applies to it the \texttt{CTM} matrix; else if the object is a \texttt{Mat} instance, then the \texttt{CTM} matrix is updated by (right) product with it; else if the object is a \texttt{Struct} instance, then the \texttt{CTM} is pushed on the stack, initially empty, then the \texttt{traversal} is called (recursion), and finally, at (each) return from recursion, the \texttt{CTM} is recovered by popping the stack.
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap29}
@@ -953,7 +949,7 @@ The \texttt{traversal} algorithm decides between three different cases, dependin
 %-------------------------------------------------------------------------------
 \subsection{Example}
 %-------------------------------------------------------------------------------
-Some simple examples of structures as combinations of LAR models and affine transformations are given in this section. 
+Some examples of structures as combinations of LAR models and affine transformations are given in this section. 
 
 \paragraph{Global coordinates}
 We start with a simple 2D example of a non-nested list of translated 2D object instances and rotation about the origin.
@@ -964,7 +960,7 @@ We start with a simple 2D example of a non-nested list of translated 2D object i
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Example of non-nested structure with translation and rotations """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@square = larCuboids([1,1])@\\
 \mbox{}\verb@table = larApply( t(-.5,-.5) )(square)@\\
@@ -982,7 +978,7 @@ We start with a simple 2D example of a non-nested list of translated 2D object i
 %-------------------------------------------------------------------------------
 
 \paragraph{Local coordinates}
-A different composition of transformations, from local to global coordinate frames, is used in yje following example.
+A different composition of transformations, from local to global coordinate frames, is used in the following example.
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap31}
@@ -990,7 +986,7 @@ A different composition of transformations, from local to global coordinate fram
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Example of non-nested structure with translation and rotations """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@square = larCuboids([1,1])@\\
 \mbox{}\verb@square = Model(square,2)@\\
@@ -1006,13 +1002,16 @@ A different composition of transformations, from local to global coordinate fram
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
+\paragraph{Call of nested structures by reference}
+Finally, a similar 2D example is given, by nesting one (or more) structures via separate definition and call by reference from the interior. Of course, a cyclic set of calls must be avoided, since it would result in a \emph{non acyclic} multigraph of the structure network.
+
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap32}
 \protect\makebox[0ex][r]{\NWtarget{nuweb17c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test06.py"@\nobreak\ {\footnotesize 17c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Example of nested structures with translation and rotations """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@square = larCuboids([1,1])@\\
 \mbox{}\verb@square = Model(square,2)@\\
@@ -1037,7 +1036,7 @@ A different composition of transformations, from local to global coordinate fram
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Mapping functions and primitive objects """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb2}{2}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb3c}{3c}}$\,\rangle$}\verb@@\\
@@ -1046,19 +1045,19 @@ A different composition of transformations, from local to global coordinate fram
 \mbox{}\verb@@\hbox{$\langle\,$Circle centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Disk centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Ring centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb5c}{5c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Spherical surface of given radius\nobreak\ {\footnotesize \NWlink{nuweb7a}{7a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Cylinder surface with $z$ axis\nobreak\ {\footnotesize \NWlink{nuweb6}{6}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7b}{7b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7c}{7c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Spherical surface of given radius\nobreak\ {\footnotesize \NWlink{nuweb6b}{6b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Cylinder surface with $z$ axis\nobreak\ {\footnotesize \NWlink{nuweb6a}{6a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7a}{7a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7b}{7b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize \NWlink{nuweb8a}{8a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb8c}{8c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb8d}{8d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Translation matrices\nobreak\ {\footnotesize \NWlink{nuweb10a}{10a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Scaling matrices\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Rotation matrices\nobreak\ {\footnotesize \NWlink{nuweb10c}{10c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Embedding and projecting a geometric model\nobreak\ {\footnotesize \NWlink{nuweb4}{4}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize \NWlink{nuweb9}{9}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Traversal of a scene multigraph\nobreak\ {\footnotesize \NWlink{nuweb16a}{16a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1070,6 +1069,8 @@ A different composition of transformations, from local to global coordinate fram
 %===============================================================================
 
 \paragraph{3D rotation about a general axis}
+The approach used by \texttt{lar-cc} to specify a general 3D rotation is shown in the following example,
+by passing the rotation function \texttt{r} the components \texttt{a,b,c} of the unit vector \texttt{axis} scaled by the rotation \texttt{angle}. 
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap34}
@@ -1077,10 +1078,11 @@ A different composition of transformations, from local to global coordinate fram
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" General 3D rotation of a toroidal surface """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@model = checkModel(larToroidal([0.2,1])())@\\
-\mbox{}\verb@a,b,c = SCALARVECTPROD([PI/2,UNITVECT([1,1,0]) ])@\\
+\mbox{}\verb@angle = PI/2; axis = UNITVECT([1,1,0])@\\
+\mbox{}\verb@a,b,c = SCALARVECTPROD([ angle, axis ])@\\
 \mbox{}\verb@model = larApply(r(a,b,c))(model)@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@@{\NWsep}
@@ -1090,7 +1092,8 @@ A different composition of transformations, from local to global coordinate fram
 %-------------------------------------------------------------------------------
 
 
-\paragraph{3D rotation of a 2D circle}
+\paragraph{3D elementary rotation of a 2D circle}
+A simpler specification is needed when the 3D rotation is about a coordinate axis. In this case the rotation angle can be directly given as the unique non-zero parameter of the the rotation function \texttt{r}. The rotation axis (in this case the $x$ one) is specified by the non-zero (angle) position.
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap35}
@@ -1098,7 +1101,7 @@ A different composition of transformations, from local to global coordinate fram
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Elementary 3D rotation of a 2D circle """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@model = checkModel(larCircle(1)())@\\
 \mbox{}\verb@model = larEmbed(1)(model)@\\
@@ -1114,9 +1117,11 @@ A different composition of transformations, from local to global coordinate fram
 
 
 %===============================================================================
-\subsection{Tests}
+\subsection{Tests about domain}
 %===============================================================================
 
+\paragraph{Mapping domains}
+The generations of mapping domains of different dimension (1D, 2D, 3D) is shown below.
 	
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap36}
@@ -1148,37 +1153,38 @@ A different composition of transformations, from local to global coordinate fram
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
-\paragraph{Circumference of unit radius}
+\paragraph{Testing some primitive object generators}
+The various model generators given in Section~\ref{sec:generators} are tested here, including LAR 2D circle, disk, and ring, as well as the 3D cylinder, sphere, and toroidal surfaces, and the solid objects ball, rod, crown, pizza, and torus.
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap37}
-\protect\makebox[0ex][r]{\NWtarget{nuweb19c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test01.py"@\nobreak\ {\footnotesize 19c }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test01.py"@\nobreak\ {\footnotesize 20a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Circumference of unit radius """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@model = checkModel(larCircle(1)())@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
 \mbox{}\verb@model = checkModel(larDisk(1)([36,4]))@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larRing([.9, 1.])([36,2]))@\\
+\mbox{}\verb@model = checkModel(larRing(.9, 1.)([36,2]))@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larCylinder([.5,2.])([32,1]))@\\
+\mbox{}\verb@model = checkModel(larCylinder(.5,2.)([32,1]))@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larSphere(1)())@\\
+\mbox{}\verb@model = checkModel(larSphere(1,PI/6,PI/4)([6,12]))@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larBall(1)()@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larRod([.25,2.])([32,1])@\\
+\mbox{}\verb@model = larRod(.25,2.)([32,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larToroidal([0.5,1])())@\\
+\mbox{}\verb@model = checkModel(larToroidal(0.5,2)())@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larCrown([0.125,1])([8,48]))@\\
+\mbox{}\verb@model = checkModel(larCrown(0.125,1)([8,48]))@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larPizza([0.05,1])([8,48])@\\
+\mbox{}\verb@model = larPizza(0.05,1,PI/3)([8,48])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larTorus([0.5,1])())@\\
+\mbox{}\verb@model = checkModel(larTorus(0.5,1)())@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1194,7 +1200,7 @@ A different composition of transformations, from local to global coordinate fram
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap38}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 20a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 20b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import *@\\
@@ -1203,29 +1209,29 @@ A different composition of transformations, from local to global coordinate fram
 \mbox{}\verb@@\\
 \mbox{}\verb@""" import modules from larcc/lib """@\\
 \mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb20b}{20b}\label{scrap39}
- }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb20g}{20g}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb20c}{20c}\label{scrap40}
- }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb20g}{20g}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb20d}{20d}\label{scrap41}
- }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb20g}{20g}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb20e}{20e}\label{scrap42}
- }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb20g}{20g}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb20f}{20f}\label{scrap43}
- }\mbox{}\verb@boolean2@ ) {\footnotesize \NWlink{nuweb20g}{20g}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21a}{21a}\label{scrap39}
+ }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21b}{21b}\label{scrap40}
+ }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21c}{21c}\label{scrap41}
+ }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21d}{21d}\label{scrap42}
+ }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21e}{21e}\label{scrap43}
+ }\mbox{}\verb@boolean2@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb17a}{17a}\NWlink{nuweb17b}{b}\NWlink{nuweb17c}{c}\NWlink{nuweb18a}{, 18a}\NWlink{nuweb18b}{b}\NWlink{nuweb19a}{, 19a}\NWlink{nuweb19c}{c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb17a}{17a}\NWlink{nuweb17b}{b}\NWlink{nuweb17c}{c}\NWlink{nuweb18a}{, 18a}\NWlink{nuweb18b}{b}\NWlink{nuweb19a}{, 19a}\NWlink{nuweb20a}{, 20a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap44}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20g}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 20g}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb21f}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 21f}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import @@1\verb@@\\
@@ -1235,7 +1241,7 @@ A different composition of transformations, from local to global coordinate fram
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1247,10 +1253,12 @@ A small set of utilityy functions is used to transform a point representation as
 
 %------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap45}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20h}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 20h}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb21g}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 21g}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\
+\mbox{}\verb@""" TODO: @\\
+\mbox{}\verb@use Decimal (http://docs.python.org/2/library/decimal.html) @\\
+\mbox{}\verb@"""@\\
 \mbox{}\verb@ROUND_ZERO = 1E-07@\\
 \mbox{}\verb@def round_or_zero (x,prec=7):@\\
 \mbox{}\verb@   """@\\
@@ -1274,7 +1282,8 @@ A small set of utilityy functions is used to transform a point representation as
 \mbox{}\verb@def vcode (vect): @\\
 \mbox{}\verb@   """@\\
 \mbox{}\verb@   To generate a string representation of a number array.@\\
-\mbox{}\verb@   Used to generate the vertex keys in PointSet dictionary, and other similar operations.@\\
+\mbox{}\verb@   Used to generate the vertex keys in PointSet dictionary, and other @\\
+\mbox{}\verb@   similar operations.@\\
 \mbox{}\verb@   """@\\
 \mbox{}\verb@   return prepKey(AA(fixedPrec)(vect))@\\
 \mbox{}\verb@@{\NWsep}

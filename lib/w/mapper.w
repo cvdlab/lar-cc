@@ -58,8 +58,8 @@ In this module a first implementation (no optimisations) is done of several \tex
 
 The \texttt{mapper} module, introduced here, aims to provide the tools needed to apply both dimension-independent affine transformations and general simplicial maps to geometric objects and assemblies developed within the LAR scheme. 
 
-For this purpose, a simplicial decomposition of the $[0,1]^d$ hypercube ($d \geq 1$) with any possible \texttt{shape} is firstly given, followed by its scaled version with any  according $\texttt{size}\in\E^d$, being its position vector the mapped image of the point $\mathbf{1}\in\E^d$. A general mapping mechanism is specified, to map any domain decomposition (either simplicial or not) with a given set of ccordinate functions, providing a piecewise-linear approximation of any curved embedding of a $d$-dimensional domain in any $\E^n$ space, with $n \geq d$. 
-A suitable function is therefore given to identify corresponding vertices when mapping a domain decomposition of the fundamental polygon of a closed manifold. 
+For this purpose, a simplicial decomposition of the $[0,1]^d$ hypercube ($d \geq 1$) with any possible \texttt{shape} is firstly given, followed by its scaled version with any  according $\texttt{size}\in\E^d$, being its position vector the mapped image of the point $\mathbf{1}\in\E^d$. A general mapping mechanism is specified, to map any domain decomposition (either simplicial or not) with a given set of coordinate functions, providing a piecewise-linear approximation of any curved embedding of a $d$-dimensional domain in any $\E^n$ space, with $n \geq d$. 
+A suitable function is also given to identify corresponding vertices when mapping a domain decomposition of the fundamental polygon (or polyhedron) of a closed manifold. 
 
 The geometric tools given in this chapter employ a normalised homogeneous representation of vertices of the represented shapes, where the added coordinate is the \emph{last} of the ordered list of vertex coordinates. The homogeneous representation of vertices is used \emph{implicitly}, by inserting the extra coordinate only when needed by the operation at hand, mainly for computing the product of the object's vertices times the matrix of an affine tensor. 
 
@@ -174,6 +174,7 @@ A projection transformation, that removes the last $k$ coordinate of vertices, w
 %-------------------------------------------------------------------------------
 %===============================================================================
 \section{Primitive objects}
+\label{sec:generators}
 %===============================================================================
 
 A large number of primitive surfaces or solids is defined in this section, using the \texttt{larMap} mechanism and the coordinate functions of a suitable chart.
@@ -200,12 +201,12 @@ A large number of primitive surfaces or solids is defined in this section, using
 %-------------------------------------------------------------------------------
 Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defined here, including 2D disks and rings, as well as cylindrical, spherical and toroidal surfaces.
 
-\paragraph{Disk}
+\paragraph{Disk surface}
 %-------------------------------------------------------------------------------
 @D Disk centered in the origin
-@{def larDisk(radius=1.):
+@{def larDisk(radius=1.,angle=2*PI):
 	def larDisk0(shape=[36,1]):
-		domain = larIntervals(shape)([2*PI,radius])
+		domain = larIntervals(shape)([angle,radius])
 		V,CV = domain
 		x = lambda V : [p[1]*COS(p[0]) for p in V]
 		y = lambda V : [p[1]*SIN(p[0]) for p in V]
@@ -214,13 +215,12 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Ring}
+\paragraph{Ring surface}
 %-------------------------------------------------------------------------------
 @D Ring centered in the origin
-@{def larRing(params):
-	r1,r2 = params
+@{def larRing(r1,r2,angle=2*PI):
 	def larRing0(shape=[36,1]):
-		V,CV = larIntervals(shape)([2*PI,r2-r1])
+		V,CV = larIntervals(shape)([angle,r2-r1])
 		V = translatePoints(V,[0,r1])
 		domain = V,CV
 		x = lambda V : [p[1] * COS(p[0]) for p in V]
@@ -245,10 +245,9 @@ def makeOriented(model):
 			out.append([cell[1]]+[cell[0]]+cell[2:])
 	return V,out
 """
-def larCylinder(params):
-	radius,height= params
+def larCylinder(radius,height,angle=2*PI):
 	def larCylinder0(shape=[36,1]):
-		domain = larIntervals(shape)([2*PI,1])
+		domain = larIntervals(shape)([angle,1])
 		V,CV = domain
 		x = lambda V : [radius*COS(p[0]) for p in V]
 		y = lambda V : [radius*SIN(p[0]) for p in V]
@@ -263,10 +262,10 @@ def larCylinder(params):
 \paragraph{Spherical surface of given radius}
 %-------------------------------------------------------------------------------
 @D Spherical surface of given radius
-@{def larSphere(radius=1):
+@{def larSphere(radius=1,angle1=PI,angle2=2*PI):
 	def larSphere0(shape=[18,36]):
-		V,CV = larIntervals(shape)([PI,2*PI])
-		V = translatePoints(V,[-PI/2,-PI])
+		V,CV = larIntervals(shape)([angle1,angle2])
+		V = translatePoints(V,[-angle1/2,-angle2/2])
 		domain = V,CV
 		x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
 		y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
@@ -278,10 +277,9 @@ def larCylinder(params):
 \paragraph{Toroidal surface}
 %-------------------------------------------------------------------------------
 @D Toroidal surface of given radiuses
-@{def larToroidal(params):
-	r,R = params
+@{def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
 	def larToroidal0(shape=[24,36]):
-		domain = larIntervals(shape)([2*PI,2*PI])
+		domain = larIntervals(shape)([angle1,angle2])
 		V,CV = domain
 		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
 		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
@@ -293,10 +291,9 @@ def larCylinder(params):
 \paragraph{Crown surface}
 %-------------------------------------------------------------------------------
 @D Half-toroidal surface of given radiuses
-@{def larCrown(params):
-	r,R = params
+@{def larCrown(r,R,angle=2*PI):
 	def larCrown0(shape=[24,36]):
-		V,CV = larIntervals(shape)([PI,2*PI])
+		V,CV = larIntervals(shape)([PI,angle])
 		V = translatePoints(V,[-PI/2,0])
 		domain = V,CV
 		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
@@ -314,9 +311,9 @@ def larCylinder(params):
 \paragraph{Ball}
 %-------------------------------------------------------------------------------
 @D Solid Sphere of given radius
-@{def larBall(radius=1):
+@{def larBall(radius=1,angle1=PI,angle2=2*PI):
 	def larBall0(shape=[18,36]):
-		V,CV = checkModel(larSphere(radius)(shape))
+		V,CV = checkModel(larSphere(radius,angle1,angle2)(shape))
 		return V,[range(len(V))]
 	return larBall0
 @}
@@ -325,10 +322,9 @@ def larCylinder(params):
 \paragraph{Solid cylinder}
 %-------------------------------------------------------------------------------
 @D Solid cylinder of given radius and height
-@{def larRod(params):
-	radius,height= params
+@{def larRod(radius,height,angle=2*PI):
 	def larRod0(shape=[36,1]):
-		V,CV = checkModel(larCylinder(params)(shape))
+		V,CV = checkModel(larCylinder(radius,height,angle)(shape))
 		return V,[range(len(V))]
 	return larRod0
 @}
@@ -337,10 +333,9 @@ def larCylinder(params):
 \paragraph{Solid torus}
 %-------------------------------------------------------------------------------
 @D Solid torus of given radiuses
-@{def larTorus(params):
-	r,R = params
+@{def larTorus(r,R,angle1=2*PI,angle2=2*PI):
 	def larTorus0(shape=[24,36,1]):
-		domain = larIntervals(shape)([2*PI,2*PI,r])
+		domain = larIntervals(shape)([angle1,angle2,r])
 		V,CV = domain
 		x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]
 		y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]
@@ -353,10 +348,11 @@ def larCylinder(params):
 \paragraph{Solid pizza}
 %-------------------------------------------------------------------------------
 @D Solid pizza of given radiuses
-@{def larPizza(params):
-	r,R= params
+@{def larPizza(r,R,angle=2*PI):
+	assert angle <= PI
 	def larPizza0(shape=[24,36]):
-		V,CV = checkModel(larCrown(params)(shape))
+		V,CV = checkModel(larCrown(r,R,angle)(shape))
+		V += [[0,0,-r],[0,0,r]]
 		return V,[range(len(V))]
 	return larPizza0
 @}
@@ -622,7 +618,7 @@ def evalStruct(struct):
 
 \paragraph{Structure traversal algorithm}
 
-The \texttt{traversal} algorithm decides between three different cases, depending on the type of the currently inspected object. If the object is a \texttt{Model} instance, then it applies to it the \texttt{CTM} matrix; else if the object is a \texttt{Mat} instance, then the \texttt{CTM} matrix is updated by (right) product with it; else if the object is a \texttt{Struct} instance, then the \texttt{CTM} is pushed on the stack, initially empty, then the \texttt{traversal} is called (recursion), and finally, at (each) return from recursion, the \texttt{CTM} is recovered by popping the stack.
+The \texttt{traversal} algorithm decides between three different cases, depending on the type of the currently inspected object. If the object is a \texttt{Model} instance, then applies to it the \texttt{CTM} matrix; else if the object is a \texttt{Mat} instance, then the \texttt{CTM} matrix is updated by (right) product with it; else if the object is a \texttt{Struct} instance, then the \texttt{CTM} is pushed on the stack, initially empty, then the \texttt{traversal} is called (recursion), and finally, at (each) return from recursion, the \texttt{CTM} is recovered by popping the stack.
 
 %-------------------------------------------------------------------------------
 @D Structure traversal algorithm 
@@ -644,7 +640,7 @@ The \texttt{traversal} algorithm decides between three different cases, dependin
 %-------------------------------------------------------------------------------
 \subsection{Example}
 %-------------------------------------------------------------------------------
-Some simple examples of structures as combinations of LAR models and affine transformations are given in this section. 
+Some examples of structures as combinations of LAR models and affine transformations are given in this section. 
 
 \paragraph{Global coordinates}
 We start with a simple 2D example of a non-nested list of translated 2D object instances and rotation about the origin.
@@ -667,7 +663,7 @@ VIEW(SKEL_1(STRUCT(MKPOLS(table)+MKPOLS(chair1)+
 %-------------------------------------------------------------------------------
 
 \paragraph{Local coordinates}
-A different composition of transformations, from local to global coordinate frames, is used in yje following example.
+A different composition of transformations, from local to global coordinate frames, is used in the following example.
 
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test05.py
@@ -684,6 +680,9 @@ scene = evalStruct(struct)
 VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @}
 %-------------------------------------------------------------------------------
+
+\paragraph{Call of nested structures by reference}
+Finally, a similar 2D example is given, by nesting one (or more) structures via separate definition and call by reference from the interior. Of course, a cyclic set of calls must be avoided, since it would result in a \emph{non acyclic} multigraph of the structure network.
 
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test06.py
@@ -737,6 +736,8 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 %===============================================================================
 
 \paragraph{3D rotation about a general axis}
+The approach used by \texttt{lar-cc} to specify a general 3D rotation is shown in the following example,
+by passing the rotation function \texttt{r} the components \texttt{a,b,c} of the unit vector \texttt{axis} scaled by the rotation \texttt{angle}. 
 
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test02.py
@@ -744,14 +745,16 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @< Initial import of modules @>
 from mapper import *
 model = checkModel(larToroidal([0.2,1])())
-a,b,c = SCALARVECTPROD([PI/2,UNITVECT([1,1,0]) ])
+angle = PI/2; axis = UNITVECT([1,1,0])
+a,b,c = SCALARVECTPROD([ angle, axis ])
 model = larApply(r(a,b,c))(model)
 VIEW(STRUCT(MKPOLS(model)))
 @}
 %-------------------------------------------------------------------------------
 
 
-\paragraph{3D rotation of a 2D circle}
+\paragraph{3D elementary rotation of a 2D circle}
+A simpler specification is needed when the 3D rotation is about a coordinate axis. In this case the rotation angle can be directly given as the unique non-zero parameter of the the rotation function \texttt{r}. The rotation axis (in this case the $x$ one) is specified by the non-zero (angle) position.
 
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test03.py
@@ -769,9 +772,11 @@ VIEW(STRUCT(MKPOLS(model)))
 
 
 %===============================================================================
-\subsection{Tests}
+\subsection{Tests about domain}
 %===============================================================================
 
+\paragraph{Mapping domains}
+The generations of mapping domains of different dimension (1D, 2D, 3D) is shown below.
 	
 %-------------------------------------------------------------------------------
 @D Basic tests of mapper module
@@ -793,7 +798,8 @@ VIEW(STRUCT(MKPOLS(model)))
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Circumference of unit radius}
+\paragraph{Testing some primitive object generators}
+The various model generators given in Section~\ref{sec:generators} are tested here, including LAR 2D circle, disk, and ring, as well as the 3D cylinder, sphere, and toroidal surfaces, and the solid objects ball, rod, crown, pizza, and torus.
 
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test01.py
@@ -804,23 +810,23 @@ model = checkModel(larCircle(1)())
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = checkModel(larDisk(1)([36,4]))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
-model = checkModel(larRing([.9, 1.])([36,2]))
+model = checkModel(larRing(.9, 1.)([36,2]))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
-model = checkModel(larCylinder([.5,2.])([32,1]))
+model = checkModel(larCylinder(.5,2.)([32,1]))
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larSphere(1)())
+model = checkModel(larSphere(1,PI/6,PI/4)([6,12]))
 VIEW(STRUCT(MKPOLS(model)))
 model = larBall(1)()
 VIEW(STRUCT(MKPOLS(model)))
-model = larRod([.25,2.])([32,1])
+model = larRod(.25,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larToroidal([0.5,1])())
+model = checkModel(larToroidal(0.5,2)())
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larCrown([0.125,1])([8,48]))
+model = checkModel(larCrown(0.125,1)([8,48]))
 VIEW(STRUCT(MKPOLS(model)))
-model = larPizza([0.05,1])([8,48])
+model = larPizza(0.05,1,PI/3)([8,48])
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larTorus([0.5,1])())
+model = checkModel(larTorus(0.5,1)())
 VIEW(STRUCT(MKPOLS(model)))
 @}
 %-------------------------------------------------------------------------------
@@ -861,7 +867,9 @@ A small set of utilityy functions is used to transform a point representation as
 
 %------------------------------------------------------------------
 @D Symbolic utility to represent points as strings
-@{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
+@{""" TODO: 
+use Decimal (http://docs.python.org/2/library/decimal.html) 
+"""
 ROUND_ZERO = 1E-07
 def round_or_zero (x,prec=7):
 	"""
@@ -885,7 +893,8 @@ def fixedPrec(value):
 def vcode (vect): 
 	"""
 	To generate a string representation of a number array.
-	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
+	Used to generate the vertex keys in PointSet dictionary, and other 
+	similar operations.
 	"""
 	return prepKey(AA(fixedPrec)(vect))
 @}

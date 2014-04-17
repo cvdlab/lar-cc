@@ -10,6 +10,8 @@ IDIR = src/tex/
 ODIR = lib/
 DOCTEX = doc/tex/
 DOCPDF = doc/pdf/
+TESTDIR = test/py/$(NAME)/
+TESTFILES = TESTDIR/*.py
 
 all: 
 	echo building $(NAME)
@@ -51,11 +53,8 @@ html:
 	mv $(NAME) doc/html/
 	open doc/html/$(NAME)/$(NAME).html
 
-tests:
-	echo `python test/py/test01.py`
-	echo `python test/py/test02.py`
-	echo `python test/py/test06.py`
-
+tests: $(TESTFILES)
+	@echo $^
 clean:
 	mv -fv $(NAME).tex $(NAME).bbl macros.tex $(DOCTEX)
 	mv -fv $(NAME).pdf $(DOCPDF)

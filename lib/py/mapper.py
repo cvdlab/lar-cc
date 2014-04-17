@@ -82,19 +82,18 @@ def larCircle(radius=1.):
       return larMap([x,y])(domain)
    return larCircle0
 
-def larDisk(radius=1.):
+def larDisk(radius=1.,angle=2*PI):
    def larDisk0(shape=[36,1]):
-      domain = larIntervals(shape)([2*PI,radius])
+      domain = larIntervals(shape)([angle,radius])
       V,CV = domain
       x = lambda V : [p[1]*COS(p[0]) for p in V]
       y = lambda V : [p[1]*SIN(p[0]) for p in V]
       return larMap([x,y])(domain)
    return larDisk0
 
-def larRing(params):
-   r1,r2 = params
+def larRing(r1,r2,angle=2*PI):
    def larRing0(shape=[36,1]):
-      V,CV = larIntervals(shape)([2*PI,r2-r1])
+      V,CV = larIntervals(shape)([angle,r2-r1])
       V = translatePoints(V,[0,r1])
       domain = V,CV
       x = lambda V : [p[1] * COS(p[0]) for p in V]
@@ -102,10 +101,10 @@ def larRing(params):
       return larMap([x,y])(domain)
    return larRing0
 
-def larSphere(radius=1):
+def larSphere(radius=1,angle1=PI,angle2=2*PI):
    def larSphere0(shape=[18,36]):
-      V,CV = larIntervals(shape)([PI,2*PI])
-      V = translatePoints(V,[-PI/2,-PI])
+      V,CV = larIntervals(shape)([angle1,angle2])
+      V = translatePoints(V,[-angle1/2,-angle2/2])
       domain = V,CV
       x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
       y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
@@ -126,10 +125,9 @@ def makeOriented(model):
          out.append([cell[1]]+[cell[0]]+cell[2:])
    return V,out
 """
-def larCylinder(params):
-   radius,height= params
+def larCylinder(radius,height,angle=2*PI):
    def larCylinder0(shape=[36,1]):
-      domain = larIntervals(shape)([2*PI,1])
+      domain = larIntervals(shape)([angle,1])
       V,CV = domain
       x = lambda V : [radius*COS(p[0]) for p in V]
       y = lambda V : [radius*SIN(p[0]) for p in V]
@@ -140,10 +138,9 @@ def larCylinder(params):
       return model
    return larCylinder0
 
-def larToroidal(params):
-   r,R = params
+def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
    def larToroidal0(shape=[24,36]):
-      domain = larIntervals(shape)([2*PI,2*PI])
+      domain = larIntervals(shape)([angle1,angle2])
       V,CV = domain
       x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
       y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
@@ -151,10 +148,9 @@ def larToroidal(params):
       return larMap([x,y,z])(domain)
    return larToroidal0
 
-def larCrown(params):
-   r,R = params
+def larCrown(r,R,angle=2*PI):
    def larCrown0(shape=[24,36]):
-      V,CV = larIntervals(shape)([PI,2*PI])
+      V,CV = larIntervals(shape)([PI,angle])
       V = translatePoints(V,[-PI/2,0])
       domain = V,CV
       x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
@@ -163,23 +159,21 @@ def larCrown(params):
       return larMap([x,y,z])(domain)
    return larCrown0
 
-def larBall(radius=1):
+def larBall(radius=1,angle1=PI,angle2=2*PI):
    def larBall0(shape=[18,36]):
-      V,CV = checkModel(larSphere(radius)(shape))
+      V,CV = checkModel(larSphere(radius,angle1,angle2)(shape))
       return V,[range(len(V))]
    return larBall0
 
-def larRod(params):
-   radius,height= params
+def larRod(radius,height,angle=2*PI):
    def larRod0(shape=[36,1]):
-      V,CV = checkModel(larCylinder(params)(shape))
+      V,CV = checkModel(larCylinder(radius,height,angle)(shape))
       return V,[range(len(V))]
    return larRod0
 
-def larTorus(params):
-   r,R = params
+def larTorus(r,R,angle1=2*PI,angle2=2*PI):
    def larTorus0(shape=[24,36,1]):
-      domain = larIntervals(shape)([2*PI,2*PI,r])
+      domain = larIntervals(shape)([angle1,angle2,r])
       V,CV = domain
       x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]
       y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]
@@ -187,10 +181,11 @@ def larTorus(params):
       return larMap([x,y,z])(domain)
    return larTorus0
 
-def larPizza(params):
-   r,R= params
+def larPizza(r,R,angle=2*PI):
+   assert angle <= PI
    def larPizza0(shape=[24,36]):
-      V,CV = checkModel(larCrown(params)(shape))
+      V,CV = checkModel(larCrown(r,R,angle)(shape))
+      V += [[0,0,-r],[0,0,r]]
       return V,[range(len(V))]
    return larPizza0
 
