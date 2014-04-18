@@ -159,6 +159,13 @@ def larCrown(r,R,angle=2*PI):
       return larMap([x,y,z])(domain)
    return larCrown0
 
+def larBox(minVect,maxVect):
+   size = DIFF([maxVect,minVect])
+   print "size =",size
+   box = larApply(s(*size))(larCuboids([1,1,1]))
+   print "box =",box
+   return larApply(t(*minVect))(box)
+
 def larBall(radius=1,angle1=PI,angle2=2*PI):
    def larBall0(shape=[18,36]):
       V,CV = checkModel(larSphere(radius,angle1,angle2)(shape))
@@ -188,6 +195,28 @@ def larPizza(r,R,angle=2*PI):
       V += [[0,0,-r],[0,0,r]]
       return V,[range(len(V))]
    return larPizza0
+
+def larHollowCyl(r,R,height,angle=2*PI):
+   def larHollowCyl0(shape=[36,1,1]):
+      V,CV = larIntervals(shape)([angle,R-r,height])
+      V = translatePoints(V,[0,r,0])
+      domain = V,CV
+      x = lambda V : [p[1] * COS(p[0]) for p in V]
+      y = lambda V : [p[1] * SIN(p[0]) for p in V]
+      z = lambda V : [p[2] * height for p in V]
+      return larMap([x,y,z])(domain)
+   return larHollowCyl0
+
+def larHollowSphere(r,R,angle1=PI,angle2=2*PI):
+   def larHollowSphere0(shape=[36,1,1]):
+      V,CV = larIntervals(shape)([angle1,angle2,R-r])
+      V = translatePoints(V,[-angle1/2,-angle2/2,r])
+      domain = V,CV
+      x = lambda V : [p[2]*COS(p[0])*COS(p[1]) for p in V]
+      y = lambda V : [p[2]*COS(p[0])*SIN(p[1]) for p in V]
+      z = lambda V : [p[2]*SIN(p[0]) for p in V]
+      return larMap([x,y,z])(domain)
+   return larHollowSphere0
 
 def t(*args): 
    d = len(args)

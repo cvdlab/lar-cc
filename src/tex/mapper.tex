@@ -309,21 +309,21 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 
 
-\paragraph{Box}
+\paragraph{Solid Box}
 %-------------------------------------------------------------------------------
 @D Solid box of given extreme vectors
 @{def larBox(minVect,maxVect):
 	size = DIFF([maxVect,minVect])
 	print "size =",size
-	box = larIntervals([1]*len(size))(size)
+	box = larApply(s(*size))(larCuboids([1,1,1]))
 	print "box =",box
-	return larApply(t(minVect),box)
+	return larApply(t(*minVect))(box)
 @}
 %-------------------------------------------------------------------------------
 
 
 
-\paragraph{Ball}
+\paragraph{Solid Ball}
 %-------------------------------------------------------------------------------
 @D Solid Sphere of given radius
 @{def larBall(radius=1,angle1=PI,angle2=2*PI):
@@ -344,6 +344,39 @@ def larCylinder(radius,height,angle=2*PI):
 	return larRod0
 @}
 %-------------------------------------------------------------------------------
+
+\paragraph{Hollow cylinder}
+%-------------------------------------------------------------------------------
+@D Hollow cylinder of given radiuses and height
+@{def larHollowCyl(r,R,height,angle=2*PI):
+	def larHollowCyl0(shape=[36,1,1]):
+		V,CV = larIntervals(shape)([angle,R-r,height])
+		V = translatePoints(V,[0,r,0])
+		domain = V,CV
+		x = lambda V : [p[1] * COS(p[0]) for p in V]
+		y = lambda V : [p[1] * SIN(p[0]) for p in V]
+		z = lambda V : [p[2] * height for p in V]
+		return larMap([x,y,z])(domain)
+	return larHollowCyl0
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Hollow sphere}
+%-------------------------------------------------------------------------------
+@D Hollow sphere of given radiuses
+@{def larHollowSphere(r,R,angle1=PI,angle2=2*PI):
+	def larHollowSphere0(shape=[36,1,1]):
+		V,CV = larIntervals(shape)([angle1,angle2,R-r])
+		V = translatePoints(V,[-angle1/2,-angle2/2,r])
+		domain = V,CV
+		x = lambda V : [p[2]*COS(p[0])*COS(p[1]) for p in V]
+		y = lambda V : [p[2]*COS(p[0])*SIN(p[1]) for p in V]
+		z = lambda V : [p[2]*SIN(p[0]) for p in V]
+		return larMap([x,y,z])(domain)
+	return larHollowSphere0
+@}
+%-------------------------------------------------------------------------------
+
 
 \paragraph{Solid torus}
 %-------------------------------------------------------------------------------
@@ -734,10 +767,13 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @< Cylinder surface with $z$ axis @>
 @< Toroidal surface of given radiuses @>
 @< Half-toroidal surface of given radiuses @>
+@< Solid box of given extreme vectors @>
 @< Solid Sphere of given radius @>
 @< Solid cylinder of given radius and height @>
 @< Solid torus of given radiuses @>
 @< Solid pizza of given radiuses @>
+@< Hollow cylinder of given radiuses and height @>
+@< Hollow sphere of given radiuses @>
 @< Translation matrices @>
 @< Scaling matrices @>
 @< Rotation matrices @>
@@ -842,6 +878,12 @@ VIEW(STRUCT(MKPOLS(model)))
 model = larPizza(0.05,1,PI/3)([8,48])
 VIEW(STRUCT(MKPOLS(model)))
 model = checkModel(larTorus(0.5,1)())
+VIEW(STRUCT(MKPOLS(model)))
+model = larBox([-1,-1,-1],[1,1,1])
+VIEW(STRUCT(MKPOLS(model)))
+model = checkModel(larHollowCyl(0.8,1,1,angle=PI/4)([12,2,2]))
+VIEW(STRUCT(MKPOLS(model)))
+model = checkModel(larHollowSphere(0.8,1,PI/6,PI/4)([6,12,2]))
 VIEW(STRUCT(MKPOLS(model)))
 @}
 %-------------------------------------------------------------------------------
