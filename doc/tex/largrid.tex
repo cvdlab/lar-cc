@@ -181,7 +181,7 @@ The second-order \texttt{larSplit} function is used to subdivide the real interv
 \begin{list}{}{} \item
 \mbox{}\verb@def larSplit(dom):@\\
 \mbox{}\verb@    def larSplit1(n):@\\
-\mbox{}\verb@        assert n > 0 and type(n) == int@\\
+\mbox{}\verb@        # assert n > 0 and isinstance(n,int)@\\
 \mbox{}\verb@        item = float(dom)/n@\\
 \mbox{}\verb@        ints = range(n+1)@\\
 \mbox{}\verb@        items = [item]*(n+1)@\\
@@ -962,6 +962,8 @@ Some test examples of the \texttt{larSplit} function are given in the following.
 \protect\makebox[0ex][r]{\NWtarget{nuweb17d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test02.py"@\nobreak\ {\footnotesize 17d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from largrid import *@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@mod_1 = larSplit(1)(4), larGrid(4)(1)@\\

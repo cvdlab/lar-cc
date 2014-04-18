@@ -118,7 +118,7 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ A scaled simplicial decomposition is provided by the second-order  \texttt{larIn
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ A projection transformation, that removes the last $k$ coordinate of vertices, w
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -260,9 +260,9 @@ A large number of primitive surfaces or solids is defined in this section, using
 \protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Circle centered in the origin\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larCircle(radius=1.):@\\
+\mbox{}\verb@def larCircle(radius=1.,angle=2*PI):@\\
 \mbox{}\verb@   def larCircle0(shape=36):@\\
-\mbox{}\verb@      domain = larIntervals([shape])([2*PI])@\\
+\mbox{}\verb@      domain = larIntervals([shape])([angle])@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      x = lambda V : [radius*COS(p[0]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [radius*SIN(p[0]) for p in V]@\\
@@ -273,7 +273,7 @@ A large number of primitive surfaces or solids is defined in this section, using
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -301,7 +301,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -326,7 +326,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -391,7 +391,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -415,7 +415,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -440,7 +440,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -449,10 +449,35 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \subsection{3D primitives}
 %-------------------------------------------------------------------------------
 
-\paragraph{Ball}
+
+\paragraph{Box}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap13}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid box of given extreme vectors\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larBox(minVect,maxVect):@\\
+\mbox{}\verb@   size = DIFF([maxVect,minVect])@\\
+\mbox{}\verb@   print "size =",size@\\
+\mbox{}\verb@   box = larIntervals([1]*len(size))(size)@\\
+\mbox{}\verb@   print "box =",box@\\
+\mbox{}\verb@   return larApply(t(minVect),box)@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Ball}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap14}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larBall(radius=1,angle1=PI,angle2=2*PI):@\\
@@ -465,15 +490,15 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Solid cylinder}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap14}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap15}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize 8c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larRod(radius,height,angle=2*PI):@\\
@@ -486,15 +511,15 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Solid torus}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap15}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize 8c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap16}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize 8d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larTorus(r,R,angle1=2*PI,angle2=2*PI):@\\
@@ -511,15 +536,15 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Solid pizza}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap16}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize 8d}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap17}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize 9}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larPizza(r,R,angle=2*PI):@\\
@@ -534,7 +559,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -559,8 +584,8 @@ First we state the general rules that will be satisfied by the matrices used in 
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap17}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize 9}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap18}
+\protect\makebox[0ex][r]{\NWtarget{nuweb10a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize 10a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larApply(affineMatrix):@\\
@@ -581,7 +606,7 @@ First we state the general rules that will be satisfied by the matrices used in 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -594,8 +619,8 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 
 \paragraph{Translation}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap18}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Translation matrices\nobreak\ {\footnotesize 10a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap19}
+\protect\makebox[0ex][r]{\NWtarget{nuweb10b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Translation matrices\nobreak\ {\footnotesize 10b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def t(*args): @\\
@@ -609,14 +634,14 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 \paragraph{Scaling}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap19}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Scaling matrices\nobreak\ {\footnotesize 10b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap20}
+\protect\makebox[0ex][r]{\NWtarget{nuweb10c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Scaling matrices\nobreak\ {\footnotesize 10c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def s(*args): @\\
@@ -630,34 +655,34 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 \paragraph{Rotation}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap20}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Rotation matrices\nobreak\ {\footnotesize 10c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap21}
+\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Rotation matrices\nobreak\ {\footnotesize 11a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def r(*args): @\\
 \mbox{}\verb@   args = list(args)@\\
 \mbox{}\verb@   n = len(args)@\\
-\mbox{}\verb@   @\hbox{$\langle\,$plane rotation (in 2D)\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@   @\hbox{$\langle\,$space rotation (in 3D)\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$plane rotation (in 2D)\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$space rotation (in 3D)\nobreak\ {\footnotesize \NWlink{nuweb11c}{11c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@   return mat.view(Mat)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap21}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$plane rotation (in 2D)\nobreak\ {\footnotesize 11a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap22}
+\protect\makebox[0ex][r]{\NWtarget{nuweb11b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$plane rotation (in 2D)\nobreak\ {\footnotesize 11b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@if n == 1: # rotation in 2D@\\
@@ -670,33 +695,33 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb10c}{10c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb11a}{11a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap22}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$space rotation (in 3D)\nobreak\ {\footnotesize 11b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap23}
+\protect\makebox[0ex][r]{\NWtarget{nuweb11c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$space rotation (in 3D)\nobreak\ {\footnotesize 11c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@if n == 3: # rotation in 3D@\\
 \mbox{}\verb@   mat = scipy.identity(4)@\\
 \mbox{}\verb@   angle = VECTNORM(args); axis = UNITVECT(args)@\\
 \mbox{}\verb@   cos = COS(angle); sin = SIN(angle)@\\
-\mbox{}\verb@   @\hbox{$\langle\,$elementary rotations (in 3D)\nobreak\ {\footnotesize \NWlink{nuweb11c}{11c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@   @\hbox{$\langle\,$general rotations (in 3D)\nobreak\ {\footnotesize \NWlink{nuweb11d}{11d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$elementary rotations (in 3D)\nobreak\ {\footnotesize \NWlink{nuweb11d}{11d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$general rotations (in 3D)\nobreak\ {\footnotesize \NWlink{nuweb11e}{11e}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb10c}{10c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb11a}{11a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap23}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$elementary rotations (in 3D)\nobreak\ {\footnotesize 11c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap24}
+\protect\makebox[0ex][r]{\NWtarget{nuweb11d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$elementary rotations (in 3D)\nobreak\ {\footnotesize 11d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@if axis[1]==axis[2]==0.0:  # rotation about x@\\
@@ -713,13 +738,13 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb11b}{11b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb11c}{11c}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$general rotations (in 3D)\nobreak\ {\footnotesize 11d}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap25}
+\protect\makebox[0ex][r]{\NWtarget{nuweb11e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$general rotations (in 3D)\nobreak\ {\footnotesize 11e}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@else:    # general 3D rotation (Rodrigues' rotation formula)   @\\
@@ -738,7 +763,7 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb11b}{11b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb11c}{11c}.
 \end{list}
 \end{flushleft}
 %===============================================================================
@@ -782,7 +807,7 @@ The aim of a structure network traversal is, of course, to transform every compo
 In order to better understand the behaviour of the traversal algorithm, where every transformation is applied to all the following models, --- but only if included in the same structure  (i.e.~list) --- it may be very useful to start with an \emph{algorithm emulation}. In particular, the recursive script below discriminates between three different cases (number, string, or sequence), whereas the actual traversal must do with (a) Models, (b) Matrices, and (c) Structures, respectively.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap25}
+\begin{flushleft} \small \label{scrap26}
 \protect\makebox[0ex][r]{\NWtarget{nuweb14a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Emulation of scene multigraph traversal\nobreak\ {\footnotesize 14a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -812,7 +837,7 @@ In order to better understand the behaviour of the traversal algorithm, where ev
 
 Some use example of the above algorithm are provided below. The printout produced at run time is shown from the \texttt{emulation of traversal algorithm} macro.
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap26}
+\begin{flushleft} \small \label{scrap27}
 \protect\makebox[0ex][r]{\NWtarget{nuweb14b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Examples of multigraph traversal\nobreak\ {\footnotesize 14b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -849,7 +874,7 @@ Some use example of the above algorithm are provided below. The printout produce
 \end{flushleft}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap27}
+\begin{flushleft} \small \label{scrap28}
 \protect\makebox[0ex][r]{\NWtarget{nuweb15}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Emulation of traversal algorithm\nobreak\ {\footnotesize 15}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -894,7 +919,7 @@ The function \texttt{evalStruct} is used to evaluate a structure network, i.e.~t
 list of objects of type \texttt{Model}, all referenced in the world coordinate system. The input variable \texttt{struct} must contain an object of class \texttt{Struct}, i.e.~a reference to an unevaluated structure network. The variable \texttt{dim}  contains the embedding dimension of the structure, i.e.~the number of doordinates of its vertices (normally either 2 or 3), the CTM (Current Transformation Matrix) is initialised to the (homogeneous) identity matrix, and  the \texttt{scene} is returned by calling the \texttt{traverse} algorithm.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap28}
+\begin{flushleft} \small \label{scrap29}
 \protect\makebox[0ex][r]{\NWtarget{nuweb16a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Traversal of a scene multigraph\nobreak\ {\footnotesize 16a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -910,7 +935,7 @@ list of objects of type \texttt{Model}, all referenced in the world coordinate s
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -920,7 +945,7 @@ list of objects of type \texttt{Model}, all referenced in the world coordinate s
 The \texttt{traversal} algorithm decides between three different cases, depending on the type of the currently inspected object. If the object is a \texttt{Model} instance, then applies to it the \texttt{CTM} matrix; else if the object is a \texttt{Mat} instance, then the \texttt{CTM} matrix is updated by (right) product with it; else if the object is a \texttt{Struct} instance, then the \texttt{CTM} is pushed on the stack, initially empty, then the \texttt{traversal} is called (recursion), and finally, at (each) return from recursion, the \texttt{CTM} is recovered by popping the stack.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap29}
+\begin{flushleft} \small \label{scrap30}
 \protect\makebox[0ex][r]{\NWtarget{nuweb16b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Structure traversal algorithm\nobreak\ {\footnotesize 16b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -955,12 +980,12 @@ Some examples of structures as combinations of LAR models and affine transformat
 We start with a simple 2D example of a non-nested list of translated 2D object instances and rotation about the origin.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap30}
+\begin{flushleft} \small \label{scrap31}
 \protect\makebox[0ex][r]{\NWtarget{nuweb17a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test04.py"@\nobreak\ {\footnotesize 17a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Example of non-nested structure with translation and rotations """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@square = larCuboids([1,1])@\\
 \mbox{}\verb@table = larApply( t(-.5,-.5) )(square)@\\
@@ -981,12 +1006,12 @@ We start with a simple 2D example of a non-nested list of translated 2D object i
 A different composition of transformations, from local to global coordinate frames, is used in the following example.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap31}
+\begin{flushleft} \small \label{scrap32}
 \protect\makebox[0ex][r]{\NWtarget{nuweb17b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test05.py"@\nobreak\ {\footnotesize 17b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Example of non-nested structure with translation and rotations """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@square = larCuboids([1,1])@\\
 \mbox{}\verb@square = Model(square,2)@\\
@@ -1006,12 +1031,12 @@ A different composition of transformations, from local to global coordinate fram
 Finally, a similar 2D example is given, by nesting one (or more) structures via separate definition and call by reference from the interior. Of course, a cyclic set of calls must be avoided, since it would result in a \emph{non acyclic} multigraph of the structure network.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap32}
-\protect\makebox[0ex][r]{\NWtarget{nuweb17c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test06.py"@\nobreak\ {\footnotesize 17c }$\equiv$
+\begin{flushleft} \small \label{scrap33}
+\protect\makebox[0ex][r]{\NWtarget{nuweb18a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test06.py"@\nobreak\ {\footnotesize 18a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Example of nested structures with translation and rotations """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@square = larCuboids([1,1])@\\
 \mbox{}\verb@square = Model(square,2)@\\
@@ -1031,17 +1056,17 @@ Finally, a similar 2D example is given, by nesting one (or more) structures via 
 %===============================================================================
 \subsection{Exporting the library}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap33}
-\protect\makebox[0ex][r]{\NWtarget{nuweb18a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/mapper.py"@\nobreak\ {\footnotesize 18a }$\equiv$
+\begin{flushleft} \small \label{scrap34}
+\protect\makebox[0ex][r]{\NWtarget{nuweb18b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/mapper.py"@\nobreak\ {\footnotesize 18b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Mapping functions and primitive objects """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb2}{2}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb3c}{3c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Primitive mapping function\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize \NWlink{nuweb19b}{19b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Circle centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Disk centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Ring centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb5c}{5c}}$\,\rangle$}\verb@@\\
@@ -1049,15 +1074,15 @@ Finally, a similar 2D example is given, by nesting one (or more) structures via 
 \mbox{}\verb@@\hbox{$\langle\,$Cylinder surface with $z$ axis\nobreak\ {\footnotesize \NWlink{nuweb6a}{6a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7a}{7a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7b}{7b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize \NWlink{nuweb8a}{8a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb8c}{8c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb8d}{8d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Translation matrices\nobreak\ {\footnotesize \NWlink{nuweb10a}{10a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Scaling matrices\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Rotation matrices\nobreak\ {\footnotesize \NWlink{nuweb10c}{10c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid Sphere of given radius\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid cylinder of given radius and height\nobreak\ {\footnotesize \NWlink{nuweb8c}{8c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid torus of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb8d}{8d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb9}{9}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Translation matrices\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Scaling matrices\nobreak\ {\footnotesize \NWlink{nuweb10c}{10c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Rotation matrices\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Embedding and projecting a geometric model\nobreak\ {\footnotesize \NWlink{nuweb4}{4}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize \NWlink{nuweb9}{9}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize \NWlink{nuweb10a}{10a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Traversal of a scene multigraph\nobreak\ {\footnotesize \NWlink{nuweb16a}{16a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1073,12 +1098,12 @@ The approach used by \texttt{lar-cc} to specify a general 3D rotation is shown i
 by passing the rotation function \texttt{r} the components \texttt{a,b,c} of the unit vector \texttt{axis} scaled by the rotation \texttt{angle}. 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap34}
-\protect\makebox[0ex][r]{\NWtarget{nuweb18b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test02.py"@\nobreak\ {\footnotesize 18b }$\equiv$
+\begin{flushleft} \small \label{scrap35}
+\protect\makebox[0ex][r]{\NWtarget{nuweb19a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test02.py"@\nobreak\ {\footnotesize 19a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" General 3D rotation of a toroidal surface """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@model = checkModel(larToroidal([0.2,1])())@\\
 \mbox{}\verb@angle = PI/2; axis = UNITVECT([1,1,0])@\\
@@ -1096,12 +1121,12 @@ by passing the rotation function \texttt{r} the components \texttt{a,b,c} of the
 A simpler specification is needed when the 3D rotation is about a coordinate axis. In this case the rotation angle can be directly given as the unique non-zero parameter of the the rotation function \texttt{r}. The rotation axis (in this case the $x$ one) is specified by the non-zero (angle) position.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap35}
-\protect\makebox[0ex][r]{\NWtarget{nuweb19a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test03.py"@\nobreak\ {\footnotesize 19a }$\equiv$
+\begin{flushleft} \small \label{scrap36}
+\protect\makebox[0ex][r]{\NWtarget{nuweb19b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test03.py"@\nobreak\ {\footnotesize 19b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Elementary 3D rotation of a 2D circle """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@model = checkModel(larCircle(1)())@\\
 \mbox{}\verb@model = larEmbed(1)(model)@\\
@@ -1124,8 +1149,8 @@ A simpler specification is needed when the 3D rotation is about a coordinate axi
 The generations of mapping domains of different dimension (1D, 2D, 3D) is shown below.
 	
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap36}
-\protect\makebox[0ex][r]{\NWtarget{nuweb19b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize 19b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap37}
+\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize 20a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@if __name__=="__main__":@\\
@@ -1148,7 +1173,7 @@ The generations of mapping domains of different dimension (1D, 2D, 3D) is shown 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb18a}{18a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb18b}{18b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1157,12 +1182,12 @@ The generations of mapping domains of different dimension (1D, 2D, 3D) is shown 
 The various model generators given in Section~\ref{sec:generators} are tested here, including LAR 2D circle, disk, and ring, as well as the 3D cylinder, sphere, and toroidal surfaces, and the solid objects ball, rod, crown, pizza, and torus.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap37}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test01.py"@\nobreak\ {\footnotesize 20a }$\equiv$
+\begin{flushleft} \small \label{scrap38}
+\protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test01.py"@\nobreak\ {\footnotesize 20b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Circumference of unit radius """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@model = checkModel(larCircle(1)())@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
@@ -1193,14 +1218,79 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 %-------------------------------------------------------------------------------
 
 
+\subsection{Volumetric utilities}
+
+
+\paragraph{Limits of a LAR Model}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap39}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Model limits\nobreak\ {\footnotesize 21a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larLimits (model):@\\
+\mbox{}\verb@   if isinstance(model,tuple): @\\
+\mbox{}\verb@      V,CV = model@\\
+\mbox{}\verb@      verts = scipy.asarray(V)@\\
+\mbox{}\verb@   else: verts = model.verts@\\
+\mbox{}\verb@   return scipy.amin(verts,axis=0).tolist(), scipy.amax(verts,axis=0).tolist()@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@assert larLimits(larSphere()()) == ([-1.0, -1.0, -1.0], [1.0, 1.0, 1.0])@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Alignment}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap40}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Alignment primitive\nobreak\ {\footnotesize 21b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def larAlign (args):@\\
+\mbox{}\verb@   def larAlign0 (args,pols):@\\
+\mbox{}\verb@      pol1, pol2 = pols@\\
+\mbox{}\verb@      box1, box2 = (larLimits(pol1), larLimits(pol2))@\\
+\mbox{}\verb@      print "box1, box2 =",(box1, box2)@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@   return larAlign0@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
 %===============================================================================
 \appendix
 \section{Utility functions}
 %===============================================================================
 
+
+
+def FLATTEN( pol )
+	temp = Plasm.shrink(pol,True)
+	hpcList = []
+	for I in range(len(temp.childs)):			
+		g,vmat, hmat = temp.childs[I].g,temp.childs[I].vmat, temp.childs[I].hmat
+		g.embed(vmat. dim)
+		g.transform(vmat, hmat)
+		hpcList += [Hpc(g)]
+	return hpcList
+	
+VIEW(STRUCT( FLATTEN(pol) ))
+
+
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap38}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 20b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap41}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 21c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import *@\\
@@ -1209,29 +1299,29 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 \mbox{}\verb@@\\
 \mbox{}\verb@""" import modules from larcc/lib """@\\
 \mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21a}{21a}\label{scrap39}
- }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21b}{21b}\label{scrap40}
- }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21c}{21c}\label{scrap41}
- }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21d}{21d}\label{scrap42}
- }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb21e}{21e}\label{scrap43}
- }\mbox{}\verb@boolean2@ ) {\footnotesize \NWlink{nuweb21f}{21f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb22a}{22a}\label{scrap42}
+ }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb22f}{22f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb22b}{22b}\label{scrap43}
+ }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb22f}{22f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb22c}{22c}\label{scrap44}
+ }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb22f}{22f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb22d}{22d}\label{scrap45}
+ }\mbox{}\verb@largrid@ ) {\footnotesize \NWlink{nuweb22f}{22f}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb22e}{22e}\label{scrap46}
+ }\mbox{}\verb@boolean2@ ) {\footnotesize \NWlink{nuweb22f}{22f}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb17a}{17a}\NWlink{nuweb17b}{b}\NWlink{nuweb17c}{c}\NWlink{nuweb18a}{, 18a}\NWlink{nuweb18b}{b}\NWlink{nuweb19a}{, 19a}\NWlink{nuweb20a}{, 20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb17a}{17a}\NWlink{nuweb17b}{b}\NWlink{nuweb18a}{, 18a}\NWlink{nuweb18b}{b}\NWlink{nuweb19a}{, 19a}\NWlink{nuweb19b}{b}\NWlink{nuweb20b}{, 20b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap44}
-\protect\makebox[0ex][r]{\NWtarget{nuweb21f}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 21f}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap47}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22f}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 22f}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import @@1\verb@@\\
@@ -1241,7 +1331,7 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21c}{21c}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1252,8 +1342,8 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 A small set of utilityy functions is used to transform a point representation as array of coordinates into a string of fixed format to be used as point key into python dictionaries.
 
 %------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap45}
-\protect\makebox[0ex][r]{\NWtarget{nuweb21g}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 21g}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap48}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22g}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 22g}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" TODO: @\\
