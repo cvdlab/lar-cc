@@ -120,7 +120,7 @@ The second-order \texttt{larSplit} function is used to subdivide the real interv
 @d Generation of vertices of decompositions of 1D intervals 
 @{def larSplit(dom):
     def larSplit1(n):
-        assert n > 0 and type(n) == int
+        # assert n > 0 and isinstance(n,int)
         item = float(dom)/n
         ints = range(n+1)
         items = [item]*(n+1)
@@ -643,7 +643,9 @@ assert larSplit(2*PI)(12) == [[0.0], [0.5235987755982988], [1.0471975511965976],
 
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test02.py
-@{from largrid import *
+@{import sys
+sys.path.insert(0, 'lib/py/')
+from largrid import *
 
 mod_1 = larSplit(1)(4), larGrid(4)(1)
 squares = larModelProduct([mod_1,mod_1])

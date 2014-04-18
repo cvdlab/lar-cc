@@ -186,9 +186,9 @@ A large number of primitive surfaces or solids is defined in this section, using
 \paragraph{Circle}
 %-------------------------------------------------------------------------------
 @D Circle centered in the origin
-@{def larCircle(radius=1.):
+@{def larCircle(radius=1.,angle=2*PI):
 	def larCircle0(shape=36):
-		domain = larIntervals([shape])([2*PI])
+		domain = larIntervals([shape])([angle])
 		V,CV = domain
 		x = lambda V : [radius*COS(p[0]) for p in V]
 		y = lambda V : [radius*SIN(p[0]) for p in V]
@@ -307,6 +307,21 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 \subsection{3D primitives}
 %-------------------------------------------------------------------------------
+
+
+\paragraph{Box}
+%-------------------------------------------------------------------------------
+@D Solid box of given extreme vectors
+@{def larBox(minVect,maxVect):
+	size = DIFF([maxVect,minVect])
+	print "size =",size
+	box = larIntervals([1]*len(size))(size)
+	print "box =",box
+	return larApply(t(minVect),box)
+@}
+%-------------------------------------------------------------------------------
+
+
 
 \paragraph{Ball}
 %-------------------------------------------------------------------------------
@@ -832,10 +847,55 @@ VIEW(STRUCT(MKPOLS(model)))
 %-------------------------------------------------------------------------------
 
 
+\subsection{Volumetric utilities}
+
+
+\paragraph{Limits of a LAR Model}
+%-------------------------------------------------------------------------------
+@D Model limits
+@{def larLimits (model):
+	if isinstance(model,tuple): 
+		V,CV = model
+		verts = scipy.asarray(V)
+	else: verts = model.verts
+	return scipy.amin(verts,axis=0).tolist(), scipy.amax(verts,axis=0).tolist()
+	
+assert larLimits(larSphere()()) == ([-1.0, -1.0, -1.0], [1.0, 1.0, 1.0])
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Alignment}
+%-------------------------------------------------------------------------------
+@D Alignment primitive
+@{def larAlign (args):
+	def larAlign0 (args,pols):
+		pol1, pol2 = pols
+		box1, box2 = (larLimits(pol1), larLimits(pol2))
+		print "box1, box2 =",(box1, box2)
+		
+	return larAlign0
+@}
+%-------------------------------------------------------------------------------
+
 %===============================================================================
 \appendix
 \section{Utility functions}
 %===============================================================================
+
+
+
+def FLATTEN( pol )
+	temp = Plasm.shrink(pol,True)
+	hpcList = []
+	for I in range(len(temp.childs)):			
+		g,vmat, hmat = temp.childs[I].g,temp.childs[I].vmat, temp.childs[I].hmat
+		g.embed(vmat. dim)
+		g.transform(vmat, hmat)
+		hpcList += [Hpc(g)]
+	return hpcList
+	
+VIEW(STRUCT( FLATTEN(pol) ))
+
 
 %-------------------------------------------------------------------------------
 @D Initial import of modules

@@ -3,7 +3,7 @@ from pyplasm import *
 
 def larSplit(dom):
     def larSplit1(n):
-        assert n > 0 and type(n) == int
+        # assert n > 0 and isinstance(n,int)
         item = float(dom)/n
         ints = range(n+1)
         items = [item]*(n+1)

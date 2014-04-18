@@ -73,9 +73,9 @@ if __name__=="__main__":
    V,CV = larIntervals([36,2,3])([2*PI,1.,1.])
    VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 
-def larCircle(radius=1.):
+def larCircle(radius=1.,angle=2*PI):
    def larCircle0(shape=36):
-      domain = larIntervals([shape])([2*PI])
+      domain = larIntervals([shape])([angle])
       V,CV = domain
       x = lambda V : [radius*COS(p[0]) for p in V]
       y = lambda V : [radius*SIN(p[0]) for p in V]

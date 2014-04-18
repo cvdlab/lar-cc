@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, 'lib/py/')
 from largrid import *
 
 mod_1 = larSplit(1)(4), larGrid(4)(1)
