@@ -529,7 +529,7 @@ The \texttt{boolean.py} module is exported to the library \texttt{lar-cc/lib}. T
 @{""" Module with Boolean operators using chains and CSR matrices """
 @< Initial import of modules @>
 @< Symbolic utility to represent points as strings @>
-@< Affine transformations of $n$ points @>
+@< Affine transformations of $d$-points @>
 @< Generation of $n$ random points in the unit $d$-disk @>
 @< Generation of $n$ random points in the standard $d$-cuboid @>
 @< Triangulation of random points @>
@@ -696,6 +696,34 @@ CV = Delaunay(array(V)).vertices
 @}
 %------------------------------------------------------------------
 
+
+model = checkModel(larHollowCyl(0.8,1,1,angle=PI/4)([12,2,2]))
+VIEW(STRUCT(MKPOLS(model)))
+model = checkModel(larHollowSphere(0.8,1,PI/6,PI/4)([6,12,2]))
+
+
+\paragraph{Union of structured grids}
+
+%------------------------------------------------------------------
+@o test/py/boolean2/test06.py
+@{""" test program for the boolean module """
+@< Initial import of modules @>
+from boolean2 import *
+from mapper import *
+blue = larHollowCyl(0.8,1,1,angle=PI/4)([6,2,5])
+red = larHollowSphere(0.8,1,PI/6,PI/4)([6,12,2])
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(blue) + MKPOLS(red) ))
+V, CV1, CV2, n12 = vertexSieve(red,blue)
+V, n1,n2,n12, B1,B2 = boolOps(red,blue)
+CV = Delaunay(array(V)).vertices
+@< Visualization of first Boolean step @>
+@}
+%------------------------------------------------------------------
+
+
+
+
+
 \paragraph{Boolean operations with general LAR cells}
 
 %------------------------------------------------------------------
@@ -783,15 +811,16 @@ from @1 import *
 @}
 %------------------------------------------------------------------
 
-\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinate.
+\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates.
 
 %------------------------------------------------------------------
-@D Affine transformations of $n$ points
+@D Affine transformations of $d$-points
 @{def translatePoints (points, tvect):
 	return [VECTSUM([p,tvect]) for p in points]
 
-def rotatePoints (points, angle):
-	return [[COS(x),-SIN(y)] for x,y in points]
+def rotatePoints (points, angle):		# 2-dimensional !! TODO: n-dim
+	a = angle
+	return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
 
 def scalePoints (points, svect):
 	return [AA(PROD)(TRANS([p,svect])) for p in points]

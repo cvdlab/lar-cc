@@ -23,7 +23,8 @@ from boolean2 import *
 
 """ simplicial decomposition of the unit d-cube """
 def larDomain(shape):
-   V,CV = larSimplexGrid(shape)
+   # V,CV = larSimplexGrid(shape)
+   V,CV = larCuboids(shape)
    V = scalePoints(V, [1./d for d in shape])
    return V,CV
 
@@ -34,7 +35,7 @@ def larIntervals(shape):
       return V,CV
    return larIntervals0
 
-def checkModel(model):
+def checkModel(model,dim=2):
    V,CV = model; n = len(V)
    vertDict = defaultdict(list)
    for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
@@ -47,14 +48,14 @@ def checkModel(model):
          invertedindex[i]=k   
    CV = [[invertedindex[v] for v in cell] for cell in CV]
    # filter out degenerate cells
-   CV = [list(set(cell)) for cell in CV if len(set(cell))==len(cell)]
+   CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
    return V, CV
 
 def larMap(coordFuncs):
-   def larMap0(domain):
+   def larMap0(domain,dim=2):
       V,CV = domain
       V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
-      return checkModel((V,CV))
+      return checkModel((V,CV),dim)
    return larMap0
 
 if __name__=="__main__":
@@ -73,13 +74,13 @@ if __name__=="__main__":
    V,CV = larIntervals([36,2,3])([2*PI,1.,1.])
    VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 
-def larCircle(radius=1.,angle=2*PI):
+def larCircle(radius=1.,angle=2*PI,dim=1):
    def larCircle0(shape=36):
       domain = larIntervals([shape])([angle])
       V,CV = domain
       x = lambda V : [radius*COS(p[0]) for p in V]
       y = lambda V : [radius*SIN(p[0]) for p in V]
-      return larMap([x,y])(domain)
+      return larMap([x,y])(domain,dim)
    return larCircle0
 
 def larDisk(radius=1.,angle=2*PI):

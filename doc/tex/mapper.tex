@@ -110,7 +110,8 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 \begin{list}{}{} \item
 \mbox{}\verb@""" simplicial decomposition of the unit d-cube """@\\
 \mbox{}\verb@def larDomain(shape):@\\
-\mbox{}\verb@   V,CV = larSimplexGrid(shape)@\\
+\mbox{}\verb@   # V,CV = larSimplexGrid(shape)@\\
+\mbox{}\verb@   V,CV = larCuboids(shape)@\\
 \mbox{}\verb@   V = scalePoints(V, [1./d for d in shape])@\\
 \mbox{}\verb@   return V,CV@\\
 \mbox{}\verb@@{\NWsep}
@@ -156,10 +157,10 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larMap(coordFuncs):@\\
-\mbox{}\verb@   def larMap0(domain):@\\
+\mbox{}\verb@   def larMap0(domain,dim=2):@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction@\\
-\mbox{}\verb@      return checkModel((V,CV))@\\
+\mbox{}\verb@      return checkModel((V,CV),dim)@\\
 \mbox{}\verb@   return larMap0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -181,7 +182,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 \protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def checkModel(model):@\\
+\mbox{}\verb@def checkModel(model,dim=2):@\\
 \mbox{}\verb@   V,CV = model; n = len(V)@\\
 \mbox{}\verb@   vertDict = defaultdict(list)@\\
 \mbox{}\verb@   for k,v in enumerate(V): vertDict[vcode(v)].append(k) @\\
@@ -194,7 +195,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 \mbox{}\verb@         invertedindex[i]=k   @\\
 \mbox{}\verb@   CV = [[invertedindex[v] for v in cell] for cell in CV]@\\
 \mbox{}\verb@   # filter out degenerate cells@\\
-\mbox{}\verb@   CV = [list(set(cell)) for cell in CV if len(set(cell))==len(cell)]@\\
+\mbox{}\verb@   CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]@\\
 \mbox{}\verb@   return V, CV@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -260,13 +261,13 @@ A large number of primitive surfaces or solids is defined in this section, using
 \protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Circle centered in the origin\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larCircle(radius=1.,angle=2*PI):@\\
+\mbox{}\verb@def larCircle(radius=1.,angle=2*PI,dim=1):@\\
 \mbox{}\verb@   def larCircle0(shape=36):@\\
 \mbox{}\verb@      domain = larIntervals([shape])([angle])@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      x = lambda V : [radius*COS(p[0]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [radius*SIN(p[0]) for p in V]@\\
-\mbox{}\verb@      return larMap([x,y])(domain)@\\
+\mbox{}\verb@      return larMap([x,y])(domain,dim)@\\
 \mbox{}\verb@   return larCircle0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1245,33 +1246,33 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 \mbox{}\verb@""" Circumference of unit radius """@\\
 \mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb22c}{22c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from mapper import *@\\
-\mbox{}\verb@model = checkModel(larCircle(1)())@\\
+\mbox{}\verb@model = larCircle(1)()@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larDisk(1)([36,4]))@\\
+\mbox{}\verb@model = larDisk(1)([36,4])@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larRing(.9, 1.)([36,2]))@\\
+\mbox{}\verb@model = larRing(.9, 1.)([36,2])@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larCylinder(.5,2.)([32,1]))@\\
+\mbox{}\verb@model = larCylinder(.5,2.)([32,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larSphere(1,PI/6,PI/4)([6,12]))@\\
+\mbox{}\verb@model = larSphere(1,PI/6,PI/4)([6,12])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larBall(1)()@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larRod(.25,2.)([32,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larToroidal(0.5,2)())@\\
+\mbox{}\verb@model = larToroidal(0.5,2)()@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larCrown(0.125,1)([8,48]))@\\
+\mbox{}\verb@model = larCrown(0.125,1)([8,48])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larPizza(0.05,1,PI/3)([8,48])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larTorus(0.5,1)())@\\
+\mbox{}\verb@model = larTorus(0.5,1)()@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larBox([-1,-1,-1],[1,1,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larHollowCyl(0.8,1,1,angle=PI/4)([12,2,2]))@\\
+\mbox{}\verb@model = larHollowCyl(0.8,1,1,angle=PI/4)([12,2,2])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = checkModel(larHollowSphere(0.8,1,PI/6,PI/4)([6,12,2]))@\\
+\mbox{}\verb@model = larHollowSphere(0.8,1,PI/6,PI/4)([6,12,2])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}

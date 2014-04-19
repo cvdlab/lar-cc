@@ -86,7 +86,8 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 @D Generate a simplicial decomposition ot the $[0,1]^d$ domain
 @{""" simplicial decomposition of the unit d-cube """
 def larDomain(shape):
-	V,CV = larSimplexGrid(shape)
+	# V,CV = larSimplexGrid(shape)
+	V,CV = larCuboids(shape)
 	V = scalePoints(V, [1./d for d in shape])
 	return V,CV
 @}
@@ -112,10 +113,10 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 %-------------------------------------------------------------------------------
 @D Primitive mapping function 
 @{def larMap(coordFuncs):
-	def larMap0(domain):
+	def larMap0(domain,dim=2):
 		V,CV = domain
 		V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
-		return checkModel((V,CV))
+		return checkModel((V,CV),dim)
 	return larMap0
 @}
 %-------------------------------------------------------------------------------
@@ -127,7 +128,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 
 %-------------------------------------------------------------------------------
 @D Create a dictionary with key the point location
-@{def checkModel(model):
+@{def checkModel(model,dim=2):
 	V,CV = model; n = len(V)
 	vertDict = defaultdict(list)
 	for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
@@ -140,7 +141,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 			invertedindex[i]=k	
 	CV = [[invertedindex[v] for v in cell] for cell in CV]
 	# filter out degenerate cells
-	CV = [list(set(cell)) for cell in CV if len(set(cell))==len(cell)]
+	CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
 	return V, CV
 @}
 %-------------------------------------------------------------------------------
@@ -186,13 +187,13 @@ A large number of primitive surfaces or solids is defined in this section, using
 \paragraph{Circle}
 %-------------------------------------------------------------------------------
 @D Circle centered in the origin
-@{def larCircle(radius=1.,angle=2*PI):
+@{def larCircle(radius=1.,angle=2*PI,dim=1):
 	def larCircle0(shape=36):
 		domain = larIntervals([shape])([angle])
 		V,CV = domain
 		x = lambda V : [radius*COS(p[0]) for p in V]
 		y = lambda V : [radius*SIN(p[0]) for p in V]
-		return larMap([x,y])(domain)
+		return larMap([x,y])(domain,dim)
 	return larCircle0
 @}
 %-------------------------------------------------------------------------------
@@ -857,33 +858,33 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 @{""" Circumference of unit radius """
 @< Initial import of modules @>
 from mapper import *
-model = checkModel(larCircle(1)())
+model = larCircle(1)()
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
-model = checkModel(larDisk(1)([36,4]))
+model = larDisk(1)([36,4])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
-model = checkModel(larRing(.9, 1.)([36,2]))
+model = larRing(.9, 1.)([36,2])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
-model = checkModel(larCylinder(.5,2.)([32,1]))
+model = larCylinder(.5,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larSphere(1,PI/6,PI/4)([6,12]))
+model = larSphere(1,PI/6,PI/4)([6,12])
 VIEW(STRUCT(MKPOLS(model)))
 model = larBall(1)()
 VIEW(STRUCT(MKPOLS(model)))
 model = larRod(.25,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larToroidal(0.5,2)())
+model = larToroidal(0.5,2)()
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larCrown(0.125,1)([8,48]))
+model = larCrown(0.125,1)([8,48])
 VIEW(STRUCT(MKPOLS(model)))
 model = larPizza(0.05,1,PI/3)([8,48])
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larTorus(0.5,1)())
+model = larTorus(0.5,1)()
 VIEW(STRUCT(MKPOLS(model)))
 model = larBox([-1,-1,-1],[1,1,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larHollowCyl(0.8,1,1,angle=PI/4)([12,2,2]))
+model = larHollowCyl(0.8,1,1,angle=PI/4)([12,2,2])
 VIEW(STRUCT(MKPOLS(model)))
-model = checkModel(larHollowSphere(0.8,1,PI/6,PI/4)([6,12,2]))
+model = larHollowSphere(0.8,1,PI/6,PI/4)([6,12,2])
 VIEW(STRUCT(MKPOLS(model)))
 @}
 %-------------------------------------------------------------------------------

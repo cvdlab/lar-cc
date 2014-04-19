@@ -52,8 +52,9 @@ def vcode (vect):
 def translatePoints (points, tvect):
    return [VECTSUM([p,tvect]) for p in points]
 
-def rotatePoints (points, angle):
-   return [[COS(x),-SIN(y)] for x,y in points]
+def rotatePoints (points, angle):      # 2-dimensional !! TODO: n-dim
+   a = angle
+   return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
 
 def scalePoints (points, svect):
    return [AA(PROD)(TRANS([p,svect])) for p in points]
