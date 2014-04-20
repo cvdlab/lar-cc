@@ -97,7 +97,9 @@ A very simple but foundational software subsystem is developed in this section, 
 \subsection{Domain decomposition}
 %-------------------------------------------------------------------------------
 
-A simplicial map is a map between simplicial complexes with the property that the images of the vertices of a simplex always span a simplex.  Simplicial maps are thus determined by their effects on vertices, and provide a piecewise-linear approximation of their underlying polyhedra.
+A simplicial map is a map between simplicial complexes with the property that the images of the vertices of a simplex always span a simplex.  Simplicial maps are thus determined by their effects on vertices, and provide a piecewise-linear approximation of their underlying polyhedra. 
+
+Since double simmeries are always present in the curved primitives generated in the module, an alternative cellular decomposition with cuboidal cells is provided.  The default choice is "cuboid".
 
 
 \paragraph{Standard and scaled decomposition of unit domain}
@@ -108,10 +110,10 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 \protect\makebox[0ex][r]{\NWtarget{nuweb2}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize 2}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@""" simplicial decomposition of the unit d-cube """@\\
-\mbox{}\verb@def larDomain(shape):@\\
-\mbox{}\verb@   # V,CV = larSimplexGrid(shape)@\\
-\mbox{}\verb@   V,CV = larCuboids(shape)@\\
+\mbox{}\verb@""" cellular decomposition of the unit d-cube """@\\
+\mbox{}\verb@def larDomain(shape, cell='cuboid'):@\\
+\mbox{}\verb@   if cell=='simplex': V,CV = larSimplexGrid(shape)@\\
+\mbox{}\verb@   elif cell=='cuboid': V,CV = larCuboids(shape)@\\
 \mbox{}\verb@   V = scalePoints(V, [1./d for d in shape])@\\
 \mbox{}\verb@   return V,CV@\\
 \mbox{}\verb@@{\NWsep}
@@ -131,9 +133,9 @@ A scaled simplicial decomposition is provided by the second-order  \texttt{larIn
 \protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def larIntervals(shape):@\\
+\mbox{}\verb@def larIntervals(shape, cell='cuboid'):@\\
 \mbox{}\verb@   def larIntervals0(size):@\\
-\mbox{}\verb@      V,CV = larDomain(shape)@\\
+\mbox{}\verb@      V,CV = larDomain(shape, cell)@\\
 \mbox{}\verb@      V = scalePoints(V, [scaleFactor for scaleFactor in size])@\\
 \mbox{}\verb@      return V,CV@\\
 \mbox{}\verb@   return larIntervals0@\\
@@ -179,7 +181,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap4}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def checkModel(model,dim=2):@\\
@@ -220,7 +222,7 @@ A projection transformation, that removes the last $k$ coordinate of vertices, w
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap5}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Embedding and projecting a geometric model\nobreak\ {\footnotesize 4}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Embedding and projecting a geometric model\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larEmbed(k):@\\
@@ -378,8 +380,8 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larSphere(radius=1,angle1=PI,angle2=2*PI):@\\
-\mbox{}\verb@   def larSphere0(shape=[18,36]):@\\
-\mbox{}\verb@      V,CV = larIntervals(shape)([angle1,angle2])@\\
+\mbox{}\verb@   def larSphere0(shape=[18,36], cell='simplex'):@\\
+\mbox{}\verb@      V,CV = larIntervals(shape, cell)([angle1,angle2])@\\
 \mbox{}\verb@      V = translatePoints(V,[-angle1/2,-angle2/2])@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]@\\
@@ -403,8 +405,8 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larToroidal(r,R,angle1=2*PI,angle2=2*PI):@\\
-\mbox{}\verb@   def larToroidal0(shape=[24,36]):@\\
-\mbox{}\verb@      domain = larIntervals(shape)([angle1,angle2])@\\
+\mbox{}\verb@   def larToroidal0(shape=[24,36], cell='simplex'):@\\
+\mbox{}\verb@      domain = larIntervals(shape, cell)([angle1,angle2])@\\
 \mbox{}\verb@      V,CV = domain@\\
 \mbox{}\verb@      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]@\\
 \mbox{}\verb@      y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]@\\
@@ -427,8 +429,8 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larCrown(r,R,angle=2*PI):@\\
-\mbox{}\verb@   def larCrown0(shape=[24,36]):@\\
-\mbox{}\verb@      V,CV = larIntervals(shape)([PI,angle])@\\
+\mbox{}\verb@   def larCrown0(shape=[24,36], cell='simplex'):@\\
+\mbox{}\verb@      V,CV = larIntervals(shape, cell)([PI,angle])@\\
 \mbox{}\verb@      V = translatePoints(V,[-PI/2,0])@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]@\\
@@ -1118,7 +1120,7 @@ Finally, a similar 2D example is given, by nesting one (or more) structures via 
 \mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb22c}{22c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb2}{2}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb3c}{3c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Primitive mapping function\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize \NWlink{nuweb20c}{20c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Circle centered in the origin\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
@@ -1138,7 +1140,7 @@ Finally, a similar 2D example is given, by nesting one (or more) structures via 
 \mbox{}\verb@@\hbox{$\langle\,$Translation matrices\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Scaling matrices\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Rotation matrices\nobreak\ {\footnotesize \NWlink{nuweb11c}{11c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Embedding and projecting a geometric model\nobreak\ {\footnotesize \NWlink{nuweb4}{4}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Embedding and projecting a geometric model\nobreak\ {\footnotesize \NWlink{nuweb4b}{4b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize \NWlink{nuweb10}{10}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Traversal of a scene multigraph\nobreak\ {\footnotesize \NWlink{nuweb17a}{17a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
@@ -1254,15 +1256,15 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
 \mbox{}\verb@model = larCylinder(.5,2.)([32,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larSphere(1,PI/6,PI/4)([6,12])@\\
+\mbox{}\verb@model = larSphere(1,PI/6,PI/4)([6,12], cell='simplex')@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larBall(1)()@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larRod(.25,2.)([32,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larToroidal(0.5,2)()@\\
+\mbox{}\verb@model = larToroidal(0.5,2)(cell='simplex')@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larCrown(0.125,1)([8,48])@\\
+\mbox{}\verb@model = larCrown(0.125,1)([8,48],cell='simplex')@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larPizza(0.05,1,PI/3)([8,48])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\

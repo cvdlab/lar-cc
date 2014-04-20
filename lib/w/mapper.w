@@ -76,7 +76,9 @@ A very simple but foundational software subsystem is developed in this section, 
 \subsection{Domain decomposition}
 %-------------------------------------------------------------------------------
 
-A simplicial map is a map between simplicial complexes with the property that the images of the vertices of a simplex always span a simplex.  Simplicial maps are thus determined by their effects on vertices, and provide a piecewise-linear approximation of their underlying polyhedra.
+A simplicial map is a map between simplicial complexes with the property that the images of the vertices of a simplex always span a simplex.  Simplicial maps are thus determined by their effects on vertices, and provide a piecewise-linear approximation of their underlying polyhedra. 
+
+Since double simmeries are always present in the curved primitives generated in the module, an alternative cellular decomposition with cuboidal cells is provided.  The default choice is "cuboid".
 
 
 \paragraph{Standard and scaled decomposition of unit domain}
@@ -84,10 +86,10 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 
 %-------------------------------------------------------------------------------
 @D Generate a simplicial decomposition ot the $[0,1]^d$ domain
-@{""" simplicial decomposition of the unit d-cube """
-def larDomain(shape):
-	# V,CV = larSimplexGrid(shape)
-	V,CV = larCuboids(shape)
+@{""" cellular decomposition of the unit d-cube """
+def larDomain(shape, cell='cuboid'):
+	if cell=='simplex': V,CV = larSimplexGrid(shape)
+	elif cell=='cuboid': V,CV = larCuboids(shape)
 	V = scalePoints(V, [1./d for d in shape])
 	return V,CV
 @}
@@ -97,9 +99,9 @@ A scaled simplicial decomposition is provided by the second-order  \texttt{larIn
 
 %-------------------------------------------------------------------------------
 @D Scaled simplicial decomposition ot the $[0,1]^d$ domain
-@{def larIntervals(shape):
+@{def larIntervals(shape, cell='cuboid'):
 	def larIntervals0(size):
-		V,CV = larDomain(shape)
+		V,CV = larDomain(shape, cell)
 		V = scalePoints(V, [scaleFactor for scaleFactor in size])
 		return V,CV
 	return larIntervals0
@@ -264,8 +266,8 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 @D Spherical surface of given radius
 @{def larSphere(radius=1,angle1=PI,angle2=2*PI):
-	def larSphere0(shape=[18,36]):
-		V,CV = larIntervals(shape)([angle1,angle2])
+	def larSphere0(shape=[18,36], cell='simplex'):
+		V,CV = larIntervals(shape, cell)([angle1,angle2])
 		V = translatePoints(V,[-angle1/2,-angle2/2])
 		domain = V,CV
 		x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
@@ -279,8 +281,8 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 @D Toroidal surface of given radiuses
 @{def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
-	def larToroidal0(shape=[24,36]):
-		domain = larIntervals(shape)([angle1,angle2])
+	def larToroidal0(shape=[24,36], cell='simplex'):
+		domain = larIntervals(shape, cell)([angle1,angle2])
 		V,CV = domain
 		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
 		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
@@ -293,8 +295,8 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 @D Half-toroidal surface of given radiuses
 @{def larCrown(r,R,angle=2*PI):
-	def larCrown0(shape=[24,36]):
-		V,CV = larIntervals(shape)([PI,angle])
+	def larCrown0(shape=[24,36], cell='simplex'):
+		V,CV = larIntervals(shape, cell)([PI,angle])
 		V = translatePoints(V,[-PI/2,0])
 		domain = V,CV
 		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
@@ -866,15 +868,15 @@ model = larRing(.9, 1.)([36,2])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = larCylinder(.5,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = larSphere(1,PI/6,PI/4)([6,12])
+model = larSphere(1,PI/6,PI/4)([6,12], cell='simplex')
 VIEW(STRUCT(MKPOLS(model)))
 model = larBall(1)()
 VIEW(STRUCT(MKPOLS(model)))
 model = larRod(.25,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = larToroidal(0.5,2)()
+model = larToroidal(0.5,2)(cell='simplex')
 VIEW(STRUCT(MKPOLS(model)))
-model = larCrown(0.125,1)([8,48])
+model = larCrown(0.125,1)([8,48],cell='simplex')
 VIEW(STRUCT(MKPOLS(model)))
 model = larPizza(0.05,1,PI/3)([8,48])
 VIEW(STRUCT(MKPOLS(model)))

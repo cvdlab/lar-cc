@@ -21,16 +21,16 @@ import boolean2
 from boolean2 import *
 
 
-""" simplicial decomposition of the unit d-cube """
-def larDomain(shape):
-   # V,CV = larSimplexGrid(shape)
-   V,CV = larCuboids(shape)
+""" cellular decomposition of the unit d-cube """
+def larDomain(shape, cell='cuboid'):
+   if cell=='simplex': V,CV = larSimplexGrid(shape)
+   elif cell=='cuboid': V,CV = larCuboids(shape)
    V = scalePoints(V, [1./d for d in shape])
    return V,CV
 
-def larIntervals(shape):
+def larIntervals(shape, cell='cuboid'):
    def larIntervals0(size):
-      V,CV = larDomain(shape)
+      V,CV = larDomain(shape, cell)
       V = scalePoints(V, [scaleFactor for scaleFactor in size])
       return V,CV
    return larIntervals0
@@ -103,8 +103,8 @@ def larRing(r1,r2,angle=2*PI):
    return larRing0
 
 def larSphere(radius=1,angle1=PI,angle2=2*PI):
-   def larSphere0(shape=[18,36]):
-      V,CV = larIntervals(shape)([angle1,angle2])
+   def larSphere0(shape=[18,36], cell='simplex'):
+      V,CV = larIntervals(shape, cell)([angle1,angle2])
       V = translatePoints(V,[-angle1/2,-angle2/2])
       domain = V,CV
       x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
@@ -140,8 +140,8 @@ def larCylinder(radius,height,angle=2*PI):
    return larCylinder0
 
 def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
-   def larToroidal0(shape=[24,36]):
-      domain = larIntervals(shape)([angle1,angle2])
+   def larToroidal0(shape=[24,36], cell='simplex'):
+      domain = larIntervals(shape, cell)([angle1,angle2])
       V,CV = domain
       x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
       y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
@@ -150,8 +150,8 @@ def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
    return larToroidal0
 
 def larCrown(r,R,angle=2*PI):
-   def larCrown0(shape=[24,36]):
-      V,CV = larIntervals(shape)([PI,angle])
+   def larCrown0(shape=[24,36], cell='simplex'):
+      V,CV = larIntervals(shape, cell)([PI,angle])
       V = translatePoints(V,[-PI/2,0])
       domain = V,CV
       x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
