@@ -5,21 +5,10 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-import lar2psm
 from lar2psm import *
-
-import simplexn
 from simplexn import *
-
-import larcc
 from larcc import *
-
-import largrid
 from largrid import *
-
-import boolean2
-from boolean2 import *
-
 
 from mapper import *
 model = checkModel(larToroidal([0.2,1])())

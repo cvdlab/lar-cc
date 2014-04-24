@@ -5,36 +5,36 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-import lar2psm
 from lar2psm import *
-
-import simplexn
 from simplexn import *
-
-import larcc
 from larcc import *
-
-import largrid
 from largrid import *
 
-import boolean2
-from boolean2 import *
+def translatePoints (points, tvect):
+   return [VECTSUM([p,tvect]) for p in points]
 
+def rotatePoints (points, angle):      # 2-dimensional !! TODO: n-dim
+   a = angle
+   return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+
+def scalePoints (points, svect):
+   return [AA(PROD)(TRANS([p,svect])) for p in points]
 
 """ cellular decomposition of the unit d-cube """
 def larDomain(shape, cell='cuboid'):
-   if cell=='simplex': V,CV = larSimplexGrid(shape)
+   if cell=='simplex': V,CV = larSimplexGrid1(shape)
    elif cell=='cuboid': V,CV = larCuboids(shape)
    V = scalePoints(V, [1./d for d in shape])
-   return V,CV
+   return [V,CV]
 
 def larIntervals(shape, cell='cuboid'):
    def larIntervals0(size):
-      V,CV = larDomain(shape, cell)
+      V,CV = larDomain(shape,cell)
       V = scalePoints(V, [scaleFactor for scaleFactor in size])
-      return V,CV
+      return [V,CV]
    return larIntervals0
 
+from collections import defaultdict
 def checkModel(model,dim=2):
    V,CV = model; n = len(V)
    vertDict = defaultdict(list)
@@ -49,13 +49,14 @@ def checkModel(model,dim=2):
    CV = [[invertedindex[v] for v in cell] for cell in CV]
    # filter out degenerate cells
    CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
-   return V, CV
+   return [V, CV]
 
 def larMap(coordFuncs):
    def larMap0(domain,dim=2):
       V,CV = domain
-      V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
-      return checkModel((V,CV),dim)
+      V = AA(CONS(coordFuncs))(V)  # plasm CONStruction
+      return [V,CV]
+      # checkModel([V,CV],dim)  TODO
    return larMap0
 
 if __name__=="__main__":
@@ -78,8 +79,8 @@ def larCircle(radius=1.,angle=2*PI,dim=1):
    def larCircle0(shape=36):
       domain = larIntervals([shape])([angle])
       V,CV = domain
-      x = lambda V : [radius*COS(p[0]) for p in V]
-      y = lambda V : [radius*SIN(p[0]) for p in V]
+      x = lambda p : radius*COS(p[0])
+      y = lambda p : radius*SIN(p[0])
       return larMap([x,y])(domain,dim)
    return larCircle0
 
@@ -87,8 +88,8 @@ def larDisk(radius=1.,angle=2*PI):
    def larDisk0(shape=[36,1]):
       domain = larIntervals(shape)([angle,radius])
       V,CV = domain
-      x = lambda V : [p[1]*COS(p[0]) for p in V]
-      y = lambda V : [p[1]*SIN(p[0]) for p in V]
+      x = lambda p : p[1]*COS(p[0])
+      y = lambda p : p[1]*SIN(p[0])
       return larMap([x,y])(domain)
    return larDisk0
 
@@ -97,19 +98,19 @@ def larRing(r1,r2,angle=2*PI):
       V,CV = larIntervals(shape)([angle,r2-r1])
       V = translatePoints(V,[0,r1])
       domain = V,CV
-      x = lambda V : [p[1] * COS(p[0]) for p in V]
-      y = lambda V : [p[1] * SIN(p[0]) for p in V]
+      x = lambda p : p[1] * COS(p[0])
+      y = lambda p : p[1] * SIN(p[0])
       return larMap([x,y])(domain)
    return larRing0
 
 def larSphere(radius=1,angle1=PI,angle2=2*PI):
-   def larSphere0(shape=[18,36], cell='simplex'):
-      V,CV = larIntervals(shape, cell)([angle1,angle2])
+   def larSphere0(shape=[18,36]):
+      V,CV = larIntervals(shape,'simplex')([angle1,angle2])
       V = translatePoints(V,[-angle1/2,-angle2/2])
       domain = V,CV
-      x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
-      y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
-      z = lambda V : [radius*SIN(p[0]) for p in V]
+      x = lambda p : radius*COS(p[0])*COS(p[1])
+      y = lambda p : radius*COS(p[0])*SIN(p[1])
+      z = lambda p : radius*SIN(p[0])
       return larMap([x,y,z])(domain)
    return larSphere0
 
@@ -130,9 +131,9 @@ def larCylinder(radius,height,angle=2*PI):
    def larCylinder0(shape=[36,1]):
       domain = larIntervals(shape)([angle,1])
       V,CV = domain
-      x = lambda V : [radius*COS(p[0]) for p in V]
-      y = lambda V : [radius*SIN(p[0]) for p in V]
-      z = lambda V : [height*p[1] for p in V]
+      x = lambda p : radius*COS(p[0])
+      y = lambda p : radius*SIN(p[0])
+      z = lambda p : height*p[1]
       mapping = [x,y,z]
       model = larMap(mapping)(domain)
       # model = makeOriented(model)
@@ -140,23 +141,23 @@ def larCylinder(radius,height,angle=2*PI):
    return larCylinder0
 
 def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
-   def larToroidal0(shape=[24,36], cell='simplex'):
-      domain = larIntervals(shape, cell)([angle1,angle2])
+   def larToroidal0(shape=[24,36]):
+      domain = larIntervals(shape,'simplex')([angle1,angle2])
       V,CV = domain
-      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
-      y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
-      z = lambda V : [-r * SIN(p[0]) for p in V]
+      x = lambda p : (R + r*COS(p[0])) * COS(p[1])
+      y = lambda p : (R + r*COS(p[0])) * SIN(p[1])
+      z = lambda p : -r * SIN(p[0])
       return larMap([x,y,z])(domain)
    return larToroidal0
 
 def larCrown(r,R,angle=2*PI):
-   def larCrown0(shape=[24,36], cell='simplex'):
-      V,CV = larIntervals(shape, cell)([PI,angle])
+   def larCrown0(shape=[24,36]):
+      V,CV = larIntervals(shape,'simplex')([PI,angle])
       V = translatePoints(V,[-PI/2,0])
       domain = V,CV
-      x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
-      y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
-      z = lambda V : [-r * SIN(p[0]) for p in V]
+      x = lambda p : (R + r*COS(p[0])) * COS(p[1])
+      y = lambda p : (R + r*COS(p[0])) * SIN(p[1])
+      z = lambda p : -r * SIN(p[0])
       return larMap([x,y,z])(domain)
    return larCrown0
 
@@ -183,9 +184,9 @@ def larTorus(r,R,angle1=2*PI,angle2=2*PI):
    def larTorus0(shape=[24,36,1]):
       domain = larIntervals(shape)([angle1,angle2,r])
       V,CV = domain
-      x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]
-      y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]
-      z = lambda V : [-p[2] * SIN(p[0]) for p in V]
+      x = lambda p : (R + p[2]*COS(p[0])) * COS(p[1])
+      y = lambda p : (R + p[2]*COS(p[0])) * SIN(p[1])
+      z = lambda p : -p[2] * SIN(p[0])
       return larMap([x,y,z])(domain)
    return larTorus0
 
@@ -202,9 +203,9 @@ def larHollowCyl(r,R,height,angle=2*PI):
       V,CV = larIntervals(shape)([angle,R-r,height])
       V = translatePoints(V,[0,r,0])
       domain = V,CV
-      x = lambda V : [p[1] * COS(p[0]) for p in V]
-      y = lambda V : [p[1] * SIN(p[0]) for p in V]
-      z = lambda V : [p[2] * height for p in V]
+      x = lambda p : p[1] * COS(p[0])
+      y = lambda p : p[1] * SIN(p[0])
+      z = lambda p : p[2] * height
       return larMap([x,y,z])(domain)
    return larHollowCyl0
 
@@ -213,9 +214,9 @@ def larHollowSphere(r,R,angle1=PI,angle2=2*PI):
       V,CV = larIntervals(shape)([angle1,angle2,R-r])
       V = translatePoints(V,[-angle1/2,-angle2/2,r])
       domain = V,CV
-      x = lambda V : [p[2]*COS(p[0])*COS(p[1]) for p in V]
-      y = lambda V : [p[2]*COS(p[0])*SIN(p[1]) for p in V]
-      z = lambda V : [p[2]*SIN(p[0]) for p in V]
+      x = lambda p : p[2]*COS(p[0])*COS(p[1])
+      y = lambda p : p[2]*COS(p[0])*SIN(p[1])
+      z = lambda p : p[2]*SIN(p[0])
       return larMap([x,y,z])(domain)
    return larHollowSphere0
 
@@ -313,4 +314,35 @@ def evalStruct(struct):
     CTM, stack = scipy.identity(dim+1), []
     scene = traversal(CTM, stack, struct) 
     return scene
+
+""" TODO: 
+use Decimal (http://docs.python.org/2/library/decimal.html) 
+"""
+ROUND_ZERO = 1E-07
+def round_or_zero (x,prec=7):
+   """
+   Decision procedure to approximate a small number to zero.
+   Return either the input number or zero.
+   """
+   def myround(x):
+      return eval(('%.'+str(prec)+'f') % round(x,prec))
+   xx = myround(x)
+   if abs(xx) < ROUND_ZERO: return 0.0
+   else: return xx
+
+def prepKey (args): return "["+", ".join(args)+"]"
+
+def fixedPrec(value):
+   if abs(value - int(value))<ROUND_ZERO: value = int(value)
+   out = ('%0.7f'% value).rstrip('0')
+   if out == '-0.': out = '0.'
+   return out
+   
+def vcode (vect): 
+   """
+   To generate a string representation of a number array.
+   Used to generate the vertex keys in PointSet dictionary, and other 
+   similar operations.
+   """
+   return prepKey(AA(fixedPrec)(vect))
 

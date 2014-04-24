@@ -82,16 +82,16 @@ Since double simmeries are always present in the curved primitives generated in 
 
 
 \paragraph{Standard and scaled decomposition of unit domain}
-The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimplexGrid} as an hypercube of dimension $d \equiv\texttt{len(shape)}$, where the \texttt{shape} tuple provides the number or row, columns, pages, etc.~of the decomposition.
+The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimplexGrid1} as an hypercube of dimension $d \equiv\texttt{len(shape)}$, where the \texttt{shape} tuple provides the number or row, columns, pages, etc.~of the decomposition.
 
 %-------------------------------------------------------------------------------
 @D Generate a simplicial decomposition ot the $[0,1]^d$ domain
 @{""" cellular decomposition of the unit d-cube """
 def larDomain(shape, cell='cuboid'):
-	if cell=='simplex': V,CV = larSimplexGrid(shape)
+	if cell=='simplex': V,CV = larSimplexGrid1(shape)
 	elif cell=='cuboid': V,CV = larCuboids(shape)
 	V = scalePoints(V, [1./d for d in shape])
-	return V,CV
+	return [V,CV]
 @}
 %-------------------------------------------------------------------------------
 
@@ -101,9 +101,9 @@ A scaled simplicial decomposition is provided by the second-order  \texttt{larIn
 @D Scaled simplicial decomposition ot the $[0,1]^d$ domain
 @{def larIntervals(shape, cell='cuboid'):
 	def larIntervals0(size):
-		V,CV = larDomain(shape, cell)
+		V,CV = larDomain(shape,cell)
 		V = scalePoints(V, [scaleFactor for scaleFactor in size])
-		return V,CV
+		return [V,CV]
 	return larIntervals0
 @}
 %-------------------------------------------------------------------------------
@@ -117,8 +117,9 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 @{def larMap(coordFuncs):
 	def larMap0(domain,dim=2):
 		V,CV = domain
-		V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
-		return checkModel((V,CV),dim)
+		V = AA(CONS(coordFuncs))(V)  # plasm CONStruction
+		return [V,CV]
+		# checkModel([V,CV],dim)  TODO
 	return larMap0
 @}
 %-------------------------------------------------------------------------------
@@ -130,7 +131,8 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 
 %-------------------------------------------------------------------------------
 @D Create a dictionary with key the point location
-@{def checkModel(model,dim=2):
+@{from collections import defaultdict
+def checkModel(model,dim=2):
 	V,CV = model; n = len(V)
 	vertDict = defaultdict(list)
 	for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
@@ -144,7 +146,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 	CV = [[invertedindex[v] for v in cell] for cell in CV]
 	# filter out degenerate cells
 	CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
-	return V, CV
+	return [V, CV]
 @}
 %-------------------------------------------------------------------------------
 
@@ -193,8 +195,8 @@ A large number of primitive surfaces or solids is defined in this section, using
 	def larCircle0(shape=36):
 		domain = larIntervals([shape])([angle])
 		V,CV = domain
-		x = lambda V : [radius*COS(p[0]) for p in V]
-		y = lambda V : [radius*SIN(p[0]) for p in V]
+		x = lambda p : radius*COS(p[0])
+		y = lambda p : radius*SIN(p[0])
 		return larMap([x,y])(domain,dim)
 	return larCircle0
 @}
@@ -211,8 +213,8 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 	def larDisk0(shape=[36,1]):
 		domain = larIntervals(shape)([angle,radius])
 		V,CV = domain
-		x = lambda V : [p[1]*COS(p[0]) for p in V]
-		y = lambda V : [p[1]*SIN(p[0]) for p in V]
+		x = lambda p : p[1]*COS(p[0])
+		y = lambda p : p[1]*SIN(p[0])
 		return larMap([x,y])(domain)
 	return larDisk0
 @}
@@ -226,8 +228,8 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 		V,CV = larIntervals(shape)([angle,r2-r1])
 		V = translatePoints(V,[0,r1])
 		domain = V,CV
-		x = lambda V : [p[1] * COS(p[0]) for p in V]
-		y = lambda V : [p[1] * SIN(p[0]) for p in V]
+		x = lambda p : p[1] * COS(p[0])
+		y = lambda p : p[1] * SIN(p[0])
 		return larMap([x,y])(domain)
 	return larRing0
 @}
@@ -252,9 +254,9 @@ def larCylinder(radius,height,angle=2*PI):
 	def larCylinder0(shape=[36,1]):
 		domain = larIntervals(shape)([angle,1])
 		V,CV = domain
-		x = lambda V : [radius*COS(p[0]) for p in V]
-		y = lambda V : [radius*SIN(p[0]) for p in V]
-		z = lambda V : [height*p[1] for p in V]
+		x = lambda p : radius*COS(p[0])
+		y = lambda p : radius*SIN(p[0])
+		z = lambda p : height*p[1]
 		mapping = [x,y,z]
 		model = larMap(mapping)(domain)
 		# model = makeOriented(model)
@@ -266,13 +268,13 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 @D Spherical surface of given radius
 @{def larSphere(radius=1,angle1=PI,angle2=2*PI):
-	def larSphere0(shape=[18,36], cell='simplex'):
-		V,CV = larIntervals(shape, cell)([angle1,angle2])
+	def larSphere0(shape=[18,36]):
+		V,CV = larIntervals(shape,'simplex')([angle1,angle2])
 		V = translatePoints(V,[-angle1/2,-angle2/2])
 		domain = V,CV
-		x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
-		y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
-		z = lambda V : [radius*SIN(p[0]) for p in V]
+		x = lambda p : radius*COS(p[0])*COS(p[1])
+		y = lambda p : radius*COS(p[0])*SIN(p[1])
+		z = lambda p : radius*SIN(p[0])
 		return larMap([x,y,z])(domain)
 	return larSphere0
 @}
@@ -281,12 +283,12 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 @D Toroidal surface of given radiuses
 @{def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
-	def larToroidal0(shape=[24,36], cell='simplex'):
-		domain = larIntervals(shape, cell)([angle1,angle2])
+	def larToroidal0(shape=[24,36]):
+		domain = larIntervals(shape,'simplex')([angle1,angle2])
 		V,CV = domain
-		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
-		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
-		z = lambda V : [-r * SIN(p[0]) for p in V]
+		x = lambda p : (R + r*COS(p[0])) * COS(p[1])
+		y = lambda p : (R + r*COS(p[0])) * SIN(p[1])
+		z = lambda p : -r * SIN(p[0])
 		return larMap([x,y,z])(domain)
 	return larToroidal0
 @}
@@ -295,13 +297,13 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 @D Half-toroidal surface of given radiuses
 @{def larCrown(r,R,angle=2*PI):
-	def larCrown0(shape=[24,36], cell='simplex'):
-		V,CV = larIntervals(shape, cell)([PI,angle])
+	def larCrown0(shape=[24,36]):
+		V,CV = larIntervals(shape,'simplex')([PI,angle])
 		V = translatePoints(V,[-PI/2,0])
 		domain = V,CV
-		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
-		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
-		z = lambda V : [-r * SIN(p[0]) for p in V]
+		x = lambda p : (R + r*COS(p[0])) * COS(p[1])
+		y = lambda p : (R + r*COS(p[0])) * SIN(p[1])
+		z = lambda p : -r * SIN(p[0])
 		return larMap([x,y,z])(domain)
 	return larCrown0
 @}
@@ -356,9 +358,9 @@ def larCylinder(radius,height,angle=2*PI):
 		V,CV = larIntervals(shape)([angle,R-r,height])
 		V = translatePoints(V,[0,r,0])
 		domain = V,CV
-		x = lambda V : [p[1] * COS(p[0]) for p in V]
-		y = lambda V : [p[1] * SIN(p[0]) for p in V]
-		z = lambda V : [p[2] * height for p in V]
+		x = lambda p : p[1] * COS(p[0])
+		y = lambda p : p[1] * SIN(p[0])
+		z = lambda p : p[2] * height
 		return larMap([x,y,z])(domain)
 	return larHollowCyl0
 @}
@@ -372,9 +374,9 @@ def larCylinder(radius,height,angle=2*PI):
 		V,CV = larIntervals(shape)([angle1,angle2,R-r])
 		V = translatePoints(V,[-angle1/2,-angle2/2,r])
 		domain = V,CV
-		x = lambda V : [p[2]*COS(p[0])*COS(p[1]) for p in V]
-		y = lambda V : [p[2]*COS(p[0])*SIN(p[1]) for p in V]
-		z = lambda V : [p[2]*SIN(p[0]) for p in V]
+		x = lambda p : p[2]*COS(p[0])*COS(p[1])
+		y = lambda p : p[2]*COS(p[0])*SIN(p[1])
+		z = lambda p : p[2]*SIN(p[0])
 		return larMap([x,y,z])(domain)
 	return larHollowSphere0
 @}
@@ -388,9 +390,9 @@ def larCylinder(radius,height,angle=2*PI):
 	def larTorus0(shape=[24,36,1]):
 		domain = larIntervals(shape)([angle1,angle2,r])
 		V,CV = domain
-		x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]
-		y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]
-		z = lambda V : [-p[2] * SIN(p[0]) for p in V]
+		x = lambda p : (R + p[2]*COS(p[0])) * COS(p[1])
+		y = lambda p : (R + p[2]*COS(p[0])) * SIN(p[1])
+		z = lambda p : -p[2] * SIN(p[0])
 		return larMap([x,y,z])(domain)
 	return larTorus0
 @}
@@ -758,6 +760,7 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @O lib/py/mapper.py
 @{""" Mapping functions and primitive objects """
 @< Initial import of modules @>
+@< Affine transformations of $d$-points @>
 @< Generate a simplicial decomposition ot the $[0,1]^d$ domain @>
 @< Scaled simplicial decomposition ot the $[0,1]^d$ domain @>
 @< Create a dictionary with key the point location @>
@@ -783,6 +786,7 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @< Embedding and projecting a geometric model @>
 @< Apply an affine transformation to a LAR model @>
 @< Traversal of a scene multigraph @>
+@< Symbolic utility to represent points as strings @>
 @}
 %-------------------------------------------------------------------------------
 %===============================================================================
@@ -950,20 +954,30 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-@< Import the module @(lar2psm@) @>
-@< Import the module @(simplexn@) @>
-@< Import the module @(larcc@) @>
-@< Import the module @(largrid@) @>
-@< Import the module @(boolean2@) @>
+from lar2psm import *
+from simplexn import *
+from larcc import *
+from largrid import *
 @}
 %-------------------------------------------------------------------------------
 
-%-------------------------------------------------------------------------------
-@D Import the module
-@{import @1
-from @1 import *
+
+\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates.
+
+%------------------------------------------------------------------
+@D Affine transformations of $d$-points
+@{def translatePoints (points, tvect):
+	return [VECTSUM([p,tvect]) for p in points]
+
+def rotatePoints (points, angle):		# 2-dimensional !! TODO: n-dim
+	a = angle
+	return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+
+def scalePoints (points, svect):
+	return [AA(PROD)(TRANS([p,svect])) for p in points]
 @}
-%-------------------------------------------------------------------------------
+%------------------------------------------------------------------
+
 
 
 \subsection{Numeric utilities}
