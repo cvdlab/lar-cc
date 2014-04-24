@@ -74,7 +74,7 @@ def larBezier(U,d=3):
 				weight = CHOOSE([N,I])*math.pow(1-t,N-I)*math.pow(t,I)
 				for K in range(len(out)):  out[K] += weight*(controldata[I][K])
 			return out
-		return (COMP([AA(COMP),DISTR]))([AA(SEL)(range(d)), map_fn])
+		return map_fn
 	return BEZIER0
 
 def larBezierCurve(controlpoints):
@@ -102,7 +102,7 @@ def larCoonsPatch (args):
 			ret[K] = ((1-u)*s0v[K] + u*s1v[K]+(1-v)*su0[K] + v*su1[K] + 
 			(1-u)*(1-v)*s0v[K] + (1-u)*v*s0v[K] + u*(1-v)*s1v[K] + u*v*s1v[K])
 		return ret
-	return (COMP([AA(COMP),DISTR]))([[S1,S2,S3], map_fn])
+	return map_fn
 @}
 %-------------------------------------------------------------------------------
 
@@ -139,7 +139,7 @@ dom = larDomain([32],'simplex')
 obj = larMap(larBezierCurve(controlpoints))(dom)
 VIEW(STRUCT(MKPOLS(obj)))
 
-obj = larMap(larBezier(S1,2)(controlpoints))(dom)
+obj = larMap(larBezier(S1)(controlpoints))(dom)
 VIEW(STRUCT(MKPOLS(obj)))
 @}
 %-------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ C1 = larBezier(S1,3)([[0,2,0],[8,3,0],[9,2,0]])
 C2 = larBezier(S1,3)([[0,4,1],[7,5,-1],[8,5,1],[12,4,0]])
 C3 = larBezier(S1,3)([[0,6,0],[9,6,3],[10,6,-1]])
 dom2D = larExtrude1(dom,20*[1./20])
-obj = larMap(larBezier(S2,3)(AA(CONS)([C0,C1,C2,C3])))(dom2D)
+obj = larMap(larBezier(S2)([C0,C1,C2,C3]))(dom2D)
 VIEW(STRUCT(MKPOLS(obj)))
 @}
 %-------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ Sv0 = larBezier(S2,3)([[0,0,0],[0,0,3],[0,10,3],[0,10,0]])
 Sv1 = larBezier(S2,3)([[10,0,0],[10,5,3],[10,10,0]])
 dom = larDomain([20],'simplex')
 dom2D = larExtrude1(dom,20*[1./20])
-out = larMap(larCoonsPatch(AA(CONS)([Su0,Su1,Sv0,Sv1])))(dom2D)
+out = larMap(larCoonsPatch([Su0,Su1,Sv0,Sv1]))(dom2D)
 VIEW(STRUCT(MKPOLS(out)))
 @}
 %-------------------------------------------------------------------------------

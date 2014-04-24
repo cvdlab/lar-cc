@@ -9,5 +9,5 @@ dom = larDomain([32],'simplex')
 obj = larMap(larBezierCurve(controlpoints))(dom)
 VIEW(STRUCT(MKPOLS(obj)))
 
-obj = larMap(larBezier(S1,2)(controlpoints))(dom)
+obj = larMap(larBezier(S1)(controlpoints))(dom)
 VIEW(STRUCT(MKPOLS(obj)))

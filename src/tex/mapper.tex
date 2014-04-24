@@ -115,9 +115,10 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 %-------------------------------------------------------------------------------
 @D Primitive mapping function 
 @{def larMap(coordFuncs):
+	if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
 	def larMap0(domain,dim=2):
 		V,CV = domain
-		V = AA(CONS(coordFuncs))(V)  # plasm CONStruction
+		V = AA(coordFuncs)(V)  # plasm CONStruction
 		return [V,CV]
 		# checkModel([V,CV],dim)  TODO
 	return larMap0
@@ -872,15 +873,15 @@ model = larRing(.9, 1.)([36,2])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = larCylinder(.5,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = larSphere(1,PI/6,PI/4)([6,12], cell='simplex')
+model = larSphere(1,PI/6,PI/4)([6,12])
 VIEW(STRUCT(MKPOLS(model)))
 model = larBall(1)()
 VIEW(STRUCT(MKPOLS(model)))
 model = larRod(.25,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
-model = larToroidal(0.5,2)(cell='simplex')
+model = larToroidal(0.5,2)()
 VIEW(STRUCT(MKPOLS(model)))
-model = larCrown(0.125,1)([8,48],cell='simplex')
+model = larCrown(0.125,1)([8,48])
 VIEW(STRUCT(MKPOLS(model)))
 model = larPizza(0.05,1,PI/3)([8,48])
 VIEW(STRUCT(MKPOLS(model)))

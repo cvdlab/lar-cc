@@ -148,9 +148,10 @@ $\langle\,$Primitive mapping function\nobreak\ {\footnotesize \NWtarget{nuweb3b}
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larMap(coordFuncs):@\\
+\mbox{}\verb@   if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)@\\
 \mbox{}\verb@   def larMap0(domain,dim=2):@\\
 \mbox{}\verb@      V,CV = domain@\\
-\mbox{}\verb@      V = AA(CONS(coordFuncs))(V)  # plasm CONStruction@\\
+\mbox{}\verb@      V = AA(coordFuncs)(V)  # plasm CONStruction@\\
 \mbox{}\verb@      return [V,CV]@\\
 \mbox{}\verb@      # checkModel([V,CV],dim)  TODO@\\
 \mbox{}\verb@   return larMap0@\\
@@ -1249,15 +1250,15 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
 \mbox{}\verb@model = larCylinder(.5,2.)([32,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larSphere(1,PI/6,PI/4)([6,12], cell='simplex')@\\
+\mbox{}\verb@model = larSphere(1,PI/6,PI/4)([6,12])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larBall(1)()@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larRod(.25,2.)([32,1])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larToroidal(0.5,2)(cell='simplex')@\\
+\mbox{}\verb@model = larToroidal(0.5,2)()@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
-\mbox{}\verb@model = larCrown(0.125,1)([8,48],cell='simplex')@\\
+\mbox{}\verb@model = larCrown(0.125,1)([8,48])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\
 \mbox{}\verb@model = larPizza(0.05,1,PI/3)([8,48])@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(model)))@\\

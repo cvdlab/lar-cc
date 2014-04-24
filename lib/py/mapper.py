@@ -52,9 +52,10 @@ def checkModel(model,dim=2):
    return [V, CV]
 
 def larMap(coordFuncs):
+   if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
    def larMap0(domain,dim=2):
       V,CV = domain
-      V = AA(CONS(coordFuncs))(V)  # plasm CONStruction
+      V = AA(coordFuncs)(V)  # plasm CONStruction
       return [V,CV]
       # checkModel([V,CV],dim)  TODO
    return larMap0

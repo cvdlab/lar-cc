@@ -23,7 +23,7 @@ def larBezier(U,d=3):
             weight = CHOOSE([N,I])*math.pow(1-t,N-I)*math.pow(t,I)
             for K in range(len(out)):  out[K] += weight*(controldata[I][K])
          return out
-      return (COMP([AA(COMP),DISTR]))([AA(SEL)(range(d)), map_fn])
+      return map_fn
    return BEZIER0
 
 def larBezierCurve(controlpoints):
@@ -44,5 +44,5 @@ def larCoonsPatch (args):
          ret[K] = ((1-u)*s0v[K] + u*s1v[K]+(1-v)*su0[K] + v*su1[K] + 
          (1-u)*(1-v)*s0v[K] + (1-u)*v*s0v[K] + u*(1-v)*s1v[K] + u*v*s1v[K])
       return ret
-   return (COMP([AA(COMP),DISTR]))([[S1,S2,S3], map_fn])
+   return map_fn
 
