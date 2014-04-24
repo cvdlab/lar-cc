@@ -56,13 +56,104 @@ In this module we implement above LAR most of the parametric methods for polynom
 \section{Introduction}
 %===============================================================================
 
+
+
+%===============================================================================
+\section{Tensor product surfaces}
+%===============================================================================
+
+The tensor product form of surfaces will be primarily used, in the remainder of this module, to support the LAR implementation of polynomial (rational) surfaces. For this purpose, we start by defining some basic operators on function tensors.
+In particular, a toolbox of basic tensor operations is given in Script 12.3.1. The ConstFunTensor operator produces a tensor of constant functions starting from a tensor of numbers; the recursive FlatTensor may be used to ?flatten? a tensor with any number of indices by producing a corresponding one index tensor; the InnerProd and TensorProd are used to compute the inner product and the tensor product of conforming tensors of functions, respectively.
+
+
+\paragraph{Toolbox of tensor operations}
+
+%-------------------------------------------------------------------------------
+@D Multidimensional transfinite Bernstein-Bezier Basis
+@{""" Toolbox of tensor operations """
+def larBernsteinBasis (U):
+	def BERNSTEIN0 (N):
+		def BERNSTEIN1 (I):
+			def map_fn(point):
+				t = U(point)
+				out = CHOOSE([N,I])*math.pow(1-t,N-I)*math.pow(t,I)
+				return out
+			return map_fn
+		return [BERNSTEIN1(I) for I in range(0,N+1)]
+	return BERNSTEIN0
+@}
+%-------------------------------------------------------------------------------
+
+\subsection{Tensor product surface patch}
+
+%-------------------------------------------------------------------------------
+@D Tensor product surface patch
+@{""" Tensor product surface patch """
+def larTensorProdSurface (args):
+	ubasis , vbasis = args
+	def TENSORPRODSURFACE0 (controlpoints_fn):
+		def map_fn(point):
+			u,v=point
+			U=[f([u]) for f in ubasis]
+			V=[f([v]) for f in vbasis]
+			controlpoints=[f(point) if callable(f) else f 
+				for f in controlpoints_fn]
+			target_dim = len(controlpoints[0][0])
+			ret=[0 for x in range(target_dim)]
+			for i in range(len(ubasis)):
+				for j in range(len(vbasis)):
+					for M in range(len(ret)):
+						for M in range(target_dim): 
+							ret[M] += U[i]*V[j] * controlpoints[i][j][M]
+			return ret
+		return map_fn
+	return TENSORPRODSURFACE0
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Bilinear tensor product surface patch}
+
+%-------------------------------------------------------------------------------
+@D Bilinear surface patch
+@{""" Bilinear tensor product surface patch """
+def larBilinearSurface(controlpoints):
+	basis = larBernsteinBasis(S1)(1)
+	return larTensorProdSurface([basis,basis])(controlpoints)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Biquadratic tensor product surface patch}
+
+%-------------------------------------------------------------------------------
+@D Biquadratic surface patch
+@{""" Biquadratic tensor product surface patch """
+def larBiquadraticSurface(controlpoints):
+	basis1 = larBernsteinBasis(S1)(2)
+	basis2 = larBernsteinBasis(S1)(2)
+	return larTensorProdSurface([basis1,basis2])(controlpoints)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Bicubic tensor product surface patch}
+
+%-------------------------------------------------------------------------------
+@D Bicubic surface patch
+@{""" Bicubic tensor product surface patch """
+def larBicubicSurface(controlpoints):
+	basis1 = larBernsteinBasis(S1)(3)
+	basis2 = larBernsteinBasis(S1)(3)
+	return larTensorProdSurface([basis1,basis2])(controlpoints)
+@}
+%-------------------------------------------------------------------------------
+
+
 %===============================================================================
 \section{Transfinite B\'ezier}
 %===============================================================================
 %-------------------------------------------------------------------------------
 @D Multidimensional transfinite B\'ezier
 @{""" Multidimensional transfinite Bezier """
-def larBezier(U,d=3):
+def larBezier(U):
 	def BEZIER0(controldata_fn):
 		N = len(controldata_fn)-1
 		def map_fn(point):
@@ -78,10 +169,10 @@ def larBezier(U,d=3):
 	return BEZIER0
 
 def larBezierCurve(controlpoints):
-	dim = len(controlpoints[0])
-	return larBezier(S1,dim)(controlpoints)
+	return larBezier(S1)(controlpoints)
 @}
 %-------------------------------------------------------------------------------
+
 %===============================================================================
 \section{Coons patches}
 %===============================================================================
@@ -115,6 +206,11 @@ def larCoonsPatch (args):
 @O lib/py/splines.py
 @{""" Mapping functions and primitive objects """
 @< Initial import of modules @>
+@< Tensor product surface patch @>
+@< Bilinear surface patch @>
+@< Biquadratic surface patch @>
+@< Bicubic surface patch @>
+@< Multidimensional transfinite Bernstein-Bezier Basis @>
 @< Multidimensional transfinite B\'ezier @>
 @< Transfinite Coons patches @>
 @}
@@ -123,6 +219,44 @@ def larCoonsPatch (args):
 %===============================================================================
 \section{Examples}
 %===============================================================================
+
+\paragraph{Examples of larBernsteinBasis generation}
+
+%-------------------------------------------------------------------------------
+@d Examples of larBernsteinBasis
+@{larBernsteinBasis(S1)(3) 
+""" [<function __main__.map_fn>,
+	<function __main__.map_fn>,
+	<function __main__.map_fn>,
+	<function __main__.map_fn>] """
+larBernsteinBasis(S1)(3)[0]
+""" <function __main__.map_fn> """
+larBernsteinBasis(S1)(3)[0]([0.0])
+""" 1.0 """
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Graph of Bernstein-Bezier basis}
+
+%-------------------------------------------------------------------------------
+@O  test/py/splines/test04.py
+@{""" Graph of Bernstein-Bezier basis """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+def larBezierBasisGraph(degree):
+	basis = larBernsteinBasis(S1)(degree)
+	dom = larDomain([32])
+	graphs = CONS(AA(larMap)(DISTL([S1, basis])))(dom)
+	return graphs
+
+graphs = larBezierBasisGraph(4)
+VIEW(STRUCT( CAT(AA(MKPOLS)( graphs )) ))
+@}
+%-------------------------------------------------------------------------------
+
 
 \paragraph{Some examples of curves}
 
@@ -135,7 +269,7 @@ sys.path.insert(0, 'lib/py/')
 from splines import *
 
 controlpoints = [[-0,0],[1,0],[1,1],[2,1],[3,1]]
-dom = larDomain([32],'simplex')
+dom = larDomain([32])
 obj = larMap(larBezierCurve(controlpoints))(dom)
 VIEW(STRUCT(MKPOLS(obj)))
 
@@ -155,10 +289,10 @@ sys.path.insert(0, 'lib/py/')
 from splines import *
 
 dom = larDomain([20],'simplex')
-C0 = larBezier(S1,3)([[0,0,0],[10,0,0]])
-C1 = larBezier(S1,3)([[0,2,0],[8,3,0],[9,2,0]])
-C2 = larBezier(S1,3)([[0,4,1],[7,5,-1],[8,5,1],[12,4,0]])
-C3 = larBezier(S1,3)([[0,6,0],[9,6,3],[10,6,-1]])
+C0 = larBezier(S1)([[0,0,0],[10,0,0]])
+C1 = larBezier(S1)([[0,2,0],[8,3,0],[9,2,0]])
+C2 = larBezier(S1)([[0,4,1],[7,5,-1],[8,5,1],[12,4,0]])
+C3 = larBezier(S1)([[0,6,0],[9,6,3],[10,6,-1]])
 dom2D = larExtrude1(dom,20*[1./20])
 obj = larMap(larBezier(S2)([C0,C1,C2,C3]))(dom2D)
 VIEW(STRUCT(MKPOLS(obj)))
@@ -174,14 +308,83 @@ import sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
 from splines import *
-Su0 = larBezier(S1,3)([[0,0,0],[10,0,0]])
-Su1 = larBezier(S1,3)([[0,10,0],[2.5,10,3],[5,10,-3],[7.5,10,3],[10,10,0]])
-Sv0 = larBezier(S2,3)([[0,0,0],[0,0,3],[0,10,3],[0,10,0]])
-Sv1 = larBezier(S2,3)([[10,0,0],[10,5,3],[10,10,0]])
-dom = larDomain([20],'simplex')
-dom2D = larExtrude1(dom,20*[1./20])
+Su0 = larBezier(S1)([[0,0,0],[10,0,0]])
+Su1 = larBezier(S1)([[0,10,0],[2.5,10,3],[5,10,-3],[7.5,10,3],[10,10,0]])
+Sv0 = larBezier(S2)([[0,0,0],[0,0,3],[0,10,3],[0,10,0]])
+Sv1 = larBezier(S2)([[10,0,0],[10,5,3],[10,10,0]])
+dom = larDomain([20])
+dom2D = larExtrude1(dom, 20*[1./20])
 out = larMap(larCoonsPatch([Su0,Su1,Sv0,Sv1]))(dom2D)
 VIEW(STRUCT(MKPOLS(out)))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Bilinear tensor product patch}
+
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test05.py
+@{""" Example of bilinear tensor product surface patch """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+controlpoints = [
+	[[0,0,0],[2,-4,2]],
+	[[0,3,1],[4,0,0]]]
+dom = larDomain([20])
+dom2D = larExtrude1(dom, 20*[1./20])
+mapping = larBilinearSurface(controlpoints)
+patch = larMap(mapping)(dom2D)
+VIEW(STRUCT(MKPOLS(patch)))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Biquadratic tensor product patch}
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test06.py
+@{""" Example of bilinear tensor product surface patch """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+controlpoints=[
+	[[0,0,0],[2,0,1],[3,1,1]],
+	[[1,3,-1],[2,2,0],[3,2,0]],
+	[[-2,4,0],[2,5,1],[1,3,2]]]
+dom = larDomain([20])
+dom2D = larExtrude1(dom, 20*[1./20])
+mapping = larBiquadraticSurface(controlpoints)
+patch = larMap(mapping)(dom2D)
+VIEW(STRUCT(MKPOLS(patch)))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Bicubic tensor product patch}
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test07.py
+@{""" Example of bilinear tensor product surface patch """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+controlpoints=[
+	[[ 0,0,0],[0 ,3  ,4],[0,6,3],[0,10,0]],
+	[[ 3,0,2],[2 ,2.5,5],[3,6,5],[4,8,2]],
+	[[ 6,0,2],[8 ,3 , 5],[7,6,4.5],[6,10,2.5]],
+	[[10,0,0],[11,3  ,4],[11,6,3],[10,9,0]]]
+dom = larDomain([20])
+dom2D = larExtrude1(dom, 20*[1./20])
+mapping = larBicubicSurface(controlpoints)
+patch = larMap(mapping)(dom2D)
+VIEW(STRUCT(MKPOLS(patch)))
 @}
 %-------------------------------------------------------------------------------
 

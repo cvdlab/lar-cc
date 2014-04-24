@@ -10,8 +10,58 @@ from larcc import *
 from largrid import *
 from mapper import *
 
+""" Tensor product surface patch """
+def larTensorProdSurface (args):
+   ubasis , vbasis = args
+   def TENSORPRODSURFACE0 (controlpoints_fn):
+      def map_fn(point):
+         u,v=point
+         U=[f([u]) for f in ubasis]
+         V=[f([v]) for f in vbasis]
+         controlpoints=[f(point) if callable(f) else f 
+            for f in controlpoints_fn]
+         target_dim = len(controlpoints[0][0])
+         ret=[0 for x in range(target_dim)]
+         for i in range(len(ubasis)):
+            for j in range(len(vbasis)):
+               for M in range(len(ret)):
+                  for M in range(target_dim): 
+                     ret[M] += U[i]*V[j] * controlpoints[i][j][M]
+         return ret
+      return map_fn
+   return TENSORPRODSURFACE0
+
+""" Bilinear tensor product surface patch """
+def larBilinearSurface(controlpoints):
+   basis = larBernsteinBasis(S1)(1)
+   return larTensorProdSurface([basis,basis])(controlpoints)
+
+""" Biquadratic tensor product surface patch """
+def larBiquadraticSurface(controlpoints):
+   basis1 = larBernsteinBasis(S1)(2)
+   basis2 = larBernsteinBasis(S1)(2)
+   return larTensorProdSurface([basis1,basis2])(controlpoints)
+
+""" Bicubic tensor product surface patch """
+def larBicubicSurface(controlpoints):
+   basis1 = larBernsteinBasis(S1)(3)
+   basis2 = larBernsteinBasis(S1)(3)
+   return larTensorProdSurface([basis1,basis2])(controlpoints)
+
+""" Toolbox of tensor operations """
+def larBernsteinBasis (U):
+   def BERNSTEIN0 (N):
+      def BERNSTEIN1 (I):
+         def map_fn(point):
+            t = U(point)
+            out = CHOOSE([N,I])*math.pow(1-t,N-I)*math.pow(t,I)
+            return out
+         return map_fn
+      return [BERNSTEIN1(I) for I in range(0,N+1)]
+   return BERNSTEIN0
+
 """ Multidimensional transfinite Bezier """
-def larBezier(U,d=3):
+def larBezier(U):
    def BEZIER0(controldata_fn):
       N = len(controldata_fn)-1
       def map_fn(point):
@@ -27,8 +77,7 @@ def larBezier(U,d=3):
    return BEZIER0
 
 def larBezierCurve(controlpoints):
-   dim = len(controlpoints[0])
-   return larBezier(S1,dim)(controlpoints)
+   return larBezier(S1)(controlpoints)
 
 """ Transfinite Coons patches """
 def larCoonsPatch (args):
