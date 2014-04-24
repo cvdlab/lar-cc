@@ -55,7 +55,7 @@ class Struct:
 def MKPOLS (model):
     if isinstance(model,Model):
         V, FV = model.verts.tolist(), model.cells
-    elif isinstance(model,tuple):
+    elif isinstance(model,tuple) or isinstance(model,list):
         V, FV = model
     pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
     return pols  

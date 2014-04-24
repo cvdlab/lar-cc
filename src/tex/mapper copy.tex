@@ -117,9 +117,9 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 @{def larMap(coordFuncs):
 	def larMap0(domain,dim=2):
 		V,CV = domain
-		V = AA(CONS(coordFuncs))(V)  # plasm CONStruction
-		return [V,CV]
-		# checkModel([V,CV],dim)  TODO
+		assert type(V) == array
+		V = TRANS(CONS(coordFuncs)(V))  # plasm CONStruction
+		return checkModel([V,CV],dim)
 	return larMap0
 @}
 %-------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ def checkModel(model,dim=2):
 	CV = [[invertedindex[v] for v in cell] for cell in CV]
 	# filter out degenerate cells
 	CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
-	return [V, CV]
+	return V, CV
 @}
 %-------------------------------------------------------------------------------
 
@@ -195,8 +195,8 @@ A large number of primitive surfaces or solids is defined in this section, using
 	def larCircle0(shape=36):
 		domain = larIntervals([shape])([angle])
 		V,CV = domain
-		x = lambda p : radius*COS(p[0])
-		y = lambda p : radius*SIN(p[0])
+		x = lambda V : [radius*COS(p[0]) for p in V]
+		y = lambda V : [radius*SIN(p[0]) for p in V]
 		return larMap([x,y])(domain,dim)
 	return larCircle0
 @}
@@ -213,8 +213,8 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 	def larDisk0(shape=[36,1]):
 		domain = larIntervals(shape)([angle,radius])
 		V,CV = domain
-		x = lambda p : p[1]*COS(p[0])
-		y = lambda p : p[1]*SIN(p[0])
+		x = lambda V : [p[1]*COS(p[0]) for p in V]
+		y = lambda V : [p[1]*SIN(p[0]) for p in V]
 		return larMap([x,y])(domain)
 	return larDisk0
 @}
@@ -228,8 +228,8 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 		V,CV = larIntervals(shape)([angle,r2-r1])
 		V = translatePoints(V,[0,r1])
 		domain = V,CV
-		x = lambda p : p[1] * COS(p[0])
-		y = lambda p : p[1] * SIN(p[0])
+		x = lambda V : [p[1] * COS(p[0]) for p in V]
+		y = lambda V : [p[1] * SIN(p[0]) for p in V]
 		return larMap([x,y])(domain)
 	return larRing0
 @}
@@ -254,9 +254,9 @@ def larCylinder(radius,height,angle=2*PI):
 	def larCylinder0(shape=[36,1]):
 		domain = larIntervals(shape)([angle,1])
 		V,CV = domain
-		x = lambda p : radius*COS(p[0])
-		y = lambda p : radius*SIN(p[0])
-		z = lambda p : height*p[1]
+		x = lambda V : [radius*COS(p[0]) for p in V]
+		y = lambda V : [radius*SIN(p[0]) for p in V]
+		z = lambda V : [height*p[1] for p in V]
 		mapping = [x,y,z]
 		model = larMap(mapping)(domain)
 		# model = makeOriented(model)
@@ -272,9 +272,9 @@ def larCylinder(radius,height,angle=2*PI):
 		V,CV = larIntervals(shape,'simplex')([angle1,angle2])
 		V = translatePoints(V,[-angle1/2,-angle2/2])
 		domain = V,CV
-		x = lambda p : radius*COS(p[0])*COS(p[1])
-		y = lambda p : radius*COS(p[0])*SIN(p[1])
-		z = lambda p : radius*SIN(p[0])
+		x = lambda V : [radius*COS(p[0])*COS(p[1]) for p in V]
+		y = lambda V : [radius*COS(p[0])*SIN(p[1]) for p in V]
+		z = lambda V : [radius*SIN(p[0]) for p in V]
 		return larMap([x,y,z])(domain)
 	return larSphere0
 @}
@@ -286,9 +286,9 @@ def larCylinder(radius,height,angle=2*PI):
 	def larToroidal0(shape=[24,36]):
 		domain = larIntervals(shape,'simplex')([angle1,angle2])
 		V,CV = domain
-		x = lambda p : (R + r*COS(p[0])) * COS(p[1])
-		y = lambda p : (R + r*COS(p[0])) * SIN(p[1])
-		z = lambda p : -r * SIN(p[0])
+		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
+		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
+		z = lambda V : [-r * SIN(p[0]) for p in V]
 		return larMap([x,y,z])(domain)
 	return larToroidal0
 @}
@@ -301,9 +301,9 @@ def larCylinder(radius,height,angle=2*PI):
 		V,CV = larIntervals(shape,'simplex')([PI,angle])
 		V = translatePoints(V,[-PI/2,0])
 		domain = V,CV
-		x = lambda p : (R + r*COS(p[0])) * COS(p[1])
-		y = lambda p : (R + r*COS(p[0])) * SIN(p[1])
-		z = lambda p : -r * SIN(p[0])
+		x = lambda V : [(R + r*COS(p[0])) * COS(p[1]) for p in V]
+		y = lambda V : [(R + r*COS(p[0])) * SIN(p[1]) for p in V]
+		z = lambda V : [-r * SIN(p[0]) for p in V]
 		return larMap([x,y,z])(domain)
 	return larCrown0
 @}
@@ -358,9 +358,9 @@ def larCylinder(radius,height,angle=2*PI):
 		V,CV = larIntervals(shape)([angle,R-r,height])
 		V = translatePoints(V,[0,r,0])
 		domain = V,CV
-		x = lambda p : p[1] * COS(p[0])
-		y = lambda p : p[1] * SIN(p[0])
-		z = lambda p : p[2] * height
+		x = lambda V : [p[1] * COS(p[0]) for p in V]
+		y = lambda V : [p[1] * SIN(p[0]) for p in V]
+		z = lambda V : [p[2] * height for p in V]
 		return larMap([x,y,z])(domain)
 	return larHollowCyl0
 @}
@@ -374,9 +374,9 @@ def larCylinder(radius,height,angle=2*PI):
 		V,CV = larIntervals(shape)([angle1,angle2,R-r])
 		V = translatePoints(V,[-angle1/2,-angle2/2,r])
 		domain = V,CV
-		x = lambda p : p[2]*COS(p[0])*COS(p[1])
-		y = lambda p : p[2]*COS(p[0])*SIN(p[1])
-		z = lambda p : p[2]*SIN(p[0])
+		x = lambda V : [p[2]*COS(p[0])*COS(p[1]) for p in V]
+		y = lambda V : [p[2]*COS(p[0])*SIN(p[1]) for p in V]
+		z = lambda V : [p[2]*SIN(p[0]) for p in V]
 		return larMap([x,y,z])(domain)
 	return larHollowSphere0
 @}
@@ -390,9 +390,9 @@ def larCylinder(radius,height,angle=2*PI):
 	def larTorus0(shape=[24,36,1]):
 		domain = larIntervals(shape)([angle1,angle2,r])
 		V,CV = domain
-		x = lambda p : (R + p[2]*COS(p[0])) * COS(p[1])
-		y = lambda p : (R + p[2]*COS(p[0])) * SIN(p[1])
-		z = lambda p : -p[2] * SIN(p[0])
+		x = lambda V : [(R + p[2]*COS(p[0])) * COS(p[1]) for p in V]
+		y = lambda V : [(R + p[2]*COS(p[0])) * SIN(p[1]) for p in V]
+		z = lambda V : [-p[2] * SIN(p[0]) for p in V]
 		return larMap([x,y,z])(domain)
 	return larTorus0
 @}

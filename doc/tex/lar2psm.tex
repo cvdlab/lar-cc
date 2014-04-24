@@ -1,24 +1,13 @@
-% -------------------------------------------------------------------------
-% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
-% -------------------------------------------------------------------------
-\providecommand{\NWtxtMacroDefBy}{Macro defined by}
-\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
-\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
-\providecommand{\NWtxtDefBy}{Defined by}
-\providecommand{\NWtxtRefIn}{Referenced in}
-\providecommand{\NWtxtNoRef}{Not referenced}
-\providecommand{\NWtxtFileDefBy}{File defined by}
-\providecommand{\NWsep}{${\diamond}$}
-\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
-\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
-  \raisebox{\baselineskip}[1.5ex][0ex]{%
-    \mbox{%
-      \hypertarget{#1}{%
-        \raisebox{-1\baselineskip}[0ex][0ex]{%
-          \mbox{#2}%
-}}}}}
-% -------------------------------------------------------------------------
-
+\newcommand{\NWtarget}[2]{#2}
+\newcommand{\NWlink}[2]{#2}
+\newcommand{\NWtxtMacroDefBy}{Macro defined by}
+\newcommand{\NWtxtMacroRefIn}{Macro referenced in}
+\newcommand{\NWtxtMacroNoRef}{Macro never referenced}
+\newcommand{\NWtxtDefBy}{Defined by}
+\newcommand{\NWtxtRefIn}{Referenced in}
+\newcommand{\NWtxtNoRef}{Not referenced}
+\newcommand{\NWtxtFileDefBy}{File defined by}
+\newcommand{\NWsep}{${\diamond}$}
 
 \documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
 \usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
@@ -61,7 +50,7 @@ Since the present \texttt{lar2psm} module is an interface between the \texttt{la
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap1}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the pyplasm module\nobreak\ {\footnotesize 2a}$\,\rangle\equiv$
+$\langle\,$Import the pyplasm module\nobreak\ {\footnotesize \NWtarget{nuweb2a}{2a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import * @\\
@@ -80,7 +69,7 @@ An useful utility will allow for the creation of a subdirectory from a \texttt{d
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap2}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create directory from path\nobreak\ {\footnotesize 2b}$\,\rangle\equiv$
+$\langle\,$Create directory from path\nobreak\ {\footnotesize \NWtarget{nuweb2b}{2b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import os@\\
@@ -102,7 +91,7 @@ It may be useful to define the repository(ies) for the unit tests associated to 
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap3}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm-tests.py"@\nobreak\ {\footnotesize 2c }$\equiv$
+\verb@"test/py/lar2psm-tests.py"@\nobreak\ {\footnotesize \NWtarget{nuweb2c}{2c} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Create directory from path\nobreak\ {\footnotesize \NWlink{nuweb2b}{2b}}$\,\rangle$}\verb@@\\
@@ -120,7 +109,7 @@ Next we define the \texttt{CCOMB} function that accepts as input a \texttt{vecto
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap4}
-\protect\makebox[0ex][r]{\NWtarget{nuweb2d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the convex combination of a list of vectors\nobreak\ {\footnotesize 2d}$\,\rangle\equiv$
+$\langle\,$Compute the convex combination of a list of vectors\nobreak\ {\footnotesize \NWtarget{nuweb2d}{2d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import scipy as sp@\\
@@ -143,10 +132,10 @@ First we test \texttt{CCOMB} with some special data, then with some random vecto
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap5}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm/test-ccomb.py"@\nobreak\ {\footnotesize 3a }$\equiv$
+\verb@"test/py/lar2psm/test-ccomb.py"@\nobreak\ {\footnotesize \NWtarget{nuweb3a}{3a} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb3b}{3b}\label{scrap6}
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize 3b\label{scrap6}
  }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from lar2psm import *@\\
 \mbox{}\verb@@\hbox{$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize \NWlink{nuweb7a}{7a}}$\,\rangle$}\verb@@\\
@@ -174,7 +163,7 @@ Some very simple examples of 0D, 1D, and 2D models follows. They are displayed i
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap7}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2D model examples\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
+$\langle\,$2D model examples\nobreak\ {\footnotesize \NWtarget{nuweb3c}{3c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.,0.],[1.,0.],[0.,1.],[1.,1.],[0.5,0.5]]@\\
@@ -202,13 +191,13 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap8}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
+$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize \NWtarget{nuweb4a}{4a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def MKPOLS (model):@\\
 \mbox{}\verb@    if isinstance(model,Model):@\\
 \mbox{}\verb@        V, FV = model.verts.tolist(), model.cells@\\
-\mbox{}\verb@    elif isinstance(model,tuple):@\\
+\mbox{}\verb@    elif isinstance(model,tuple) or isinstance(model,list):@\\
 \mbox{}\verb@        V, FV = model@\\
 \mbox{}\verb@    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]@\\
 \mbox{}\verb@    return pols  @\\
@@ -228,10 +217,10 @@ Some simple 3D, 2D, 1D and 0D models are generated and visualised exploded by th
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap9}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm/test-models.py"@\nobreak\ {\footnotesize 4b }$\equiv$
+\verb@"test/py/lar2psm/test-models.py"@\nobreak\ {\footnotesize \NWtarget{nuweb4b}{4b} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb4c}{4c}\label{scrap10}
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize 4c\label{scrap10}
  }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$View model examples\nobreak\ {\footnotesize \NWlink{nuweb6d}{6d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
@@ -252,7 +241,7 @@ must be true, otherways the function would induce some compenetration of the cel
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap11}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Explode the scene using \texttt{sx,sy,sz} scaling parameters\nobreak\ {\footnotesize 4d}$\,\rangle\equiv$
+$\langle\,$Explode the scene using \texttt{sx,sy,sz} scaling parameters\nobreak\ {\footnotesize \NWtarget{nuweb4d}{4d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def EXPLODE (sx,sy,sz):@\\
@@ -290,7 +279,7 @@ First we define a parametric macro to allow the importing of \texttt{larcc} modu
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap12}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
+$\langle\,$Import the module\nobreak\ {\footnotesize \NWtarget{nuweb5a}{5a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import sys@\\
@@ -311,11 +300,11 @@ First we define a parametric macro to allow the importing of \texttt{larcc} modu
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap13}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Function to import a generic module\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
+$\langle\,$Function to import a generic module\nobreak\ {\footnotesize \NWtarget{nuweb5b}{5b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def importModule(moduleName):@\\
-\mbox{}\verb@   @\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb5c}{5c}\label{scrap14}
+\mbox{}\verb@   @\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize 5c\label{scrap14}
  }\mbox{}\verb@moduleName@ ) {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -336,11 +325,11 @@ First we define a parametric macro to allow the importing of \texttt{larcc} modu
 Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the functional parts it is composed of. Of course, this one is the module version corresponding to the current state of the system, i.e.~to a very initial state. Other functions will be added when needed.
 %------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap15}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/lar2psm.py"@\nobreak\ {\footnotesize 5d }$\equiv$
+\verb@"lib/py/lar2psm.py"@\nobreak\ {\footnotesize \NWtarget{nuweb5d}{5d} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@"""Module with functions needed to interface LAR with pyplasm"""@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb5e}{5e}\label{scrap16}
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize 5e\label{scrap16}
  }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Function to import a generic module\nobreak\ {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Compute the convex combination of a list of vectors\nobreak\ {\footnotesize \NWlink{nuweb2d}{2d}}$\,\rangle$}\verb@@\\
@@ -365,7 +354,7 @@ A possible unit test strategy is to create a directory for unit tests associated
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap17}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$create directory and echo of creation\nobreak\ {\footnotesize 6a}$\,\rangle\equiv$
+$\langle\,$create directory and echo of creation\nobreak\ {\footnotesize \NWtarget{nuweb6a}{6a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Create directory from path\nobreak\ {\footnotesize \NWlink{nuweb2b}{2b}}$\,\rangle$}\verb@@\\
@@ -385,10 +374,10 @@ A possible unit test strategy is to create a directory for unit tests associated
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap18}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm/test01.py"@\nobreak\ {\footnotesize 6b }$\equiv$
+\verb@"test/py/lar2psm/test01.py"@\nobreak\ {\footnotesize \NWtarget{nuweb6b}{6b} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$create directory and echo of creation:\nobreak\ ({\footnotesize \NWtarget{nuweb6c}{6c}\label{scrap19}
+\mbox{}\verb@@\hbox{$\langle\,$create directory and echo of creation:\nobreak\ ({\footnotesize 6c\label{scrap19}
  }\mbox{}\verb@test/py/lar2psm/@ ) {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -404,7 +393,7 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap20}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$View model examples\nobreak\ {\footnotesize 6d}$\,\rangle\equiv$
+$\langle\,$View model examples\nobreak\ {\footnotesize \NWtarget{nuweb6d}{6d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from lar2psm import *@\\
@@ -441,7 +430,7 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap21}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
+$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize \NWtarget{nuweb7a}{7a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@assert( CCOMB([]) == [] )@\\
@@ -477,7 +466,7 @@ In order to implement a structure as a list of models and transformations, we ne
 \paragraph{\texttt{Mat} and \texttt{Verts} classes}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap22}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$types Mat and Verts\nobreak\ {\footnotesize 7b}$\,\rangle\equiv$
+$\langle\,$types Mat and Verts\nobreak\ {\footnotesize \NWtarget{nuweb7b}{7b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" class definitions for LAR """@\\
@@ -497,7 +486,7 @@ In order to implement a structure as a list of models and transformations, we ne
 \paragraph{\texttt{Model} class}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap23}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Model class\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
+$\langle\,$Model class\nobreak\ {\footnotesize \NWtarget{nuweb8a}{8a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@class Model:@\\
@@ -520,7 +509,7 @@ In order to implement a structure as a list of models and transformations, we ne
 \paragraph{\texttt{Struct} iterable class}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Struct class\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
+$\langle\,$Struct class\nobreak\ {\footnotesize \NWtarget{nuweb8b}{8b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def checkStruct(data):  @\\

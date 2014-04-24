@@ -78,7 +78,7 @@ In our implementation the combinatorial algorithm above is twofold generalised:
 \end{enumerate}
 
 \paragraph{Implementation}
-In the macro below, \texttt{larExtrude} is the function to generate the output model vertices in a multiple extrusion of a LAR model.
+In the macro below, \texttt{larExtrude1} is the function to generate the output model vertices in a multiple extrusion of a LAR model.
 
 First we notice that the \texttt{model} variable contains a pair (\texttt{V}, \texttt{FV}), where \texttt{V} is the array of input vertices, and \texttt{FV} is the array of $d$-cells (given as lists of vertex indices) providing the  input representation of a LAR cellular complex.
 
@@ -97,7 +97,7 @@ The \texttt{cellGroups} variable is used to select the groups of $(d+1)$-simplic
 
 %-------------------------------------------------------------------------------
 @d Simplicial model extrusion in accord with a 1D pattern
-@{def larExtrude(model,pattern):
+@{def larExtrude1(model,pattern):
     V, FV = model
     d, m = len(FV[0]), len(pattern)
     coords = list(cumsum([0]+(AA(ABS)(pattern))))
@@ -173,7 +173,7 @@ It is interesting to notice that the 2D model extruded in example 1 below and sh
 \end{figure}
 
 \paragraph{Examples 2 and 3}
-The examples show that the implemented \texttt{larExtrude} algorithm is fully multidimensional. 
+The examples show that the implemented \texttt{larExtrude1} algorithm is fully multidimensional. 
 It may be worth noting the initial definition of the empty \texttt{model}, as a pair having the empty list as vertex set and the list \texttt{[[0]]} as the cell list. Such initial value is used
 to define a predefinite constant \texttt{VOID}.
 
@@ -191,21 +191,21 @@ to define a predefinite constant \texttt{VOID}.
 @{# example 1
 V = [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]]
 FV = [[0,1,3],[1,2,4],[2,4,5],[3,4,6],[4,6,7],[5,7,8]]
-model = larExtrude((V,FV),4*[1,2,-3])
+model = larExtrude1((V,FV),4*[1,2,-3])
 VIEW(EXPLODE(1,1,1.2)(MKPOLS(model)))
 
 # example 2
-model = larExtrude( VOID, 6*[1] )
+model = larExtrude1( VOID, 6*[1] )
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
-model = larExtrude( model, 6*[1] )
+model = larExtrude1( model, 6*[1] )
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
-model = larExtrude( model, 6*[1] )
+model = larExtrude1( model, 6*[1] )
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
 
 # example 3
-model = larExtrude( VOID, 10*[1,-1] )
+model = larExtrude1( VOID, 10*[1,-1] )
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
-model = larExtrude( model, 10*[1] )
+model = larExtrude1( model, 10*[1] )
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
 @}
 %-------------------------------------------------------------------------------
@@ -222,17 +222,17 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
 
 \subsection{Generation of multidimensional simplicial grids}
 
-The generation of simplicial grids of any dimension and shape using the \texttt{larSimplexGrid}
+The generation of simplicial grids of any dimension and shape using the \texttt{larSimplexGrid1}
 is amazingly simple. The input parameter \texttt{shape} is either a tuple or a list of integers used to specify the \emph{shape} of the created array, i.e.~both the number of its dimensions (given by \texttt{len(shape)}) and the \texttt{size} of each dimension $k$ (given by the \texttt{shape[k]} element).
 The implementation starts from the LAR model of the VOID simplicial complex (denoted as \texttt{VOID}, a predefined constant) and updates the \texttt{model} variable extruding it iteratively according to the specs given by \texttt{shape}.
 Just notice that the returned grid \texttt{model} has vertices with integer coordinates, that can be subsequently scaled and/or translated and/or mapped in any other way, according to the user needs.
 
 %-------------------------------------------------------------------------------
 @d Generation of simplicial grids
-@{def larSimplexGrid(shape):
+@{def larSimplexGrid1(shape):
     model = VOID
     for item in shape:
-        model = larExtrude(model,item*[1])
+        model = larExtrude1(model,item*[1])
     return model
 @}
 %-------------------------------------------------------------------------------
@@ -250,10 +250,10 @@ Just notice that the returned grid \texttt{model} has vertices with integer coor
 
 %-------------------------------------------------------------------------------
 @d Examples of simplicial grids
-@{grid_2d = larSimplexGrid([3,3])
+@{grid_2d = larSimplexGrid1([3,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(grid_2d)))
 
-grid_3d = larSimplexGrid([2,3,4])
+grid_3d = larSimplexGrid1([2,3,4])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(grid_3d)))
 @}
 %-------------------------------------------------------------------------------
@@ -292,11 +292,11 @@ The \texttt{larSimplexFacets} function, for estraction of non-oriented $(d-1)$-f
 %-------------------------------------------------------------------------------
 
 \paragraph{Examples of facet extraction}
-The simple generation of the LAR model of a simplicial decomposition of a 3D cube as a \texttt{larSimplexGrid} with \texttt{shape = [1,1,1]} and of its 2D and 1D skeletons is shown here.
+The simple generation of the LAR model of a simplicial decomposition of a 3D cube as a \texttt{larSimplexGrid1} with \texttt{shape = [1,1,1]} and of its 2D and 1D skeletons is shown here.
 
 %-------------------------------------------------------------------------------
 @d Examples of facet extraction from 3D simplicial cube
-@{V,CV = larSimplexGrid([1,1,1])
+@{V,CV = larSimplexGrid1([1,1,1])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 SK2 = (V,larSimplexFacets(CV))
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(SK2)))
@@ -341,10 +341,10 @@ if __name__ == "__main__":
 \subsubsection{2D example}
 
 \paragraph{Generate a simplicial decomposition}
-Then we generate and show a 2D decomposition of the unit square $[0,1]^2\subset\E^2$ into a $3\times 3$ grid of simplices (triangles, in this case), using the \texttt{larSimplexGrid} function, that returns a pair \texttt{(V,FV)}, made by the array \texttt{V} of vertices, and by the array \texttt{FV} of ``faces by vertex'' indices, that constitute a \emph{reduced} simplicial LAR of the $[0,1]^2$ domain. The computed \texttt{FV} array is then dispayed ``exploded'', being $ex,ey,ez$ the explosion parameters in the $x,y,z$ coordinate directions, respectively. Notice that the \texttt{MKPOLS} pyplasm primitive requires a pair \texttt{(V,FV)}, that we call a ``model'', as input --- i.e. a pair made by the array \texttt{V} of vertices, and by a zero-based array of array of indices of vertices. Elsewhere in this document we identified such a data structure as CSR$(M_d)$, for some dimension $d$. Suc notation stands for the Compressed Sparse Row representation of a binary characteristic matrix.
+Then we generate and show a 2D decomposition of the unit square $[0,1]^2\subset\E^2$ into a $3\times 3$ grid of simplices (triangles, in this case), using the \texttt{larSimplexGrid1} function, that returns a pair \texttt{(V,FV)}, made by the array \texttt{V} of vertices, and by the array \texttt{FV} of ``faces by vertex'' indices, that constitute a \emph{reduced} simplicial LAR of the $[0,1]^2$ domain. The computed \texttt{FV} array is then dispayed ``exploded'', being $ex,ey,ez$ the explosion parameters in the $x,y,z$ coordinate directions, respectively. Notice that the \texttt{MKPOLS} pyplasm primitive requires a pair \texttt{(V,FV)}, that we call a ``model'', as input --- i.e. a pair made by the array \texttt{V} of vertices, and by a zero-based array of array of indices of vertices. Elsewhere in this document we identified such a data structure as CSR$(M_d)$, for some dimension $d$. Suc notation stands for the Compressed Sparse Row representation of a binary characteristic matrix.
 
 @d Generate a simplicial decomposition ot the $[0,1]^2$ domain
-@{V,FV = larSimplexGrid([3,3])
+@{V,FV = larSimplexGrid1([3,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 @}
 
@@ -373,11 +373,11 @@ We are finally able to generate and output a complete test file, including the v
 
 \subsubsection{3D example}
 
-In this case we produce a $2\times 2\times 2$ grid of tetrahedra. The dimension (3D) of the model to be generated is inferred by the presence of 3 parameters in the parameter list of the \texttt{larSimplexGrid} function. 
+In this case we produce a $2\times 2\times 2$ grid of tetrahedra. The dimension (3D) of the model to be generated is inferred by the presence of 3 parameters in the parameter list of the \texttt{larSimplexGrid1} function. 
 
 %-------------------------------------------------------------------------------
 @d Generate a simplicial decomposition ot the $[0,1]^3$ domain
-@{V,CV = larSimplexGrid([2,2,2])
+@{V,CV = larSimplexGrid1([2,2,2])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 @}
 %-------------------------------------------------------------------------------
@@ -437,6 +437,7 @@ def cumsum(iterable):
 @d Inport the $Simple_X^n$ library
 @{""" import modules from larcc/lib """
 import sys
+from scipy import reshape
 sys.path.insert(0, 'lib/py/')
 from pyplasm import *
 from lar2psm import *
