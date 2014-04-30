@@ -5,6 +5,7 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+import lar2psm
 from lar2psm import *
 from simplexn import *
 from larcc import *

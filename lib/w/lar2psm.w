@@ -115,14 +115,24 @@ The function \texttt{MKPOLS} returns a list of HPC objects, i.e.~the geometric t
 Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} array of the previous example) is mapped into a polyhedral cell by the \texttt{pyplasm} operator \texttt{MKPOL}. The vertex indices are mapped from base 0 (the Python and C standard) to base 1 (the Plasm, Matlab, and FORTRAN standard).
 %------------------------------------------------------------------
 @d MaKe a list of HPC objects from a LAR model
-@{def MKPOLS (model):
+@{@< LAR model decomposition @>
+def MKPOLS (model):
+	V,FV = larModelBreak(model)
+	pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
+	return pols  
+@| MKPOLS @}
+%------------------------------------------------------------------
+
+%------------------------------------------------------------------
+@d LAR model decomposition
+@{def larModelBreak(model):
     if isinstance(model,Model):
-        V, FV = model.verts.tolist(), model.cells
+        # V, FV = model.verts.tolist(), model.cells
+        V, FV = model.verts, model.cells
     elif isinstance(model,tuple) or isinstance(model,list):
         V, FV = model
-    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
-    return pols  
-@| MKPOLS @}
+    return V,FV
+@}
 %------------------------------------------------------------------
 
 \paragraph{Unit tests}
@@ -294,10 +304,10 @@ class Verts(scipy.ndarray): pass
 @D Model class
 @{class Model:
 	""" A pair (geometry, topology) of the LAR package """
-	def __init__(self,(verts,cells),dim):
+	def __init__(self,(verts,cells)):
 		self.n = len(verts[0])
-		self.d = dim
-		self.verts = scipy.array(verts).view(Verts)
+		# self.verts = scipy.array(verts).view(Verts)
+		self.verts = verts
 		self.cells = cells
 @}
 %-------------------------------------------------------------------------------
@@ -305,23 +315,9 @@ class Verts(scipy.ndarray): pass
 \paragraph{\texttt{Struct} iterable class}
 %-------------------------------------------------------------------------------
 @D Struct class
-@{def checkStruct(data):	
-	def visit(o):
-	    if isinstance(o, (list,Struct)):
-	        for value in o:
-	            for subvalue in visit(value):
-	                yield subvalue
-	    elif isinstance(o, Model) or isinstance(o, Mat): 
-	    	yield o		
-	flatten = list(visit(data))
-	dims = [ o.n for o in flatten if isinstance(o, Model) ]
-	if EQ(dims): return dims[0] 
-	else:return None
-
-class Struct:
+@{class Struct:
     """ The assembly type of the LAR package """
     def __init__(self,data):
-        self.n = checkStruct(data)
         self.body = data
     def __iter__(self):
         return iter(self.body)

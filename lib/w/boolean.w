@@ -169,8 +169,34 @@ The input LAR models are located in a common space by (implicitly) joining \text
 @D Initial indexing of vertex positions
 @{from collections import defaultdict, OrderedDict
 
+""" TODO: change defaultdict to OrderedDefaultdict """
+
+class OrderedDefaultdict(collections.OrderedDict):
+    def __init__(self, *args, **kwargs):
+        if not args:
+            self.default_factory = None
+        else:
+            if not (args[0] is None or callable(args[0])):
+                raise TypeError('first argument must be callable or None')
+            self.default_factory = args[0]
+            args = args[1:]
+        super(OrderedDefaultdict, self).__init__(*args, **kwargs)
+
+    def __missing__ (self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = default = self.default_factory()
+        return default
+
+    def __reduce__(self):  # optional, for pickle support
+        args = (self.default_factory,) if self.default_factory else tuple()
+        return self.__class__, args, None, None, self.iteritems()
+
+
 def vertexSieve(model1, model2):
-	V1,CV1 = model1; V2,CV2 = model2
+	from lar2psm import larModelBreak
+	V1,CV1 = larModelBreak(model1) 
+	V2,CV2 = larModelBreak(model2)
 	n = len(V1); m = len(V2)
 	def shift(CV, n): 
 		return [[v+n for v in cell]for cell in CV]
@@ -450,7 +476,6 @@ The \texttt{boolean.py} module is exported to the library \texttt{lar-cc/lib}. T
 @{""" Module with Boolean operators using chains and CSR matrices """
 @< Initial import of modules @>
 @< Symbolic utility to represent points as strings @>
-@< Affine transformations of $d$-points @>
 @< High-level Boolean operations @>
 @< Boolean subdivided complex @>
 @< Compute boundary vertices of both arguments @>
@@ -679,25 +704,9 @@ from simplexn import *
 from larcc import *
 from largrid import *
 from myfont import *
+from mapper import *
 @}
 %------------------------------------------------------------------
-
-\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates.
-
-%------------------------------------------------------------------
-@D Affine transformations of $d$-points
-@{def translatePoints (points, tvect):
-	return [VECTSUM([p,tvect]) for p in points]
-
-def rotatePoints (points, angle):		# 2-dimensional !! TODO: n-dim
-	a = angle
-	return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
-
-def scalePoints (points, svect):
-	return [AA(PROD)(TRANS([p,svect])) for p in points]
-@}
-%------------------------------------------------------------------
-
 \subsection{Numeric utilities}
 
 A small set of utilityy functions is used to transform a point representation as array of coordinates into a string of fixed format to be used as point key into python dictionaries.

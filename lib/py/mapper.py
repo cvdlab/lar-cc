@@ -5,6 +5,7 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+import lar2psm
 from lar2psm import *
 from simplexn import *
 from larcc import *
@@ -57,7 +58,7 @@ def larMap(coordFuncs):
       V,CV = domain
       V = AA(coordFuncs)(V)  # plasm CONStruction
       return [V,CV]
-      # checkModel([V,CV],dim)  TODO
+      # checkModel([V,CV])  TODO
    return larMap0
 
 if __name__=="__main__":
@@ -85,6 +86,17 @@ def larCircle(radius=1.,angle=2*PI,dim=1):
       return larMap([x,y])(domain,dim)
    return larCircle0
 
+def larHelix(radius=1.,pitch=1.,nturns=2,dim=1):
+   def larHelix0(shape=36*nturns):
+      angle = nturns*2*PI
+      domain = larIntervals([shape])([angle])
+      V,CV = domain
+      x = lambda p : radius*COS(p[0])
+      y = lambda p : radius*SIN(p[0])
+      z = lambda p : (pitch/(2*PI)) * p[0]
+      return larMap([x,y,z])(domain,dim)
+   return larHelix0
+
 def larDisk(radius=1.,angle=2*PI):
    def larDisk0(shape=[36,1]):
       domain = larIntervals(shape)([angle,radius])
@@ -93,6 +105,19 @@ def larDisk(radius=1.,angle=2*PI):
       y = lambda p : p[1]*SIN(p[0])
       return larMap([x,y])(domain)
    return larDisk0
+
+def larHelicoid(R=1.,r=0.5,pitch=1.,nturns=2,dim=1):
+   def larHelicoid0(shape=[36*nturns,2]):
+      angle = nturns*2*PI
+      domain = larIntervals(shape,'simplex')([angle,R-r])
+      V,CV = domain
+      V = translatePoints(V,[0,r,0])
+      domain = V,CV
+      x = lambda p : p[1]*COS(p[0])
+      y = lambda p : p[1]*SIN(p[0])
+      z = lambda p : (pitch/(2*PI)) * p[0]
+      return larMap([x,y,z])(domain,dim)
+   return larHelicoid0
 
 def larRing(r1,r2,angle=2*PI):
    def larRing0(shape=[36,1]):
@@ -174,6 +199,19 @@ def larBall(radius=1,angle1=PI,angle2=2*PI):
       V,CV = checkModel(larSphere(radius,angle1,angle2)(shape))
       return V,[range(len(V))]
    return larBall0
+
+def larSolidHelicoid(thickness=.1,R=1.,r=0.5,pitch=1.,nturns=2.,steps=36):
+   def larSolidHelicoid0(shape=[steps*int(nturns),1,1]):
+      angle = nturns*2*PI
+      domain = larIntervals(shape)([angle,R-r,thickness])
+      V,CV = domain
+      V = translatePoints(V,[0,r,0])
+      domain = V,CV
+      x = lambda p : p[1]*COS(p[0])
+      y = lambda p : p[1]*SIN(p[0])
+      z = lambda p : (pitch/(2*PI))*p[0] + p[2]
+      return larMap([x,y,z])(domain)
+   return larSolidHelicoid0
 
 def larRod(radius,height,angle=2*PI):
    def larRod0(shape=[36,1]):
@@ -286,16 +324,57 @@ def larEmbed(k):
 def larApply(affineMatrix):
    def larApply0(model):
       if isinstance(model,Model):
-         V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
+         # V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
+         V = scipy.dot(array([v+[1.0] for v in model.verts]), affineMatrix.T).tolist()
          V = [v[:-1] for v in V]
          CV = copy(model.cells)
-         d = copy(model.d)
-         return Model((V,CV),d)
-      elif isinstance(model,tuple):
+         return Model((V,CV))
+      elif isinstance(model,tuple) or isinstance(model,list):
          V,CV = model
          V = scipy.dot([v+[1.0] for v in V], affineMatrix.T).tolist()
          return [v[:-1] for v in V],CV
    return larApply0
+
+""" Flatten a list using Python generators """
+def flatten(lst):
+   for x in lst:
+      if isinstance(x, list):
+         for x in flatten(x):
+            yield x
+      elif isinstance(x, Struct):
+         for x in flatten(x.body):
+            yield x
+      else:
+         yield x
+ 
+# lst = [[1], 2, [[3,4], 5], [[[]]], [[[6]]], 7, 8, []]
+# print list(flatten(lst)) 
+# [1, 2, 3, 4, 5, 6, 7, 8]
+
+def checkStruct(lst):
+   """ Return the common dimension of structure elements.
+   """
+   vertsDims = [computeDim(obj) for obj in flatten(lst)]
+   if EQ(vertsDims): 
+      return vertsDims[0]
+   else: 
+      print "*** LAR ERROR: Struct dimension mismatch."
+
+def computeDim(obj):
+   """ Check for dimension of a structure element (Verts or V). 
+   """
+   if (isinstance(obj,lar2psm.Model)):
+      return obj.n
+   elif (isinstance(obj,tuple) or isinstance(obj,list)) and len(obj)==2:
+      V = obj[0]
+      if (isinstance(V,list) and isinstance(V[0],list) and 
+            (isinstance(V[0][0],float) or isinstance(V[0][0],int))): 
+         dim = len(V[0])
+         return dim
+   elif (isinstance(obj,lar2psm.Mat)):
+      dim = obj.shape[0]-1
+      return dim
+   else: return 0
 
 """ Traversal of a scene multigraph """
 def traversal(CTM, stack, obj, scene=[]):
@@ -311,10 +390,10 @@ def traversal(CTM, stack, obj, scene=[]):
     return scene
 
 def evalStruct(struct):
-    dim = struct.n
-    CTM, stack = scipy.identity(dim+1), []
-    scene = traversal(CTM, stack, struct) 
-    return scene
+   dim = checkStruct(struct.body)
+   CTM, stack = scipy.identity(dim+1), []
+   scene = traversal(CTM, stack, struct) 
+   return scene
 
 """ TODO: 
 use Decimal (http://docs.python.org/2/library/decimal.html) 

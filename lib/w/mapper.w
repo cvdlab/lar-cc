@@ -120,7 +120,7 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 		V,CV = domain
 		V = AA(coordFuncs)(V)  # plasm CONStruction
 		return [V,CV]
-		# checkModel([V,CV],dim)  TODO
+		# checkModel([V,CV])  TODO
 	return larMap0
 @}
 %-------------------------------------------------------------------------------
@@ -202,6 +202,21 @@ A large number of primitive surfaces or solids is defined in this section, using
 	return larCircle0
 @}
 %-------------------------------------------------------------------------------
+\paragraph{Helix curve}
+%-------------------------------------------------------------------------------
+@D Helix curve about the $z$ axis
+@{def larHelix(radius=1.,pitch=1.,nturns=2,dim=1):
+	def larHelix0(shape=36*nturns):
+		angle = nturns*2*PI
+		domain = larIntervals([shape])([angle])
+		V,CV = domain
+		x = lambda p : radius*COS(p[0])
+		y = lambda p : radius*SIN(p[0])
+		z = lambda p : (pitch/(2*PI)) * p[0]
+		return larMap([x,y,z])(domain,dim)
+	return larHelix0
+@}
+%-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 \subsection{2D primitives}
 %-------------------------------------------------------------------------------
@@ -218,6 +233,23 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 		y = lambda p : p[1]*SIN(p[0])
 		return larMap([x,y])(domain)
 	return larDisk0
+@}
+%-------------------------------------------------------------------------------
+\paragraph{Helicoid surface}
+%-------------------------------------------------------------------------------
+@D Helicoid about the $z$ axis
+@{def larHelicoid(R=1.,r=0.5,pitch=1.,nturns=2,dim=1):
+	def larHelicoid0(shape=[36*nturns,2]):
+		angle = nturns*2*PI
+		domain = larIntervals(shape,'simplex')([angle,R-r])
+		V,CV = domain
+		V = translatePoints(V,[0,r,0])
+		domain = V,CV
+		x = lambda p : p[1]*COS(p[0])
+		y = lambda p : p[1]*SIN(p[0])
+		z = lambda p : (pitch/(2*PI)) * p[0]
+		return larMap([x,y,z])(domain,dim)
+	return larHelicoid0
 @}
 %-------------------------------------------------------------------------------
 
@@ -327,6 +359,23 @@ def larCylinder(radius,height,angle=2*PI):
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Solid helicoid}
+%-------------------------------------------------------------------------------
+@D Solid helicoid about the $z$ axis
+@{def larSolidHelicoid(thickness=.1,R=1.,r=0.5,pitch=1.,nturns=2.,steps=36):
+	def larSolidHelicoid0(shape=[steps*int(nturns),1,1]):
+		angle = nturns*2*PI
+		domain = larIntervals(shape)([angle,R-r,thickness])
+		V,CV = domain
+		V = translatePoints(V,[0,r,0])
+		domain = V,CV
+		x = lambda p : p[1]*COS(p[0])
+		y = lambda p : p[1]*SIN(p[0])
+		z = lambda p : (pitch/(2*PI))*p[0] + p[2]
+		return larMap([x,y,z])(domain)
+	return larSolidHelicoid0
+@}
+%-------------------------------------------------------------------------------
 
 
 \paragraph{Solid Ball}
@@ -436,12 +485,12 @@ First we state the general rules that will be satisfied by the matrices used in 
 @{def larApply(affineMatrix):
 	def larApply0(model):
 		if isinstance(model,Model):
-			V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
+			# V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
+			V = scipy.dot(array([v+[1.0] for v in model.verts]), affineMatrix.T).tolist()
 			V = [v[:-1] for v in V]
 			CV = copy(model.cells)
-			d = copy(model.d)
-			return Model((V,CV),d)
-		elif isinstance(model,tuple):
+			return Model((V,CV))
+		elif isinstance(model,tuple) or isinstance(model,list):
 			V,CV = model
 			V = scipy.dot([v+[1.0] for v in V], affineMatrix.T).tolist()
 			return [v[:-1] for v in V],CV
@@ -653,6 +702,60 @@ The previous traversal algorithm is here customised for scene multigraph, where 
 \paragraph{Check models for common dimension}
 The input list of a call to \texttt{larStruct} primitive is preliminary checked for uniform dimensionality of the enclosed LAR models and transformations. The common dimension \texttt{dim} of models and matrices is returned by the function \texttt{checkStruct}, within the class definition \texttt{Struct} in the module \texttt{lar2psm}. Otherwise, an exception is generated (TODO).
 
+
+%-------------------------------------------------------------------------------
+@D Check for dimension of a structure element (Verts or V)
+@{@< Flatten a list @>
+def checkStruct(lst):
+	""" Return the common dimension of structure elements.
+	"""
+	vertsDims = [computeDim(obj) for obj in flatten(lst)]
+	if EQ(vertsDims): 
+		return vertsDims[0]
+	else: 
+		print "*** LAR ERROR: Struct dimension mismatch."
+
+def computeDim(obj):
+	""" Check for dimension of a structure element (Verts or V). 
+	"""
+	if (isinstance(obj,lar2psm.Model)):
+		return obj.n
+	elif (isinstance(obj,tuple) or isinstance(obj,list)) and len(obj)==2:
+		V = obj[0]
+		if (isinstance(V,list) and isinstance(V[0],list) and 
+				(isinstance(V[0][0],float) or isinstance(V[0][0],int))): 
+			dim = len(V[0])
+			return dim
+	elif (isinstance(obj,lar2psm.Mat)):
+		dim = obj.shape[0]-1
+		return dim
+	else: return 0
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Flatten a list using Python generators}
+The \texttt{flatten} is a generator that yields the non-list values of its input in order. In the example, the generator is converted back to a list before printing. Modified from \href{http://rosettacode.org/wiki/Flatten_a_list#Python}{\emph{Rosetta code}} project. It is used here to flatten a structure in order to check for common dimensionality of elements.
+
+%-------------------------------------------------------------------------------
+@D Flatten a list
+@{""" Flatten a list using Python generators """
+def flatten(lst):
+	for x in lst:
+		if isinstance(x, list):
+			for x in flatten(x):
+				yield x
+		elif isinstance(x, Struct):
+			for x in flatten(x.body):
+				yield x
+		else:
+			yield x
+ 
+# lst = [[1], 2, [[3,4], 5], [[[]]], [[[6]]], 7, 8, []]
+# print list(flatten(lst)) 
+# [1, 2, 3, 4, 5, 6, 7, 8]
+@}
+%-------------------------------------------------------------------------------
+
 \paragraph{Initialization and call of the algorithm}
 
 The function \texttt{evalStruct} is used to evaluate a structure network, i.e.~to return a \texttt{scene}
@@ -663,10 +766,10 @@ list of objects of type \texttt{Model}, all referenced in the world coordinate s
 @{""" Traversal of a scene multigraph """
 @< Structure traversal algorithm @>
 def evalStruct(struct):
-    dim = struct.n
-    CTM, stack = scipy.identity(dim+1), []
-    scene = traversal(CTM, stack, struct) 
-    return scene
+	dim = checkStruct(struct.body)
+	CTM, stack = scipy.identity(dim+1), []
+	scene = traversal(CTM, stack, struct) 
+	return scene
 @}
 %-------------------------------------------------------------------------------
 
@@ -725,7 +828,7 @@ A different composition of transformations, from local to global coordinate fram
 @< Initial import of modules @>
 from mapper import *
 square = larCuboids([1,1])
-square = Model(square,2)
+square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
 chair = larApply( s(.35,.35) )(table)
 chair = larApply( t(.75, 0) )(chair)
@@ -744,7 +847,7 @@ Finally, a similar 2D example is given, by nesting one (or more) structures via 
 @< Initial import of modules @>
 from mapper import *
 square = larCuboids([1,1])
-square = Model(square,2)
+square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
 chair = Struct([ t(.75, 0), s(.35,.35), table ])
 struct = Struct( [t(2,1)] + [table] + 4*[r(PI/2), chair])
@@ -752,6 +855,42 @@ scene = evalStruct(struct)
 VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @}
 %-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test08.py
+@{""" LAR model input and handling """
+@< Input of LAR architectural plan @>
+dwelling = larApply(t(3,0))(Model((V,FV)))
+print "\n dwelling =",dwelling
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS(dwelling)))
+plan = Struct([dwelling,s(-1,1),dwelling])
+VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(evalStruct(plan)))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+%-------------------------------------------------------------------------------
+@D Input of LAR architectural plan
+@{@< Initial import of modules @>
+from mapper import *
+V = [[3,-3],
+[9,-3],[0,0],[3,0],[9,0],[15,0],
+[3,3],[6,3],[9,3],[15,3],[21,3], 
+[0,9],[6,9],[15,9],[18,9],[0,13],
+[6,13],[9,13],[15,13],[18,10],[21,10], 
+[18,13],[6,16],[9,16],[9,17],[15,17],
+[18,17],[-3,24],[6,24],[15,24],[-3,13]]
+FV = [
+[22,23,24,25,29,28], [15,16,22,28,27,30], [18,21,26,25], 
+[13,14,19,21,18], [16,17,23,22], [11,12,16,15],
+[9,10,20,19,14,13], [2,3,6,7,12,11], [0,1,4,8,7,6,3],
+[4,5,9,13,18,17,16,12,7,8],[17,18,25,24,23]]
+@}
+%-------------------------------------------------------------------------------
+
+
 
 %===============================================================================
 \section{Computational framework}
@@ -768,7 +907,9 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @< Primitive mapping function @>
 @< Basic tests of mapper module @>
 @< Circle centered in the origin @>
+@< Helix curve about the $z$ axis @>
 @< Disk centered in the origin @>
+@< Helicoid about the $z$ axis @>
 @< Ring centered in the origin @>
 @< Spherical surface of given radius @>
 @< Cylinder surface with $z$ axis @>
@@ -776,6 +917,7 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @< Half-toroidal surface of given radiuses @>
 @< Solid box of given extreme vectors @>
 @< Solid Sphere of given radius @>
+@< Solid helicoid about the $z$ axis @>
 @< Solid cylinder of given radius and height @>
 @< Solid torus of given radiuses @>
 @< Solid pizza of given radiuses @>
@@ -786,6 +928,7 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @< Rotation matrices @>
 @< Embedding and projecting a geometric model @>
 @< Apply an affine transformation to a LAR model @>
+@< Check for dimension of a structure element (Verts or V) @>
 @< Traversal of a scene multigraph @>
 @< Symbolic utility to represent points as strings @>
 @}
@@ -867,7 +1010,11 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 from mapper import *
 model = larCircle(1)()
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+model = larHelix(1,0.5,4)()
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = larDisk(1)([36,4])
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+model = larHelicoid(1,0.5,0.1,10)()
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = larRing(.9, 1.)([36,2])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
@@ -876,6 +1023,8 @@ VIEW(STRUCT(MKPOLS(model)))
 model = larSphere(1,PI/6,PI/4)([6,12])
 VIEW(STRUCT(MKPOLS(model)))
 model = larBall(1)()
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+model = larSolidHelicoid(0.2,1,0.5,0.5,10)()
 VIEW(STRUCT(MKPOLS(model)))
 model = larRod(.25,2.)([32,1])
 VIEW(STRUCT(MKPOLS(model)))
@@ -955,6 +1104,7 @@ import os,sys
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+import lar2psm
 from lar2psm import *
 from simplexn import *
 from larcc import *

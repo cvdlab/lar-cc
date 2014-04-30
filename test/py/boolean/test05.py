@@ -9,6 +9,7 @@ from simplexn import *
 from larcc import *
 from largrid import *
 from myfont import *
+from mapper import *
 
 from boolean import *
 model1 = randomTriangulation(100,3,'cuboid')
