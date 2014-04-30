@@ -32,14 +32,16 @@ V,FV = larApply(t(3,0))(dwelling)
 print "\n V,FV =",V,FV
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS(dwelling)))
 dwelling = Struct([ t(3,0), dwelling ])
-plan = Struct([dwelling,s(-1,1),dwelling])
-double = evalStruct(plan)
-VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(double))))
-   
-
-single = movePoint2point(AA(larModelBreak)(double))([0,0])([0,0])
-V,FV = single
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV))))
-
-EV= face2edge(FV)
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+V1 = [[0,0],[3,0],[3,4.5],[0,4.5],[3,9],[0,9],[3,13],[-3,13],[-3,0],[0,-3]]
+FV1 = [[0,1,2,3],[3,2,4,5],[0,3,5,4,6,7,8,9]]
+landing = V1,FV1
+stair = spiralStair(width=0.2,R=1.5,r=0.25,riser=0.1,pitch=4.,nturns=1.75,steps=36)
+stair = larApply(r(0,0,PI/4))(stair)
+# stair = larDisk([1.5,1.75*PI])()
+# stair = larApply(r(PI/4))(stair)
+stair = larApply(t(0,-3))(larCircle(2.5)())
+plan = Struct([stair,landing,dwelling,s(-1,1),dwelling])
+assembly2D = evalStruct(plan)
+VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly2D))))
+assembly1D = TRANS(CONS([S1,COMP([AA(face2edge),S2])])(TRANS(assembly2D)))
+VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))

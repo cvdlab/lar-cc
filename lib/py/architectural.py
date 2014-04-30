@@ -52,8 +52,8 @@ def movePoint2point(twoModels):
    return movePoint2point0
 
 
-def spiralStair(R=1.,r=0.5,riser=0.1,pitch=2.,nturns=2.,steps=18):
-   V,CV = larSolidHelicoid(0.2,R,r,pitch,nturns,steps)()
+def spiralStair(width=0.2,R=1.,r=0.5,riser=0.1,pitch=2.,nturns=2.,steps=18):
+   V,CV = larSolidHelicoid(width,R,r,pitch,nturns,steps)()
    W = CAT([[V[k],V[k+1],V[k+2],V[k+3]]+
       [SUM([V[k+1],[0,0,-riser]]),SUM([V[k+3],[0,0,-riser]])]
       for k,v in enumerate(V[:-4]) if k%4==0])
@@ -64,4 +64,5 @@ def spiralStair(R=1.,r=0.5,riser=0.1,pitch=2.,nturns=2.,steps=18):
    return W,CW
    
 VIEW(STRUCT(MKPOLS(spiralStair())))
+VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
 

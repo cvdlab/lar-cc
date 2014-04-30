@@ -19,6 +19,8 @@ def rotatePoints (points, angle):      # 2-dimensional !! TODO: n-dim
    return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
 
 def scalePoints (points, svect):
+   print "\n points =",points
+   print "\n svect =",svect
    return [AA(PROD)(TRANS([p,svect])) for p in points]
 
 """ cellular decomposition of the unit d-cube """
@@ -31,7 +33,7 @@ def larDomain(shape, cell='cuboid'):
 def larIntervals(shape, cell='cuboid'):
    def larIntervals0(size):
       V,CV = larDomain(shape,cell)
-      V = scalePoints(V, [scaleFactor for scaleFactor in size])
+      V = scalePoints(V, size)
       return [V,CV]
    return larIntervals0
 

@@ -125,7 +125,7 @@ $\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\fo
 \mbox{}\verb@def larIntervals(shape, cell='cuboid'):@\\
 \mbox{}\verb@   def larIntervals0(size):@\\
 \mbox{}\verb@      V,CV = larDomain(shape,cell)@\\
-\mbox{}\verb@      V = scalePoints(V, [scaleFactor for scaleFactor in size])@\\
+\mbox{}\verb@      V = scalePoints(V, size)@\\
 \mbox{}\verb@      return [V,CV]@\\
 \mbox{}\verb@   return larIntervals0@\\
 \mbox{}\verb@@{\NWsep}
@@ -1353,7 +1353,7 @@ $\langle\,$Input of LAR architectural plan\nobreak\ {\footnotesize \NWtarget{nuw
 \mbox{}\verb@@\hbox{$\langle\,$Apply an affine transformation to a LAR model\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Check for dimension of a structure element (Verts or V)\nobreak\ {\footnotesize \NWlink{nuweb18a}{18a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Traversal of a scene multigraph\nobreak\ {\footnotesize \NWlink{nuweb19a}{19a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb26c}{26c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1612,6 +1612,8 @@ $\langle\,$Affine transformations of $d$-points\nobreak\ {\footnotesize \NWtarge
 \mbox{}\verb@   return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def scalePoints (points, svect):@\\
+\mbox{}\verb@   print "\n points =",points@\\
+\mbox{}\verb@   print "\n svect =",svect@\\
 \mbox{}\verb@   return [AA(PROD)(TRANS([p,svect])) for p in points]@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1631,7 +1633,7 @@ A small set of utilityy functions is used to transform a point representation as
 
 %------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap52}
-$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWtarget{nuweb26c}{26c}}$\,\rangle\equiv$
+$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWtarget{nuweb27}{27}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" TODO: @\\
