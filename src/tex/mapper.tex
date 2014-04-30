@@ -713,6 +713,7 @@ def checkStruct(lst):
 	if EQ(vertsDims): 
 		return vertsDims[0]
 	else: 
+		print "\n vertsDims =", vertsDims
 		print "*** LAR ERROR: Struct dimension mismatch."
 
 def computeDim(obj):
@@ -741,7 +742,9 @@ The \texttt{flatten} is a generator that yields the non-list values of its input
 @{""" Flatten a list using Python generators """
 def flatten(lst):
 	for x in lst:
-		if isinstance(x, list):
+		if (isinstance(x,tuple) or isinstance(x,list)) and len(x)==2:
+			yield x
+		elif (isinstance(x,tuple) or isinstance(x,list)):
 			for x in flatten(x):
 				yield x
 		elif isinstance(x, Struct):
@@ -767,7 +770,9 @@ list of objects of type \texttt{Model}, all referenced in the world coordinate s
 @< Structure traversal algorithm @>
 def evalStruct(struct):
 	dim = checkStruct(struct.body)
+	print "\n dim =",dim
 	CTM, stack = scipy.identity(dim+1), []
+	print "\n CTM, stack =",CTM, stack
 	scene = traversal(CTM, stack, struct) 
 	return scene
 @}
@@ -780,16 +785,19 @@ The \texttt{traversal} algorithm decides between three different cases, dependin
 %-------------------------------------------------------------------------------
 @D Structure traversal algorithm 
 @{def traversal(CTM, stack, obj, scene=[]):
-    for i in range(len(obj)):
-        if isinstance(obj[i],Model): 
-            scene += [larApply(CTM)(obj[i])]
-        elif isinstance(obj[i],Mat): 
-            CTM = scipy.dot(CTM, obj[i])
-        elif isinstance(obj[i],Struct):
-            stack.append(CTM) 
-            traversal(CTM, stack, obj[i], scene)
-            CTM = stack.pop()
-    return scene
+	print "\n CTM, obj =",obj
+	for i in range(len(obj)):
+		if isinstance(obj[i],Model): 
+			scene += [larApply(CTM)(obj[i])]
+		elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
+			scene += [larApply(CTM)(obj[i])]
+		elif isinstance(obj[i],Mat): 
+			CTM = scipy.dot(CTM, obj[i])
+		elif isinstance(obj[i],Struct):
+			stack.append(CTM) 
+			traversal(CTM, stack, obj[i], scene)
+			CTM = stack.pop()
+	return scene
 @}
 %-------------------------------------------------------------------------------
 

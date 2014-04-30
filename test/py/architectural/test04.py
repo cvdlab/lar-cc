@@ -31,6 +31,7 @@ dwelling = [V,FV]
 V,FV = larApply(t(3,0))(dwelling)
 print "\n V,FV =",V,FV
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS(dwelling)))
+dwelling = Struct([ t(3,0), dwelling ])
 plan = Struct([dwelling,s(-1,1),dwelling])
 double = evalStruct(plan)
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(double))))
