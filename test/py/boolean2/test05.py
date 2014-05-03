@@ -20,6 +20,9 @@ from largrid import *
 import myfont
 from myfont import *
 
+import mapper
+from mapper import *
+
 
 import boolean2
 from boolean2 import *
@@ -32,13 +35,13 @@ from myfont import *
 
 model1 = randomTriangulation(100,3,'cuboid')
 V1,CV1 = model1
-V1 = scalePoints(V1, [2,2,2])
-V1 = translatePoints(V1, [-1,-1,-1])
+V1 = larScale( [2,2,2])(V1)
+V1 = larTranslate( [-1,-1,-1])(V1)
 model1 = V1,CV1 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
 model2 = randomTriangulation(100,3,'cuboid')
 V2,CV2 = model2
-V2 = scalePoints(V2, [2,2,2])
+V2 = larScale( [2,2,2])(V2)
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
 V, n1,n2,n12, B1,B2 = boolOps(model1,model2)

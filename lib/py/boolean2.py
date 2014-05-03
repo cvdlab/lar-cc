@@ -20,6 +20,9 @@ from largrid import *
 import myfont
 from myfont import *
 
+import mapper
+from mapper import *
+
 
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 ROUND_ZERO = 1E-07

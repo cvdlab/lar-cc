@@ -19,7 +19,7 @@ V1,CV1 = model1
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
 model2 = randomTriangulation(100,2,'cuboid')
 V2,CV2 = model2
-V2 = scalePoints(V2, [2,2])
+V2 = larScale( [2,2])(V2)
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
 V, n1,n2,n12,BV1,BV2 = boolOps(model1,model2)

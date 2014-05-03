@@ -541,7 +541,7 @@ model1 = randomTriangulation(100,2,'disk')
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)))
 model2 = randomTriangulation(100,2,'cuboid')
 V2,CV2 = model2
-V2 = scalePoints(V2, [2,2])
+V2 = larScale([2,2])(V2)
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)))
 V,CV_un, CV_int, n1,n2,n12, B1,B2 = boolOps(model1,model2)
@@ -626,6 +626,7 @@ sys.path.insert(0, 'lib/py/')
 @< Import the module @(simplexn@) @>
 @< Import the module @(larcc@) @>
 @< Import the module @(largrid@) @>
+@< Import the module @(mapper@) @>
 @}
 %------------------------------------------------------------------
 

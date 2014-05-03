@@ -20,6 +20,9 @@ from largrid import *
 import myfont
 from myfont import *
 
+import mapper
+from mapper import *
+
 
 import boolean2
 from boolean2 import *

@@ -103,7 +103,7 @@ $\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ 
 \mbox{}\verb@def larDomain(shape, cell='cuboid'):@\\
 \mbox{}\verb@   if cell=='simplex': V,CV = larSimplexGrid1(shape)@\\
 \mbox{}\verb@   elif cell=='cuboid': V,CV = larCuboids(shape)@\\
-\mbox{}\verb@   V = scalePoints(V, [1./d for d in shape])@\\
+\mbox{}\verb@   V = larScale( [1./d for d in shape])(V)@\\
 \mbox{}\verb@   return [V,CV]@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -125,7 +125,7 @@ $\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\fo
 \mbox{}\verb@def larIntervals(shape, cell='cuboid'):@\\
 \mbox{}\verb@   def larIntervals0(size):@\\
 \mbox{}\verb@      V,CV = larDomain(shape,cell)@\\
-\mbox{}\verb@      V = scalePoints(V, size)@\\
+\mbox{}\verb@      V = larScale( size)(V)@\\
 \mbox{}\verb@      return [V,CV]@\\
 \mbox{}\verb@   return larIntervals0@\\
 \mbox{}\verb@@{\NWsep}
@@ -336,7 +336,7 @@ $\langle\,$Helicoid about the $z$ axis\nobreak\ {\footnotesize \NWtarget{nuweb6b
 \mbox{}\verb@      angle = nturns*2*PI@\\
 \mbox{}\verb@      domain = larIntervals(shape,'simplex')([angle,R-r])@\\
 \mbox{}\verb@      V,CV = domain@\\
-\mbox{}\verb@      V = translatePoints(V,[0,r,0])@\\
+\mbox{}\verb@      V = larTranslate([0,r,0])(V)@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda p : p[1]*COS(p[0])@\\
 \mbox{}\verb@      y = lambda p : p[1]*SIN(p[0])@\\
@@ -362,7 +362,7 @@ $\langle\,$Ring centered in the origin\nobreak\ {\footnotesize \NWtarget{nuweb6c
 \mbox{}\verb@def larRing(r1,r2,angle=2*PI):@\\
 \mbox{}\verb@   def larRing0(shape=[36,1]):@\\
 \mbox{}\verb@      V,CV = larIntervals(shape)([angle,r2-r1])@\\
-\mbox{}\verb@      V = translatePoints(V,[0,r1])@\\
+\mbox{}\verb@      V = larTranslate([0,r1])(V)@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda p : p[1] * COS(p[0])@\\
 \mbox{}\verb@      y = lambda p : p[1] * SIN(p[0])@\\
@@ -426,7 +426,7 @@ $\langle\,$Spherical surface of given radius\nobreak\ {\footnotesize \NWtarget{n
 \mbox{}\verb@def larSphere(radius=1,angle1=PI,angle2=2*PI):@\\
 \mbox{}\verb@   def larSphere0(shape=[18,36]):@\\
 \mbox{}\verb@      V,CV = larIntervals(shape,'simplex')([angle1,angle2])@\\
-\mbox{}\verb@      V = translatePoints(V,[-angle1/2,-angle2/2])@\\
+\mbox{}\verb@      V = larTranslate([-angle1/2,-angle2/2])(V)@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda p : radius*COS(p[0])*COS(p[1])@\\
 \mbox{}\verb@      y = lambda p : radius*COS(p[0])*SIN(p[1])@\\
@@ -475,7 +475,7 @@ $\langle\,$Half-toroidal surface of given radiuses\nobreak\ {\footnotesize \NWta
 \mbox{}\verb@def larCrown(r,R,angle=2*PI):@\\
 \mbox{}\verb@   def larCrown0(shape=[24,36]):@\\
 \mbox{}\verb@      V,CV = larIntervals(shape,'simplex')([PI,angle])@\\
-\mbox{}\verb@      V = translatePoints(V,[-PI/2,0])@\\
+\mbox{}\verb@      V = larTranslate([-PI/2,0])(V)@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda p : (R + r*COS(p[0])) * COS(p[1])@\\
 \mbox{}\verb@      y = lambda p : (R + r*COS(p[0])) * SIN(p[1])@\\
@@ -530,7 +530,7 @@ $\langle\,$Solid helicoid about the $z$ axis\nobreak\ {\footnotesize \NWtarget{n
 \mbox{}\verb@      angle = nturns*2*PI@\\
 \mbox{}\verb@      domain = larIntervals(shape)([angle,R-r,thickness])@\\
 \mbox{}\verb@      V,CV = domain@\\
-\mbox{}\verb@      V = translatePoints(V,[0,r,0])@\\
+\mbox{}\verb@      V = larTranslate([0,r,0])(V)@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda p : p[1]*COS(p[0])@\\
 \mbox{}\verb@      y = lambda p : p[1]*SIN(p[0])@\\
@@ -599,7 +599,7 @@ $\langle\,$Hollow cylinder of given radiuses and height\nobreak\ {\footnotesize 
 \mbox{}\verb@def larHollowCyl(r,R,height,angle=2*PI):@\\
 \mbox{}\verb@   def larHollowCyl0(shape=[36,1,1]):@\\
 \mbox{}\verb@      V,CV = larIntervals(shape)([angle,R-r,height])@\\
-\mbox{}\verb@      V = translatePoints(V,[0,r,0])@\\
+\mbox{}\verb@      V = larTranslate([0,r,0])(V)@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda p : p[1] * COS(p[0])@\\
 \mbox{}\verb@      y = lambda p : p[1] * SIN(p[0])@\\
@@ -625,7 +625,7 @@ $\langle\,$Hollow sphere of given radiuses\nobreak\ {\footnotesize \NWtarget{nuw
 \mbox{}\verb@def larHollowSphere(r,R,angle1=PI,angle2=2*PI):@\\
 \mbox{}\verb@   def larHollowSphere0(shape=[36,1,1]):@\\
 \mbox{}\verb@      V,CV = larIntervals(shape)([angle1,angle2,R-r])@\\
-\mbox{}\verb@      V = translatePoints(V,[-angle1/2,-angle2/2,r])@\\
+\mbox{}\verb@      V = larTranslate([-angle1/2,-angle2/2,r])(V)@\\
 \mbox{}\verb@      domain = V,CV@\\
 \mbox{}\verb@      x = lambda p : p[2]*COS(p[0])*COS(p[1])@\\
 \mbox{}\verb@      y = lambda p : p[2]*COS(p[0])*SIN(p[1])@\\
@@ -1597,24 +1597,30 @@ $\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWtarget{nuweb26a}
 %-------------------------------------------------------------------------------
 
 
-\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates.
+\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates. Second-order functions are used in order to employ their curried version to transform geometric assemblies.
 
 %------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap51}
 $\langle\,$Affine transformations of $d$-points\nobreak\ {\footnotesize \NWtarget{nuweb26b}{26b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def translatePoints (points, tvect):@\\
-\mbox{}\verb@   return [VECTSUM([p,tvect]) for p in points]@\\
+\mbox{}\verb@def larTranslate (tvect):@\\
+\mbox{}\verb@   def larTranslate0 (points):@\\
+\mbox{}\verb@      return [VECTSUM([p,tvect]) for p in points]@\\
+\mbox{}\verb@   return larTranslate0@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@def rotatePoints (points, angle):      # 2-dimensional !! TODO: n-dim@\\
-\mbox{}\verb@   a = angle@\\
-\mbox{}\verb@   return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]@\\
+\mbox{}\verb@def larRotate (angle):     # 2-dimensional !! TODO: n-dim@\\
+\mbox{}\verb@   def larRotate0 (points):@\\
+\mbox{}\verb@      a = angle@\\
+\mbox{}\verb@      return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]@\\
+\mbox{}\verb@   return larRotate0@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@def scalePoints (points, svect):@\\
-\mbox{}\verb@   print "\n points =",points@\\
-\mbox{}\verb@   print "\n svect =",svect@\\
-\mbox{}\verb@   return [AA(PROD)(TRANS([p,svect])) for p in points]@\\
+\mbox{}\verb@def larScale (svect):@\\
+\mbox{}\verb@   def larScale0 (points):@\\
+\mbox{}\verb@      print "\n points =",points@\\
+\mbox{}\verb@      print "\n svect =",svect@\\
+\mbox{}\verb@      return [AA(PROD)(TRANS([p,svect])) for p in points]@\\
+\mbox{}\verb@   return larScale0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}

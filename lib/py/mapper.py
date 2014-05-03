@@ -11,29 +11,35 @@ from simplexn import *
 from larcc import *
 from largrid import *
 
-def translatePoints (points, tvect):
-   return [VECTSUM([p,tvect]) for p in points]
+def larTranslate (tvect):
+   def larTranslate0 (points):
+      return [VECTSUM([p,tvect]) for p in points]
+   return larTranslate0
 
-def rotatePoints (points, angle):      # 2-dimensional !! TODO: n-dim
-   a = angle
-   return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+def larRotate (angle):     # 2-dimensional !! TODO: n-dim
+   def larRotate0 (points):
+      a = angle
+      return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+   return larRotate0
 
-def scalePoints (points, svect):
-   print "\n points =",points
-   print "\n svect =",svect
-   return [AA(PROD)(TRANS([p,svect])) for p in points]
+def larScale (svect):
+   def larScale0 (points):
+      print "\n points =",points
+      print "\n svect =",svect
+      return [AA(PROD)(TRANS([p,svect])) for p in points]
+   return larScale0
 
 """ cellular decomposition of the unit d-cube """
 def larDomain(shape, cell='cuboid'):
    if cell=='simplex': V,CV = larSimplexGrid1(shape)
    elif cell=='cuboid': V,CV = larCuboids(shape)
-   V = scalePoints(V, [1./d for d in shape])
+   V = larScale( [1./d for d in shape])(V)
    return [V,CV]
 
 def larIntervals(shape, cell='cuboid'):
    def larIntervals0(size):
       V,CV = larDomain(shape,cell)
-      V = scalePoints(V, size)
+      V = larScale( size)(V)
       return [V,CV]
    return larIntervals0
 
@@ -113,7 +119,7 @@ def larHelicoid(R=1.,r=0.5,pitch=1.,nturns=2,dim=1):
       angle = nturns*2*PI
       domain = larIntervals(shape,'simplex')([angle,R-r])
       V,CV = domain
-      V = translatePoints(V,[0,r,0])
+      V = larTranslate([0,r,0])(V)
       domain = V,CV
       x = lambda p : p[1]*COS(p[0])
       y = lambda p : p[1]*SIN(p[0])
@@ -124,7 +130,7 @@ def larHelicoid(R=1.,r=0.5,pitch=1.,nturns=2,dim=1):
 def larRing(r1,r2,angle=2*PI):
    def larRing0(shape=[36,1]):
       V,CV = larIntervals(shape)([angle,r2-r1])
-      V = translatePoints(V,[0,r1])
+      V = larTranslate([0,r1])(V)
       domain = V,CV
       x = lambda p : p[1] * COS(p[0])
       y = lambda p : p[1] * SIN(p[0])
@@ -134,7 +140,7 @@ def larRing(r1,r2,angle=2*PI):
 def larSphere(radius=1,angle1=PI,angle2=2*PI):
    def larSphere0(shape=[18,36]):
       V,CV = larIntervals(shape,'simplex')([angle1,angle2])
-      V = translatePoints(V,[-angle1/2,-angle2/2])
+      V = larTranslate([-angle1/2,-angle2/2])(V)
       domain = V,CV
       x = lambda p : radius*COS(p[0])*COS(p[1])
       y = lambda p : radius*COS(p[0])*SIN(p[1])
@@ -181,7 +187,7 @@ def larToroidal(r,R,angle1=2*PI,angle2=2*PI):
 def larCrown(r,R,angle=2*PI):
    def larCrown0(shape=[24,36]):
       V,CV = larIntervals(shape,'simplex')([PI,angle])
-      V = translatePoints(V,[-PI/2,0])
+      V = larTranslate([-PI/2,0])(V)
       domain = V,CV
       x = lambda p : (R + r*COS(p[0])) * COS(p[1])
       y = lambda p : (R + r*COS(p[0])) * SIN(p[1])
@@ -207,7 +213,7 @@ def larSolidHelicoid(thickness=.1,R=1.,r=0.5,pitch=1.,nturns=2.,steps=36):
       angle = nturns*2*PI
       domain = larIntervals(shape)([angle,R-r,thickness])
       V,CV = domain
-      V = translatePoints(V,[0,r,0])
+      V = larTranslate([0,r,0])(V)
       domain = V,CV
       x = lambda p : p[1]*COS(p[0])
       y = lambda p : p[1]*SIN(p[0])
@@ -242,7 +248,7 @@ def larPizza(r,R,angle=2*PI):
 def larHollowCyl(r,R,height,angle=2*PI):
    def larHollowCyl0(shape=[36,1,1]):
       V,CV = larIntervals(shape)([angle,R-r,height])
-      V = translatePoints(V,[0,r,0])
+      V = larTranslate([0,r,0])(V)
       domain = V,CV
       x = lambda p : p[1] * COS(p[0])
       y = lambda p : p[1] * SIN(p[0])
@@ -253,7 +259,7 @@ def larHollowCyl(r,R,height,angle=2*PI):
 def larHollowSphere(r,R,angle1=PI,angle2=2*PI):
    def larHollowSphere0(shape=[36,1,1]):
       V,CV = larIntervals(shape)([angle1,angle2,R-r])
-      V = translatePoints(V,[-angle1/2,-angle2/2,r])
+      V = larTranslate([-angle1/2,-angle2/2,r])(V)
       domain = V,CV
       x = lambda p : p[2]*COS(p[0])*COS(p[1])
       y = lambda p : p[2]*COS(p[0])*SIN(p[1])

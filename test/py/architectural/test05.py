@@ -1,4 +1,4 @@
-""" D LAR model input and handling """
+""" 3D mock-up of apartment block """
 from pyplasm import *
 from scipy import *
 import os,sys
@@ -39,3 +39,21 @@ assembly2D = evalStruct(plan)
 assembly1D = larCells(face2edge)(assembly2D)
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))
 
+stair = spiralStair(width=0.2,R=3,r=0.25,riser=0.1,pitch=4.4,nturns=1.75,steps=36)
+stair = larApply(r(0,0,3*PI/4))(stair)
+stair = larApply(t(0,-3,0))(stair)
+stairColumn = larApply(t(0,-3,0))(larRod(0.25,4.2)())
+mod_1 = larQuote1D( 6*[0.2,-3.8] )
+assembly3D = larBinOps(larModelProduct)(assembly2D)(mod_1)
+VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly3D))))
+
+horClosures = horizontalClosures([0.2,-3.8]*12 +[0.2])(assembly2D)
+VIEW(STRUCT(horClosures))
+
+wire = SKEL_1(INSR(PROD)(AA(QUOTE)([[6,9,9,9,9,6],[-3,10,11],[4]*12])))
+VIEW(wire)
+frame3D = T(1)(-24)(OFFSET([.2,.6,.2])(wire))
+VIEW(frame3D)
+
+assembly3D = evalStruct(Struct([stairColumn,stair,t(0,0,4)]*12))
+VIEW(STRUCT(CAT(AA(MKPOLS)(assembly3D)) + horClosures + [frame3D]))

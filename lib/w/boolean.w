@@ -199,7 +199,7 @@ def vertexSieve(model1, model2):
 	V2,CV2 = larModelBreak(model2)
 	n = len(V1); m = len(V2)
 	def shift(CV, n): 
-		return [[v+n for v in cell]for cell in CV]
+		return [[v+n for v in cell] for cell in CV]
 	CV2 = shift(CV2,n)
 @}
 %-------------------------------------------------------------------------------
@@ -607,7 +607,7 @@ V1,CV1 = model1
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
 model2 = randomTriangulation(100,2,'cuboid')
 V2,CV2 = model2
-V2 = scalePoints(V2, [2,2])
+V2 = larScale( [2,2])(V2)
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
 V, n1,n2,n12,BV1,BV2 = boolOps(model1,model2)
@@ -623,13 +623,13 @@ V, n1,n2,n12,BV1,BV2 = boolOps(model1,model2)
 from boolean import *
 model1 = randomTriangulation(100,3,'cuboid')
 V1,CV1 = model1
-V1 = scalePoints(V1, [2,2,2])
-V1 = translatePoints(V1, [-1,-1,-1])
+V1 = larScale( [2,2,2])(V1)
+V1 = larTranslate( [-1,-1,-1])(V1)
 model1 = V1,CV1 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
 model2 = randomTriangulation(100,3,'cuboid')
 V2,CV2 = model2
-V2 = scalePoints(V2, [2,2,2])
+V2 = larScale( [2,2,2])(V2)
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
 V, n1,n2,n12;BV1,BV2 = boolOps(model1,model2)
@@ -646,7 +646,7 @@ V, n1,n2,n12;BV1,BV2 = boolOps(model1,model2)
 from boolean import *
 blue = larSimplexGrid([30,60])
 V2,CV2 = larSimplexGrid([70,40])
-V2 = translatePoints(V2, [.5,.5])
+V2 = larTranslate( [.5,.5])(V2)
 red = V2,CV2
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(blue) ))
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(red) ))

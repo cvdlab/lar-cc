@@ -242,7 +242,7 @@ $\langle\,$Initial indexing of vertex positions\nobreak\ {\footnotesize \NWtarge
 \mbox{}\verb@   V2,CV2 = larModelBreak(model2)@\\
 \mbox{}\verb@   n = len(V1); m = len(V2)@\\
 \mbox{}\verb@   def shift(CV, n): @\\
-\mbox{}\verb@      return [[v+n for v in cell]for cell in CV]@\\
+\mbox{}\verb@      return [[v+n for v in cell] for cell in CV]@\\
 \mbox{}\verb@   CV2 = shift(CV2,n)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -829,7 +829,7 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))@\\
 \mbox{}\verb@model2 = randomTriangulation(100,2,'cuboid')@\\
 \mbox{}\verb@V2,CV2 = model2@\\
-\mbox{}\verb@V2 = scalePoints(V2, [2,2])@\\
+\mbox{}\verb@V2 = larScale( [2,2])(V2)@\\
 \mbox{}\verb@model2 = V2,CV2 @\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)+cellNames(model2,CV2,RED)))@\\
 \mbox{}\verb@V, n1,n2,n12,BV1,BV2 = boolOps(model1,model2)@\\
@@ -853,13 +853,13 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \mbox{}\verb@from boolean import *@\\
 \mbox{}\verb@model1 = randomTriangulation(100,3,'cuboid')@\\
 \mbox{}\verb@V1,CV1 = model1@\\
-\mbox{}\verb@V1 = scalePoints(V1, [2,2,2])@\\
-\mbox{}\verb@V1 = translatePoints(V1, [-1,-1,-1])@\\
+\mbox{}\verb@V1 = larScale( [2,2,2])(V1)@\\
+\mbox{}\verb@V1 = larTranslate( [-1,-1,-1])(V1)@\\
 \mbox{}\verb@model1 = V1,CV1 @\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))@\\
 \mbox{}\verb@model2 = randomTriangulation(100,3,'cuboid')@\\
 \mbox{}\verb@V2,CV2 = model2@\\
-\mbox{}\verb@V2 = scalePoints(V2, [2,2,2])@\\
+\mbox{}\verb@V2 = larScale( [2,2,2])(V2)@\\
 \mbox{}\verb@model2 = V2,CV2 @\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model2)+cellNames(model2,CV2,RED)))@\\
 \mbox{}\verb@V, n1,n2,n12;BV1,BV2 = boolOps(model1,model2)@\\
@@ -884,7 +884,7 @@ Some unit tests of the first Boolean stage are discussed in the following. They 
 \mbox{}\verb@from boolean import *@\\
 \mbox{}\verb@blue = larSimplexGrid([30,60])@\\
 \mbox{}\verb@V2,CV2 = larSimplexGrid([70,40])@\\
-\mbox{}\verb@V2 = translatePoints(V2, [.5,.5])@\\
+\mbox{}\verb@V2 = larTranslate( [.5,.5])(V2)@\\
 \mbox{}\verb@red = V2,CV2@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(blue) ))@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(red) ))@\\

@@ -19,6 +19,32 @@ def lar2polylines (model):
    V,FV = model
    return [[V[v] for v in cell]+[V[cell[0]]] for cell in FV]
 
+
+def larCells(fun):
+   def larCells0(assembly):
+      return TRANS(CONS([S1,COMP([AA(fun),S2])])(TRANS(assembly)))
+   return larCells0
+
+def larVerts(fun):
+   def larCells0(assembly):
+      return TRANS(CONS([ COMP([AA(fun),S1]),S2 ])(TRANS(assembly)))
+   return larCells0
+
+def larBinOps(op):
+   def larCells0(assembly):
+      def larCells1(arg):
+         return AA(op)(DISTR([assembly,arg]))
+      return larCells1
+   return larCells0
+
+
+def larQuote1D(pattern):
+   return larExtrude1( VOID, pattern )
+
+def larQuote0D(pattern):
+   V,CV = larQuote1D(pattern)
+   return V,[[k] for k in range(len(V))] 
+
 def bUnit_to_eEiP(FV,EV):
    """ Subdivide the 1-cells. 
    Return external envelope and interior partitions """
@@ -63,6 +89,39 @@ def spiralStair(width=0.2,R=1.,r=0.5,riser=0.1,pitch=2.,nturns=2.,steps=18):
    CW =[SUM([[0,1,2,3,6,8,10,11],[6*k]*8]) for k in range(nsteps)]
    return W,CW
    
-VIEW(STRUCT(MKPOLS(spiralStair())))
-VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
+if __name__=="__main__":   
+   VIEW(STRUCT(MKPOLS(spiralStair())))
+   VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
+
+""" Solidify horizontal polygons in 3D """
+def solidify(pol):   
+   min=MIN([1])(pol)[0]
+   max=MAX([1])(pol)[0]
+   z = MIN([3])(pol)[0]
+   pol = PROJECT(1)(pol)
+   siz=max-min
+   far_point=max+siz*100 
+   def InftyProject(pol):
+      verts,cells,pols=UKPOL(pol)
+      verts=[[far_point] + v[1:] for v in verts]
+      return MKPOL([verts,cells,pols])  
+   ret=SPLITCELLS(pol)
+   ret=[JOIN([pol,InftyProject(pol)]) for pol in ret]
+   return T(3)(z)(XOR(ret))
+
+def horizontalClosures(pattern):
+   vertical1D = larQuote1D(pattern)
+   vertical0D = larQuote0D(pattern)
+   def horizontalClosures0(assembly2D):
+      out = []
+      for flat2D in assembly2D:
+         V,FV = flat2D
+         EV = face2edge(FV)
+         dwellH3D = larModelProduct([flat2D,vertical0D])
+         dwellV3D = larModelProduct([(V,EV),vertical1D])
+         poly3D = AA(POLYLINE)(lar2polylines(dwellH3D))
+         floors3D = AA(solidify)(poly3D)
+         out += floors3D+MKPOLS(dwellV3D)
+      return out
+   return horizontalClosures0
 

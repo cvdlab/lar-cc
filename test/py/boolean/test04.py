@@ -14,7 +14,7 @@ from mapper import *
 from boolean import *
 blue = larSimplexGrid([30,60])
 V2,CV2 = larSimplexGrid([70,40])
-V2 = translatePoints(V2, [.5,.5])
+V2 = larTranslate( [.5,.5])(V2)
 red = V2,CV2
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(blue) ))
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(red) ))
