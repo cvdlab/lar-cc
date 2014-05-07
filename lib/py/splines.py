@@ -95,3 +95,8 @@ def larCoonsPatch (args):
       return ret
    return map_fn
 
+""" Domain decomposition for 1D bspline maps """
+def larDom(knots,tics=32): 
+   domain = knots[-1]-knots[0]
+   return larIntervals([tics*domain])([domain])
+

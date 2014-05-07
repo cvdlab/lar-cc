@@ -62,11 +62,15 @@ The LAR representation find his roots in the design language Plasm~\cite{Paoluzz
 \section{Introduction}\label{sec:intro}
 %===============================================================================
 %-------------------------------------------------------------------------------
-% 2 column
 Looking for simplicity. 
 Form and function. Who comes first?
 CAD is evolving with the net.
-Algebraic geometry on graphics processors.
+Algebraic topology on graphics processors.
+
+In this paper we discuss a novel linear algebraic representation, supporting topological methods to represent and process mesh connectivity information for dimension-independent cellular complexes, including simplicial, cuboidal, and polytopal cells. This representation works even with the awkward domain partitions---with non-convex and/or non-manifold cells, and cells non homeomorphic to balls---that may arise in Building Information Modeling (BIM) and Geographic Information Systems (GIS) applications. Simplicial and cuboidal cell complexes provide the standard mesh representation used in most science and engineering simulations, whereas complexes of possibly non-convex or non-contractible cells may be needed to represent the built environment in software applications for the Architecture, Engineering, and Construction (AEC) sector.
+
+Our approach provides a unified representation where concepts and techniques from computer graphics (graphics primitives), geometric modelling (curves and surfaces) and solid modelling (solids and higher dim manifolds) converge with those from computational science (structured and unstructured meshes) in a common computational structure. This representation may be used in novel and highly demanding application areas\footnote{It is being tested within the \href{http://standards.ieee.org/develop/project/3333.2.html}{IEEE P3333.2} -- Standard for Three-Dimensional Model Creation Using Unprocessed 3D Medical Data.} (see for instance Figure~\ref{fig:bone}), and may be supported by modern silicon-based APIs\footnote{A prototype implementation with  \href{http://www.khronos.org/opencl/}{OpenCL} and \href{http://www.khronos.org/webcl/}{WebCL} is on the way.} on last and next generation hardware.
+
 
 %-------------------------------------------------------------------------------
 %===============================================================================
@@ -336,6 +340,8 @@ VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))
 %-------------------------------------------------------------------------------
 
 
+
+
 \paragraph{Initial 3D assembly of apartment block}
 
 %-------------------------------------------------------------------------------
@@ -565,6 +571,7 @@ A fully parametric \texttt{spiralStair} functions is given below, where the majo
 	
 if __name__=="__main__":	
 	VIEW(STRUCT(MKPOLS(spiralStair())))
+	VIEW(SKEL_1(STRUCT(MKPOLS(spiralStair())))
 	VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
 @}
 %-------------------------------------------------------------------------------

@@ -199,6 +199,234 @@ def larCoonsPatch (args):
 
 
 %===============================================================================
+\section{Bsplines}
+%===============================================================================
+The B-splines discussed in this section are called \emph{non-uniform}
+because different spline segments may correspond to different
+intervals in parameter space, unlike uniform B-splines. 
+The basis polynomials, and consequently the spline shape and the other
+properties, are defined by a non-decreasing sequence of real
+numbers
+\[
+t_0 \leq t_1 \leq\cdots\leq t_n,
+\]
+called the {\it knot sequence}.  Splines of this kind are also named
+\emph{NUB-splines} in the remainder of this book,\footnote{Some authors
+call them non-uniform non-rational B-splines.  We prefer to emphasize
+that they are polynomial splines.} where the name stands for
+Non-Uniform B-splines. 
+
+The knot sequence is used to define the basis polynomials which blend
+the control points.  In particular, each subset of $k+2$ adjacent knot
+values is used to compute a basis polynomial of degree $k$.  Notice
+that some subsequent knots may coincide.  In this case we speak of 
+\emph{multiplicity} of the knots.
+
+
+\paragraph{Note}\index{Splines!number of points and joints}
+
+In non-uniform B-splines the number $n+1$ of {\em knot values} is
+greater than the number $m+1$ of control points $\p{p}_0, \ldots,
+\p{p}_m$.  In particular, the relation
+\begin{equation}
+	n = m+k+1,
+	\label{eq:knotsNumber}
+\end{equation}
+where $k$ is the \emph{degree} of spline segments, must hold between
+the number of knots and the number of control points.  The quantity $h
+= k+1$ is called the \emph{order} of the spline.  It will be useful
+when giving recursive formulas to compute the B-basis polynomials. 
+Let us remember, e.g., that a spline of order four is made of cubic
+segments.
+
+
+\paragraph{Non-uniform B-spline flexibility}
+\index{Non-uniform B-splines!flexibility}
+
+Such splines have a much greater flexibility than the uniform ones. 
+The basis polynomial associated with each control point may vary
+depending on the subset of knots it depends on.  Spline segments may
+be parametrized over intervals of different size, and even reduced to
+a single point.  Therefore, the continuity at a joint may be reduced, 
+e.g.~from $C^{2}$ to $C^{1}$ to $C^{0}$ and even to none by suitably increasing the multiplicity
+of a knot.
+
+%-------------------------------------------------------------------------------
+\subsection{Definitions}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Geometric entities}\index{Geometric!entities}
+
+In order to fully understand the construction of a non-uniform B-spline, it may
+be useful to recall the main inter-relationships among the 5 geometric
+entities that enter the definition.
+
+\paragraph{Control points} \hspace{-2mm}are denoted as $\p{p}_{i}$, 
+with $0\leq i\leq m$.  A non-uniform B-spline usually approximates the control 
+points. 
+
+\paragraph{Knot values} \hspace{-2mm}are denoted as $t_{i}$, with $0\leq i\leq 
+n$.  It must be $n = m+k+1$, where $k$ is the spline degree.
+Knot values are used to define the B-spline polynomials. They also 
+define the join points (or joints) between adjacent spline segments. 
+When two consecutive knots coincide, the spline segment associated with 
+their interval reduces to a point.
+
+\paragraph{Spline degree} \hspace{-2mm}is defined as the degree of the
+B-basis functions which are combined with the control points.  The
+degree is denoted as $k$.  It is connected to the spline order $h =
+k+1$.  The most used non-uniform B-splines are either cubic or quadratic.  The
+image of a linear non-uniform B-spline is a polygonal line.  The image of a
+non-uniform B-spline of degree $0$ coincides with the sequence of control
+points.
+
+\paragraph{B-basis polynomials} \hspace{-2mm}are denoted as $B_{i,h}(t)$.  They are
+univariate polynomials in the $t$ indeterminate, computed by using the
+recursive formulas of Cox and de Boor.  The $i$ index is associated with
+the first one of values in the knot subsequence
+$(t_{i},t_{i+1},\ldots,t_{i+h})$ used to compute $B_{i,h}(t)$.  The
+second index is called \emph{order} of the polynomial.
+
+\paragraph{Spline segments} \hspace{-2mm}are defined as polynomial vector functions
+of a single parameter.  Such functions are denoted as $\p{Q}_{i}(t)$,
+with $k\leq i\leq m$.  A $\p{Q}_{i}(t)$ spline segment is obtained by a
+combination of the $i$-th control point and the $k$ previous points
+with the basis polynomials of order $h$ associated to the same
+indices.  It is easy to see that the number of spline segments is
+$m-K+1$.
+
+
+%-------------------------------------------------------------------------------
+\subsection{Computation of a B-spline mapping}
+%-------------------------------------------------------------------------------
+
+The B-spline mapping, i.e. the vector-valued polynomial to be mapped over a 1D domain
+discretisation by the \texttt{larMap} operator, is computed by making reference to the 
+\texttt{pyplasm} implementation given by the \texttt{BSPLINE} contained in the 
+\texttt{fenvs.py} library in the \texttt{pyplasm} package.
+
+\texttt{BSPLINE} is a third-order function, that must be ordinately applied to 
+\texttt{degree}, \texttt{knots}, and \texttt{controlpoints}.
+
+
+%-------------------------------------------------------------------------------
+\subsection{Domain computation}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Domain decomposition for 1D bspline maps
+@{""" Domain decomposition for 1D bspline maps """
+def larDom(knots,tics=32): 
+	domain = knots[-1]-knots[0]
+	return larIntervals([tics*domain])([domain])
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Examples}
+%-------------------------------------------------------------------------------
+
+\paragraph{Two examples of B-spline curves using lar-cc}
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test08.py
+@{""" Two examples of B-spline curves using lar-cc """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+controls = [[0,0],[-1,2],[1,4],[2,3],[1,1],[1,2],[2.5,1],[2.5,3],[4,4],[5,0]];
+knots = [0,0,0,0,1,2,3,4,5,6,7,7,7,7]
+bspline = BSPLINE(3)(knots)(controls)
+obj = larMap(bspline)(larDom(knots))
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+
+controls = [[0,1],[1,1],[2,0],[3,0],[4,0],[5,-1],[6,-1]]
+knots = [0,0,0,1,2,3,4,5,5,5]
+bspline = BSPLINE(2)(knots)(controls)
+obj = larMap(bspline)(larDom(knots))
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Bezier curve as a B-spline curve}
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test09.py
+@{""" Bezier curve as a B-spline curve """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+controls = [[0,1],[0,0],[1,1],[1,0]]
+bezier = larBezierCurve(controls)
+dom = larIntervals([32])([1])
+obj = larMap(bezier)(dom)
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+
+knots = [0,0,0,0,1,1,1,1]
+bspline = BSPLINE(3)(knots)(controls)
+dom = larIntervals([100])([knots[-1]-knots[0]])
+obj = larMap(bspline)(dom)
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{B-spline curve: effect of double or triple control points}
+
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test10.py
+@{""" B-spline curve: effect of double or triple control points """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+controls1 = [[0,0],[2.5,5],[6,1],[9,3]]
+controls2 = [[0,0],[2.5,5],[2.5,5],[6,1],[9,3]]
+controls3 = [[0,0],[2.5,5],[2.5,5],[2.5,5],[6,1],[9,3]]
+knots = [0,0,0,0,1,1,1,1]
+bspline1 = larMap( BSPLINE(3)(knots)(controls1) )(larDom(knots))
+knots = [0,0,0,0,1,2,2,2,2]
+bspline2 = larMap( BSPLINE(3)(knots)(controls2) )(larDom(knots))
+knots = [0,0,0,0,1,2,3,3,3,3]
+bspline3 = larMap( BSPLINE(3)(knots)(controls3) )(larDom(knots))
+
+VIEW(STRUCT( CAT(AA(MKPOLS)([bspline1,bspline2,bspline3])) + 
+	[POLYLINE(controls1)]) )
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Periodic B-spline curve}
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test11.py
+@{""" Periodic B-spline curve """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+controls = [[0,1],[0,0],[1,0],[1,1],[0,1]]
+knots = [0,0,0,1,2,3,3,3]				# non-periodic B-spline
+bspline = BSPLINE(2)(knots)(controls)
+obj = larMap(bspline)(larDom(knots))  
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+
+knots = [0,1,2,3,4,5,6,7]				# periodic B-spline
+bspline = BSPLINE(2)(knots)(controls) 	
+obj = larMap(bspline)(larDom(knots))
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+@}
+%-------------------------------------------------------------------------------
+
+%===============================================================================
 \section{Computational framework}
 %===============================================================================
 \subsection{Exporting the library}
@@ -213,6 +441,7 @@ def larCoonsPatch (args):
 @< Multidimensional transfinite Bernstein-Bezier Basis @>
 @< Multidimensional transfinite B\'ezier @>
 @< Transfinite Coons patches @>
+@< Domain decomposition for 1D bspline maps @>
 @}
 
 
