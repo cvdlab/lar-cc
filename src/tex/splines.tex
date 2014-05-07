@@ -3,7 +3,7 @@
 \geometry{letterpaper}		%...ora4paperora5paperor...
 %\geometry{landscape}		%Activateforforrotatedpagegeometry
 %\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+\usepackage{graphicx}				%Usepdf,png,jpg,orepswithpdflatex;useepsinDVImode
 								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
 \usepackage{amssymb}
 \usepackage{hyperref}
@@ -255,7 +255,7 @@ of a knot.
 \subsection{Definitions}
 %-------------------------------------------------------------------------------
 
-\subsubsection{Geometric entities}\index{Geometric!entities}
+\subsubsection{Geometric entities}
 
 In order to fully understand the construction of a non-uniform B-spline, it may
 be useful to recall the main inter-relationships among the 5 geometric
@@ -426,6 +426,182 @@ VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Effect of knot multiplicity on B-spline curve}
+
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test12.py
+@{""" Effect of knot multiplicity on B-spline curve """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+points = [[0,0],[-1,2],[1,4],[2,3],[1,1],[1,2],[2.5,1]]
+b1 = BSPLINE(2)([0,0,0,1,2,3,4,5,5,5])(points)
+VIEW(STRUCT(MKPOLS( larMap(b1)(larDom([0,5])) ) + [POLYLINE(points)]))
+b2 = BSPLINE(2)([0,0,0,1,1,2,3,4,4,4])(points)
+VIEW(STRUCT(MKPOLS( larMap(b2)(larDom([0,5])) ) + [POLYLINE(points)]))
+b3 = BSPLINE(2)([0,0,0,1,1,1,2,3,3,3])(points)
+VIEW(STRUCT(MKPOLS( larMap(b3)(larDom([0,5])) ) + [POLYLINE(points)]))
+b4 = BSPLINE(2)([0,0,0,1,1,1,1,2,2,2])(points)
+VIEW(STRUCT(MKPOLS( larMap(b4)(larDom([0,5])) ) + [POLYLINE(points)]))
+@}
+%-------------------------------------------------------------------------------
+
+
+TODO: extend biplane mapping to unconnected domain ... (remove BUG above)
+
+
+
+%===============================================================================
+\section{NURBS}
+%===============================================================================
+
+
+Rational non-uniform B-splines are normally denoted as NURB splines or
+simply as NURBS. These splines are very important for both graphics
+and CAD applications. In particular:
+
+
+\begin{enumerate}
+
+\item 
+Rational curves and splines are invariant with respect to affine and
+projective transformations.  Consequently, to transform or
+project a NURBS it is sufficient to transform or project its
+control points, leaving to the graphics hardware the task of sampling
+or rasterizing the transformed curve.
+
+\item 
+NURBS represent exactly the conic sections, i.e.~circles, ellipses, 
+parabol\ae, iperbol\ae. Such curves are very frequent in mechanical 
+CAD, where several shapes and geometric constructions are based on 
+such geometric primitives.
+
+\item
+Rational B-splines are very flexible, since (a) the available degrees
+of freedom concern both degree, control points, knot values and
+weights; (b) can be locally interpolant or approximant; (c) can
+alternate spline segments with different degree; and (d)
+different continuity at join points.
+
+\item
+They also allow for local variation of ``parametrization velocity", or
+better, allow for modification of the norm of velocity vector along
+the spline, defined as the derivative of the curve with respect to the
+arc length.  For this purpose it is sufficient to properly modify the
+knot sequence.  This fact allows easy modification of the sampling density
+of spline points along segments with higher or lower curvature, while
+maintaining the desired appearance of smoothness.
+
+\end{enumerate}
+
+As a consequence of their usefulness for applications, NURBS are
+largely available when using geometric libraries or CAD kernels.
+
+%-------------------------------------------------------------------------------
+\subsection{Rational B-splines of arbitrary degree}
+%-------------------------------------------------------------------------------
+
+A rational B-spline segment $\v{R}_{i}(t)$ is defined as the
+projection from the origin on the hyperplane $x_{d+1}=1$ of a
+polynomial B-spline segment $\v{P}_{i}(u)$ in $\E^{d+1}$ homogeneous
+space.  
+
+Using the same approach adopted when discussing rational B\'ezier
+curves, where $\p{q}_{i} = (w_{i}\p{p}_{i}, w_{i})\in\E^{d+1}$ are the
+$m+1$ homogeneous control points, the equation of the rational
+B-spline segment of degree $k$ with $n+1$ knots, may be therefore
+written as
+\begin{equation}
+    \p{R}_i(t) = 
+    \sum_{\ell=0}^k 
+    w_{i-\ell}\,\p{p}_{i-\ell} 
+    {B_{i-\ell,k+1}(t) \over w(t)}
+ = 
+    \sum_{\ell=0}^k 
+    \p{p}_{i-\ell} 
+    N_{i-\ell,k+1}(t)
+    \label{eq:NUBgeneriche1}
+\end{equation}
+with $ k\leq i\leq m$,  $t\in [t_{i}, t_{i+1})$, and
+\[
+w(t) = \sum_{\ell=0}^k
+w_{i-\ell} B_{i-\ell,k+1}(t),
+\]
+where $N_{i,h}(t)$ is the non-uniform rational
+B-basis function of initial value $t_{i}$ and order $h$.
+A global representation of the NURB spline can be given, due to the 
+local support of the $N_{i,h}(t)$ functions, i.e.~to the fact that 
+they are zero outside the interval $[t_{i},t_{i+h})$. So:
+\[
+\p{R}(t) =  \bigcup_{i=k}^{m} \p{R}_i(t) = 
+\sum_{i=0}^{m}\p{p}_{i}\,N_{i,h}(t), \qquad t\in [t_{k},t_{m+1}).
+\]
+
+NURB splines can be computed as non-uniform B-splines by using homogeneous
+control points, and finally by dividing the Cartesian coordinate
+maps times the homogeneous one.  This approach will be used in
+the NURBS implementation given later in this chapter.  A more
+efficient and numerically stable variation of the Cox and de Boor
+formula for the rational case is given by
+Farin~\cite{Farin:88}, p.~196.
+
+
+%-------------------------------------------------------------------------------
+\subsection{Computation of a NURBS mapping}
+%-------------------------------------------------------------------------------
+
+The NURBS mapping, i.e. the vector-valued polynomial to be mapped over a 1D domain
+discretisation by the \texttt{larMap} operator, is computed by making reference to the 
+\texttt{pyplasm} implementation given by the \texttt{RATIONALBSPLINE} contained in the 
+\texttt{fenvs.py} library in the \texttt{pyplasm} package.
+
+\texttt{RATIONALBSPLINE} is a third-order function, that must be ordinately applied to 
+\texttt{degree}, \texttt{knots}, and \texttt{controlpoints}.
+
+%-------------------------------------------------------------------------------
+@D NURBS mapping definition
+@{""" Alias for the pyplasm definition (too long :o) """
+NURBS = RATIONALBSPLINE
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Examples}
+%-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.33\linewidth]{images/nurbs-circle} 
+   \caption{Circle 2D \emph{exactly} implemented as a 9-point NURBS curve.}
+   \label{fig:example}
+\end{figure}
+
+
+\paragraph{Circle implemented as 9-point NURBS curve}
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test13.py
+@{""" Circle implemented as 9-point NURBS curve """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from splines import *
+
+knots = [0,0,0,1,1,2,2,3,3,4,4,4]
+_p=math.sqrt(2)/2.0
+controls = [[-1,0,1], [-_p,_p,_p], [0,1,1], [_p,_p,_p],[1,0,1], [_p,-_p,_p], [0,-1,1], [-_p,-_p,_p], [-1,0,1]]
+nurbs = NURBS(2)(knots)(controls)
+obj = larMap(nurbs)(larDom(knots))
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+@}
+%-------------------------------------------------------------------------------
+
+
+
 %===============================================================================
 \section{Computational framework}
 %===============================================================================
@@ -442,6 +618,7 @@ VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
 @< Multidimensional transfinite B\'ezier @>
 @< Transfinite Coons patches @>
 @< Domain decomposition for 1D bspline maps @>
+@< NURBS mapping definition @>
 @}
 
 

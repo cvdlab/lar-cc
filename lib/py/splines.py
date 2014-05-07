@@ -100,3 +100,6 @@ def larDom(knots,tics=32):
    domain = knots[-1]-knots[0]
    return larIntervals([tics*domain])([domain])
 
+""" Alias for the pyplasm definition (too long :o) """
+NURBS = RATIONALBSPLINE
+
