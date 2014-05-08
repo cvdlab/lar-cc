@@ -1,8 +1,10 @@
 """ Example of transfinite Coons surface """
 import sys
 """ import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
+sys.path.insert(0, 'lib/py/') 
 from splines import *
+
+
 Su0 = larBezier(S1)([[0,0,0],[10,0,0]])
 Su1 = larBezier(S1)([[0,10,0],[2.5,10,3],[5,10,-3],[7.5,10,3],[10,10,0]])
 Sv0 = larBezier(S2)([[0,0,0],[0,0,3],[0,10,3],[0,10,0]])

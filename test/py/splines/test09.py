@@ -1,8 +1,9 @@
 """ Bezier curve as a B-spline curve """
 import sys
 """ import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
+sys.path.insert(0, 'lib/py/') 
 from splines import *
+
 
 controls = [[0,1],[0,0],[1,1],[1,0]]
 bezier = larBezierCurve(controls)

@@ -1,8 +1,9 @@
 """ B-spline curve: effect of double or triple control points """
 import sys
 """ import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
+sys.path.insert(0, 'lib/py/') 
 from splines import *
+
 
 controls1 = [[0,0],[2.5,5],[6,1],[9,3]]
 controls2 = [[0,0],[2.5,5],[2.5,5],[6,1],[9,3]]

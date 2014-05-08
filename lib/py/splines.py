@@ -160,3 +160,64 @@ if __name__=="__main__":
    VIEW(graph)
    VIEW(STRUCT(MKPOLS(graphs[0]) + MKPOLS(graphs[-1])))
 
+
+def TBSPLINE(U):
+   def TBSPLINE0(degree):
+      def TBSPLINE1(knots):
+         def TBSPLINE2(points_fn):
+   
+            n=len(points_fn)-1
+            m=len(knots)-1
+            k=degree+1
+            T=knots
+            tmin,tmax=T[k-1],T[n+1]
+   
+            # see http://www.na.iac.cnr.it/~bdv/cagd/spline/B-spline/bspline-curve.html
+            if len(knots)!=(n+k+1):
+               raise Exception("Invalid point/knots/degree for bspline!")
+   
+            # de boord coefficients
+            def N(i,k,t):
+   
+               # Ni1(t)
+               if k==1: 
+                  if(t>=T[i] and t<T[i+1]) or (t==tmax and t>=T[i] and t<=T[i+1]): 
+                     # i use strict inclusion for the max value
+                     return 1
+                  else:
+                     return 0
+   
+               # Nik(t)
+               ret=0
+   
+               num1,div1= t-T[i], T[i+k-1]-T[i]  
+               if div1!=0: ret+=(num1/div1) * N(i,k-1,t)
+               # elif num1!=0: ret+=N(i,k-1,t)
+   
+               num2,div2=T[i+k]-t, T[i+k]-T[i+1]
+               if div2!=0:  ret+=(num2/div2) * N(i+1,k-1,t)
+               # elif num2!=0: ret+=N(i,k-1,t)
+   
+               return ret
+   
+            # map function
+            def map_fn(point):
+               t=U(point)
+   
+               # if control points are functions
+               points=[f(point) if callable(f) else f for f in points_fn]
+   
+               target_dim=len(points[0])
+               ret=[0 for i in range(target_dim)];
+               for i in range(n+1):
+                  coeff=N(i,k,t) 
+                  for M in range(target_dim):
+                     ret[M]+=points[i][M]*coeff
+               return ret
+   
+            return map_fn
+   
+         return TBSPLINE2
+      return TBSPLINE1
+   return TBSPLINE0
+

@@ -1,8 +1,9 @@
 """ Example of bilinear tensor product surface patch """
 import sys
 """ import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
+sys.path.insert(0, 'lib/py/') 
 from splines import *
+
 
 controlpoints=[
    [[0,0,0],[2,0,1],[3,1,1]],

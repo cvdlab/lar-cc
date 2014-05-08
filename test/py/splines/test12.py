@@ -1,8 +1,9 @@
 """ Effect of knot multiplicity on B-spline curve """
 import sys
 """ import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
+sys.path.insert(0, 'lib/py/') 
 from splines import *
+
 
 points = [[0,0],[-1,2],[1,4],[2,3],[1,1],[1,2],[2.5,1]]
 b1 = BSPLINE(2)([0,0,0,1,2,3,4,5,5,5])(points)

@@ -331,10 +331,7 @@ def larDom(knots,tics=32):
 %-------------------------------------------------------------------------------
 @O test/py/splines/test08.py
 @{""" Two examples of B-spline curves using lar-cc """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 controls = [[0,0],[-1,2],[1,4],[2,3],[1,1],[1,2],[2.5,1],[2.5,3],[4,4],[5,0]];
 knots = [0,0,0,0,1,2,3,4,5,6,7,7,7,7]
@@ -356,10 +353,7 @@ VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test09.py
 @{""" Bezier curve as a B-spline curve """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 controls = [[0,1],[0,0],[1,1],[1,0]]
 bezier = larBezierCurve(controls)
@@ -382,10 +376,7 @@ VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test10.py
 @{""" B-spline curve: effect of double or triple control points """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 controls1 = [[0,0],[2.5,5],[6,1],[9,3]]
 controls2 = [[0,0],[2.5,5],[2.5,5],[6,1],[9,3]]
@@ -408,10 +399,7 @@ VIEW(STRUCT( CAT(AA(MKPOLS)([bspline1,bspline2,bspline3])) +
 %-------------------------------------------------------------------------------
 @O test/py/splines/test11.py
 @{""" Periodic B-spline curve """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 controls = [[0,1],[0,0],[1,0],[1,1],[0,1]]
 knots = [0,0,0,1,2,3,3,3]				# non-periodic B-spline
@@ -432,10 +420,7 @@ VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test12.py
 @{""" Effect of knot multiplicity on B-spline curve """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 points = [[0,0],[-1,2],[1,4],[2,3],[1,1],[1,2],[2.5,1]]
 b1 = BSPLINE(2)([0,0,0,1,2,3,4,5,5,5])(points)
@@ -539,6 +524,125 @@ if __name__=="__main__":
 	graph = STRUCT(CAT(AA(MKPOLS)(graphs)))
 	VIEW(graph)
 	VIEW(STRUCT(MKPOLS(graphs[0]) + MKPOLS(graphs[-1])))
+@}
+%-------------------------------------------------------------------------------
+
+
+%===============================================================================
+\section{Transfinite B-splines}
+%===============================================================================
+
+
+
+%-------------------------------------------------------------------------------
+@D Transfinite B-splines
+@{
+def TBSPLINE(U):
+	def TBSPLINE0(degree):
+		def TBSPLINE1(knots):
+			def TBSPLINE2(points_fn):
+	
+				n=len(points_fn)-1
+				m=len(knots)-1
+				k=degree+1
+				T=knots
+				tmin,tmax=T[k-1],T[n+1]
+	
+				# see http://www.na.iac.cnr.it/~bdv/cagd/spline/B-spline/bspline-curve.html
+				if len(knots)!=(n+k+1):
+					raise Exception("Invalid point/knots/degree for bspline!")
+	
+				# de boord coefficients
+				def N(i,k,t):
+	
+					# Ni1(t)
+					if k==1: 
+						if(t>=T[i] and t<T[i+1]) or (t==tmax and t>=T[i] and t<=T[i+1]): 
+							# i use strict inclusion for the max value
+							return 1
+						else:
+							return 0
+	
+					# Nik(t)
+					ret=0
+	
+					num1,div1= t-T[i], T[i+k-1]-T[i]  
+					if div1!=0: ret+=(num1/div1) * N(i,k-1,t)
+					# elif num1!=0: ret+=N(i,k-1,t)
+	
+					num2,div2=T[i+k]-t, T[i+k]-T[i+1]
+					if div2!=0:  ret+=(num2/div2) * N(i+1,k-1,t)
+					# elif num2!=0: ret+=N(i,k-1,t)
+	
+					return ret
+	
+				# map function
+				def map_fn(point):
+					t=U(point)
+	
+					# if control points are functions
+					points=[f(point) if callable(f) else f for f in points_fn]
+	
+					target_dim=len(points[0])
+					ret=[0 for i in range(target_dim)];
+					for i in range(n+1):
+						coeff=N(i,k,t) 
+						for M in range(target_dim):
+							ret[M]+=points[i][M]*coeff
+					return ret
+	
+				return map_fn
+	
+			return TBSPLINE2
+		return TBSPLINE1
+	return TBSPLINE0
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test13.py
+@{""" Periodic B-spline curve """
+@< Importing the library @>
+
+controls = [[0,1],[0,0],[1,0],[1,1],[0,1]]
+knots = [0,0,0,1,2,3,3,3]				# non-periodic B-spline
+tbspline = TBSPLINE(S1)(2)(knots)(controls)
+obj = larMap(tbspline)(larDom(knots))  
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+
+knots = [0,1,2,3,4,5,6,7]				# periodic B-spline
+tbspline = TBSPLINE(S1)(2)(knots)(controls) 	
+obj = larMap(tbspline)(larDom(knots))
+VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Transfinite surface from Bezier control curves and periodic B-spline curve}
+
+In the script below a simple example of Transfinite surface is generated, using 5
+Bezier control curves and a periodic B-spline curve.
+
+%-------------------------------------------------------------------------------
+@O test/py/splines/test14.py
+@{""" Transfinite surface from Bezier control curves and periodic B-spline curve """
+@< Importing the library @>
+
+b1 = BEZIER(S1)([[0,1,0],[0,1,5]])
+b2 = BEZIER(S1)([[0,0,0],[0,0,5]])
+b3 = BEZIER(S1)([[1,0,0],[2,-1,2.5],[1,0,5]])
+b4 = BEZIER(S1)([[1,1,0],[1,1,5]])
+b5 = BEZIER(S1)([[0,1,0],[0,1,5]])
+controls = [b1,b2,b3,b4,b5]
+knots = [0,1,2,3,4,5,6,7]				# periodic B-spline
+knots = [0,0,0,1,2,3,3,3]				# non-periodic B-spline
+tbspline = TBSPLINE(S2)(2)(knots)(controls) 	
+dom = larModelProduct([larDomain([10]),larDom(knots)])
+dom = larIntervals([32,48],'simplex')([1,3])
+obj = larMap(tbspline)(dom)
+VIEW(STRUCT( MKPOLS(obj) ))
+VIEW(SKEL_1(STRUCT( MKPOLS(dom) )))
 @}
 %-------------------------------------------------------------------------------
 
@@ -676,10 +780,7 @@ NURBS = RATIONALBSPLINE
 %-------------------------------------------------------------------------------
 @O test/py/splines/test13.py
 @{""" Circle implemented as 9-point NURBS curve """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 knots = [0,0,0,1,1,2,2,3,3,4,4,4]
 _p=math.sqrt(2)/2.0
@@ -712,6 +813,7 @@ VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
 @< NURBS mapping definition @>
 @< Sampling of a set of B-splines @>
 @< Drawing the graph of a set of B-splines @>
+@< Transfinite B-splines @>
 @}
 
 
@@ -740,10 +842,7 @@ larBernsteinBasis(S1)(3)[0]([0.0])
 %-------------------------------------------------------------------------------
 @O  test/py/splines/test04.py
 @{""" Graph of Bernstein-Bezier basis """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 def larBezierBasisGraph(degree):
 	basis = larBernsteinBasis(S1)(degree)
@@ -762,10 +861,7 @@ VIEW(STRUCT( CAT(AA(MKPOLS)( graphs )) ))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test01.py 
 @{""" Example of Bezier curve """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 controlpoints = [[-0,0],[1,0],[1,1],[2,1],[3,1]]
 dom = larDomain([32])
@@ -782,10 +878,7 @@ VIEW(STRUCT(MKPOLS(obj)))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test02.py  
 @{""" Example of transfinite surface """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 dom = larDomain([20],'simplex')
 C0 = larBezier(S1)([[0,0,0],[10,0,0]])
@@ -803,10 +896,8 @@ VIEW(STRUCT(MKPOLS(obj)))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test03.py  
 @{""" Example of transfinite Coons surface """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
+
 Su0 = larBezier(S1)([[0,0,0],[10,0,0]])
 Su1 = larBezier(S1)([[0,10,0],[2.5,10,3],[5,10,-3],[7.5,10,3],[10,10,0]])
 Sv0 = larBezier(S2)([[0,0,0],[0,0,3],[0,10,3],[0,10,0]])
@@ -825,10 +916,7 @@ VIEW(STRUCT(MKPOLS(out)))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test05.py
 @{""" Example of bilinear tensor product surface patch """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 controlpoints = [
 	[[0,0,0],[2,-4,2]],
@@ -846,10 +934,7 @@ VIEW(STRUCT(MKPOLS(patch)))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test06.py
 @{""" Example of bilinear tensor product surface patch """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
+@< Importing the library @>
 
 controlpoints=[
 	[[0,0,0],[2,0,1],[3,1,1]],
@@ -869,11 +954,7 @@ VIEW(STRUCT(MKPOLS(patch)))
 %-------------------------------------------------------------------------------
 @O test/py/splines/test07.py
 @{""" Example of bilinear tensor product surface patch """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from splines import *
-
+@< Importing the library @>
 controlpoints=[
 	[[ 0,0,0],[0 ,3  ,4],[0,6,3],[0,10,0]],
 	[[ 3,0,2],[2 ,2.5,5],[3,6,5],[4,8,2]],
@@ -908,6 +989,16 @@ from simplexn import *
 from larcc import *
 from largrid import *
 from mapper import *
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@D Importing the library
+@{import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/') 
+from splines import *
 @}
 %-------------------------------------------------------------------------------
 
