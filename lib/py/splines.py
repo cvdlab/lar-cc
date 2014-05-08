@@ -103,3 +103,60 @@ def larDom(knots,tics=32):
 """ Alias for the pyplasm definition (too long :o) """
 NURBS = RATIONALBSPLINE
 
+""" Sampling of a set of B-splines of given degree, knots and controls """
+def BSPLINEBASIS(degree):
+   def BSPLINE0(knots):
+      def BSPLINE1(ncontrols):
+         n = ncontrols-1
+         m=len(knots)-1
+         k=degree+1
+         T=knots
+         tmin,tmax=T[k-1],T[n+1]       
+         if len(knots)!=(n+k+1):
+            raise Exception("Invalid point/knots/degree for bspline!")        
+
+         # de Boor coefficients
+         def N(i,k,t):           
+            # Ni1(t)
+            if k==1:
+               if(t>=T[i] and t<T[i+1]) or(t==tmax and t>=T[i] and t<=T[i+1]):
+                  # i use strict inclusion for the max value
+                  return 1
+               else:
+                  return 0          
+            # Nik(t)
+            ret=0
+            
+            num1,div1= t-T[i], T[i+k-1]-T[i]
+            if div1!=0: ret+=(num1/div1) * N(i,k-1,t)          
+            num2,div2=T[i+k]-t, T[i+k]-T[i+1]
+            if div2!=0:  ret+=(num2/div2) * N(i+1,k-1,t)
+            
+            return ret
+         
+         # map function
+         def map_fn(point):
+            t=point[0]
+            return [N(i,k,t) for i in range(n+1)]
+                     
+         return map_fn
+      return BSPLINE1
+   return BSPLINE0
+
+""" Drawing the graph of a set of B-splines """
+if __name__=="__main__":
+
+   knots = [0,0,0,1,1,2,2,3,3,4,4,4]
+   ncontrols = 9
+   degree = 2
+   obj = larMap(BSPLINEBASIS(degree)(knots)(ncontrols))(larDom(knots))
+   
+   funs = TRANS(obj[0])
+   var = AA(CAT)(larDom(knots)[0])
+   cells = larDom(knots)[1]
+   
+   graphs =  [[TRANS([var,fun]),cells] for fun in funs]
+   graph = STRUCT(CAT(AA(MKPOLS)(graphs)))
+   VIEW(graph)
+   VIEW(STRUCT(MKPOLS(graphs[0]) + MKPOLS(graphs[-1])))
+

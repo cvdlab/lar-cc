@@ -454,6 +454,96 @@ TODO: extend biplane mapping to unconnected domain ... (remove BUG above)
 
 
 
+%-------------------------------------------------------------------------------
+\subsection{B-spline basis functions}
+%-------------------------------------------------------------------------------
+
+In mathematics, the support of a function is the set of points where the function is not zero-valued.
+A spline is a sufficiently smooth polynomial function that is piecewise-defined, and possesses a high degree of smoothness at the places where the polynomial pieces connect (which are known as knots).
+
+A B-spline, or Basis spline, is a spline function that has minimal support with respect to a given degree, smoothness, and domain partition. Any spline function of given degree can be expressed as a linear combination of B-splines of that degree. Cardinal B-splines have knots that are equidistant from each other. B-splines can be used for curve-fitting and numerical differentiation of experimental data.
+
+In CAD and computer graphics, spline functions are constructed as linear combinations of B-splines with a set of control points.
+
+\paragraph{Sampling of a set of B-splines}
+Here we provide the code  for  the sampling of a set of B-splines of given degree, knot vector and number of control points.
+
+%-------------------------------------------------------------------------------
+@D Sampling of a set of B-splines
+@{""" Sampling of a set of B-splines of given degree, knots and controls """
+def BSPLINEBASIS(degree):
+	def BSPLINE0(knots):
+		def BSPLINE1(ncontrols):
+			n = ncontrols-1
+			m=len(knots)-1
+			k=degree+1
+			T=knots
+			tmin,tmax=T[k-1],T[n+1]			
+			if len(knots)!=(n+k+1):
+				raise Exception("Invalid point/knots/degree for bspline!")			
+
+			# de Boor coefficients
+			def N(i,k,t):				
+				# Ni1(t)
+				if k==1:
+					if(t>=T[i] and t<T[i+1]) or(t==tmax and t>=T[i] and t<=T[i+1]):
+						# i use strict inclusion for the max value
+						return 1
+					else:
+						return 0				
+				# Nik(t)
+				ret=0
+				
+				num1,div1= t-T[i], T[i+k-1]-T[i]
+				if div1!=0: ret+=(num1/div1) * N(i,k-1,t)				
+				num2,div2=T[i+k]-t, T[i+k]-T[i+1]
+				if div2!=0:  ret+=(num2/div2) * N(i+1,k-1,t)
+				
+				return ret
+			
+			# map function
+			def map_fn(point):
+				t=point[0]
+				return [N(i,k,t) for i in range(n+1)]
+							
+			return map_fn
+		return BSPLINE1
+	return BSPLINE0
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Example}
+
+The script below is used to display the graph of the whole set of basis splines 
+for a given degree, knot vector and number of control points. It may be interesting to note that
+the value stored in \texttt{obj} is the LAR 2-model of a curve (look at \texttt{obj[1]}) embedded in 
+$n$-dimensional space, with $n=9$ (the number of contral points), where every coordinate provides the 
+discretised values of one of the blending functions, i.e.~the values of one B-spline basis function. 
+
+%-------------------------------------------------------------------------------
+@D Drawing the graph of a set of B-splines
+@{""" Drawing the graph of a set of B-splines """
+if __name__=="__main__":
+
+	knots = [0,0,0,1,1,2,2,3,3,4,4,4]
+	ncontrols = 9
+	degree = 2
+	obj = larMap(BSPLINEBASIS(degree)(knots)(ncontrols))(larDom(knots))
+	
+	funs = TRANS(obj[0])
+	var = AA(CAT)(larDom(knots)[0])
+	cells = larDom(knots)[1]
+	
+	graphs =  [[TRANS([var,fun]),cells] for fun in funs]
+	graph = STRUCT(CAT(AA(MKPOLS)(graphs)))
+	VIEW(graph)
+	VIEW(STRUCT(MKPOLS(graphs[0]) + MKPOLS(graphs[-1])))
+@}
+%-------------------------------------------------------------------------------
+
+
+
 %===============================================================================
 \section{NURBS}
 %===============================================================================
@@ -593,7 +683,8 @@ from splines import *
 
 knots = [0,0,0,1,1,2,2,3,3,4,4,4]
 _p=math.sqrt(2)/2.0
-controls = [[-1,0,1], [-_p,_p,_p], [0,1,1], [_p,_p,_p],[1,0,1], [_p,-_p,_p], [0,-1,1], [-_p,-_p,_p], [-1,0,1]]
+controls = [[-1,0,1], [-_p,_p,_p], [0,1,1], [_p,_p,_p],[1,0,1], [_p,-_p,_p], 
+			[0,-1,1], [-_p,-_p,_p], [-1,0,1]]
 nurbs = NURBS(2)(knots)(controls)
 obj = larMap(nurbs)(larDom(knots))
 VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
@@ -619,6 +710,8 @@ VIEW(STRUCT( MKPOLS(obj) + [POLYLINE(controls)] ))
 @< Transfinite Coons patches @>
 @< Domain decomposition for 1D bspline maps @>
 @< NURBS mapping definition @>
+@< Sampling of a set of B-splines @>
+@< Drawing the graph of a set of B-splines @>
 @}
 
 
