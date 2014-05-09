@@ -98,10 +98,7 @@ def larCoonsPatch (args):
 """ Domain decomposition for 1D bspline maps """
 def larDom(knots,tics=32): 
    domain = knots[-1]-knots[0]
-   return larIntervals([tics*domain])([domain])
-
-""" Alias for the pyplasm definition (too long :o) """
-NURBS = RATIONALBSPLINE
+   return larIntervals([tics*int(domain)])([domain])
 
 """ Sampling of a set of B-splines of given degree, knots and controls """
 def BSPLINEBASIS(degree):
@@ -220,4 +217,25 @@ def TBSPLINE(U):
          return TBSPLINE2
       return TBSPLINE1
    return TBSPLINE0
+
+""" Transfinite NURBS """
+def TRATIONALBSPLINE(U):
+   def TRATIONALBSPLINE0(degree):
+      def TRATIONALBSPLINE1(knots):
+         def TRATIONALBSPLINE2(points):
+            bspline=TBSPLINE(U)(degree)(knots)(points)
+            def map_fn(point):         
+               ret=bspline(point)
+               last=ret[-1]
+               if last!=0: ret=[value/last for value in ret]
+               ret=ret[:-1]
+               return ret
+            return map_fn
+         return TRATIONALBSPLINE2
+      return TRATIONALBSPLINE1
+   return TRATIONALBSPLINE0
+
+""" Alias for the pyplasm definition (too long :o) """
+NURBS = RATIONALBSPLINE     # in pyplasm
+TNURBS = TRATIONALBSPLINE   # in lar-cc (only)
 
