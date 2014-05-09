@@ -91,6 +91,7 @@ def spiralStair(width=0.2,R=1.,r=0.5,riser=0.1,pitch=2.,nturns=2.,steps=18):
    
 if __name__=="__main__":   
    VIEW(STRUCT(MKPOLS(spiralStair())))
+   VIEW(SKEL_1(STRUCT(MKPOLS(spiralStair())))
    VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
 
 """ Solidify horizontal polygons in 3D """
