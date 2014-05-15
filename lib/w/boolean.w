@@ -71,10 +71,10 @@ The API will contain the high-level binary functions \texttt{union}, \texttt{int
 %-------------------------------------------------------------------------------
 @D High-level Boolean operations
 @{""" High level Boolean Application Programming Interface """
-def larUnion(lar1,lar2): lar = boolOps(lar1,lar2)
-def larIntersection(lar1,lar2): lar = boolOps(lar1,lar2)
-def larDifference(lar1,lar2): lar = boolOps(lar1,lar2)
-def larXor(lar1,lar2): lar = boolOps(lar1,lar2)
+def larUnion(lar1,lar2): lar = boolOps(lar1,lar2); pass
+def larIntersection(lar1,lar2): lar = boolOps(lar1,lar2); pass
+def larDifference(lar1,lar2): lar = boolOps(lar1,lar2); pass
+def larXor(lar1,lar2): lar = boolOps(lar1,lar2); pass
 @}
 %-------------------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ def larXor(lar1,lar2): lar = boolOps(lar1,lar2)
 The novel Boolean algorithm based on chains is summarised in this section. We will refer to the Boolean union; the other operators (intersection, difference, xor), will be derived accordingly.
 
 \paragraph{Reordering of vertex coordinates}
-First we embed both the (two) arguments in the same space, and order the vertex indices in three consecutive subsets, allocating in the first subset $V_1$ the vertices of $\Lambda^1$, in the second $V_{12}$ the (coincident or very-close) common vertices in $\Lambda^1\cap\Lambda^2$ , and the the third subset $V_2$ the remaining vertices of $\Lambda^2$. 
+First we embed both the (two) arguments $X_1, X_2$ in the same space, and order the vertex indices in three consecutive subsets, allocating in the first subset $V_1$ the vertices of $\Lambda^1$, in the second $V_{12}$ the (coincident or very-close) common vertices in $\Lambda^1\cap\Lambda^2$ , and the the third subset $V_2$ the remaining vertices of $\Lambda^2$. 
 
 \paragraph{Input boundaries extraction}
 Then we construct the boundary operators $\partial_d^1$ and $\partial_d^2$ over $\Lambda^1$ and $\Lambda^2$, respectively.

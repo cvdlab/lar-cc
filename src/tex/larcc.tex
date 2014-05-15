@@ -433,7 +433,7 @@ print "\ncoboundary_0 =\n", csr2DenseMatrix(coboundary(EV,AA(LIST)(range(len(V))
 	pass
 
 def totalChain(cells):
-	return csrCreate([[0] for cell in cells])
+	return csrCreate([[0] for cell in cells])  # ????  zero ??
 
 def boundaryCells(cells,facets):
 	csrBoundaryMat = boundary(cells,facets)

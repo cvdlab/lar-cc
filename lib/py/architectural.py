@@ -88,10 +88,10 @@ def spiralStair(width=0.2,R=1.,r=0.5,riser=0.1,pitch=2.,nturns=2.,steps=18):
    nsteps = len(W)/12
    CW =[SUM([[0,1,2,3,6,8,10,11],[6*k]*8]) for k in range(nsteps)]
    return W,CW
-   
-if __name__=="__main__":   
+
+if __name__=="__main__":
    VIEW(STRUCT(MKPOLS(spiralStair())))
-   VIEW(SKEL_1(STRUCT(MKPOLS(spiralStair())))
+   VIEW(SKEL_1(STRUCT(MKPOLS(spiralStair()))))
    VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
 
 """ Solidify horizontal polygons in 3D """
