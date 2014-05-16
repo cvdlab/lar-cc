@@ -15,7 +15,7 @@ from sysml import *
 
 master = assemblyDiagramInit([2,2,2])([[.4,.6],[.4,.6],[.4,.6]])
 diagram = assemblyDiagramInit([3,3,3])([[.4,.2,.4],[.4,.2,.4],[.4,.2,.4]])
-VIEW(SKEL_1(STRUCT([STRUCT(MKPOLS(master)),T(2)(1),STRUCT(MKPOLS(diagram))])))
+VIEW(SKEL_1(STRUCT([DRAW(master),T(2)(1),DRAW(diagram)])))
 
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
 hpc = cellNumbering (master,hpc)(range(len(master[1])),WHITE,.5)

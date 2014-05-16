@@ -31,7 +31,7 @@ hpc = SKEL_1(STRUCT(MKPOLS(diagram1)))
 V = diagram1[0]
 hpc = cellNumbering ((V,FV),hpc)(interiorFaces,YELLOW,.5)
 VIEW(hpc)
-hpc = cellNumbering ((V,EV),hpc)(range(len(EV)),GREEN,.4)
+hpc = cellNumbering ((V,EV),hpc)([for f in interiorFaces],GREEN,.4)
 VIEW(hpc)
 hpc = cellNumbering ((V,VV),hpc)(range(len(VV)),RED,.3)
 VIEW(hpc)

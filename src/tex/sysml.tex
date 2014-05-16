@@ -129,6 +129,7 @@ def unitDiagram(diagram, size=[1,1,1]):
 \subsection{Cell numbering}
 %-------------------------------------------------------------------------------
 
+
 \paragraph{Drawing numbers of cells}
 
 %-------------------------------------------------------------------------------
@@ -190,7 +191,7 @@ Of course, such nesting may happen several times within a (father) master, produ
 
 
 \paragraph{Task decomposition}
-The procedure to map a subdiagram to a diagram is described below in a top-down manner,
+The procedure to map a diagram to a sub diagram is described below in a top-down manner,
 decomposing the task into an ordered set of subtasks.
 %-------------------------------------------------------------------------------
 @D Subdiagram to diagram mapping
@@ -198,10 +199,19 @@ decomposing the task into an ordered set of subtasks.
 @< 3D window to viewport transformation @>
 
 def diagram2cell(diagram,master,cell):
-	mat = diagram2cellMatrix(diagram)(master,7)
+	mat = diagram2cellMatrix(diagram)(master,cell)
 	diagram =larApply(mat)(diagram)	
+	
+	"""
+	# yet to finish coding
 	V, CV1, CV2, n12 = vertexSieve(master,diagram)
-	master = V, CV1+CV2
+	masterBoundaryFaces = boundaryOfChain(CV,FV)([cell])
+	diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
+	"""
+	V = master[0] + diagram[0]
+	offset = len(master[0])
+	CV = [c for k,c in enumerate(master[1]) if k != cell] + [[v+offset for v in c] for c in diagram[1]]
+	master = V, CV
 	return master
 @}
 %-------------------------------------------------------------------------------
@@ -210,7 +220,6 @@ def diagram2cell(diagram,master,cell):
 %-------------------------------------------------------------------------------
 @D 3D window to viewport transformation
 @{""" 3D window to viewport transformation """
-
 def diagram2cellMatrix(diagram):
 	def diagramToCellMatrix0(master,cell):
 		wdw = min(diagram[0]) + max(diagram[0])			# window3D
@@ -286,7 +295,7 @@ hpc = SKEL_1(STRUCT(MKPOLS(diagram1)))
 V = diagram1[0]
 hpc = cellNumbering ((V,FV),hpc)(interiorFaces,YELLOW,.5)
 VIEW(hpc)
-hpc = cellNumbering ((V,EV),hpc)(range(len(EV)),GREEN,.4)
+hpc = cellNumbering ((V,EV),hpc)([for f in interiorFaces],GREEN,.4)
 VIEW(hpc)
 hpc = cellNumbering ((V,VV),hpc)(range(len(VV)),RED,.3)
 VIEW(hpc)
@@ -306,7 +315,7 @@ from sysml import *
 
 master = assemblyDiagramInit([2,2,2])([[.4,.6],[.4,.6],[.4,.6]])
 diagram = assemblyDiagramInit([3,3,3])([[.4,.2,.4],[.4,.2,.4],[.4,.2,.4]])
-VIEW(SKEL_1(STRUCT([STRUCT(MKPOLS(master)),T(2)(1),STRUCT(MKPOLS(diagram))])))
+VIEW(SKEL_1(STRUCT([DRAW(master),T(2)(1),DRAW(diagram)])))
 
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
 hpc = cellNumbering (master,hpc)(range(len(master[1])),WHITE,.5)
@@ -345,8 +354,6 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larFacets(master))))
 
 masterBoundaryFaces = boundaryOfChain(CV,FV)([7])
 diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
-
-
 @}
 %-------------------------------------------------------------------------------
 
@@ -359,12 +366,68 @@ diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
 \end{figure}
 
 
+\paragraph{progressive refinement of a block diagram}
+
+%-------------------------------------------------------------------------------
+@O test/py/sysml/test04.py
+@{""" progressive refinement of a block diagram """
+@< Initial import of modules @>
+from sysml import *
+DRAW = COMP([VIEW,STRUCT,MKPOLS])
+
+master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])
+V,CV = master
+hpc = SKEL_1(STRUCT(MKPOLS(master)))
+hpc = cellNumbering (master,hpc)(range(len(CV)),CYAN,2)
+VIEW(hpc)
+
+toRemove = [13,33,17,37]
+master = V,[cell for k,cell in enumerate(CV) if not (k in toRemove)]
+DRAW(master)
+
+hpc = SKEL_1(STRUCT(MKPOLS(master)))
+hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
+VIEW(hpc)
+
+toMerge = 29
+cell = MKPOL([master[0],[[v+1 for v in  master[1][toMerge]]],None])
+VIEW(STRUCT([hpc,cell]))
+
+diagram = assemblyDiagramInit([3,1,2])([[2,1,2],[.3],[2.2,.5]])
+master = diagram2cell(diagram,master,toMerge)
+hpc = SKEL_1(STRUCT(MKPOLS(master)))
+hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
+VIEW(hpc)
+
+toRemove = [47]
+master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemove)]
+DRAW(master)
+
+hpc = SKEL_1(STRUCT(MKPOLS(master)))
+hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
+VIEW(hpc)
+
+toMerge = 34
+cell = MKPOL([master[0],[[v+1 for v in  master[1][toMerge]]],None])
+VIEW(STRUCT([hpc,cell]))
+
+diagram = assemblyDiagramInit([5,1,3])([[1.5,0.9,.2,.9,1.5],[.3],[1,1.4,.3]])
+master = diagram2cell(diagram,master,toMerge)
+hpc = SKEL_1(STRUCT(MKPOLS(master)))
+hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
+VIEW(hpc)
+
+toRemove = [53,59]
+master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemove)]
+DRAW(master)
+@}
+%-------------------------------------------------------------------------------
+
+
 %===============================================================================
 \appendix
 \section{Utilities}
 %===============================================================================
-
-
 
 %-------------------------------------------------------------------------------
 @D To compute the boundary (d-1)-chain of a given d-chain

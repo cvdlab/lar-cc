@@ -74,7 +74,6 @@ def cellNumbering (larModel,hpcModel):
 
 
 """ 3D window to viewport transformation """
-
 def diagram2cellMatrix(diagram):
    def diagramToCellMatrix0(master,cell):
       wdw = min(diagram[0]) + max(diagram[0])         # window3D
@@ -97,9 +96,18 @@ def diagram2cellMatrix(diagram):
 
 
 def diagram2cell(diagram,master,cell):
-   mat = diagram2cellMatrix(diagram)(master,7)
+   mat = diagram2cellMatrix(diagram)(master,cell)
    diagram =larApply(mat)(diagram)  
+   
+   """
+   # yet to finish coding
    V, CV1, CV2, n12 = vertexSieve(master,diagram)
-   master = V, CV1+CV2
+   masterBoundaryFaces = boundaryOfChain(CV,FV)([cell])
+   diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
+   """
+   V = master[0] + diagram[0]
+   offset = len(master[0])
+   CV = [c for k,c in enumerate(master[1]) if k != cell] + [[v+offset for v in c] for c in diagram[1]]
+   master = V, CV
    return master
 

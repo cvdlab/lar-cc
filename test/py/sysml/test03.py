@@ -22,14 +22,10 @@ hpc = SKEL_1(STRUCT(MKPOLS(master)))
 hpc = cellNumbering (master,hpc)(range(len(CV)),CYAN,.5)
 VIEW(hpc)
 
-
-
 master = diagram2cell(diagram,master,7)
 VIEW(SKEL_1(STRUCT( MKPOLS(master) )))
 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larFacets(master))))
 
-print "\n boundary of master 3-cell 7 =", boundaryOfChain(CV,FV)([7])
-
-
-
+masterBoundaryFaces = boundaryOfChain(CV,FV)([7])
+diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
