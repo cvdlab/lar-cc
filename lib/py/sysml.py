@@ -107,7 +107,8 @@ def diagram2cell(diagram,master,cell):
    """
    V = master[0] + diagram[0]
    offset = len(master[0])
-   CV = [c for k,c in enumerate(master[1]) if k != cell] + [[v+offset for v in c] for c in diagram[1]]
+   CV = [c for k,c in enumerate(master[1]) if k != cell] + [
+         [v+offset for v in c] for c in diagram[1]]
    master = V, CV
    return master
 

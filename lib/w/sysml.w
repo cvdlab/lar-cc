@@ -210,7 +210,8 @@ def diagram2cell(diagram,master,cell):
 	"""
 	V = master[0] + diagram[0]
 	offset = len(master[0])
-	CV = [c for k,c in enumerate(master[1]) if k != cell] + [[v+offset for v in c] for c in diagram[1]]
+	CV = [c for k,c in enumerate(master[1]) if k != cell] + [
+			[v+offset for v in c] for c in diagram[1]]
 	master = V, CV
 	return master
 @}
@@ -367,6 +368,16 @@ diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
 
 
 \paragraph{progressive refinement of a block diagram}
+
+In this example, a step-by step generation of a simple apartment is produced, using 
+\texttt{assemblyDiagramInit} to produce a block diagram of given \texttt{shape} and 
+\texttt{size}, the \texttt{cellNumbering} function to generate an \emph{hpc} value
+with the numbers of 3-cells in the current "master" diagram, the \texttt{diagram2cell}
+function to map and merge a \texttt{diagram} into a \texttt{cell} of the \texttt{master}.
+
+Remember that in \texttt{lar-cc} the numbering of cells in a model is 0-based (like
+in python). Conversely, in \texttt{pyplasm} the numbering of cells (for example of 
+vertex indices in \texttt{MKPOL}) is 1-based, like in Fortran or MATLAB.   
 
 %-------------------------------------------------------------------------------
 @O test/py/sysml/test04.py
