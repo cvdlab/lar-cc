@@ -193,6 +193,22 @@ Of course, such nesting may happen several times within a (father) master, produ
 \paragraph{Task decomposition}
 The procedure to map a diagram to a sub diagram is described below in a top-down manner,
 decomposing the task into an ordered set of subtasks.
+
+
+The \texttt{diagram2cell} functions below works as follows.  Its job is to map the LAR model \texttt{diagram} (semantically a 3-array of cuboidal blocks) onto the 3D-cell of the \texttt{master} LAR model (another 3-array of cuboidal blocks), indexed by the integer \texttt{cell} parameter. In few words: mapping \texttt{diagram} onto the given \texttt{cell} of \texttt{master}.
+
+First, the matrix \texttt{mat}of this 3D-window to 3D-viewport transformation is computed, by invoking \texttt{diagram2cellMatrix}. Then, the \texttt(mat) transformation is applied to \texttt{vertices}.
+Then both such LAR models are passed as parameters of the \texttt{vertexSieve} function, that returns a single vertex list \texttt{V}, two (reindexed) lists \texttt{CV1} and \texttt{CV2}, and the number \texttt{n12} of common vertices.
+
+We can look at their common incidence matrix as shown in Figure~\ref{}.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.4\linewidth]{images/merge} 
+   \caption{Structure of the characteristic matrix $M(CV)$ afre the merge of two LAR models, and identification of the common vertices.}
+   \label{fig:example}
+\end{figure}
+
 %-------------------------------------------------------------------------------
 @D Subdiagram to diagram mapping
 @{
@@ -201,21 +217,39 @@ decomposing the task into an ordered set of subtasks.
 def diagram2cell(diagram,master,cell):
 	mat = diagram2cellMatrix(diagram)(master,cell)
 	diagram =larApply(mat)(diagram)	
+	(V1,CV1),(V2,CV2) = master,diagram
+	n1,n2 = len(V1), len(V2)
 	
-	"""
-	# yet to finish coding
+	# identification of common vertices
 	V, CV1, CV2, n12 = vertexSieve(master,diagram)
-	masterBoundaryFaces = boundaryOfChain(CV,FV)([cell])
-	diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
-	"""
-	V = master[0] + diagram[0]
-	offset = len(master[0])
-	CV = [c for k,c in enumerate(master[1]) if k != cell] + [
-			[v+offset for v in c] for c in diagram[1]]
+	commonRange = range(n1-n12, n1)
+	newRange = range(n1,n1-n12+n2)
+	
+	# addition of incident vertices into the adjacents of theCell
+	def checkInclusion(V,theCell,newRange):
+		theVerts = [V[v] for v in theCell]
+		theMin, theMax = min(theVerts), max(theVerts)
+		theCell += [v for v in newRange if (
+			theMin[0] <= V[v][0] and theMin[1] <= V[v][1] and theMin[2] <= V[v][2] 
+			and 
+			V[v][0] <= theMax[0] and V[v][1] <= theMax[1] and V[v][2] <= theMax[2] 
+			)]
+		return theCell
+	
+	# addition of new vertices into the adjacents of cell c
+	CV1 = [checkInclusion(V,c,newRange) 
+			if set(c).intersection(commonRange) != set() else c
+			 for c in CV1]
+	
+	# masterBoundaryFaces = boundaryOfChain(CV,FV)([cell])
+	# diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
+	CV = [c for k,c in enumerate(CV1) if k != cell] + CV2
+	
 	master = V, CV
 	return master
 @}
 %-------------------------------------------------------------------------------
+
 
 \paragraph{3D window to viewport transformation}
 %-------------------------------------------------------------------------------
@@ -366,14 +400,38 @@ diagramBoundaryFaces = lar2boundaryFaces(CV,FV)
    \label{fig:mastermerged}
 \end{figure}
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig2} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig4} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig5} 
 
-\paragraph{progressive refinement of a block diagram}
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig6} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig7} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig8} 
+
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig9} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig10} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig11} 
+
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig12} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig13} 
+   \includegraphics[height=0.3\linewidth,width=0.3\linewidth]{images/fig14} 
+
+   \caption{The construction process of the \texttt{master} block diagram built by the example \texttt{test/py/sysml/test4.py} of Section~\ref{sec:master}.}
+   \label{fig:master}
+\end{figure}
+
+\subsection{progressive refinement of a block diagram}
+\label{sec:master}
 
 In this example, a step-by step generation of a simple apartment is produced, using 
 \texttt{assemblyDiagramInit} to produce a block diagram of given \texttt{shape} and 
 \texttt{size}, the \texttt{cellNumbering} function to generate an \emph{hpc} value
 with the numbers of 3-cells in the current "master" diagram, the \texttt{diagram2cell}
 function to map and merge a \texttt{diagram} into a \texttt{cell} of the \texttt{master}.
+
+The construction process is visualised in Figure~\ref{fig:master}.
 
 Remember that in \texttt{lar-cc} the numbering of cells in a model is 0-based (like
 in python). Conversely, in \texttt{pyplasm} the numbering of cells (for example of 
