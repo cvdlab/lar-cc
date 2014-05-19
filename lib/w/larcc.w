@@ -433,7 +433,7 @@ print "\ncoboundary_0 =\n", csr2DenseMatrix(coboundary(EV,AA(LIST)(range(len(V))
 	pass
 
 def totalChain(cells):
-	return csrCreate([[0] for cell in cells])
+	return csrCreate([[0] for cell in cells])  # ????  zero ??
 
 def boundaryCells(cells,facets):
 	csrBoundaryMat = boundary(cells,facets)
@@ -590,12 +590,13 @@ print "\nadj_1_cells =\n", csr2DenseMatrix(adj_1_cells)
     csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
     return V,cells,csr,csrAdjSquareMat
 
-def larFacets(model,dim=3):
+def larFacets(model,dim=3,emptyCellNumber=0):
     """
         Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
         Return (V, (d-1)-cellFacets)
 		"""
     V,cells,csr,csrAdjSquareMat = setup(model,dim)
+    solidCellNumber = len(cells) - emptyCellNumber
     cellFacets = []
     # for each input cell i
     for i in range(len(cells)):
@@ -603,7 +604,7 @@ def larFacets(model,dim=3):
         cell1 = csr[i].tocoo().col
         pairs = zip(adjCells.col,adjCells.data)
         for j,v in pairs:
-            if (i<j):
+            if (i<j) and (i<solidCellNumber):
                 cell2 = csr[j].tocoo().col
                 cell = list(set(cell1).intersection(cell2))
                 cellFacets.append(sorted(cell))

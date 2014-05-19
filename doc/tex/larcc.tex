@@ -1,24 +1,13 @@
-% -------------------------------------------------------------------------
-% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
-% -------------------------------------------------------------------------
-\providecommand{\NWtxtMacroDefBy}{Macro defined by}
-\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
-\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
-\providecommand{\NWtxtDefBy}{Defined by}
-\providecommand{\NWtxtRefIn}{Referenced in}
-\providecommand{\NWtxtNoRef}{Not referenced}
-\providecommand{\NWtxtFileDefBy}{File defined by}
-\providecommand{\NWsep}{${\diamond}$}
-\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
-\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
-  \raisebox{\baselineskip}[1.5ex][0ex]{%
-    \mbox{%
-      \hypertarget{#1}{%
-        \raisebox{-1\baselineskip}[0ex][0ex]{%
-          \mbox{#2}%
-}}}}}
-% -------------------------------------------------------------------------
-
+\newcommand{\NWtarget}[2]{#2}
+\newcommand{\NWlink}[2]{#2}
+\newcommand{\NWtxtMacroDefBy}{Macro defined by}
+\newcommand{\NWtxtMacroRefIn}{Macro referenced in}
+\newcommand{\NWtxtMacroNoRef}{Macro never referenced}
+\newcommand{\NWtxtDefBy}{Defined by}
+\newcommand{\NWtxtRefIn}{Referenced in}
+\newcommand{\NWtxtNoRef}{Not referenced}
+\newcommand{\NWtxtFileDefBy}{File defined by}
+\newcommand{\NWsep}{${\diamond}$}
 \documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
 \usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
 \geometry{letterpaper}		%...ora4paperora5paperor...
@@ -124,7 +113,7 @@ First we give the function \texttt{triples2mat} to make the transformation from 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap1}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From list of triples to scipy.sparse\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
+$\langle\,$From list of triples to scipy.sparse\nobreak\ {\footnotesize \NWtarget{nuweb3a}{3a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def triples2mat(triples,shape="csr"):@\\
@@ -148,7 +137,7 @@ The function \texttt{brc2Coo} transforms a \texttt{BRC} representation in a list
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap2}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Brc to Coo transformation\nobreak\ {\footnotesize 3b}$\,\rangle\equiv$
+$\langle\,$Brc to Coo transformation\nobreak\ {\footnotesize \NWtarget{nuweb3b}{3b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def brc2Coo(ListOfListOfInt):@\\
@@ -170,7 +159,7 @@ Two coordinate compressed sparse matrices \texttt{cooFV} and \texttt{cooEV} are 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap3}
-\protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Brc to Coo transformation\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
+$\langle\,$Test example of Brc to Coo transformation\nobreak\ {\footnotesize \NWtarget{nuweb3c}{3c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> brc2Coo"@\\
@@ -197,7 +186,7 @@ Two coordinate compressed sparse matrices \texttt{cooFV} and \texttt{cooEV} are 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap4}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coo to Csr transformation\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
+$\langle\,$Coo to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4a}{4a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def coo2Csr(COOm):@\\
@@ -218,7 +207,7 @@ Two CSR sparse matrices \texttt{csrFV} and \texttt{csrEV} are generated (by \emp
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap5}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Coo to Csr transformation\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
+$\langle\,$Test example of Coo to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4b}{4b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrFV = coo2Csr(cooFV)@\\
@@ -249,7 +238,7 @@ The transformation from BRC to CSR format is implemented slightly differently, a
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap6}
-\protect\makebox[0ex][r]{\NWtarget{nuweb4c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Brc to Csr transformation\nobreak\ {\footnotesize 4c}$\,\rangle\equiv$
+$\langle\,$Brc to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4c}{4c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrCreate(BRCmatrix,shape=(0,0)):@\\
@@ -274,7 +263,7 @@ The conversion to CSR format of the characteristic matrix \emph{faces-vertices} 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap7}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Brc to Csr transformation\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
+$\langle\,$Test example of Brc to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb5a}{5a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> brc2Csr"@\\
@@ -312,7 +301,7 @@ Two Utility functions allow to query the number of rows and columns of a CSR mat
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap8}
-\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Query Matrix shape\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
+$\langle\,$Query Matrix shape\nobreak\ {\footnotesize \NWtarget{nuweb5b}{5b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrGetNumberOfRows(CSRmatrix):@\\
@@ -335,7 +324,7 @@ Two Utility functions allow to query the number of rows and columns of a CSR mat
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap9}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Query Matrix shape\nobreak\ {\footnotesize 6a}$\,\rangle\equiv$
+$\langle\,$Test examples of Query Matrix shape\nobreak\ {\footnotesize \NWtarget{nuweb6a}{6a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csrGetNumberOfRows"@\\
@@ -360,7 +349,7 @@ Two Utility functions allow to query the number of rows and columns of a CSR mat
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap10}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Sparse to dense matrix transformation\nobreak\ {\footnotesize 6b}$\,\rangle\equiv$
+$\langle\,$Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWtarget{nuweb6b}{6b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csr2DenseMatrix(CSRm):@\\
@@ -384,7 +373,7 @@ Two Utility functions allow to query the number of rows and columns of a CSR mat
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap11}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize 6c}$\,\rangle\equiv$
+$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWtarget{nuweb6c}{6c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csr2DenseMatrix"@\\
@@ -407,7 +396,7 @@ By running the file \texttt{test/py/larcc/ex8.py} the reader will get the two ma
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap12}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex8.py"@\nobreak\ {\footnotesize 6d }$\equiv$
+\verb@"test/py/larcc/ex8.py"@\nobreak\ {\footnotesize \NWtarget{nuweb6d}{6d} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from larcc import *@\\
@@ -458,7 +447,7 @@ The following macro provides the IDE interface for the two main matrix operation
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap13}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Matrix product and transposition\nobreak\ {\footnotesize 7}$\,\rangle\equiv$
+$\langle\,$Matrix product and transposition\nobreak\ {\footnotesize \NWtarget{nuweb7}{7}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def matrixProduct(CSRm1,CSRm2):@\\
@@ -518,7 +507,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap14}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize 8}$\,\rangle\equiv$
+$\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWtarget{nuweb8}{8}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrBoundaryFilter(CSRm, facetLengths):@\\
@@ -544,7 +533,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap15}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
+$\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWtarget{nuweb9a}{9a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csrBoundaryFilter"@\\
@@ -565,7 +554,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap16}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize 9b}$\,\rangle\equiv$
+$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWtarget{nuweb9b}{9b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrPredFilter(CSRm, pred):@\\
@@ -589,7 +578,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap17}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize 9c}$\,\rangle\equiv$
+$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWtarget{nuweb9c}{9c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csrPredFilter"@\\
@@ -616,7 +605,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap18}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 10a}$\,\rangle\equiv$
+$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWtarget{nuweb10a}{10a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def boundary(cells,facets):@\\
@@ -642,7 +631,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap19}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 10b}$\,\rangle\equiv$
+$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWtarget{nuweb10b}{10b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], @\\
@@ -675,14 +664,14 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap20}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize 11a}$\,\rangle\equiv$
+$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWtarget{nuweb11a}{11a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def zeroChain(cells):@\\
 \mbox{}\verb@   pass@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def totalChain(cells):@\\
-\mbox{}\verb@   return csrCreate([[0] for cell in cells])@\\
+\mbox{}\verb@   return csrCreate([[0] for cell in cells])  # ????  zero ??@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def boundaryCells(cells,facets):@\\
 \mbox{}\verb@   csrBoundaryMat = boundary(cells,facets)@\\
@@ -705,7 +694,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap21}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize 11b}$\,\rangle\equiv$
+$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWtarget{nuweb11b}{11b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = boundaryCells(CV,FV)@\\
@@ -729,7 +718,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap22}
-\protect\makebox[0ex][r]{\NWtarget{nuweb12a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize 12a}$\,\rangle\equiv$
+$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWtarget{nuweb12a}{12a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def signedBoundary (V,CV,FV):@\\
@@ -774,7 +763,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap23}
-\protect\makebox[0ex][r]{\NWtarget{nuweb12b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 12b}$\,\rangle\equiv$
+$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWtarget{nuweb12b}{12b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def signedBoundaryCells(verts,cells,facets):@\\
@@ -813,7 +802,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb14}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 14}$\,\rangle\equiv$
+$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWtarget{nuweb14}{14}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def pivotSimplices(V,CV,d=3):@\\
@@ -875,7 +864,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap25}
-\protect\makebox[0ex][r]{\NWtarget{nuweb15a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize 15a}$\,\rangle\equiv$
+$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWtarget{nuweb15a}{15a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larCellAdjacencies(CSRm):@\\
@@ -894,7 +883,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap26}
-\protect\makebox[0ex][r]{\NWtarget{nuweb15b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize 15b}$\,\rangle\equiv$
+$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize \NWtarget{nuweb15b}{15b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> larCellAdjacencies"@\\
@@ -915,7 +904,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap27}
-\protect\makebox[0ex][r]{\NWtarget{nuweb16}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize 16}$\,\rangle\equiv$
+$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWtarget{nuweb16}{16}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def setup(model,dim):@\\
@@ -925,12 +914,13 @@ As a general rule for operators between two spaces of chains of different dimens
 \mbox{}\verb@    csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?@\\
 \mbox{}\verb@    return V,cells,csr,csrAdjSquareMat@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@def larFacets(model,dim=3):@\\
+\mbox{}\verb@def larFacets(model,dim=3,emptyCellNumber=0):@\\
 \mbox{}\verb@    """@\\
 \mbox{}\verb@        Estraction of (d-1)-cellFacets from "model" := (V,d-cells)@\\
 \mbox{}\verb@        Return (V, (d-1)-cellFacets)@\\
 \mbox{}\verb@      """@\\
 \mbox{}\verb@    V,cells,csr,csrAdjSquareMat = setup(model,dim)@\\
+\mbox{}\verb@    solidCellNumber = len(cells) - emptyCellNumber@\\
 \mbox{}\verb@    cellFacets = []@\\
 \mbox{}\verb@    # for each input cell i@\\
 \mbox{}\verb@    for i in range(len(cells)):@\\
@@ -938,7 +928,7 @@ As a general rule for operators between two spaces of chains of different dimens
 \mbox{}\verb@        cell1 = csr[i].tocoo().col@\\
 \mbox{}\verb@        pairs = zip(adjCells.col,adjCells.data)@\\
 \mbox{}\verb@        for j,v in pairs:@\\
-\mbox{}\verb@            if (i<j):@\\
+\mbox{}\verb@            if (i<j) and (i<solidCellNumber):@\\
 \mbox{}\verb@                cell2 = csr[j].tocoo().col@\\
 \mbox{}\verb@                cell = list(set(cell1).intersection(cell2))@\\
 \mbox{}\verb@                cellFacets.append(sorted(cell))@\\
@@ -958,7 +948,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap28}
-\protect\makebox[0ex][r]{\NWtarget{nuweb17}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize 17}$\,\rangle\equiv$
+$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWtarget{nuweb17}{17}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.,0.],[3.,0.],[0.,3.],[3.,3.],[1.,2.],[2.,2.],[1.,1.],[2.,1.]]@\\
@@ -991,7 +981,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap29}
-\protect\makebox[0ex][r]{\NWtarget{nuweb18a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$The MIT Licence\nobreak\ {\footnotesize 18a}$\,\rangle\equiv$
+$\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWtarget{nuweb18a}{18a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1032,7 +1022,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap30}
-\protect\makebox[0ex][r]{\NWtarget{nuweb18b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize 18b}$\,\rangle\equiv$
+$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWtarget{nuweb18b}{18b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import *@\\
@@ -1059,7 +1049,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap31}
-\protect\makebox[0ex][r]{\NWtarget{nuweb19a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/larcc.py"@\nobreak\ {\footnotesize 19a }$\equiv$
+\verb@"lib/py/larcc.py"@\nobreak\ {\footnotesize \NWtarget{nuweb19a}{19a} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# -*- coding: utf-8 -*-@\\
@@ -1097,7 +1087,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap32}
-\protect\makebox[0ex][r]{\NWtarget{nuweb19b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples\nobreak\ {\footnotesize 19b}$\,\rangle\equiv$
+$\langle\,$Test examples\nobreak\ {\footnotesize \NWtarget{nuweb19b}{19b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1134,7 +1124,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap33}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex1.py"@\nobreak\ {\footnotesize 20a }$\equiv$
+\verb@"test/py/larcc/ex1.py"@\nobreak\ {\footnotesize \NWtarget{nuweb20a}{20a} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1161,7 +1151,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap34}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize 20b}$\,\rangle\equiv$
+$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWtarget{nuweb20b}{20b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1183,7 +1173,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap35}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$characteristic matrices\nobreak\ {\footnotesize 20c}$\,\rangle\equiv$
+$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWtarget{nuweb20c}{20c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# characteristic matrices@\\
@@ -1205,7 +1195,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap36}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$incidence matrix\nobreak\ {\footnotesize 20d}$\,\rangle\equiv$
+$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWtarget{nuweb20d}{20d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product@\\
@@ -1225,7 +1215,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap37}
-\protect\makebox[0ex][r]{\NWtarget{nuweb21a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize 21a}$\,\rangle\equiv$
+$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWtarget{nuweb21a}{21a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -1247,7 +1237,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap38}
-\protect\makebox[0ex][r]{\NWtarget{nuweb21b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$product of cell complexes\nobreak\ {\footnotesize 21b}$\,\rangle\equiv$
+$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWtarget{nuweb21b}{21b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product operator@\\
@@ -1274,7 +1264,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap39}
-\protect\makebox[0ex][r]{\NWtarget{nuweb21c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize 21c}$\,\rangle\equiv$
+$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb21c}{21c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 2-skeleton of the 3D product complex@\\
@@ -1301,7 +1291,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap40}
-\protect\makebox[0ex][r]{\NWtarget{nuweb22a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize 22a}$\,\rangle\equiv$
+$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb22a}{22a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 1-skeleton of the 3D product complex @\\
@@ -1328,7 +1318,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap41}
-\protect\makebox[0ex][r]{\NWtarget{nuweb22b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$0-coboundary computation\nobreak\ {\footnotesize 22b}$\,\rangle\equiv$
+$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22b}{22b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -1354,7 +1344,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap42}
-\protect\makebox[0ex][r]{\NWtarget{nuweb22c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-coboundary computation\nobreak\ {\footnotesize 22c}$\,\rangle\equiv$
+$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22c}{22c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrEF3 = matrixProduct(csrEV3, csrTranspose(csrFV3))@\\
@@ -1376,7 +1366,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap43}
-\protect\makebox[0ex][r]{\NWtarget{nuweb23a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-coboundary computation\nobreak\ {\footnotesize 23a}$\,\rangle\equiv$
+$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb23a}{23a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrCV = csrCreate(CV)@\\
@@ -1399,7 +1389,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap44}
-\protect\makebox[0ex][r]{\NWtarget{nuweb23b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize 23b}$\,\rangle\equiv$
+$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWtarget{nuweb23b}{23b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary chain visualisation@\\
@@ -1424,7 +1414,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap45}
-\protect\makebox[0ex][r]{\NWtarget{nuweb23c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex2.py"@\nobreak\ {\footnotesize 23c }$\equiv$
+\verb@"test/py/larcc/ex2.py"@\nobreak\ {\footnotesize \NWtarget{nuweb23c}{23c} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1439,7 +1429,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap46}
-\protect\makebox[0ex][r]{\NWtarget{nuweb23d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize 23d}$\,\rangle\equiv$
+$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb23d}{23d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
@@ -1476,7 +1466,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap47}
-\protect\makebox[0ex][r]{\NWtarget{nuweb24a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex3.py"@\nobreak\ {\footnotesize 24a }$\equiv$
+\verb@"test/py/larcc/ex3.py"@\nobreak\ {\footnotesize \NWtarget{nuweb24a}{24a} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Importing external modules\nobreak\ {\footnotesize \NWlink{nuweb24b}{24b}}$\,\rangle$}\verb@@\\
@@ -1494,7 +1484,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap48}
-\protect\makebox[0ex][r]{\NWtarget{nuweb24b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing external modules\nobreak\ {\footnotesize 24b}$\,\rangle\equiv$
+$\langle\,$Importing external modules\nobreak\ {\footnotesize \NWtarget{nuweb24b}{24b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
@@ -1515,7 +1505,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap49}
-\protect\makebox[0ex][r]{\NWtarget{nuweb24c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize 24c}$\,\rangle\equiv$
+$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize \NWtarget{nuweb24c}{24c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@verts = np.random.rand(10000, 3) # 1000 points in 3-d@\\
@@ -1541,7 +1531,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap50}
-\protect\makebox[0ex][r]{\NWtarget{nuweb24d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize 24d}$\,\rangle\equiv$
+$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize \NWtarget{nuweb24d}{24d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@FV = larSimplexFacets(CV)@\\
@@ -1564,7 +1554,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap51}
-\protect\makebox[0ex][r]{\NWtarget{nuweb25a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize 25a}$\,\rangle\equiv$
+$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \NWtarget{nuweb25a}{25a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
@@ -1589,7 +1579,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap52}
-\protect\makebox[0ex][r]{\NWtarget{nuweb25b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex4.py"@\nobreak\ {\footnotesize 25b }$\equiv$
+\verb@"test/py/larcc/ex4.py"@\nobreak\ {\footnotesize \NWtarget{nuweb25b}{25b} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb25c}{25c}}$\,\rangle$}\verb@@\\
@@ -1606,7 +1596,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap53}
-\protect\makebox[0ex][r]{\NWtarget{nuweb25c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize 25c}$\,\rangle\equiv$
+$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb25c}{25c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
@@ -1627,7 +1617,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap54}
-\protect\makebox[0ex][r]{\NWtarget{nuweb25d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize 25d}$\,\rangle\equiv$
+$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb25d}{25d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@FV = larSimplexFacets(CV)@\\
@@ -1647,7 +1637,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap55}
-\protect\makebox[0ex][r]{\NWtarget{nuweb25e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize 25e}$\,\rangle\equiv$
+$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb25e}{25e}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrSignedBoundaryMat = signedBoundary (V,CV,FV)@\\
@@ -1674,7 +1664,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap56}
-\protect\makebox[0ex][r]{\NWtarget{nuweb26a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex5.py"@\nobreak\ {\footnotesize 26a }$\equiv$
+\verb@"test/py/larcc/ex5.py"@\nobreak\ {\footnotesize \NWtarget{nuweb26a}{26a} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize \NWlink{nuweb26b}{26b}}$\,\rangle$}\verb@@\\
@@ -1691,7 +1681,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap57}
-\protect\makebox[0ex][r]{\NWtarget{nuweb26b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize 26b}$\,\rangle\equiv$
+$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize \NWtarget{nuweb26b}{26b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
@@ -1716,7 +1706,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap58}
-\protect\makebox[0ex][r]{\NWtarget{nuweb26c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize 26c}$\,\rangle\equiv$
+$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWtarget{nuweb26c}{26c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@np.set_printoptions(threshold='nan')@\\
@@ -1740,7 +1730,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap59}
-\protect\makebox[0ex][r]{\NWtarget{nuweb26d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize 26d}$\,\rangle\equiv$
+$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWtarget{nuweb26d}{26d}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_1 = signedBoundaryCells(V,FV,EV)@\\
@@ -1765,7 +1755,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap60}
-\protect\makebox[0ex][r]{\NWtarget{nuweb27a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex6.py"@\nobreak\ {\footnotesize 27a }$\equiv$
+\verb@"test/py/larcc/ex6.py"@\nobreak\ {\footnotesize \NWtarget{nuweb27a}{27a} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
@@ -1794,7 +1784,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap61}
-\protect\makebox[0ex][r]{\NWtarget{nuweb27b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize 27b}$\,\rangle\equiv$
+$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWtarget{nuweb27b}{27b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def quasiEquilateral(tria):@\\
@@ -1818,7 +1808,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap62}
-\protect\makebox[0ex][r]{\NWtarget{nuweb28a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize 28a}$\,\rangle\equiv$
+$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize \NWtarget{nuweb28a}{28a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@verts = np.random.rand(20,2)@\\
@@ -1844,7 +1834,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap63}
-\protect\makebox[0ex][r]{\NWtarget{nuweb28b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize 28b}$\,\rangle\equiv$
+$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize \NWtarget{nuweb28b}{28b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_1 = signedBoundaryCells(V,FV,EV)@\\
@@ -1868,7 +1858,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap64}
-\protect\makebox[0ex][r]{\NWtarget{nuweb28c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the topologically ordered chain of boundary vertices\nobreak\ {\footnotesize 28c}$\,\rangle\equiv$
+$\langle\,$Compute the topologically ordered chain of boundary vertices\nobreak\ {\footnotesize \NWtarget{nuweb28c}{28c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1886,7 +1876,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap65}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
+$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize \NWtarget{nuweb29a}{29a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def permutationOrbits(List):@\\
@@ -1922,7 +1912,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap66}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/ex7.py"@\nobreak\ {\footnotesize 29b }$\equiv$
+\verb@"test/py/larcc/ex7.py"@\nobreak\ {\footnotesize \NWtarget{nuweb29b}{29b} }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
@@ -1949,7 +1939,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap67}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
+$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWtarget{nuweb30a}{30a}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@geom_0,topol_0 = [[0.],[1.],[2.],[3.],[4.]],[[0,1],[1,2],[3,4]]@\\
@@ -1970,7 +1960,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap68}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
+$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWtarget{nuweb30b}{30b}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@squares = larModelProduct([mod_0,mod_1])@\\
@@ -1992,7 +1982,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap69}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 30c}$\,\rangle\equiv$
+$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWtarget{nuweb30c}{30c}}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@cubes = larModelProduct([squares,mod_0])@\\

@@ -129,3 +129,15 @@ def diagram2cell(diagram,master,cell):
    master = V, CV
    return master
 
+""" Exterior space of a block diagram """
+def exteriorCells(diagram):
+   V,CV = diagram
+   minVert, maxVert = min(V), max(V)
+   d = len(V[0])
+   outchain = [[] for k in range(2*d)]
+   for k,v in enumerate(V):
+      for h in range(d):
+         if v[h] == minVert[h]: outchain[h] += [k]
+         if v[h] == maxVert[h]: outchain[h+d] += [k]
+   return outchain
+

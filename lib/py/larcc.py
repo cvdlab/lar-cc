@@ -120,16 +120,16 @@ def zeroChain(cells):
    pass
 
 def totalChain(cells):
-   return csrCreate([[0] for cell in cells])
+   return csrCreate([[0] for cell in cells])  # ????  zero ??
 
 def boundaryCells(cells,facets):
-    csrBoundaryMat = boundary(cells,facets)
-    csrChain = totalChain(cells)
-    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
-    boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-    return boundaryCells
+   csrBoundaryMat = boundary(cells,facets)
+   csrChain = totalChain(cells)
+   csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
+   for k,value in enumerate(csrBoundaryChain.data):
+      if value % 2 == 0: csrBoundaryChain.data[k] = 0
+   boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+   return boundaryCells
 
 def signedBoundary (V,CV,FV):
    # compute the set of pairs of indices to [boundary face,incident coface]
@@ -225,12 +225,13 @@ def setup(model,dim):
     csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
     return V,cells,csr,csrAdjSquareMat
 
-def larFacets(model,dim=3):
+def larFacets(model,dim=3,emptyCellNumber=0):
     """
         Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
         Return (V, (d-1)-cellFacets)
       """
     V,cells,csr,csrAdjSquareMat = setup(model,dim)
+    solidCellNumber = len(cells) - emptyCellNumber
     cellFacets = []
     # for each input cell i
     for i in range(len(cells)):
@@ -238,7 +239,7 @@ def larFacets(model,dim=3):
         cell1 = csr[i].tocoo().col
         pairs = zip(adjCells.col,adjCells.data)
         for j,v in pairs:
-            if (i<j):
+            if (i<j) and (i<solidCellNumber):
                 cell2 = csr[j].tocoo().col
                 cell = list(set(cell1).intersection(cell2))
                 cellFacets.append(sorted(cell))
@@ -316,7 +317,7 @@ if __name__ == "__main__":
    print "\ncoboundary_0 =\n", csr2DenseMatrix(coboundary(EV,AA(LIST)(range(len(V)))))
    
    boundaryCells_2 = boundaryCells(CV,FV)
-   
+   boundaryCells_1 = boundaryCells([FV[k] for k in boundaryCells_2],EV)
    
    print "\nboundaryCells_2 =\n", boundaryCells_2
    print "\nboundaryCells_1 =\n", boundaryCells_1
