@@ -465,10 +465,42 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
 	
 	# compute the [face, coface] pair as vertex lists
-	vertLists = [[FV[pair[0]], CV[pair[1]]]for pair in pairs]
+	vertLists = [[FV[f], CV[c]]for f,c in pairs]
 	
 	# compute two n-cells to compare for sign
-	cellPairs = [ [list(set(coface).difference(face))+face,coface] 
+	cellPairs = [ [list(set(coface).difference(face))+face, coface] 
+					for face,coface in vertLists]
+	
+	# compute the local indices of missing boundary cofaces
+	missingVertIndices = [ coface.index(list(set(coface).difference(face))[0]) 
+							for face,coface in vertLists]
+	
+	# compute the point matrices to compare for sign
+	cofaceMats = [ [V[k]+[1.0] for k in cofaceCell]
+					for facetCell,cofaceCell in cellPairs]
+	
+	# signed incidence coefficients
+	cofaceSigns = AA(SIGN)(AA(np.linalg.det)(cofaceMats))
+	faceSigns = AA(C(POWER)(-1))(missingVertIndices)
+	signPairProd = AA(PROD)(TRANS([cofaceSigns,faceSigns]))
+	
+	# signed boundary matrix
+	csrSignedBoundaryMat = csr_matrix( (signPairProd,TRANS(pairs)) )
+	return csrSignedBoundaryMat
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@d Signed boundary matrix for simplicial models
+@{def signedBoundary (V,CV,FV):
+	# compute the set of pairs of indices to [boundary face,incident coface]
+	coo = boundary(CV,FV).tocoo()
+	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
+	
+	# compute the [face, coface] pair as vertex lists
+	vertLists = [[FV[f], CV[c]]for f,c in pairs]
+	
+	# compute two n-cells to compare for sign
+	cellPairs = [ [list(set(coface).difference(face))+face, coface] 
 					for face,coface in vertLists]
 	
 	# compute the local indices of missing boundary cofaces

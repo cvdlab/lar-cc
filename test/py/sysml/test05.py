@@ -31,10 +31,10 @@ VIEW(hpc)
 
 emptyChain = [17,13,32,36,52,58,65]
 solidCV = [cell for k,cell in enumerate(master[1]) if not (k in emptyChain)]
-exteriorCV =  [cell for k,cell in enumerate(master[1]) if k in emptyChain]
-exteriorCV += exteriorCells(master)
 DRAW((master[0],solidCV))
 
+exteriorCV =  [cell for k,cell in enumerate(master[1]) if k in emptyChain]
+exteriorCV += exteriorCells(master)
 CV = solidCV + exteriorCV
 V = master[0]
 FV = [f for f in larFacets((V,CV),3,len(exteriorCV))[1] if len(f) >= 4]
