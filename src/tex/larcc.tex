@@ -250,10 +250,12 @@ print "\nEV =\n", csr2DenseMatrix(csrEV)
 
 \paragraph{Characteristic matrices}
 Let us compute and show in dense form the characteristic matrices of 2- and 1-cells of the simple manifold just defined.
-By running the file \texttt{test/py/larcc/ex8.py} the reader will get the two matrices shown in Example~\ref{ex:denseMat}
+By running the file \texttt{test/py/larcc/test08.py} the reader will get the two matrices shown in Example~\ref{ex:denseMat}
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex8.py
-@{from larcc import *
+@o test/py/larcc/test08.py
+@{import sys
+sys.path.insert(0, 'lib/py/')
+from larcc import *
 @< Test example of Brc to Csr transformation @>
 @< Test examples of Sparse to dense matrix transformation @>
 @}
@@ -453,49 +455,114 @@ boundaryCells_1 = boundaryCells([FV[k] for k in boundaryCells_2],EV)
 print "\nboundaryCells_2 =\n", boundaryCells_2
 print "\nboundaryCells_1 =\n", boundaryCells_1
 
-boundary = (V,[FV[k] for k in boundaryCells_2])
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
+boundaryModel = (V,[FV[k] for k in boundaryCells_2])
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
 @}
 %-------------------------------------------------------------------------------
+
+\paragraph{Signed boundary matrix for simplicial complexes}
+
+The computation of the \emph{signed} boundary matrix starts with enumerating the non-zero 
+elements of the mod two (unoriented) boundary matrix. In particular, the \texttt{pairs} variable 
+contains all the pairs of incident ($(d-1)$-cell, $d$-cell), corresponding to all
+the 1 elements in the binary boundary matrix. Of course, their number equates the product
+of the number of $d$-cells, times the number of $(d-1)$-facets on the boundary of each $d$-cell.
+For the case of a 3-simplicial complex \texttt{CV}, we have $4|\texttt{CV}|$ \texttt{pairs}
+elements.  The actual goal of the function \texttt{signedBoundary}, in the macro below, is to compute a sign for
+each of them.
+
+The \texttt{pairs} values must be interpreted as $(i,j)$ values in the incidence matrix \texttt{FC} 
+(\emph{facets}-\emph{cells}), and hence as pairs of indices $f$ and $c$ into the characteristic 
+matrices $\texttt{FV}=\texttt{CSR}(M_{d-1})$ and $\texttt{CV}=\texttt{CSR}(M_{d})$, respectively.
+
+For each incidence pair \texttt{f,c}, the list \texttt{vertLists}  contains the two lists of 
+vertices associated to \texttt{f} and to \texttt{c}, called respectively the \texttt{face} and 
+the \texttt{coface}. For each \texttt{face, coface} pair (i.e.~for each unit element in the unordered 
+boundary matrix), the \texttt{missingVertIndices} list will contain the index of the \texttt{coface} 
+vertex not contained in the incident \texttt{face}. 
+Finally the $\pm 1$ (signed) incidence coefficients are computed and stored in the \texttt{faceSigns},
+and then located in their actual positions within the \texttt{csrSignedBoundaryMat}.
+The sign of the incidence coefficient associated to the pair (facet,cell), also called (face,coface)
+in the implementation below, is computed as the sign of $(-1)^k$, where $k$ is the position index of the removed
+vertex in the facet $\langle v_0, \ldots, v_{k-1}, v_{k+1}, \ldots, v_d \rangle$. of the 
+$\langle v_0, \ldots, v_d \rangle$ cell.
+
 %-------------------------------------------------------------------------------
-@d Signed boundary matrix for simplicial models
-@{def signedBoundary (V,CV,FV):
+@D Signed boundary matrix for simplicial models
+@{def signedBoundary (CV,FV):
 	# compute the set of pairs of indices to [boundary face,incident coface]
 	coo = boundary(CV,FV).tocoo()
 	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
-	
+
 	# compute the [face, coface] pair as vertex lists
 	vertLists = [[FV[f], CV[c]] for f,c in pairs]
-	
-	# compute the local indices of missing boundary cofaces
-	missingVertIndices = [ coface.index(list(set(coface).difference(face))[0]) 
-							for face,coface in vertLists]
-	
-	# compute the point matrices to compare for sign
-	cofaceMats = [ [V[k]+[1] for k in cofaceCell]
-					for cofaceCell in TRANS(vertLists)[1]]
-		
+
+	# compute the local (interior to the coface) indices of missing vertices 
+	def missingVert(face,coface): return list(set(coface).difference(face))[0]
+	missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
+
 	# signed incidence coefficients
-	cofaceSigns = AA(SIGN)(AA(np.linalg.det)(cofaceMats))
 	faceSigns = AA(C(POWER)(-1))(missingVertIndices)
-	signPairProd = AA(PROD)(TRANS([cofaceSigns,faceSigns]))
-	
+
 	# signed boundary matrix
-	csrSignedBoundaryMat = csr_matrix( (signPairProd,TRANS(pairs)) )
+	csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
 	return csrSignedBoundaryMat
 @}
 %-------------------------------------------------------------------------------
+
+\paragraph{Computation of signed boundary cells}
+
+Two simplices are
+said \emph{coherently oriented} when their common facets have opposite orientations.
+If the boundary cells give a decomposition of the boundary of an orientable solid, that 
+partitionates the embedding space in two subsets corresponding to the \emph{interior} and the \emph{exterior} 
+of the solid, then the boundary cells can be coherently oriented. This task is performed by the function 
+\texttt{signedBoundaryCells} below.
+
+The matrix of the signed boundary operator, with elements in $\{-1,0,1\}$, is computed in 
+compressed sparse row (CSR) format, and stored in \texttt{csrSignedBoundaryMat}. 
+In order to be able to return a list of \texttt{signedBoundaryCells} having a coherent orientation,
+we need to compute the coface of each boundary facet, i.e.~the single $d$-cell having the facet on its boundary,
+and provide a coherent orientation to such chain of $d$-cells. 
+The goal is obtained computing the sign of the determinant of the coface matrices, i.e.~of square matrices having 
+as rows the vertices of a coface, in normalised homogeneous coordinates.
+
+The chain of boundary facets \texttt{boundaryCells}, obtained by multiplying the signed matrix of the 
+boundary operator by the coordinate representation of the total $d$-chain, is coherently oriented by multiplication 
+times the determinants of the \texttt{cofaceMats}.
+
+The \texttt{cofaceMats} list is filled 
+with the matrices having per row the position vectors of vertices of a coface, in normalized 
+homogeneous coordinates. The list of signed face indices \texttt{orientedBoundaryCells} is returned by the function.
+
 %-------------------------------------------------------------------------------
-@d Oriented boundary cells for simplicial models
+@D Oriented boundary cells for simplicial models
 @{def signedBoundaryCells(verts,cells,facets):
-	csrBoundaryMat = signedBoundary(verts,cells,facets)
+	csrSignedBoundaryMat = signedBoundary(cells,facets)
+
 	csrTotalChain = totalChain(cells)
-	csrBoundaryChain = matrixProduct(csrBoundaryMat, csrTotalChain)
-	coo = csrBoundaryChain.tocoo()
-	boundaryCells = list(coo.row * coo.data)
-	return AA(int)(boundaryCells)
+	csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
+	cooCells = csrBoundaryChain.tocoo()
+	
+	boundaryCells = []
+	for k,v in enumerate(cooCells.data):
+		if abs(v) == 1:
+			boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]
+			
+	boundaryCocells = []
+	for k,v in enumerate(boundaryCells):
+		boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)
+		
+	boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
+	boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
+	
+	def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+	orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
+	
+	return orientedBoundaryCells
 @}
 %-------------------------------------------------------------------------------
+
 \paragraph{Orienting polytopal cells}
 \begin{description}
 	\item[input]:  "cell" indices of a convex and solid polytopes and "V" vertices;
@@ -664,7 +731,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import collections
 import scipy
 import numpy as np
-from scipy import zeros,arange,mat,amin,amax
+from scipy import zeros,arange,mat,amin,amax,array
 from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 
 from lar2psm import *
@@ -720,6 +787,31 @@ if __name__ == "__main__":
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Comparing oriented and unoriented boundary}
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test09.py
+@{""" comparing oriented boundary and unoriented boundary extraction on a simple example """
+import sys
+sys.path.insert(0, 'lib/py/')
+from largrid import *
+from larcc import *
+
+V,CV = larSimplexGrid1([1,1,1])
+FV = larSimplexFacets(CV)
+
+orientedBoundary = signedBoundaryCells(V,CV,FV)
+def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+orientedBoundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in orientedBoundary]
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,orientedBoundaryFV))))
+
+BF = boundaryCells(CV,FV)
+boundaryCellsFV = [FV[k] for k in BF]
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryCellsFV))))
+@}
+%-------------------------------------------------------------------------------
+
+
 
 \appendix
 
@@ -729,8 +821,9 @@ if __name__ == "__main__":
 \subsection{Model generation, skeleton and boundary extraction}
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex1.py
-@{
+@o test/py/larcc/test01.py
+@{import sys
+sys.path.insert(0, 'lib/py/')
 from larcc import *
 from largrid import *
 @< input of 2D topology and geometry data @>
@@ -879,8 +972,9 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 \subsection{Boundary of 3D simplicial grid}
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex2.py
-@{
+@o test/py/larcc/test02.py
+@{import sys
+sys.path.insert(0, 'lib/py/')
 @< boundary of 3D simplicial grid @>
 @}
 %-------------------------------------------------------------------------------
@@ -890,7 +984,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 @{from simplexn import *
 from larcc import *
 
-V,CV = larSimplexGrid([10,10,3])
+V,CV = larSimplexGrid1([10,10,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 SK2 = (V,larSimplexFacets(CV))
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(SK2)))
@@ -903,6 +997,13 @@ boundaryCells_2 = boundaryCells(CV,FV)
 boundary = (V,[FV[k] for k in boundaryCells_2])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 print "\nboundaryCells_2 =\n", boundaryCells_2
+
+boundaryCells_2 = signedBoundaryCells(V,CV,FV)
+def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
+
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))
+print "\nboundaryCells_2 =\n", boundaryFV
 @}
 %-------------------------------------------------------------------------------
 
@@ -911,7 +1012,7 @@ print "\nboundaryCells_2 =\n", boundaryCells_2
 
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex3.py
+@o test/py/larcc/test03.py
 @{@< Importing external modules @>
 @< Generating and viewing a random 3D simplicial complex @>
 @< Computing and viewing its non-oriented boundary @>
@@ -926,6 +1027,7 @@ print "\nboundaryCells_2 =\n", boundaryCells_2
 sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
+from scipy import *
 from scipy.spatial import Delaunay
 import numpy as np
 @}
@@ -962,15 +1064,15 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
 print "\nboundaryCells_2 =\n", boundaryCells_2
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
-bndry = (V,boundaryFV)
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
+boundaryModel = (V,boundaryFV)
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
 @}
 %-------------------------------------------------------------------------------
 
 \subsection{Oriented boundary of a simplicial grid}
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex4.py
+@o test/py/larcc/test04.py
 @{@< Generate and view a 3D simplicial grid @>
 @< Computing and viewing the 2-skeleton of simplicial grid @>
 @< Computing and viewing the oriented boundary of simplicial grid @>
@@ -980,9 +1082,11 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
 
 %-------------------------------------------------------------------------------
 @d Generate and view a 3D simplicial grid
-@{from simplexn import *
+@{import sys
+sys.path.insert(0, 'lib/py/')
+from simplexn import *
 from larcc import *
-V,CV = larSimplexGrid([4,4,4])
+V,CV = larSimplexGrid1([4,4,4])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 @}
 %-------------------------------------------------------------------------------
@@ -997,7 +1101,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 
 %-------------------------------------------------------------------------------
 @d Computing and viewing the oriented boundary of simplicial grid
-@{csrSignedBoundaryMat = signedBoundary (V,CV,FV)
+@{csrSignedBoundaryMat = signedBoundary (CV,FV)
 boundaryCells_2 = signedBoundaryCells(V,CV,FV)
 def swap(l): return [l[1],l[0],l[2]]
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
@@ -1011,8 +1115,11 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex5.py
-@{@< Skeletons computation and vilualisation @>
+@o test/py/larcc/test05.py
+@{import sys
+sys.path.insert(0, 'lib/py/')
+
+@< Skeletons computation and vilualisation @>
 @< Oriented boundary matrix visualization @>
 @< Computation of oriented boundary cells @>
 @}
@@ -1023,7 +1130,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 @d Skeletons computation and vilualisation
 @{from simplexn import *
 from larcc import *
-V,FV = larSimplexGrid([3,3])
+V,FV = larSimplexGrid1([3,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 EV = larSimplexFacets(FV)
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))
@@ -1035,7 +1142,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,VV))))
 %-------------------------------------------------------------------------------
 @d Oriented boundary matrix visualization
 @{np.set_printoptions(threshold='nan')
-csrSignedBoundaryMat = signedBoundary (V,FV,EV)
+csrSignedBoundaryMat = signedBoundary (FV,EV)
 Z = csr2DenseMatrix(csrSignedBoundaryMat)
 print "\ncsrSignedBoundaryMat =\n", Z
 from pylab import *
@@ -1058,8 +1165,10 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
 \subsection{Boundary of random 2D simplicial complex}
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex6.py
-@{from simplexn import *
+@o test/py/larcc/test06.py
+@{import sys
+sys.path.insert(0, 'lib/py/')
+from simplexn import *
 from larcc import *
 from scipy.spatial import Delaunay
 @< Test for quasi-equilateral triangles @>
@@ -1147,8 +1256,10 @@ if __name__ == "__main__":
 \subsection{Assemblies of simplices and hypercubes}
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/ex7.py
-@{from simplexn import *
+@o test/py/larcc/test07.py
+@{import sys
+sys.path.insert(0, 'lib/py/')
+from simplexn import *
 from larcc import *
 from largrid import *
 @< Definition of 1-dimensional LAR models @>

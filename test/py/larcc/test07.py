@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
 from largrid import *

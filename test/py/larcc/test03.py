@@ -2,6 +2,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
+from scipy import *
 from scipy.spatial import Delaunay
 import numpy as np
 
@@ -26,6 +27,6 @@ boundaryCells_2 = signedBoundaryCells(V,CV,FV)
 print "\nboundaryCells_2 =\n", boundaryCells_2
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
-bndry = (V,boundaryFV)
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
+boundaryModel = (V,boundaryFV)
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
 

@@ -1,6 +1,9 @@
+import sys
+sys.path.insert(0, 'lib/py/')
+
 from simplexn import *
 from larcc import *
-V,FV = larSimplexGrid([3,3])
+V,FV = larSimplexGrid1([3,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 EV = larSimplexFacets(FV)
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))
@@ -8,7 +11,7 @@ VV = larSimplexFacets(EV)
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,VV))))
 
 np.set_printoptions(threshold='nan')
-csrSignedBoundaryMat = signedBoundary (V,FV,EV)
+csrSignedBoundaryMat = signedBoundary (FV,EV)
 Z = csr2DenseMatrix(csrSignedBoundaryMat)
 print "\ncsrSignedBoundaryMat =\n", Z
 from pylab import *

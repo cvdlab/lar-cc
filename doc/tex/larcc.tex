@@ -1,13 +1,24 @@
-\newcommand{\NWtarget}[2]{#2}
-\newcommand{\NWlink}[2]{#2}
-\newcommand{\NWtxtMacroDefBy}{Macro defined by}
-\newcommand{\NWtxtMacroRefIn}{Macro referenced in}
-\newcommand{\NWtxtMacroNoRef}{Macro never referenced}
-\newcommand{\NWtxtDefBy}{Defined by}
-\newcommand{\NWtxtRefIn}{Referenced in}
-\newcommand{\NWtxtNoRef}{Not referenced}
-\newcommand{\NWtxtFileDefBy}{File defined by}
-\newcommand{\NWsep}{${\diamond}$}
+% -------------------------------------------------------------------------
+% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
+% -------------------------------------------------------------------------
+\providecommand{\NWtxtMacroDefBy}{Macro defined by}
+\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
+\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
+\providecommand{\NWtxtDefBy}{Defined by}
+\providecommand{\NWtxtRefIn}{Referenced in}
+\providecommand{\NWtxtNoRef}{Not referenced}
+\providecommand{\NWtxtFileDefBy}{File defined by}
+\providecommand{\NWsep}{${\diamond}$}
+\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
+\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
+  \raisebox{\baselineskip}[1.5ex][0ex]{%
+    \mbox{%
+      \hypertarget{#1}{%
+        \raisebox{-1\baselineskip}[0ex][0ex]{%
+          \mbox{#2}%
+}}}}}
+% -------------------------------------------------------------------------
+
 \documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
 \usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
 \geometry{letterpaper}		%...ora4paperora5paperor...
@@ -113,7 +124,7 @@ First we give the function \texttt{triples2mat} to make the transformation from 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap1}
-$\langle\,$From list of triples to scipy.sparse\nobreak\ {\footnotesize \NWtarget{nuweb3a}{3a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb3a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From list of triples to scipy.sparse\nobreak\ {\footnotesize 3a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def triples2mat(triples,shape="csr"):@\\
@@ -128,7 +139,7 @@ $\langle\,$From list of triples to scipy.sparse\nobreak\ {\footnotesize \NWtarge
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -137,7 +148,7 @@ The function \texttt{brc2Coo} transforms a \texttt{BRC} representation in a list
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap2}
-$\langle\,$Brc to Coo transformation\nobreak\ {\footnotesize \NWtarget{nuweb3b}{3b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb3b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Brc to Coo transformation\nobreak\ {\footnotesize 3b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def brc2Coo(ListOfListOfInt):@\\
@@ -149,7 +160,7 @@ $\langle\,$Brc to Coo transformation\nobreak\ {\footnotesize \NWtarget{nuweb3b}{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -159,7 +170,7 @@ Two coordinate compressed sparse matrices \texttt{cooFV} and \texttt{cooEV} are 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap3}
-$\langle\,$Test example of Brc to Coo transformation\nobreak\ {\footnotesize \NWtarget{nuweb3c}{3c}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb3c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Brc to Coo transformation\nobreak\ {\footnotesize 3c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> brc2Coo"@\\
@@ -178,7 +189,7 @@ $\langle\,$Test example of Brc to Coo transformation\nobreak\ {\footnotesize \NW
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -186,7 +197,7 @@ $\langle\,$Test example of Brc to Coo transformation\nobreak\ {\footnotesize \NW
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap4}
-$\langle\,$Coo to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4a}{4a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coo to Csr transformation\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def coo2Csr(COOm):@\\
@@ -197,7 +208,7 @@ $\langle\,$Coo to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4a}{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -207,7 +218,7 @@ Two CSR sparse matrices \texttt{csrFV} and \texttt{csrEV} are generated (by \emp
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap5}
-$\langle\,$Test example of Coo to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4b}{4b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Coo to Csr transformation\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrFV = coo2Csr(cooFV)@\\
@@ -219,7 +230,7 @@ $\langle\,$Test example of Coo to Csr transformation\nobreak\ {\footnotesize \NW
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -238,7 +249,7 @@ The transformation from BRC to CSR format is implemented slightly differently, a
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap6}
-$\langle\,$Brc to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4c}{4c}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Brc to Csr transformation\nobreak\ {\footnotesize 4c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrCreate(BRCmatrix,shape=(0,0)):@\\
@@ -254,7 +265,7 @@ $\langle\,$Brc to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb4c}{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -263,7 +274,7 @@ The conversion to CSR format of the characteristic matrix \emph{faces-vertices} 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap7}
-$\langle\,$Test example of Brc to Csr transformation\nobreak\ {\footnotesize \NWtarget{nuweb5a}{5a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Brc to Csr transformation\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> brc2Csr"@\\
@@ -280,7 +291,7 @@ $\langle\,$Test example of Brc to Csr transformation\nobreak\ {\footnotesize \NW
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6d}{6d}\NWlink{nuweb19b}{, 19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb6d}{6d}\NWlink{nuweb20b}{, 20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -301,7 +312,7 @@ Two Utility functions allow to query the number of rows and columns of a CSR mat
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap8}
-$\langle\,$Query Matrix shape\nobreak\ {\footnotesize \NWtarget{nuweb5b}{5b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Query Matrix shape\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrGetNumberOfRows(CSRmatrix):@\\
@@ -316,7 +327,7 @@ $\langle\,$Query Matrix shape\nobreak\ {\footnotesize \NWtarget{nuweb5b}{5b}}$\,
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -324,7 +335,7 @@ $\langle\,$Query Matrix shape\nobreak\ {\footnotesize \NWtarget{nuweb5b}{5b}}$\,
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap9}
-$\langle\,$Test examples of Query Matrix shape\nobreak\ {\footnotesize \NWtarget{nuweb6a}{6a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Query Matrix shape\nobreak\ {\footnotesize 6a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csrGetNumberOfRows"@\\
@@ -338,7 +349,7 @@ $\langle\,$Test examples of Query Matrix shape\nobreak\ {\footnotesize \NWtarget
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -349,7 +360,7 @@ $\langle\,$Test examples of Query Matrix shape\nobreak\ {\footnotesize \NWtarget
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap10}
-$\langle\,$Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWtarget{nuweb6b}{6b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Sparse to dense matrix transformation\nobreak\ {\footnotesize 6b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csr2DenseMatrix(CSRm):@\\
@@ -365,7 +376,7 @@ $\langle\,$Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWtarg
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -373,7 +384,7 @@ $\langle\,$Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWtarg
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap11}
-$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWtarget{nuweb6c}{6c}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize 6c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csr2DenseMatrix"@\\
@@ -384,7 +395,7 @@ $\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\foo
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6d}{6d}\NWlink{nuweb19b}{, 19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb6d}{6d}\NWlink{nuweb20b}{, 20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -392,13 +403,15 @@ $\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\foo
 
 \paragraph{Characteristic matrices}
 Let us compute and show in dense form the characteristic matrices of 2- and 1-cells of the simple manifold just defined.
-By running the file \texttt{test/py/larcc/ex8.py} the reader will get the two matrices shown in Example~\ref{ex:denseMat}
+By running the file \texttt{test/py/larcc/test08.py} the reader will get the two matrices shown in Example~\ref{ex:denseMat}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap12}
-\verb@"test/py/larcc/ex8.py"@\nobreak\ {\footnotesize \NWtarget{nuweb6d}{6d} }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test08.py"@\nobreak\ {\footnotesize 6d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Brc to Csr transformation\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWlink{nuweb6c}{6c}}$\,\rangle$}\verb@@\\
@@ -447,7 +460,7 @@ The following macro provides the IDE interface for the two main matrix operation
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap13}
-$\langle\,$Matrix product and transposition\nobreak\ {\footnotesize \NWtarget{nuweb7}{7}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb7}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Matrix product and transposition\nobreak\ {\footnotesize 7}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def matrixProduct(CSRm1,CSRm2):@\\
@@ -462,7 +475,7 @@ $\langle\,$Matrix product and transposition\nobreak\ {\footnotesize \NWtarget{nu
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -507,7 +520,7 @@ As a general rule for operators between two spaces of chains of different dimens
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap14}
-$\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWtarget{nuweb8}{8}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize 8}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrBoundaryFilter(CSRm, facetLengths):@\\
@@ -525,7 +538,7 @@ $\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -533,7 +546,7 @@ $\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesi
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap15}
-$\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWtarget{nuweb9a}{9a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csrBoundaryFilter"@\\
@@ -546,7 +559,7 @@ $\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobre
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -554,7 +567,7 @@ $\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobre
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap16}
-$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWtarget{nuweb9b}{9b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize 9b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def csrPredFilter(CSRm, pred):@\\
@@ -570,7 +583,7 @@ $\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWt
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -578,7 +591,7 @@ $\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWt
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap17}
-$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWtarget{nuweb9c}{9c}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb9c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize 9c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> csrPredFilter"@\\
@@ -589,7 +602,7 @@ $\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\f
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -605,7 +618,7 @@ $\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\f
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap18}
-$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWtarget{nuweb10a}{10a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 10a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def boundary(cells,facets):@\\
@@ -623,7 +636,7 @@ $\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \N
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -631,7 +644,7 @@ $\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \N
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap19}
-$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWtarget{nuweb10b}{10b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 10b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], @\\
@@ -656,7 +669,7 @@ $\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -664,7 +677,7 @@ $\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap20}
-$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWtarget{nuweb11a}{11a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize 11a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def zeroChain(cells):@\\
@@ -686,7 +699,7 @@ $\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWta
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -694,7 +707,7 @@ $\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWta
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap21}
-$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWtarget{nuweb11b}{11b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize 11b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = boundaryCells(CV,FV)@\\
@@ -703,82 +716,143 @@ $\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\f
 \mbox{}\verb@print "\nboundaryCells_2 =\n", boundaryCells_2@\\
 \mbox{}\verb@print "\nboundaryCells_1 =\n", boundaryCells_1@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@boundary = (V,[FV[k] for k in boundaryCells_2])@\\
-\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))@\\
+\mbox{}\verb@boundaryModel = (V,[FV[k] for k in boundaryCells_2])@\\
+\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
 %-------------------------------------------------------------------------------
+
+\paragraph{Signed boundary matrix for simplicial complexes}
+
+The computation of the \emph{signed} boundary matrix starts with enumerating the non-zero 
+elements of the mod two (unoriented) boundary matrix. In particular, the \texttt{pairs} variable 
+contains all the pairs of incident ($(d-1)$-cell, $d$-cell), corresponding to all
+the 1 elements in the binary boundary matrix. Of course, their number equates the product
+of the number of $d$-cells, times the number of $(d-1)$-facets on the boundary of each $d$-cell.
+For the case of a 3-simplicial complex \texttt{CV}, we have $4|\texttt{CV}|$ \texttt{pairs}
+elements.  The actual goal of the function \texttt{signedBoundary}, in the macro below, is to compute a sign for
+each of them.
+
+The \texttt{pairs} values must be interpreted as $(i,j)$ values in the incidence matrix \texttt{FC} 
+(\emph{facets}-\emph{cells}), and hence as pairs of indices $f$ and $c$ into the characteristic 
+matrices $\texttt{FV}=\texttt{CSR}(M_{d-1})$ and $\texttt{CV}=\texttt{CSR}(M_{d})$, respectively.
+
+For each incidence pair \texttt{f,c}, the list \texttt{vertLists}  contains the two lists of 
+vertices associated to \texttt{f} and to \texttt{c}, called respectively the \texttt{face} and 
+the \texttt{coface}. For each \texttt{face, coface} pair (i.e.~for each unit element in the unordered 
+boundary matrix), the \texttt{missingVertIndices} list will contain the index of the \texttt{coface} 
+vertex not contained in the incident \texttt{face}. 
+Finally the $\pm 1$ (signed) incidence coefficients are computed and stored in the \texttt{faceSigns},
+and then located in their actual positions within the \texttt{csrSignedBoundaryMat}.
+The sign of the incidence coefficient associated to the pair (facet,cell), also called (face,coface)
+in the implementation below, is computed as the sign of $(-1)^k$, where $k$ is the position index of the removed
+vertex in the facet $\langle v_0, \ldots, v_{k-1}, v_{k+1}, \ldots, v_d \rangle$. of the 
+$\langle v_0, \ldots, v_d \rangle$ cell.
+
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap22}
-$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWtarget{nuweb12a}{12a}}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap22}
+\protect\makebox[0ex][r]{\NWtarget{nuweb12}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize 12}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def signedBoundary (V,CV,FV):@\\
+\mbox{}\verb@def signedBoundary (CV,FV):@\\
 \mbox{}\verb@   # compute the set of pairs of indices to [boundary face,incident coface]@\\
 \mbox{}\verb@   coo = boundary(CV,FV).tocoo()@\\
 \mbox{}\verb@   pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]@\\
-\mbox{}\verb@   @\\
+\mbox{}\verb@@\\
 \mbox{}\verb@   # compute the [face, coface] pair as vertex lists@\\
 \mbox{}\verb@   vertLists = [[FV[f], CV[c]] for f,c in pairs]@\\
-\mbox{}\verb@   @\\
-\mbox{}\verb@   # compute the local indices of missing boundary cofaces@\\
-\mbox{}\verb@   missingVertIndices = [ coface.index(list(set(coface).difference(face))[0]) @\\
-\mbox{}\verb@                     for face,coface in vertLists]@\\
-\mbox{}\verb@   @\\
-\mbox{}\verb@   # compute the point matrices to compare for sign@\\
-\mbox{}\verb@   cofaceMats = [ [V[k]+[1] for k in cofaceCell]@\\
-\mbox{}\verb@               for cofaceCell in TRANS(vertLists)[1]]@\\
-\mbox{}\verb@      @\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   # compute the local (interior to the coface) indices of missing vertices @\\
+\mbox{}\verb@   def missingVert(face,coface): return list(set(coface).difference(face))[0]@\\
+\mbox{}\verb@   missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@   # signed incidence coefficients@\\
-\mbox{}\verb@   cofaceSigns = AA(SIGN)(AA(np.linalg.det)(cofaceMats))@\\
 \mbox{}\verb@   faceSigns = AA(C(POWER)(-1))(missingVertIndices)@\\
-\mbox{}\verb@   signPairProd = AA(PROD)(TRANS([cofaceSigns,faceSigns]))@\\
-\mbox{}\verb@   @\\
+\mbox{}\verb@@\\
 \mbox{}\verb@   # signed boundary matrix@\\
-\mbox{}\verb@   csrSignedBoundaryMat = csr_matrix( (signPairProd,TRANS(pairs)) )@\\
+\mbox{}\verb@   csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )@\\
 \mbox{}\verb@   return csrSignedBoundaryMat@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
-\end{minipage}\\[4ex]
 \end{flushleft}
 %-------------------------------------------------------------------------------
+
+\paragraph{Computation of signed boundary cells}
+
+Two simplices are
+said \emph{coherently oriented} when their common facets have opposite orientations.
+If the boundary cells give a decomposition of the boundary of an orientable solid, that 
+partitionates the embedding space in two subsets corresponding to the \emph{interior} and the \emph{exterior} 
+of the solid, then the boundary cells can be coherently oriented. This task is performed by the function 
+\texttt{signedBoundaryCells} below.
+
+The matrix of the signed boundary operator, with elements in $\{-1,0,1\}$, is computed in 
+compressed sparse row (CSR) format, and stored in \texttt{csrSignedBoundaryMat}. 
+In order to be able to return a list of \texttt{signedBoundaryCells} having a coherent orientation,
+we need to compute the coface of each boundary facet, i.e.~the single $d$-cell having the facet on its boundary,
+and provide a coherent orientation to such chain of $d$-cells. 
+The goal is obtained computing the sign of the determinant of the coface matrices, i.e.~of square matrices having 
+as rows the vertices of a coface, in normalised homogeneous coordinates.
+
+The chain of boundary facets \texttt{boundaryCells}, obtained by multiplying the signed matrix of the 
+boundary operator by the coordinate representation of the total $d$-chain, is coherently oriented by multiplication 
+times the determinants of the \texttt{cofaceMats}.
+
+The \texttt{cofaceMats} list is filled 
+with the matrices having per row the position vectors of vertices of a coface, in normalized 
+homogeneous coordinates. The list of signed face indices \texttt{orientedBoundaryCells} is returned by the function.
+
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap23}
-$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWtarget{nuweb12b}{12b}}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap23}
+\protect\makebox[0ex][r]{\NWtarget{nuweb13}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 13}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def signedBoundaryCells(verts,cells,facets):@\\
-\mbox{}\verb@   csrBoundaryMat = signedBoundary(verts,cells,facets)@\\
+\mbox{}\verb@   csrSignedBoundaryMat = signedBoundary(cells,facets)@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@   csrTotalChain = totalChain(cells)@\\
-\mbox{}\verb@   csrBoundaryChain = matrixProduct(csrBoundaryMat, csrTotalChain)@\\
-\mbox{}\verb@   coo = csrBoundaryChain.tocoo()@\\
-\mbox{}\verb@   boundaryCells = list(coo.row * coo.data)@\\
-\mbox{}\verb@   return AA(int)(boundaryCells)@\\
+\mbox{}\verb@   csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)@\\
+\mbox{}\verb@   cooCells = csrBoundaryChain.tocoo()@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   boundaryCells = []@\\
+\mbox{}\verb@   for k,v in enumerate(cooCells.data):@\\
+\mbox{}\verb@      if abs(v) == 1:@\\
+\mbox{}\verb@         boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]@\\
+\mbox{}\verb@         @\\
+\mbox{}\verb@   boundaryCocells = []@\\
+\mbox{}\verb@   for k,v in enumerate(boundaryCells):@\\
+\mbox{}\verb@      boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@   boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]@\\
+\mbox{}\verb@   boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
+\mbox{}\verb@   orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   return orientedBoundaryCells@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb12b}{12b}\NWlink{nuweb14}{, 14}.
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroDefBy\ \NWlink{nuweb13}{13}\NWlink{nuweb15}{, 15}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
-\end{minipage}\\[4ex]
 \end{flushleft}
 %-------------------------------------------------------------------------------
+
 \paragraph{Orienting polytopal cells}
 \begin{description}
 	\item[input]:  "cell" indices of a convex and solid polytopes and "V" vertices;
@@ -797,7 +871,7 @@ $\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap24}
-$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWtarget{nuweb14}{14}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb15}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 15}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def pivotSimplices(V,CV,d=3):@\\
@@ -850,8 +924,8 @@ $\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroDefBy\ \NWlink{nuweb12b}{12b}\NWlink{nuweb14}{, 14}.
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroDefBy\ \NWlink{nuweb13}{13}\NWlink{nuweb15}{, 15}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -859,7 +933,7 @@ $\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap25}
-$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWtarget{nuweb15a}{15a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb16a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize 16a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larCellAdjacencies(CSRm):@\\
@@ -870,7 +944,7 @@ $\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWtarget{nuw
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -878,7 +952,7 @@ $\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWtarget{nuw
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap26}
-$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize \NWtarget{nuweb15b}{15b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb16b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize 16b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@print "\n>>> larCellAdjacencies"@\\
@@ -891,7 +965,7 @@ $\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotes
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -899,7 +973,7 @@ $\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotes
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap27}
-$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWtarget{nuweb16}{16}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb17}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize 17}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def setup(model,dim):@\\
@@ -935,7 +1009,7 @@ $\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWtar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -943,7 +1017,7 @@ $\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWtar
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap28}
-$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWtarget{nuweb17}{17}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb18}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize 18}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.,0.],[3.,0.],[0.,3.],[3.,3.],[1.,2.],[2.,2.],[1.,1.],[2.,1.]]@\\
@@ -964,7 +1038,7 @@ $\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\fo
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19b}{19b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20b}{20b}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -976,7 +1050,7 @@ $\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\fo
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap29}
-$\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWtarget{nuweb18a}{18a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb19a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$The MIT Licence\nobreak\ {\footnotesize 19a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1008,7 +1082,7 @@ $\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWtarget{nuweb18a}{18a}}$\,\
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1017,14 +1091,14 @@ $\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWtarget{nuweb18a}{18a}}$\,\
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap30}
-$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWtarget{nuweb18b}{18b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb19b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize 19b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import *@\\
 \mbox{}\verb@import collections@\\
 \mbox{}\verb@import scipy@\\
 \mbox{}\verb@import numpy as np@\\
-\mbox{}\verb@from scipy import zeros,arange,mat,amin,amax@\\
+\mbox{}\verb@from scipy import zeros,arange,mat,amin,amax,array@\\
 \mbox{}\verb@from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@from lar2psm import *@\\
@@ -1033,7 +1107,7 @@ $\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWtarget{nu
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1044,13 +1118,13 @@ $\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWtarget{nu
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap31}
-\verb@"lib/py/larcc.py"@\nobreak\ {\footnotesize \NWtarget{nuweb19a}{19a} }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/larcc.py"@\nobreak\ {\footnotesize 20a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# -*- coding: utf-8 -*-@\\
 \mbox{}\verb@""" Basic LARCC library """@\\
-\mbox{}\verb@@\hbox{$\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWlink{nuweb18a}{18a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWlink{nuweb18b}{18b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWlink{nuweb19a}{19a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWlink{nuweb19b}{19b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$From list of triples to scipy.sparse\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Brc to Coo transformation\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Coo to Csr transformation\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
@@ -1062,13 +1136,13 @@ $\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWtarget{nu
 \mbox{}\verb@@\hbox{$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb10a}{10a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb12a}{12a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb12b}{12b}, \ldots\ }$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb15a}{15a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb16}{16}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb12}{12}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb13}{13}, \ldots\ }$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb16a}{16a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb17}{17}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@if __name__ == "__main__": @\\
-\mbox{}\verb@   @\hbox{$\langle\,$Test examples\nobreak\ {\footnotesize \NWlink{nuweb19b}{19b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$Test examples\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1082,7 +1156,7 @@ $\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWtarget{nu
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap32}
-$\langle\,$Test examples\nobreak\ {\footnotesize \NWtarget{nuweb19b}{19b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples\nobreak\ {\footnotesize 20b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1095,18 +1169,49 @@ $\langle\,$Test examples\nobreak\ {\footnotesize \NWtarget{nuweb19b}{19b}}$\,\ra
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb9c}{9c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb15b}{15b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb17}{17}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb16b}{16b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb18}{18}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb19a}{19a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
 %-------------------------------------------------------------------------------
+
+\paragraph{Comparing oriented and unoriented boundary}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap33}
+\protect\makebox[0ex][r]{\NWtarget{nuweb20c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test09.py"@\nobreak\ {\footnotesize 20c }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" comparing oriented boundary and unoriented boundary extraction on a simple example """@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from largrid import *@\\
+\mbox{}\verb@from larcc import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V,CV = larSimplexGrid1([1,1,1])@\\
+\mbox{}\verb@FV = larSimplexFacets(CV)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@orientedBoundary = signedBoundaryCells(V,CV,FV)@\\
+\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
+\mbox{}\verb@orientedBoundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in orientedBoundary]@\\
+\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,orientedBoundaryFV))))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@BF = boundaryCells(CV,FV)@\\
+\mbox{}\verb@boundaryCellsFV = [FV[k] for k in BF]@\\
+\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryCellsFV))))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
 
 
 \appendix
@@ -1118,24 +1223,25 @@ $\langle\,$Test examples\nobreak\ {\footnotesize \NWtarget{nuweb19b}{19b}}$\,\ra
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap33}
-\verb@"test/py/larcc/ex1.py"@\nobreak\ {\footnotesize \NWtarget{nuweb20a}{20a} }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap34}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test01.py"@\nobreak\ {\footnotesize 21 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@from largrid import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWlink{nuweb20c}{20c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWlink{nuweb20d}{20d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWlink{nuweb21a}{21a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWlink{nuweb21b}{21b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb22a}{22a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb22b}{22b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb22c}{22c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb23a}{23a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWlink{nuweb23b}{23b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWlink{nuweb22a}{22a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWlink{nuweb22b}{22b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWlink{nuweb22c}{22c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWlink{nuweb22d}{22d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWlink{nuweb23a}{23a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb23b}{23b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb23c}{23c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb24a}{24a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb24b}{24b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb24c}{24c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWlink{nuweb24d}{24d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1145,8 +1251,8 @@ $\langle\,$Test examples\nobreak\ {\footnotesize \NWtarget{nuweb19b}{19b}}$\,\ra
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap34}
-$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWtarget{nuweb20b}{20b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap35}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize 22a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1159,7 +1265,7 @@ $\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWtar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1167,8 +1273,8 @@ $\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWtar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap35}
-$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWtarget{nuweb20c}{20c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap36}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$characteristic matrices\nobreak\ {\footnotesize 22b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# characteristic matrices@\\
@@ -1181,7 +1287,7 @@ $\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWtarget{nuweb20c}{2
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1189,8 +1295,8 @@ $\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWtarget{nuweb20c}{2
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap36}
-$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWtarget{nuweb20d}{20d}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap37}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$incidence matrix\nobreak\ {\footnotesize 22c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product@\\
@@ -1201,7 +1307,7 @@ $\langle\,$incidence matrix\nobreak\ {\footnotesize \NWtarget{nuweb20d}{20d}}$\,
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1209,8 +1315,8 @@ $\langle\,$incidence matrix\nobreak\ {\footnotesize \NWtarget{nuweb20d}{20d}}$\,
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap37}
-$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWtarget{nuweb21a}{21a}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap38}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize 22d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -1223,7 +1329,7 @@ $\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWtarget{n
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1231,8 +1337,8 @@ $\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWtarget{n
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap38}
-$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWtarget{nuweb21b}{21b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap39}
+\protect\makebox[0ex][r]{\NWtarget{nuweb23a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$product of cell complexes\nobreak\ {\footnotesize 23a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product operator@\\
@@ -1250,7 +1356,7 @@ $\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWtarget{nuweb21b}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1258,8 +1364,8 @@ $\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWtarget{nuweb21b}
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap39}
-$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb21c}{21c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap40}
+\protect\makebox[0ex][r]{\NWtarget{nuweb23b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize 23b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 2-skeleton of the 3D product complex@\\
@@ -1277,7 +1383,7 @@ $\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb21c}{21c
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1285,8 +1391,8 @@ $\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb21c}{21c
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap40}
-$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb22a}{22a}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap41}
+\protect\makebox[0ex][r]{\NWtarget{nuweb23c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize 23c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 1-skeleton of the 3D product complex @\\
@@ -1304,7 +1410,7 @@ $\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb22a}{22a
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1312,8 +1418,8 @@ $\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWtarget{nuweb22a}{22a
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap41}
-$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22b}{22b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap42}
+\protect\makebox[0ex][r]{\NWtarget{nuweb24a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$0-coboundary computation\nobreak\ {\footnotesize 24a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -1330,7 +1436,7 @@ $\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22b}{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1338,8 +1444,8 @@ $\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22b}{
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap42}
-$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22c}{22c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap43}
+\protect\makebox[0ex][r]{\NWtarget{nuweb24b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-coboundary computation\nobreak\ {\footnotesize 24b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrEF3 = matrixProduct(csrEV3, csrTranspose(csrFV3))@\\
@@ -1352,7 +1458,7 @@ $\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22c}{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1360,8 +1466,8 @@ $\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb22c}{
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap43}
-$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb23a}{23a}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap44}
+\protect\makebox[0ex][r]{\NWtarget{nuweb24c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-coboundary computation\nobreak\ {\footnotesize 24c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrCV = csrCreate(CV)@\\
@@ -1375,7 +1481,7 @@ $\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb23a}{
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1383,8 +1489,8 @@ $\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWtarget{nuweb23a}{
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap44}
-$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWtarget{nuweb23b}{23b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap45}
+\protect\makebox[0ex][r]{\NWtarget{nuweb24d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize 24d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary chain visualisation@\\
@@ -1396,7 +1502,7 @@ $\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWtarget{nuweb2
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb20a}{20a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21}{21}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1408,12 +1514,13 @@ $\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWtarget{nuweb2
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap45}
-\verb@"test/py/larcc/ex2.py"@\nobreak\ {\footnotesize \NWtarget{nuweb23c}{23c} }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap46}
+\protect\makebox[0ex][r]{\NWtarget{nuweb25a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test02.py"@\nobreak\ {\footnotesize 25a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb23d}{23d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb25b}{25b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1423,14 +1530,14 @@ $\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWtarget{nuweb2
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap46}
-$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb23d}{23d}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap47}
+\protect\makebox[0ex][r]{\NWtarget{nuweb25b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize 25b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@V,CV = larSimplexGrid([10,10,3])@\\
+\mbox{}\verb@V,CV = larSimplexGrid1([10,10,3])@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))@\\
 \mbox{}\verb@SK2 = (V,larSimplexFacets(CV))@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(SK2)))@\\
@@ -1443,12 +1550,19 @@ $\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWtarget{nuwe
 \mbox{}\verb@boundary = (V,[FV[k] for k in boundaryCells_2])@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))@\\
 \mbox{}\verb@print "\nboundaryCells_2 =\n", boundaryCells_2@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
+\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
+\mbox{}\verb@boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))@\\
+\mbox{}\verb@print "\nboundaryCells_2 =\n", boundaryFV@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb23c}{23c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25a}{25a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1460,14 +1574,14 @@ $\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWtarget{nuwe
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap47}
-\verb@"test/py/larcc/ex3.py"@\nobreak\ {\footnotesize \NWtarget{nuweb24a}{24a} }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap48}
+\protect\makebox[0ex][r]{\NWtarget{nuweb25c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test03.py"@\nobreak\ {\footnotesize 25c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Importing external modules\nobreak\ {\footnotesize \NWlink{nuweb24b}{24b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize \NWlink{nuweb24c}{24c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb24d}{24d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb25a}{25a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Importing external modules\nobreak\ {\footnotesize \NWlink{nuweb26a}{26a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize \NWlink{nuweb26b}{26b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb26c}{26c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb26d}{26d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1478,14 +1592,15 @@ $\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWtarget{nuwe
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap48}
-$\langle\,$Importing external modules\nobreak\ {\footnotesize \NWtarget{nuweb24b}{24b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap49}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing external modules\nobreak\ {\footnotesize 26a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import sys@\\
 \mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from simplexn import *@\\
 \mbox{}\verb@from larcc import *@\\
+\mbox{}\verb@from scipy import *@\\
 \mbox{}\verb@from scipy.spatial import Delaunay@\\
 \mbox{}\verb@import numpy as np@\\
 \mbox{}\verb@@{\NWsep}
@@ -1493,7 +1608,7 @@ $\langle\,$Importing external modules\nobreak\ {\footnotesize \NWtarget{nuweb24b
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb24a}{24a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25c}{25c}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1501,8 +1616,8 @@ $\langle\,$Importing external modules\nobreak\ {\footnotesize \NWtarget{nuweb24b
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap49}
-$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize \NWtarget{nuweb24c}{24c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap50}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize 26b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@verts = np.random.rand(10000, 3) # 1000 points in 3-d@\\
@@ -1519,7 +1634,7 @@ $\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\foot
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb24a}{24a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25c}{25c}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1527,8 +1642,8 @@ $\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\foot
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap50}
-$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize \NWtarget{nuweb24d}{24d}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap51}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize 26c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@FV = larSimplexFacets(CV)@\\
@@ -1542,7 +1657,7 @@ $\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesi
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb24a}{24a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25c}{25c}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1550,22 +1665,22 @@ $\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesi
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap51}
-$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \NWtarget{nuweb25a}{25a}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap52}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize 26d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
 \mbox{}\verb@print "\nboundaryCells_2 =\n", boundaryCells_2@\\
 \mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]@\\
-\mbox{}\verb@bndry = (V,boundaryFV)@\\
-\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))@\\
+\mbox{}\verb@boundaryModel = (V,boundaryFV)@\\
+\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb24a}{24a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25c}{25c}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1575,13 +1690,13 @@ $\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap52}
-\verb@"test/py/larcc/ex4.py"@\nobreak\ {\footnotesize \NWtarget{nuweb25b}{25b} }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap53}
+\protect\makebox[0ex][r]{\NWtarget{nuweb27a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test04.py"@\nobreak\ {\footnotesize 27a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb25c}{25c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb25d}{25d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb25e}{25e}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb27b}{27b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb27c}{27c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb27d}{27d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1592,20 +1707,22 @@ $\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap53}
-$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb25c}{25c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap54}
+\protect\makebox[0ex][r]{\NWtarget{nuweb27b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize 27b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from simplexn import *@\\
 \mbox{}\verb@from larcc import *@\\
-\mbox{}\verb@V,CV = larSimplexGrid([4,4,4])@\\
+\mbox{}\verb@V,CV = larSimplexGrid1([4,4,4])@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb25b}{25b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb27a}{27a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1613,8 +1730,8 @@ $\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWtar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap54}
-$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb25d}{25d}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap55}
+\protect\makebox[0ex][r]{\NWtarget{nuweb27c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize 27c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@FV = larSimplexFacets(CV)@\\
@@ -1625,7 +1742,7 @@ $\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\fo
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb25b}{25b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb27a}{27a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1633,11 +1750,11 @@ $\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\fo
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap55}
-$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize \NWtarget{nuweb25e}{25e}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap56}
+\protect\makebox[0ex][r]{\NWtarget{nuweb27d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize 27d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@csrSignedBoundaryMat = signedBoundary (V,CV,FV)@\\
+\mbox{}\verb@csrSignedBoundaryMat = signedBoundary (CV,FV)@\\
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
 \mbox{}\verb@def swap(l): return [l[1],l[0],l[2]]@\\
 \mbox{}\verb@boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]@\\
@@ -1648,7 +1765,7 @@ $\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobrea
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb25b}{25b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb27a}{27a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1660,13 +1777,16 @@ $\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobrea
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap56}
-\verb@"test/py/larcc/ex5.py"@\nobreak\ {\footnotesize \NWtarget{nuweb26a}{26a} }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap57}
+\protect\makebox[0ex][r]{\NWtarget{nuweb27e}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test05.py"@\nobreak\ {\footnotesize 27e }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize \NWlink{nuweb26b}{26b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWlink{nuweb26c}{26c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWlink{nuweb26d}{26d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize \NWlink{nuweb28a}{28a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWlink{nuweb28b}{28b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWlink{nuweb28c}{28c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1677,13 +1797,13 @@ $\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobrea
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap57}
-$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize \NWtarget{nuweb26b}{26b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap58}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize 28a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from simplexn import *@\\
 \mbox{}\verb@from larcc import *@\\
-\mbox{}\verb@V,FV = larSimplexGrid([3,3])@\\
+\mbox{}\verb@V,FV = larSimplexGrid1([3,3])@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))@\\
 \mbox{}\verb@EV = larSimplexFacets(FV)@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))@\\
@@ -1694,7 +1814,7 @@ $\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize \NWta
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb26a}{26a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb27e}{27e}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1702,12 +1822,12 @@ $\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize \NWta
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap58}
-$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWtarget{nuweb26c}{26c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap59}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize 28b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@np.set_printoptions(threshold='nan')@\\
-\mbox{}\verb@csrSignedBoundaryMat = signedBoundary (V,FV,EV)@\\
+\mbox{}\verb@csrSignedBoundaryMat = signedBoundary (FV,EV)@\\
 \mbox{}\verb@Z = csr2DenseMatrix(csrSignedBoundaryMat)@\\
 \mbox{}\verb@print "\ncsrSignedBoundaryMat =\n", Z@\\
 \mbox{}\verb@from pylab import *@\\
@@ -1718,7 +1838,7 @@ $\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWtar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb26a}{26a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb27e}{27e}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1726,8 +1846,8 @@ $\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWtar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap59}
-$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWtarget{nuweb26d}{26d}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap60}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize 28c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_1 = signedBoundaryCells(V,FV,EV)@\\
@@ -1741,7 +1861,7 @@ $\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWtar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb26a}{26a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb27e}{27e}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1751,16 +1871,18 @@ $\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWtar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap60}
-\verb@"test/py/larcc/ex6.py"@\nobreak\ {\footnotesize \NWtarget{nuweb27a}{27a} }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap61}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test06.py"@\nobreak\ {\footnotesize 28d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from simplexn import *@\\
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@from scipy.spatial import Delaunay@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWlink{nuweb27b}{27b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize \NWlink{nuweb28a}{28a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize \NWlink{nuweb28b}{28b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1780,8 +1902,8 @@ $\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWtar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap61}
-$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWtarget{nuweb27b}{27b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap62}
+\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def quasiEquilateral(tria):@\\
@@ -1796,7 +1918,7 @@ $\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWtarge
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27a}{27a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28d}{28d}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1804,8 +1926,8 @@ $\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWtarge
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap62}
-$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize \NWtarget{nuweb28a}{28a}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap63}
+\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@verts = np.random.rand(20,2)@\\
@@ -1822,7 +1944,7 @@ $\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27a}{27a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28d}{28d}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1830,8 +1952,8 @@ $\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize 
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap63}
-$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize \NWtarget{nuweb28b}{28b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap64}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_1 = signedBoundaryCells(V,FV,EV)@\\
@@ -1846,7 +1968,7 @@ $\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize \NWtar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27a}{27a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28d}{28d}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1854,8 +1976,8 @@ $\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize \NWtar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap64}
-$\langle\,$Compute the topologically ordered chain of boundary vertices\nobreak\ {\footnotesize \NWtarget{nuweb28c}{28c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap65}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the topologically ordered chain of boundary vertices\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1872,8 +1994,8 @@ $\langle\,$Compute the topologically ordered chain of boundary vertices\nobreak\
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap65}
-$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize \NWtarget{nuweb29a}{29a}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap66}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize 30c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def permutationOrbits(List):@\\
@@ -1908,16 +2030,18 @@ $\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize \NWtarget
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap66}
-\verb@"test/py/larcc/ex7.py"@\nobreak\ {\footnotesize \NWtarget{nuweb29b}{29b} }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap67}
+\protect\makebox[0ex][r]{\NWtarget{nuweb31a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test07.py"@\nobreak\ {\footnotesize 31a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from simplexn import *@\\
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@from largrid import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWlink{nuweb30c}{30c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWlink{nuweb31b}{31b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWlink{nuweb31c}{31c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWlink{nuweb32}{32}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1935,8 +2059,8 @@ $\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize \NWtarget
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap67}
-$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWtarget{nuweb30a}{30a}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap68}
+\protect\makebox[0ex][r]{\NWtarget{nuweb31b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize 31b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@geom_0,topol_0 = [[0.],[1.],[2.],[3.],[4.]],[[0,1],[1,2],[3,4]]@\\
@@ -1948,7 +2072,7 @@ $\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWtar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb29b}{29b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb31a}{31a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1956,8 +2080,8 @@ $\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWtar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap68}
-$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWtarget{nuweb30b}{30b}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap69}
+\protect\makebox[0ex][r]{\NWtarget{nuweb31c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 31c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@squares = larModelProduct([mod_0,mod_1])@\\
@@ -1970,7 +2094,7 @@ $\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb29b}{29b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb31a}{31a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1978,8 +2102,8 @@ $\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap69}
-$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWtarget{nuweb30c}{30c}}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap70}
+\protect\makebox[0ex][r]{\NWtarget{nuweb32}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 32}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@cubes = larModelProduct([squares,mod_0])@\\
@@ -1992,7 +2116,7 @@ $\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb29b}{29b}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb31a}{31a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}

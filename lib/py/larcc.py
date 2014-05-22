@@ -29,7 +29,7 @@ from pyplasm import *
 import collections
 import scipy
 import numpy as np
-from scipy import zeros,arange,mat,amin,amax
+from scipy import zeros,arange,mat,amin,amax,array
 from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 
 from lar2psm import *
@@ -131,38 +131,48 @@ def boundaryCells(cells,facets):
    boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
    return boundaryCells
 
-def signedBoundary (V,CV,FV):
+def signedBoundary (CV,FV):
    # compute the set of pairs of indices to [boundary face,incident coface]
    coo = boundary(CV,FV).tocoo()
    pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
-   
+
    # compute the [face, coface] pair as vertex lists
    vertLists = [[FV[f], CV[c]] for f,c in pairs]
-   
-   # compute the local indices of missing boundary cofaces
-   missingVertIndices = [ coface.index(list(set(coface).difference(face))[0]) 
-                     for face,coface in vertLists]
-   
-   # compute the point matrices to compare for sign
-   cofaceMats = [ [V[k]+[1] for k in cofaceCell]
-               for cofaceCell in TRANS(vertLists)[1]]
-      
+
+   # compute the local (interior to the coface) indices of missing vertices 
+   def missingVert(face,coface): return list(set(coface).difference(face))[0]
+   missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
+
    # signed incidence coefficients
-   cofaceSigns = AA(SIGN)(AA(np.linalg.det)(cofaceMats))
    faceSigns = AA(C(POWER)(-1))(missingVertIndices)
-   signPairProd = AA(PROD)(TRANS([cofaceSigns,faceSigns]))
-   
+
    # signed boundary matrix
-   csrSignedBoundaryMat = csr_matrix( (signPairProd,TRANS(pairs)) )
+   csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
    return csrSignedBoundaryMat
 
 def signedBoundaryCells(verts,cells,facets):
-   csrBoundaryMat = signedBoundary(verts,cells,facets)
+   csrSignedBoundaryMat = signedBoundary(cells,facets)
+
    csrTotalChain = totalChain(cells)
-   csrBoundaryChain = matrixProduct(csrBoundaryMat, csrTotalChain)
-   coo = csrBoundaryChain.tocoo()
-   boundaryCells = list(coo.row * coo.data)
-   return AA(int)(boundaryCells)
+   csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
+   cooCells = csrBoundaryChain.tocoo()
+   
+   boundaryCells = []
+   for k,v in enumerate(cooCells.data):
+      if abs(v) == 1:
+         boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]
+         
+   boundaryCocells = []
+   for k,v in enumerate(boundaryCells):
+      boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)
+      
+   boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
+   boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
+   
+   def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+   orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
+   
+   return orientedBoundaryCells
 def pivotSimplices(V,CV,d=3):
    simplices = []
    for cell in CV:
@@ -317,8 +327,8 @@ if __name__ == "__main__":
    print "\nboundaryCells_2 =\n", boundaryCells_2
    print "\nboundaryCells_1 =\n", boundaryCells_1
    
-   boundary = (V,[FV[k] for k in boundaryCells_2])
-   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
+   boundaryModel = (V,[FV[k] for k in boundaryCells_2])
+   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
    
    print "\n>>> larCellAdjacencies"
    adj_2_cells = larCellAdjacencies(csrFV)
