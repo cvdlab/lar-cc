@@ -8,7 +8,7 @@
 								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
 \usepackage{amssymb,amsmath,amsthm}
 \newtheorem{definition}{Definition}
-\usepackage[colorlinks=true]{hyperref}
+\usepackage[colorlinks]{hyperref}
 
 \input{macros}
 

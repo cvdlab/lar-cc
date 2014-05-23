@@ -1,53 +1,53 @@
-%% -------------------------------------------------------------------------
-%% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
-%% -------------------------------------------------------------------------
-%\providecommand{\NWtxtMacroDefBy}{Macro defined by}
-%\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
-%\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
-%\providecommand{\NWtxtDefBy}{Defined by}
-%\providecommand{\NWtxtRefIn}{Referenced in}
-%\providecommand{\NWtxtNoRef}{Not referenced}
-%\providecommand{\NWtxtFileDefBy}{File defined by}
-%\providecommand{\NWsep}{${\diamond}$}
-%\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
-%\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
-%  \raisebox{\baselineskip}[1.5ex][0ex]{%
-%    \mbox{%
-%      \hypertarget{#1}{%
-%        \raisebox{-1\baselineskip}[0ex][0ex]{%
-%          \mbox{#2}%
-%}}}}}
-%% -------------------------------------------------------------------------
-%
-%\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-%\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-%\geometry{letterpaper}		%...ora4paperora5paperor...
-%%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-%%\usepackage{graphicx}				%Usepdf,png,jpg,oreps§withpdflatex;useepsinDVImode
-%								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
-%\usepackage{amssymb}
-%\usepackage[colorlinks=true]{hyperref}
-%\usepackage{qtree}
-%
-%\input{macros}
-%
-\chapter{Literate programming IDE for LAR-CC 
-%\footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
+% -------------------------------------------------------------------------
+% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
+% -------------------------------------------------------------------------
+\providecommand{\NWtxtMacroDefBy}{Macro defined by}
+\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
+\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
+\providecommand{\NWtxtDefBy}{Defined by}
+\providecommand{\NWtxtRefIn}{Referenced in}
+\providecommand{\NWtxtNoRef}{Not referenced}
+\providecommand{\NWtxtFileDefBy}{File defined by}
+\providecommand{\NWsep}{${\diamond}$}
+\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
+\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
+  \raisebox{\baselineskip}[1.5ex][0ex]{%
+    \mbox{%
+      \hypertarget{#1}{%
+        \raisebox{-1\baselineskip}[0ex][0ex]{%
+          \mbox{#2}%
+}}}}}
+% -------------------------------------------------------------------------
+
+\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}		%...ora4paperora5paperor...
+%\geometry{landscape}		%Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
+%\usepackage{graphicx}				%Usepdf,png,jpg,oreps§withpdflatex;useepsinDVImode
+								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\usepackage{amssymb}
+\usepackage[colorlinks]{hyperref}
+\usepackage{qtree}
+
+\input{macros}
+
+\title{Literate programming IDE for LAR-CC 
+\footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
-%\author{Alberto Paoluzzi}
-%%\date{}							%Activatetodisplayagivendateornodate
-%
-%\begin{document}
-%\maketitle
-%%\nonstopmode
+\author{Alberto Paoluzzi}
+%\date{}							%Activatetodisplayagivendateornodate
+
+\begin{document}
+\maketitle
+%\nonstopmode
 
 \begin{abstract}
 This document introduces the developer of geometric libreries and applications to  the integrated development environment (IDE)  set up for documentation and multilanguage development  using LAR-CC, the Linear Algebraic Representation for geometry, manufacturing and physics with \emph{Chains} and \emph{CoChains}. This IDE is strongly based on the \href{http://www.literateprogramming.com/}{literate programming} tool \emph{Nuweb}, aiming at embedding the code in the documentation, and not vice-versa.
 The main goal of this framework is to facilitate how to express the \emph{why} of software design decisions, and not only the tricky details of low level coding.  I would recommend writing programs as if they were research papers and treat the code as you would write mathematical expressions in a research paper. Using multiple programming languages is allowed and even encouraged in \texttt{larcc}. When possible, the same functions coded in different languages should stay close within the same document subsection. The \texttt{larcc} IDE integrates a few programming, documentation and version control tools, including \href{http://www.tug.org/texlive/}{\LaTeX}, \href{http://sourceforge.net/projects/nuweb/}{\emph{Nuweb}}, \href{http://johnmacfarlane.net/pandoc/}{\emph{Pandoc}},  \href{http://git-scm.com/}{\emph{Git}}, and \href{http://leoeditor.com/}{Leo editor}.
 \end{abstract}
 
-%\tableofcontents
+\tableofcontents
 \section{Up and running}
 
 \subsection{Prerequisites}
@@ -183,6 +183,6 @@ conversely contains all the documentation generated by the system, once again su
 \end{figure}
 
 \bibliographystyle{amsalpha}
-\bibliography{frame.bbl}
+\bibliography{frame}
 
-%\end{document}
+\end{document}

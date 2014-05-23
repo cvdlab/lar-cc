@@ -1297,7 +1297,8 @@ VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
 
 %-------------------------------------------------------------------------------
 @d Assembly generation  of cubes and tetrahedra 
-@{cubes = larModelProduct([squares,mod_0])
+@{from largrid import *
+cubes = larModelProduct([squares,mod_0])
 V,CV = cubes
 simplices = pivotSimplices(V,CV,d=3)
 VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),

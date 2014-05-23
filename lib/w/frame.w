@@ -6,7 +6,7 @@
 %\usepackage{graphicx}				%Usepdf,png,jpg,oreps§withpdflatex;useepsinDVImode
 								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
 \usepackage{amssymb}
-\usepackage[colorlinks=true]{hyperref}
+\usepackage[colorlinks]{hyperref}
 \usepackage{qtree}
 
 \input{macros}

@@ -6,7 +6,7 @@
 \usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
 								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
 \usepackage{amssymb}
-\usepackage{hyperref}
+\usepackage[colorlinks]{hyperref}
 
 %----macros begin---------------------------------------------------------------
 \usepackage{color}
@@ -232,7 +232,7 @@ An example of coding is given below. The \emph{precision} of the string represen
 
 
 \paragraph{Filter the common dictionary into three subsets}
-\texttt{Vertdict}, dictionary of vertices, uses as key stye position vectors of vertices coded as string, and as values the list of integer indices of vertices on the given position. If the point position belongs either to the first or to second argument only, it is stored in \texttt{case1} or \texttt{case2} lists respectively. If the position (\texttt{item.key}) is shared between two vertices, it is stored in \texttt{case12}.
+\texttt{Vertdict}, dictionary of vertices, uses as key the position vectors of vertices coded as string, and as values the list of integer indices of vertices on the given position. If the point position belongs either to the first or to second argument only, it is stored in \texttt{case1} or \texttt{case2} lists respectively. If the position (\texttt{item.key}) is shared between two vertices, it is stored in \texttt{case12}.
 The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of vertices respectively stored in each repository.
 %-------------------------------------------------------------------------------
 @D Filter the common dictionary into three subsets

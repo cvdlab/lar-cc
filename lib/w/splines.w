@@ -6,7 +6,7 @@
 \usepackage{graphicx}				%Usepdf,png,jpg,orepswithpdflatex;useepsinDVImode
 								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
 \usepackage{amssymb}
-\usepackage{hyperref}
+\usepackage[colorlinks]{hyperref}
 
 %----macros begin---------------------------------------------------------------
 \usepackage{color}

@@ -43,5 +43,5 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 BF = boundaryCells(solidCV,FV)
 boundaryFaces = [FV[face] for face in BF]
 B_Rep = V,boundaryFaces
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(B_Rep)))
+VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS(B_Rep)))
 VIEW(STRUCT(MKPOLS(B_Rep)))

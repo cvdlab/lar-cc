@@ -1,13 +1,24 @@
-\newcommand{\NWtarget}[2]{#2}
-\newcommand{\NWlink}[2]{#2}
-\newcommand{\NWtxtMacroDefBy}{Macro defined by}
-\newcommand{\NWtxtMacroRefIn}{Macro referenced in}
-\newcommand{\NWtxtMacroNoRef}{Macro never referenced}
-\newcommand{\NWtxtDefBy}{Defined by}
-\newcommand{\NWtxtRefIn}{Referenced in}
-\newcommand{\NWtxtNoRef}{Not referenced}
-\newcommand{\NWtxtFileDefBy}{File defined by}
-\newcommand{\NWsep}{${\diamond}$}
+% -------------------------------------------------------------------------
+% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
+% -------------------------------------------------------------------------
+\providecommand{\NWtxtMacroDefBy}{Macro defined by}
+\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
+\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
+\providecommand{\NWtxtDefBy}{Defined by}
+\providecommand{\NWtxtRefIn}{Referenced in}
+\providecommand{\NWtxtNoRef}{Not referenced}
+\providecommand{\NWtxtFileDefBy}{File defined by}
+\providecommand{\NWsep}{${\diamond}$}
+\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
+\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
+  \raisebox{\baselineskip}[1.5ex][0ex]{%
+    \mbox{%
+      \hypertarget{#1}{%
+        \raisebox{-1\baselineskip}[0ex][0ex]{%
+          \mbox{#2}%
+}}}}}
+% -------------------------------------------------------------------------
+
 \documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
 \usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
 \geometry{letterpaper}		%...ora4paperora5paperor...
@@ -108,7 +119,7 @@ The \texttt{cellGroups} variable is used to select the groups of $(d+1)$-simplic
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap1}
-$\langle\,$Simplicial model extrusion in accord with a 1D pattern\nobreak\ {\footnotesize \NWtarget{nuweb4a}{4a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Simplicial model extrusion in accord with a 1D pattern\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larExtrude1(model,pattern):@\\
@@ -140,7 +151,7 @@ For each cell in \texttt{FV} a chain of vertices is created, then they are separ
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap2}
-$\langle\,$Append a chain of extruded cells to outcells\nobreak\ {\footnotesize \NWtarget{nuweb4b}{4b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Append a chain of extruded cells to outcells\nobreak\ {\footnotesize 4b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Create the indices of vertices in the cell "tube"\nobreak\ {\footnotesize \NWlink{nuweb4c}{4c}}$\,\rangle$}\verb@@\\
@@ -161,7 +172,7 @@ Here the ``long'' chain of vertices is created.
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap3}
-$\langle\,$Create the indices of vertices in the cell "tube"\nobreak\ {\footnotesize \NWtarget{nuweb4c}{4c}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create the indices of vertices in the cell "tube"\nobreak\ {\footnotesize 4c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@tube = [v + k*offset for k in range(m+1) for v in cell]  @{\NWsep}
@@ -180,7 +191,7 @@ Here the chain of vertices is spitted into subchains, and such subchains are res
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap4}
-$\langle\,$Take groups of d+1 elements, by shifting one position\nobreak\ {\footnotesize \NWtarget{nuweb4d}{4d}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb4d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Take groups of d+1 elements, by shifting one position\nobreak\ {\footnotesize 4d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@cellTube = [tube[k:k+d+1] for k in range(rangelimit)]@\\
@@ -246,7 +257,7 @@ to define a predefinite constant \texttt{VOID}.
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap5}
-$\langle\,$Examples of simplicial complex extrusions\nobreak\ {\footnotesize \NWtarget{nuweb5}{5}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb5}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Examples of simplicial complex extrusions\nobreak\ {\footnotesize 5}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# example 1@\\
@@ -298,7 +309,7 @@ Just notice that the returned grid \texttt{model} has vertices with integer coor
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap6}
-$\langle\,$Generation of simplicial grids\nobreak\ {\footnotesize \NWtarget{nuweb7}{7}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb7}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation of simplicial grids\nobreak\ {\footnotesize 7}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larSimplexGrid1(shape):@\\
@@ -331,7 +342,7 @@ $\langle\,$Generation of simplicial grids\nobreak\ {\footnotesize \NWtarget{nuwe
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap7}
-$\langle\,$Examples of simplicial grids\nobreak\ {\footnotesize \NWtarget{nuweb8a}{8a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Examples of simplicial grids\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@grid_2d = larSimplexGrid1([3,3])@\\
@@ -373,7 +384,7 @@ The \texttt{larSimplexFacets} function, for estraction of non-oriented $(d-1)$-f
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap8}
-$\langle\,$Facets extraction from a set of simplices\nobreak\ {\footnotesize \NWtarget{nuweb8b}{8b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Facets extraction from a set of simplices\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larSimplexFacets(simplices):@\\
@@ -401,7 +412,7 @@ The simple generation of the LAR model of a simplicial decomposition of a 3D cub
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap9}
-$\langle\,$Examples of facet extraction from 3D simplicial cube\nobreak\ {\footnotesize \NWtarget{nuweb9a}{9a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Examples of facet extraction from 3D simplicial cube\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V,CV = larSimplexGrid1([1,1,1])@\\
@@ -429,7 +440,7 @@ The current version of the \texttt{simplexn} library is exported here. Next vers
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap10}
-\verb@"lib/py/simplexn.py"@\nobreak\ {\footnotesize \NWtarget{nuweb9b}{9b} }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/simplexn.py"@\nobreak\ {\footnotesize 9b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# -*- coding: utf-8 -*-@\\
@@ -469,7 +480,7 @@ Then we generate and show a 2D decomposition of the unit square $[0,1]^2\subset\
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap11}
-$\langle\,$Generate a simplicial decomposition ot the $[0,1]^2$ domain\nobreak\ {\footnotesize \NWtarget{nuweb10a}{10a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate a simplicial decomposition ot the $[0,1]^2$ domain\nobreak\ {\footnotesize 10a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V,FV = larSimplexGrid1([3,3])@\\
@@ -489,7 +500,7 @@ Since the complex is simplicial, we can directly extract its facets (in this cas
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap12}
-$\langle\,$Extract the edges of the 2D decomposition\nobreak\ {\footnotesize \NWtarget{nuweb10b}{10b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Extract the edges of the 2D decomposition\nobreak\ {\footnotesize 10b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@EV = larSimplexFacets(FV)@\\
@@ -511,7 +522,7 @@ We are finally able to generate and output a complete test file, including the v
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap13}
-\verb@"test/py/simplexn/test01.py"@\nobreak\ {\footnotesize \NWtarget{nuweb10c}{10c} }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/simplexn/test01.py"@\nobreak\ {\footnotesize 10c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -531,7 +542,7 @@ In this case we produce a $2\times 2\times 2$ grid of tetrahedra. The dimension 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap14}
-$\langle\,$Generate a simplicial decomposition ot the $[0,1]^3$ domain\nobreak\ {\footnotesize \NWtarget{nuweb11a}{11a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate a simplicial decomposition ot the $[0,1]^3$ domain\nobreak\ {\footnotesize 11a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V,CV = larSimplexGrid1([2,2,2])@\\
@@ -552,7 +563,7 @@ and repeat two times the facet extraction:
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap15}
-$\langle\,$Extract the faces and edges of the 3D decomposition\nobreak\ {\footnotesize \NWtarget{nuweb11b}{11b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Extract the faces and edges of the 3D decomposition\nobreak\ {\footnotesize 11b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -575,7 +586,7 @@ and finally export a new test file:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap16}
-\verb@"test/py/simplexn/test02.py"@\nobreak\ {\footnotesize \NWtarget{nuweb11c}{11c} }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb11c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/simplexn/test02.py"@\nobreak\ {\footnotesize 11c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -605,7 +616,7 @@ and finally export a new test file:
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap17}
-$\langle\,$Cumulative sum\nobreak\ {\footnotesize \NWtarget{nuweb12a}{12a}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb12a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cumulative sum\nobreak\ {\footnotesize 12a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -631,7 +642,7 @@ $\langle\,$Cumulative sum\nobreak\ {\footnotesize \NWtarget{nuweb12a}{12a}}$\,\r
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap18}
-$\langle\,$Inport the $Simple_X^n$ library\nobreak\ {\footnotesize \NWtarget{nuweb12b}{12b}}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb12b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Inport the $Simple_X^n$ library\nobreak\ {\footnotesize 12b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" import modules from larcc/lib """@\\
