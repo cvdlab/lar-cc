@@ -424,7 +424,7 @@ def larCuboids(shape, full=False):
 		cells = gridMap(len(shape))
 	else:
 		skeletonIds = range(len(shape)+1)
-		cells = CAT([ gridMap(id) for id in skeletonIds ])
+		cells = [ gridMap(id) for id in skeletonIds ]
 	return vertGrid, cells
 @}
 %-------------------------------------------------------------------------------
@@ -434,9 +434,10 @@ Visualisation examples of grid of dimension 1,2, and 3 are given below and are d
 
 %-------------------------------------------------------------------------------
 @d Multidimensional visualisation examples
-@{VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larCuboids([3],True))))
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larCuboids([3,2],True))))
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larCuboids([3,2,1],True))))
+@{def mergeSkeletons(larSkeletons): return larSkeletons[0],CAT(larSkeletons[1])
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(mergeSkeletons(larCuboids([3],True)))))
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(mergeSkeletons(larCuboids([3,2],True)))))
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(mergeSkeletons(larCuboids([3,2,1],True)))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -505,10 +506,98 @@ if __name__=="__main__":
 @}
 %-------------------------------------------------------------------------------
 
+%===============================================================================
+\section{Face stack of cellular complexes}
+\label{sec:facestack}
+%===============================================================================
+
+%-------------------------------------------------------------------------------
+\subsection{Simplicial complexes}
+%-------------------------------------------------------------------------------
+
+The stack of faces of a simplicial $d$-complex is easy to compute making use of the combinatorial properties of the simplex boundary. If the input is the compressed sparse row representation \texttt{CSR}$(M_d)$ of the binary characteristic matrix $M_d$ of the highest rank cells ($d$-simplices), we repeatedly apply the \texttt{larSimplexFacets} function.
+
+\paragraph{Simplicial face stack computation}
+The whole stack of \texttt{LAR} cell-vertex arrays is computed below for the multidimensional case, and returned ordered from 0-cells to $d$-cells.
+
+%-------------------------------------------------------------------------------
+@D Simplicial face stack computation
+@{""" Simplicial face stack computation """
+def larSimplicialStack(simplices):
+	dim = len(simplices[0])-1
+	faceStack = [simplices]
+	for k in range(dim):
+		faces = larSimplexFacets(faceStack[-1])
+		faceStack.append(faces)
+	return REVERSE(faceStack)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Oriented boundary: Example 2D}
+The file \texttt{test/py/largrid/test04.py} gives an example of computation of the oriented 1D boundary of a 2D simplicial grid. In the variable \texttt{bases} we store the stack of bases of $k$-chains, for $0\leq k\leq 2$. The variable \texttt{boundaryCells} contains the indices of boundary cells, signed according to their absolute orientation. To get a coherent orientation of the model boundary, the boundary 2-cells with negative indices must undergo to reversing their orientation.
+ 
+%-------------------------------------------------------------------------------
+@O test/py/largrid/test04.py
+@{""" Computation of the boundary of a simplicial grid """
+import sys
+sys.path.insert(0, 'lib/py/')
+from larcc import *
+from largrid import *
+
+V,simplices = larSimplexGrid1((2,2))
+bases = larSimplicialStack(simplices)
+boundaryCells = signedBoundaryCells(V,bases[-1],bases[-2])
+
+def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+orientedBoundary = [bases[-2][-k] if k<0 else swap(bases[-2][k]) 
+						for k in boundaryCells]
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))
+submodel = STRUCT(MKPOLS((V,orientedBoundary)))
+VIEW(larModelNumbering(V,bases,submodel))
+@}
+%-------------------------------------------------------------------------------
 
 
+\paragraph{Oriented boundary: Example 3D}
+A very similar example is given below for a 3D simplicial grid, in order to show 
+how to use the components of the LAR cell stack, computed as \texttt{larSimplicialStack(CV)}, and stored in the \texttt{bases} variable. T
+
+%-------------------------------------------------------------------------------
+@O test/py/largrid/test03.py
+@{""" Computation of the boundary of a simplicial grid """
+import sys
+sys.path.insert(0, 'lib/py/')
+from larcc import *
+from largrid import *
+
+V,CV = larSimplexGrid1((2,2,2))
+bases = larSimplicialStack(CV)
+VV,EV,FV,CV = bases
+boundaryCells = signedBoundaryCells(V,CV,FV)
+
+def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+orientedBoundary = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells]
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))
+submodel = EXPLODE(1.05,1.05,1.05)(MKPOLS((V,orientedBoundary)))
+VIEW(larModelNumbering(V,bases,submodel))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Cuboidal complexes}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Polytopal complexes}
+%-------------------------------------------------------------------------------
+
+TODO
+
+%-------------------------------------------------------------------------------
+%===============================================================================
 \section{Cartesian product of cellular complexes}
 \label{sec:product}
+%===============================================================================
 
 \paragraph{LAR model of cellular complexes}
 
@@ -592,6 +681,7 @@ import collections
 @< Multidimensional grid skeletons @>
 @< Generation of grid boundary complex @>
 @< Cartesian product of two lar models   @>
+@< Simplicial face stack computation @>
 if __name__=="__main__":
 	@< Multidimensional visualisation examples @>
 	@< Test examples of Cartesian product @>

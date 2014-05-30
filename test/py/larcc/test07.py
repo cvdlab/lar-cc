@@ -14,6 +14,7 @@ simplices = pivotSimplices(V,FV,d=2)
 VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
               SKEL_1(STRUCT(MKPOLS((V,FV)))) ]))
 
+from largrid import *
 cubes = larModelProduct([squares,mod_0])
 V,CV = cubes
 simplices = pivotSimplices(V,CV,d=3)

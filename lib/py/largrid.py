@@ -83,7 +83,7 @@ def larCuboids(shape, full=False):
       cells = gridMap(len(shape))
    else:
       skeletonIds = range(len(shape)+1)
-      cells = CAT([ gridMap(id) for id in skeletonIds ])
+      cells = [ gridMap(id) for id in skeletonIds ]
    return vertGrid, cells
 
 def gridSkeletons(shape):
@@ -128,10 +128,20 @@ def larModelProduct(twoModels):
     model = [list(v) for v in vertices.keys()], cells
     return model
 
+""" Simplicial face stack computation """
+def larSimplicialStack(simplices):
+   dim = len(simplices[0])-1
+   faceStack = [simplices]
+   for k in range(dim):
+      faces = larSimplexFacets(faceStack[-1])
+      faceStack.append(faces)
+   return REVERSE(faceStack)
+
 if __name__=="__main__":
-   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larCuboids([3],True))))
-   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larCuboids([3,2],True))))
-   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(larCuboids([3,2,1],True))))
+   def mergeSkeletons(larSkeletons): return larSkeletons[0],CAT(larSkeletons[1])
+   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(mergeSkeletons(larCuboids([3],True)))))
+   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(mergeSkeletons(larCuboids([3,2],True)))))
+   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(mergeSkeletons(larCuboids([3,2,1],True)))))
    
    if __name__ == "__main__":
        geom_0,topol_0 = [[0.],[1.],[2.],[3.],[4.]],[[0,1],[1,2],[2,3],[3,4]]

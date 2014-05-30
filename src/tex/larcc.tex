@@ -389,7 +389,159 @@ print "\nccsrPredFilter(csrFE) =\n", csr2DenseMatrix(CSRm)
 
 \section{Topological operations}
 
+In this section we provide the matrix representation of operators to compute the more important and useful topological operations on cellular complexes, and/or the indexed relations they return. We start the section by giving a graphical tool used to test the developed software, concerning the graphical writing of the full set of indices of the cells of every dimension in a 3D cuboidal complex.  
+
+\paragraph{Visualization of cell indices}
+As already outlined, the \texttt{modelIndexing} function return the \emph{hpc} value assembling both the 1-skeletons of the cells of every dimensions, and the graphical output of their indices, located on the centroid of each cell, and displayed using colors and sizes depending on the \emph{rank} of the cell.
+
+%-------------------------------------------------------------------------------
+@D Visualization of cell indices
+@{""" Visualization of cell indices """
+from sysml import *
+def modelIndexing(shape):
+	V, bases = larCuboids(shape,True)
+	# bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
+	color = [YELLOW,CYAN,GREEN,WHITE]
+	nums = AA(range)(AA(len)(bases))
+	hpcs = []
+	for k in range(4):
+		hpcs += [SKEL_1(STRUCT(MKPOLS((V,bases[k]))))]
+		hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
+	return STRUCT(hpcs)
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@D Visualization of cell indices
+@{""" Numbered visualization of a LAR model """
+def larModelNumbering(V,bases,submodel):
+	color = [YELLOW,CYAN,GREEN,WHITE]
+	nums = AA(range)(AA(len)(bases))
+	hpcs = [submodel]
+	for k in range(len(bases)):
+		hpcs += [cellNumbering((V,bases[k]),submodel)(nums[k],color[k],0.3+0.2*k)]
+	return STRUCT(hpcs)
+@}
+%-------------------------------------------------------------------------------
+
+
+
 \subsection{Incidence and adjacency operators}
+
+Let us start by computing the more interesting subset of the binary relationships between the 4 decompositive and/or boundary entities of 3D cellular models.  Therefore, in this case we denote with \texttt{C}, \texttt{F}, \texttt{E}, and \texttt{V}, the 3-cells and their faces, edges and vertices, respectively.
+The input is the full-fledged LAR representation provided by 
+\begin{align}
+\texttt{CV} := \texttt{CSR}(M_3) \\
+\texttt{FV} := \texttt{CSR}(M_2) \\
+\texttt{EV} := \texttt{CSR}(M_1) \\
+\texttt{VV} := \texttt{CSR}(M_0) 
+\end{align}
+
+Of course, $\texttt{CSR}(M_0)$ coincides with the identity matrix of dimension $|V|$ and can by excluded by further considerations.
+Some binary incidence and adjacency relations we are going to compute are:
+\begin{align}
+\texttt{CF} := \texttt{CV} \times \texttt{FV}^t = \texttt{CSR}(M_3)\times\texttt{CSR}(M_2)^t \\
+\texttt{CE} := \texttt{CV} \times \texttt{EV}^t = \texttt{CSR}(M_3)\times\texttt{CSR}(M_1)^t \\
+\texttt{FE} := \texttt{FV} \times \texttt{EV}^t = \texttt{CSR}(M_2)\times\texttt{CSR}(M_1)^t 
+\end{align}
+
+The other possible operators follow from a similer computational pattern.
+
+\paragraph{The programming pattern for incidence computation}
+
+A high-level function \texttt{larIncidence} useful to compute the LAR representation of the incidence matrix (operator) and the incidence relations is given in the script below.
+
+%-------------------------------------------------------------------------------
+@d Some incidence operators
+@{""" Some incidence operators """
+def larIncidence(cells,facets):
+	csrCellFacet = csrCellFaceIncidence(cells,facets)
+	cooCellFacet = csrCellFacet.tocoo()
+	larCellFacet = [[] for cell in range(len(cells))]
+	for i,j,val in zip(cooCellFacet.row,cooCellFacet.col,cooCellFacet.data):
+		if val == 1: larCellFacet[i] += [j]
+	return larCellFacet
+
+@< Cell-Face incidence operator @>
+@< Cell-Edge incidence operator @>
+@< Face-Edge incidence operator @>
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Cell-Face incidence}
+The \texttt{csrCellFaceIncidence} and \texttt{larCellFace} functions are given below, and exported to the \texttt{larcc} module.
+%-------------------------------------------------------------------------------
+@d Cell-Face incidence operator
+@{""" Cell-Face incidence operator """
+def csrCellFaceIncidence(CV,FV):
+	return boundary(FV,CV)
+
+def larCellFace(CV,FV):
+	return larIncidence(CV,FV)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Cell-Edge incidence}
+Analogously, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} functions are given in the following script.
+
+%-------------------------------------------------------------------------------
+@d Cell-Edge incidence operator
+@{""" Cell-Edge incidence operator """
+def csrCellEdgeIncidence(CV,EV):
+	 return boundary(EV,CV)
+
+def larCellEdge(CV,EV):
+	return larIncidence(CV,EV)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Face-Edge incidence}
+Finally, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} functions are provided below.
+
+%-------------------------------------------------------------------------------
+@d Face-Edge incidence operator
+@{""" Face-Edge incidence operator """
+def csrFaceEdgeIncidence(FV,EV):
+	return boundary(EV,FV)
+
+def larFaceEdge(FV,EV):
+	return larIncidence(FV,EV)
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Example}
+The example below concerns a 3D cuboidal grid, by computing a full LAR stack of bases
+\texttt{CV, FV, EV, VV}, showing its fully numbered 3D model, and finally by computing
+some more useful binary relationships (\texttt{CF, CE, FE}), needed for example to compute the signed matrices of boundary operators.
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test10.py
+@{""" A mesh model and various incidence operators """
+import sys
+sys.path.insert(0, 'lib/py/')
+from larcc import *
+from largrid import *
+
+shape = [2,2,2]
+V,(VV,EV,FV,CV) = larCuboids(shape,True)
+"""
+CV = [cell for cell in cellComplex if len(cell)==8]
+FV = [cell for cell in cellComplex if len(cell)==4]
+EV = [cell for cell in cellComplex if len(cell)==2]
+VV = [cell for cell in cellComplex if len(cell)==1]
+"""
+VIEW(modelIndexing(shape))
+
+CF = larCellFace(CV,FV)
+CE = larCellFace(CV,EV)
+FE = larCellFace(FV,EV)
+@}
+%-------------------------------------------------------------------------------
+
+
 
 
 \subsection{Boundary and coboundary operators}
@@ -761,6 +913,9 @@ from lar2psm import *
 @< Oriented boundary cells for simplicial models @>
 @< Computation of cell adjacencies @>
 @< Extraction of facets of a cell complex @>
+@< Some incidence operators @>
+@< Visualization of cell indices @>
+@< Numbered visualization of a LAR model @>
 
 if __name__ == "__main__": 
 	@< Test examples @>

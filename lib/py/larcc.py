@@ -252,6 +252,59 @@ def larFacets(model,dim=3,emptyCellNumber=0):
     cellFacets = sorted(AA(list)(set(AA(tuple)(cellFacets))))
     return V,cellFacets
 
+""" Some incidence operators """
+def larIncidence(cells,facets):
+   csrCellFacet = csrCellFaceIncidence(cells,facets)
+   cooCellFacet = csrCellFacet.tocoo()
+   larCellFacet = [[] for cell in range(len(cells))]
+   for i,j,val in zip(cooCellFacet.row,cooCellFacet.col,cooCellFacet.data):
+      if val == 1: larCellFacet[i] += [j]
+   return larCellFacet
+
+""" Cell-Face incidence operator """
+def csrCellFaceIncidence(CV,FV):
+   return boundary(FV,CV)
+
+def larCellFace(CV,FV):
+   return larIncidence(CV,FV)
+
+""" Cell-Edge incidence operator """
+def csrCellEdgeIncidence(CV,EV):
+    return boundary(EV,CV)
+
+def larCellEdge(CV,EV):
+   return larIncidence(CV,EV)
+
+""" Face-Edge incidence operator """
+def csrFaceEdgeIncidence(FV,EV):
+   return boundary(EV,FV)
+
+def larFaceEdge(FV,EV):
+   return larIncidence(FV,EV)
+
+
+""" Visualization of cell indices """
+from sysml import *
+def modelIndexing(shape):
+   V, bases = larCuboids(shape,True)
+   # bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
+   color = [YELLOW,CYAN,GREEN,WHITE]
+   nums = AA(range)(AA(len)(bases))
+   hpcs = []
+   for k in range(4):
+      hpcs += [SKEL_1(STRUCT(MKPOLS((V,bases[k]))))]
+      hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
+   return STRUCT(hpcs)
+""" Numbered visualization of a LAR model """
+def larModelNumbering(V,bases,submodel):
+   color = [YELLOW,CYAN,GREEN,WHITE]
+   nums = AA(range)(AA(len)(bases))
+   hpcs = [submodel]
+   for k in range(len(bases)):
+      hpcs += [cellNumbering((V,bases[k]),submodel)(nums[k],color[k],0.3+0.2*k)]
+   return STRUCT(hpcs)
+
+
 
 if __name__ == "__main__": 
    
