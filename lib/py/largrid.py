@@ -136,26 +136,20 @@ def larSimplicialStack(simplices):
       faceStack.append(faces)
    return REVERSE(faceStack)
 
-""" Boundary vertices of a cuboidal complex """
-def cuboidalComplexBoundaryVertices(model):
-   V,CV = model
-   d = len(V[0])
-   csrVC = csrCreate(CV).T
-   csrVC.todense()
-   exterior = [v for v in range(csrVC.shape[0]) if sum(csrVC[v].data)<int(2**d) ]
-   return exterior
+""" Extraction of facets from cuboidal complexes """
+def larCuboidsFacets((V,cells)):
+   dim = len(V[0])
+   n = int(2**(dim-1))
+   facets = []
+   for cell in cells:
+      coords = [AR([V[v],v]) for v in cell] # decorate coords with vertex index
+      doubleFacets = [sorted(coords,key=(lambda x: x[k])) for k in range(dim)]
+      facets += AA(AA(LAST))(CAT([[pair[:n],pair[n:]] for pair in doubleFacets]))
+   facets = AA(eval)(set(AA(str)(facets))) # remove duplicates
+   return V,facets
 
-""" Improper facets decomposition """
-def improperFacetsCovering(facets,cells,dim=3):
-   improperFacets = [facet for facet in facets if len(facet)>int(2**(dim-1))] 
-   fathers = [coface for facet in improperFacets for coface in cells 
-            if set(facet).intersection(coface)==set(facet)]
-   brothers = [sorted( [ facet for facet in facets 
-               if set(facet).intersection(coface)==set(facet) ], 
-               key=lambda x: len(x) )
-                  for coface in fathers]
-   out = [list(set(bros[-1]).difference(b)) for bros in brothers for b in bros[:-1]]
-   return [facet for facet in facets+out if len(facet)==int(2**(dim-1))]
+if __name__ == "__main__":
+   VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(cuboidsFacets(larCuboids([3,3,3])))))
 
 if __name__=="__main__":
    def mergeSkeletons(larSkeletons): return larSkeletons[0],CAT(larSkeletons[1])

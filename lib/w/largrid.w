@@ -596,11 +596,13 @@ def cuboidalComplexBoundaryVertices(model):
 	V,CV = model
 	d = len(V[0])
 	csrVC = csrCreate(CV).T
-	csrVC.todense()
-	exterior = [v for v in range(csrVC.shape[0]) if sum(csrVC[v].data)<int(2**d) ]
+	print csrVC.todense()
+	exterior = [v for v in range(csrVC.shape[0]) 
+				if 0 < int(sum(csrVC[v].data)) < int(2**d) ]
 	return exterior
 @}
-%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------		
+
 
 
 \paragraph{Example 2D}
@@ -610,15 +612,15 @@ def cuboidalComplexBoundaryVertices(model):
 @{""" Extraction of boundary vertices of a cuboidal complex """
 import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
+from random import random
 
-shape = (50,50)
-model = larCuboids(shape)
-V,cells = model
-exterior = cuboidalComplexBoundaryVertices(model)
-VIEW(STRUCT(MKPOLS((V,AA(LIST)(exterior)))))
-VIEW(STRUCT(MKPOLS(larFacets((V,cells),dim=2))))
-V,facets = larFacets((V,cells+[exterior]),dim=2)
-EV = improperFacetsCovering(facets,cells,2)
+shape = 20,20
+V,cells = larCuboids(shape)
+cellSpan = prod(shape)
+fraction = 0.9
+remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
+cells = [cells[k] for k in range(cellSpan) if not k in remove]
+V,EV = larCuboidsFacets((V,cells))
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 @}
 %-------------------------------------------------------------------------------
@@ -630,15 +632,15 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 @{""" Extraction of boundary vertices of a cuboidal complex """
 import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
+from random import random
 
 shape = (10,10,10)
-model = larCuboids(shape)
-V,cells = model
-exterior = cuboidalComplexBoundaryVertices(model)
-VIEW(STRUCT(MKPOLS((V,AA(LIST)(exterior)))))
-V,facets = larFacets((V,cells+[exterior]))
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(larFacets((V,cells+[exterior])))))
-FV = improperFacetsCovering(facets,cells)
+V,cells = larCuboids(shape)
+cellSpan = prod(shape)
+fraction = 0.9
+remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
+cells = [cells[k] for k in range(cellSpan) if not k in remove]
+V,FV = larCuboidsFacets((V,cells))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 @}
 %-------------------------------------------------------------------------------
@@ -661,6 +663,7 @@ The default case is 3D. To use the \texttt{improperFacetsCovering} function for 
 @{""" Improper facets decomposition """
 def improperFacetsCovering(facets,cells,dim=3):
 	improperFacets = [facet for facet in facets if len(facet)>int(2**(dim-1))]	
+	print "\nimproperFacets =",improperFacets,"\n"
 	fathers = [coface for facet in improperFacets for coface in cells 
 				if set(facet).intersection(coface)==set(facet)]
 	brothers = [sorted( [ facet for facet in facets 
@@ -675,18 +678,26 @@ def improperFacetsCovering(facets,cells,dim=3):
 \subsubsection{Random polytopal complexes}
 
 
-%import sys; sys.path.insert(0, 'lib/py/')
-%from morph import *
-%from largrid import *
-%import scipy.misc
-%
-%shape = 20,20
-%structure = 5,5
-%assert len(shape) == len(structure)
-%imageVerts = larImageVerts(shape)
-%_, skeletons, operators = imageChainComplex (shape)
-%image_array = randomImage(shape, structure, 0.05)
-%
+\paragraph{Extraction of facets from cuboidal complexes}
+
+%-------------------------------------------------------------------------------
+@D Extraction of facets from cuboidal complexes
+@{""" Extraction of facets from cuboidal complexes """
+def larCuboidsFacets((V,cells)):
+	dim = len(V[0])
+	n = int(2**(dim-1))
+	facets = []
+	for cell in cells:
+		coords = [AR([V[v],v]) for v in cell] # decorate coords with vertex index
+		doubleFacets = [sorted(coords,key=(lambda x: x[k])) for k in range(dim)]
+		facets += AA(AA(LAST))(CAT([[pair[:n],pair[n:]] for pair in doubleFacets]))
+	facets = AA(eval)(set(AA(str)(facets))) # remove duplicates
+	return V,facets
+
+if __name__ == "__main__":
+	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(cuboidsFacets(larCuboids([3,3,3])))))
+@}
+%-------------------------------------------------------------------------------
 
 
 %-------------------------------------------------------------------------------
@@ -784,8 +795,7 @@ import collections
 @< Generation of grid boundary complex @>
 @< Cartesian product of two lar models   @>
 @< Simplicial face stack computation @>
-@< Identification of boundary vertices of a cuboidal complex @>
-@< Identification of cofaces of improper facets @>
+@< Extraction of facets from cuboidal complexes @>
 if __name__=="__main__":
 	@< Multidimensional visualisation examples @>
 	@< Test examples of Cartesian product @>

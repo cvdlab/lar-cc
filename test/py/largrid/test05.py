@@ -1,13 +1,13 @@
 """ Extraction of boundary vertices of a cuboidal complex """
 import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
+from random import random
 
-shape = (50,50)
-model = larCuboids(shape)
-V,cells = model
-exterior = cuboidalComplexBoundaryVertices(model)
-VIEW(STRUCT(MKPOLS((V,AA(LIST)(exterior)))))
-VIEW(STRUCT(MKPOLS(larFacets((V,cells),dim=2))))
-V,facets = larFacets((V,cells+[exterior]),dim=2)
-EV = improperFacetsCovering(facets,cells,2)
+shape = 20,20
+V,cells = larCuboids(shape)
+cellSpan = prod(shape)
+fraction = 0.9
+remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
+cells = [cells[k] for k in range(cellSpan) if not k in remove]
+V,EV = larCuboidsFacets((V,cells))
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
