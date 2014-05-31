@@ -17,7 +17,7 @@ DRAW = COMP([VIEW,STRUCT,MKPOLS])
 master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])
 V,CV = master
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
-hpc = cellNumbering (master,hpc)(range(len(CV)),CYAN,2)
+hpc =   (master,hpc)(range(len(CV)),CYAN,2)
 VIEW(hpc)
 
 toRemove = [13,33,17,37]

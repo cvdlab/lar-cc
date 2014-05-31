@@ -3,8 +3,7 @@ import collections
 from simplexn import *
 import numpy as np
 
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 import larcc
 from larcc import *
 
@@ -136,6 +135,50 @@ def larSimplicialStack(simplices):
       faces = larSimplexFacets(faceStack[-1])
       faceStack.append(faces)
    return REVERSE(faceStack)
+
+""" Boundary vertices of a cuboidal complex """
+def cuboidalComplexBoundaryVertices(model):
+   V,CV = model
+   d = len(V[0])
+   csrVC = csrCreate(CV).T
+   csrVC.todense()
+   exterior = [v for v in range(csrVC.shape[0]) if sum(csrVC[v].data)<int(2**d) ]
+   return exterior
+
+""" Improper facets decomposition """
+def improperFacetsCovering(facets,cells,dim=3):
+   improperFacets = [facet for facet in facets if len(facet)>int(2**(dim-1))] 
+   cofaces = AA(set)(cells)
+   facets = AA(set)(facets)
+   fathers = [coface for facet in improperFacets for coface in cofaces 
+            if set(facet).intersection(coface)==set(facet)]
+   brothers = [sorted( [ facet for facet in facets 
+               if set(facet).intersection(coface)==set(facet) ], 
+               key=lambda x: len(x) )
+                  for coface in fathers]
+   out = []
+   if dim==2:
+      for father,sons in zip(fathers,brothers):
+         out += [ list( sons[-1].difference(sons[0]) ),
+               list( sons[-1].difference(sons[1]) ) ]
+   if dim==3:
+      for father,sons in zip(fathers,brothers):
+         if len(sons[-1])==7:
+            out += [ list( sons[-1].difference(sons[0]) ),
+               list( sons[-1].difference(sons[1]) ),
+               list( sons[-1].difference(sons[2]) ) ]
+         if len(sons[-1])==6:
+            a = list( sons[-1].difference(sons[0]) )
+            if len(a)==4: out += [a]
+            a = list( sons[-1].difference(sons[1]) )
+            if len(a)==4: out += [a]
+            a = list( sons[-1].difference(sons[2]) )
+            if len(a)==4: out += [a]
+            a = list( sons[-1].difference(sons[3]) )
+            if len(a)==4: out += [a]
+               
+   facets = [facet for facet in facets if len(facet)==int(2**(dim-1))]
+   return AA(list)(facets) + out
 
 if __name__=="__main__":
    def mergeSkeletons(larSkeletons): return larSkeletons[0],CAT(larSkeletons[1])

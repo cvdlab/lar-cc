@@ -1,6 +1,5 @@
 """ Computation of the boundary of a simplicial grid """
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 from largrid import *
 

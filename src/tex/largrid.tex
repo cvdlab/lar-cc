@@ -3,7 +3,7 @@
 \geometry{letterpaper}		%...ora4paperora5paperor...
 %\geometry{landscape}		%Activateforforrotatedpagegeometry
 %\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+\usepackage{graphicx}				%Usepdf,png,jpg,orepswithpdflatex;useepsinDVImode
 								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
 \usepackage{amssymb}
 \usepackage[colorlinks]{hyperref}
@@ -539,8 +539,7 @@ The file \texttt{test/py/largrid/test04.py} gives an example of computation of t
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test04.py
 @{""" Computation of the boundary of a simplicial grid """
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 from largrid import *
 
@@ -565,8 +564,7 @@ how to use the components of the LAR cell stack, computed as \texttt{larSimplici
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test03.py
 @{""" Computation of the boundary of a simplicial grid """
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 from largrid import *
 
@@ -586,6 +584,118 @@ VIEW(larModelNumbering(V,bases,submodel))
 %-------------------------------------------------------------------------------
 \subsection{Cuboidal complexes}
 %-------------------------------------------------------------------------------
+
+In order to compute the faces stack of a cuboidal $d$-complex, we are going to preeliminary extract the subset of boundary vertices, identified by the condition of having less than 8 incident 3-cells, and in general---for a cuboidal $d$-complex---a number less than $2^d$ of incident $d$-cells. 
+
+\paragraph{Identification of boundary vertices}
+
+%-------------------------------------------------------------------------------
+@D Identification of boundary vertices of a cuboidal complex
+@{""" Boundary vertices of a cuboidal complex """
+def cuboidalComplexBoundaryVertices(model):
+	V,CV = model
+	d = len(V[0])
+	csrVC = csrCreate(CV).T
+	csrVC.todense()
+	exterior = [v for v in range(csrVC.shape[0]) if sum(csrVC[v].data)<int(2**d) ]
+	return exterior
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Example 2D}
+
+%-------------------------------------------------------------------------------
+@O test/py/largrid/test05.py
+@{""" Extraction of boundary vertices of a cuboidal complex """
+import sys; sys.path.insert(0, 'lib/py/')
+from largrid import *
+
+shape = (50,50)
+model = larCuboids(shape)
+V,cells = model
+exterior = cuboidalComplexBoundaryVertices(model)
+VIEW(STRUCT(MKPOLS((V,AA(LIST)(exterior)))))
+VIEW(STRUCT(MKPOLS(larFacets((V,cells),dim=2))))
+V,facets = larFacets((V,cells+[exterior]),dim=2)
+EV = improperFacetsCovering(facets,cells,2)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Example 3D}
+
+%-------------------------------------------------------------------------------
+@O test/py/largrid/test06.py
+@{""" Extraction of boundary vertices of a cuboidal complex """
+import sys; sys.path.insert(0, 'lib/py/')
+from largrid import *
+
+shape = (10,10,10)
+model = larCuboids(shape)
+V,cells = model
+exterior = cuboidalComplexBoundaryVertices(model)
+VIEW(STRUCT(MKPOLS((V,AA(LIST)(exterior)))))
+V,facets = larFacets((V,cells+[exterior]))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(larFacets((V,cells+[exterior])))))
+FV = improperFacetsCovering(facets,cells)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsubsection{Improper facets decomposition}
+
+When computing the $(d-1)$-facets adjacent to the \emph{exterior} face, by using the \texttt{larFacets} function, some output elements may be said \emph{improper}, since they contain a number of vertices higher than $2^{d-1}$, as shown by the previous examples 
+\texttt{test/py/largrid/test05.py} and \texttt{test/py/largrid/test06.py}. Hence the necessity of properly decomposing such improper subsets of exterior vertices into a suitable collection of regular $(d-1)$-facets (each with $2^{d-1}$ vertices).
+
+\paragraph{Cofaces of improper facets}
+
+The input is the set of facets extracted by the \texttt{larFacets} function, that include some improper facet, i.e.~some vertex subset $\sigma_{d-1}$, with $|\sigma_{d-1}|>2^{d-1}$.
+The output of the \texttt{improperFacetsCovering} function is the full set of regular facets, including the covering  with two or more facets of $2^{d-1}$ cardinality, of each of the improper facets. The first step is the computation of the $\sigma_{d}$ cofaces of improper facets.
+The default case is 3D. To use the \texttt{improperFacetsCovering} function for lower (or higher) dimensionality, the dimension \texttt{dim} of the input LAR \texttt{cells} must be explicitly given.
+
+%-------------------------------------------------------------------------------
+@D Identification of cofaces of improper facets
+@{""" Improper facets decomposition """
+def improperFacetsCovering(facets,cells,dim=3):
+	improperFacets = [facet for facet in facets if len(facet)>int(2**(dim-1))]	
+	cofaces = AA(set)(cells)
+	facets = AA(set)(facets)
+	fathers = [coface for facet in improperFacets for coface in cofaces 
+				if set(facet).intersection(coface)==set(facet)]
+	brothers = [sorted( [ facet for facet in facets 
+					if set(facet).intersection(coface)==set(facet) ], 
+					key=lambda x: len(x) )
+						for coface in fathers]
+	out = []
+	if dim==2:
+		for father,sons in zip(fathers,brothers):
+			out += [ list( sons[-1].difference(sons[0]) ),
+			 		list( sons[-1].difference(sons[1]) ) ]
+	if dim==3:
+		for father,sons in zip(fathers,brothers):
+			if len(sons[-1])==7:
+				out += [ list( sons[-1].difference(sons[0]) ),
+			 		list( sons[-1].difference(sons[1]) ),
+			 		list( sons[-1].difference(sons[2]) ) ]
+			if len(sons[-1])==6:
+				a = list( sons[-1].difference(sons[0]) )
+				if len(a)==4: out += [a]
+				a = list( sons[-1].difference(sons[1]) )
+				if len(a)==4: out += [a]
+				a = list( sons[-1].difference(sons[2]) )
+				if len(a)==4: out += [a]
+				a = list( sons[-1].difference(sons[3]) )
+				if len(a)==4: out += [a]
+					
+	facets = [facet for facet in facets if len(facet)==int(2**(dim-1))]
+	return AA(list)(facets) + out
+@}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Random polytopal complexes}
 
 %-------------------------------------------------------------------------------
 \subsection{Polytopal complexes}
@@ -682,6 +792,8 @@ import collections
 @< Generation of grid boundary complex @>
 @< Cartesian product of two lar models   @>
 @< Simplicial face stack computation @>
+@< Identification of boundary vertices of a cuboidal complex @>
+@< Identification of cofaces of improper facets @>
 if __name__=="__main__":
 	@< Multidimensional visualisation examples @>
 	@< Test examples of Cartesian product @>
@@ -733,8 +845,7 @@ assert larSplit(2*PI)(12) == [[0.0], [0.5235987755982988], [1.0471975511965976],
 
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test02.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 
 mod_1 = larSplit(1)(4), larGrid(4)(1)
@@ -789,8 +900,7 @@ createDir('test/py/largrid/')
 First we define a parametric macro to allow the importing of \texttt{larcc} modules from the project repository \texttt{lib/py/}. When the user needs to import some project's module, she may call this macro as done in Section~\ref{sec:lar2psm}.
 %------------------------------------------------------------------
 @d Import the module
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 import @1
 from @1 import *
 @}

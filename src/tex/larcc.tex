@@ -253,8 +253,7 @@ Let us compute and show in dense form the characteristic matrices of 2- and 1-ce
 By running the file \texttt{test/py/larcc/test08.py} the reader will get the two matrices shown in Example~\ref{ex:denseMat}
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test08.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 @< Test example of Brc to Csr transformation @>
 @< Test examples of Sparse to dense matrix transformation @>
@@ -520,8 +519,7 @@ some more useful binary relationships (\texttt{CF, CE, FE}), needed for example 
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test10.py
 @{""" A mesh model and various incidence operators """
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 from largrid import *
 
@@ -947,8 +945,7 @@ if __name__ == "__main__":
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test09.py
 @{""" comparing oriented boundary and unoriented boundary extraction on a simple example """
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 from larcc import *
 
@@ -977,8 +974,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryCellsFV))))
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test01.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 from largrid import *
 @< input of 2D topology and geometry data @>
@@ -1128,8 +1124,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test02.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 @< boundary of 3D simplicial grid @>
 @}
 %-------------------------------------------------------------------------------
@@ -1178,8 +1173,7 @@ print "\nboundaryCells_2 =\n", boundaryFV
 
 %-------------------------------------------------------------------------------
 @d Importing external modules
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
 from scipy import *
@@ -1237,8 +1231,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
 
 %-------------------------------------------------------------------------------
 @d Generate and view a 3D simplicial grid
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
 V,CV = larSimplexGrid1([4,4,4])
@@ -1271,8 +1264,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test05.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 
 @< Skeletons computation and vilualisation @>
 @< Oriented boundary matrix visualization @>
@@ -1321,8 +1313,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test06.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
 from scipy.spatial import Delaunay
@@ -1412,8 +1403,7 @@ if __name__ == "__main__":
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test07.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
 from largrid import *
