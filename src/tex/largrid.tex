@@ -661,41 +661,33 @@ The default case is 3D. To use the \texttt{improperFacetsCovering} function for 
 @{""" Improper facets decomposition """
 def improperFacetsCovering(facets,cells,dim=3):
 	improperFacets = [facet for facet in facets if len(facet)>int(2**(dim-1))]	
-	cofaces = AA(set)(cells)
-	facets = AA(set)(facets)
-	fathers = [coface for facet in improperFacets for coface in cofaces 
+	fathers = [coface for facet in improperFacets for coface in cells 
 				if set(facet).intersection(coface)==set(facet)]
 	brothers = [sorted( [ facet for facet in facets 
 					if set(facet).intersection(coface)==set(facet) ], 
 					key=lambda x: len(x) )
 						for coface in fathers]
-	out = []
-	if dim==2:
-		for father,sons in zip(fathers,brothers):
-			out += [ list( sons[-1].difference(sons[0]) ),
-			 		list( sons[-1].difference(sons[1]) ) ]
-	if dim==3:
-		for father,sons in zip(fathers,brothers):
-			if len(sons[-1])==7:
-				out += [ list( sons[-1].difference(sons[0]) ),
-			 		list( sons[-1].difference(sons[1]) ),
-			 		list( sons[-1].difference(sons[2]) ) ]
-			if len(sons[-1])==6:
-				a = list( sons[-1].difference(sons[0]) )
-				if len(a)==4: out += [a]
-				a = list( sons[-1].difference(sons[1]) )
-				if len(a)==4: out += [a]
-				a = list( sons[-1].difference(sons[2]) )
-				if len(a)==4: out += [a]
-				a = list( sons[-1].difference(sons[3]) )
-				if len(a)==4: out += [a]
-					
-	facets = [facet for facet in facets if len(facet)==int(2**(dim-1))]
-	return AA(list)(facets) + out
+	out = [list(set(bros[-1]).difference(b)) for bros in brothers for b in bros[:-1]]
+	return [facet for facet in facets+out if len(facet)==int(2**(dim-1))]
 @}
 %-------------------------------------------------------------------------------
 
 \subsubsection{Random polytopal complexes}
+
+
+%import sys; sys.path.insert(0, 'lib/py/')
+%from morph import *
+%from largrid import *
+%import scipy.misc
+%
+%shape = 20,20
+%structure = 5,5
+%assert len(shape) == len(structure)
+%imageVerts = larImageVerts(shape)
+%_, skeletons, operators = imageChainComplex (shape)
+%image_array = randomImage(shape, structure, 0.05)
+%
+
 
 %-------------------------------------------------------------------------------
 \subsection{Polytopal complexes}
