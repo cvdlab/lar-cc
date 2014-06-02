@@ -1,5 +1,4 @@
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 print "\n>>> brc2Csr"
 V = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]]

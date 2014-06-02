@@ -414,13 +414,78 @@ def modelIndexing(shape):
 %-------------------------------------------------------------------------------
 @D Visualization of cell indices
 @{""" Numbered visualization of a LAR model """
-def larModelNumbering(V,bases,submodel):
+def larModelNumbering(V,bases,submodel,numberScaling=1):
 	color = [YELLOW,CYAN,GREEN,WHITE]
 	nums = AA(range)(AA(len)(bases))
 	hpcs = [submodel]
 	for k in range(len(bases)):
-		hpcs += [cellNumbering((V,bases[k]),submodel)(nums[k],color[k],0.3+0.2*k)]
+		hpcs += [cellNumbering((V,bases[k]),submodel)
+					(nums[k],color[k],(0.3+0.2*k)*numberScaling)]
 	return STRUCT(hpcs)
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Drawing of oriented edges}
+The following function return the \texttt{hpc} of the drawing with arrows of the oriented 1-cells of a 2D cellular complex. Of course, each edge orientation is from second to first vertex, independently from the vertex indices. Therefore, the edge orientation can be reversed by swapping the vertex indices in the 1-cell definition. 
+%-------------------------------------------------------------------------------
+@D Drawing of oriented edges
+@{""" Drawing of oriented edges (2D) """
+def mkSignedEdges (model):
+	V,EV = model
+	assert len(V[0])==2
+	hpcs = []
+	times = C(SCALARVECTPROD)
+	for e0,e1 in EV:
+		v0,v1 = V[e0], V[e1]
+		vx,vy = DIFF([ v1, v0 ])
+		nx,ny = [-vy, vx]
+		v2 = SUM([ v0, times(0.66)([vx,vy]) ])
+		v3 = SUM([ v0, times(0.6)([vx,vy]), times(0.06)([nx,ny]) ])
+		v4 = SUM([ v0, times(0.6)([vx,vy]), times(-0.06)([nx,ny]) ])
+		verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]
+		hpcs += [MKPOL([verts,cells,None])]
+	hpc = STRUCT(hpcs)
+	return hpc
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Example of oriented edge drawing}
+An example of drawing of oriented edges is given in \texttt{test/py/larcc/test11.py} file, and in Figure~\ref{numberedcomplex}, showing both the numbering of the cells and the arrows indicating the edge orientation.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=\linewidth]{images/numberedcomplex} 
+   \caption{Example of numbered polytopal complex, including edge orientations.}
+   \label{numberedcomplex}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test11.py
+@{""" Example of oriented edge drawing """
+import sys;sys.path.insert(0, 'lib/py/')
+from larcc import *
+
+V = [[9,0],[13,2],[15,4],[17,8],[14,9],[13,10],[11,11],[9,10],[7,9],[5,9],[3,
+8],[0,6],[2,3],[2,1],[5,0],[7,1],[4,2],[12,10],[6,3],[8,3],[3,5],[5,5],[7,6],
+[8,5],[10,5],[11,4],[10,2],[13,4],[14,6],[13,7],[11,9],[9,7],[7,7],[4,7],[2,
+6],[12,7],[12,5]]
+
+FV = [[0,1,26],[5,6,17],[6,7,17,30],[7,30,31],[7,8,31,32],[24,30,31,35],[3,4,
+28],[4,5,17,29,30,35],[4,28,29],[28,29,35,36],[8,9,32,33],[9,10,33],[11,10,
+33,34],[11,20,34],[20,33,34],[20,21,32,33],[18,21,22],[21,22,32],[22,23,31,
+32],[23,24,31],[11,12,20],[12,16,18,20,21],[18,22,23],[18,19,23],[19,23,24],
+[15,19,24,26],[0,15,26],[24,25,26],[24,25,35,36],[2,3,28],[1,2,27,28],[12,13,
+16],[13,14,16],[14,15,16,18,19],[1,25,26,27],[25,27,36],[36,27,28]]
+
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV))))
+VV = AA(LIST)(range(len(V)))
+_,EV = larFacets((V,FV+[range(16)]),dim=2,emptyCellNumber=1)
+
+submodel = mkSignedEdges((V,EV))
+VIEW(submodel)
+VIEW(larModelNumbering(V,[VV,EV,FV],submodel,3))
 @}
 %-------------------------------------------------------------------------------
 
@@ -914,6 +979,7 @@ from lar2psm import *
 @< Some incidence operators @>
 @< Visualization of cell indices @>
 @< Numbered visualization of a LAR model @>
+@< Drawing of oriented edges @>
 
 if __name__ == "__main__": 
 	@< Test examples @>

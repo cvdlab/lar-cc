@@ -585,31 +585,12 @@ VIEW(larModelNumbering(V,bases,submodel))
 \subsection{Cuboidal complexes}
 %-------------------------------------------------------------------------------
 
-In order to compute the faces stack of a cuboidal $d$-complex, we are going to preeliminary extract the subset of boundary vertices, identified by the condition of having less than 8 incident 3-cells, and in general---for a cuboidal $d$-complex---a number less than $2^d$ of incident $d$-cells. 
-
-\paragraph{Identification of boundary vertices}
-
-%-------------------------------------------------------------------------------
-@D Identification of boundary vertices of a cuboidal complex
-@{""" Boundary vertices of a cuboidal complex """
-def cuboidalComplexBoundaryVertices(model):
-	V,CV = model
-	d = len(V[0])
-	csrVC = csrCreate(CV).T
-	print csrVC.todense()
-	exterior = [v for v in range(csrVC.shape[0]) 
-				if 0 < int(sum(csrVC[v].data)) < int(2**d) ]
-	return exterior
-@}
-%-------------------------------------------------------------------------------		
-
-
 
 \paragraph{Example 2D}
 
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test05.py
-@{""" Extraction of boundary vertices of a cuboidal complex """
+@{""" Extraction of oriented boundary of a cuboidal 2-complex """
 import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 from random import random
@@ -622,14 +603,39 @@ remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
 cells = [cells[k] for k in range(cellSpan) if not k in remove]
 V,EV = larCuboidsFacets((V,cells))
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+
+boundaryCells = signedBoundaryCells(V,cells,EV)
+def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+orientedBoundary = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells]
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))
+
 @}
 %-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned0} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned1} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned2} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned3} 
+   \caption{Extraction of oriented boundary of a cuboidal 2-complex: (a) The cellular 2-complex; (b) complex of 1-cells; (c) oriented boundary; (d) exploded boundary.}
+	\vspace{3mm}
+   \centering
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned0} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned1} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned2} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned3} 
+   \caption{Extraction of oriented boundary of a cuboidal 3-complex: (a) Cellular 3-complex; (b) complex of 2-cells; (c) (exploded) oriented boundary; (d) view from the boundary interior.}
+   \label{fig:2-3-complex}
+\end{figure}
+
 
 \paragraph{Example 3D}
 
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test06.py
-@{""" Extraction of boundary vertices of a cuboidal complex """
+@{""" Extraction of oriented boundary of a cuboidal 3-complex """
 import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 from random import random
@@ -646,34 +652,6 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 %-------------------------------------------------------------------------------
 
 
-
-\subsubsection{Improper facets decomposition}
-
-When computing the $(d-1)$-facets adjacent to the \emph{exterior} face, by using the \texttt{larFacets} function, some output elements may be said \emph{improper}, since they contain a number of vertices higher than $2^{d-1}$, as shown by the previous examples 
-\texttt{test/py/largrid/test05.py} and \texttt{test/py/largrid/test06.py}. Hence the necessity of properly decomposing such improper subsets of exterior vertices into a suitable collection of regular $(d-1)$-facets (each with $2^{d-1}$ vertices).
-
-\paragraph{Cofaces of improper facets}
-
-The input is the set of facets extracted by the \texttt{larFacets} function, that include some improper facet, i.e.~some vertex subset $\sigma_{d-1}$, with $|\sigma_{d-1}|>2^{d-1}$.
-The output of the \texttt{improperFacetsCovering} function is the full set of regular facets, including the covering  with two or more facets of $2^{d-1}$ cardinality, of each of the improper facets. The first step is the computation of the $\sigma_{d}$ cofaces of improper facets.
-The default case is 3D. To use the \texttt{improperFacetsCovering} function for lower (or higher) dimensionality, the dimension \texttt{dim} of the input LAR \texttt{cells} must be explicitly given.
-
-%-------------------------------------------------------------------------------
-@D Identification of cofaces of improper facets
-@{""" Improper facets decomposition """
-def improperFacetsCovering(facets,cells,dim=3):
-	improperFacets = [facet for facet in facets if len(facet)>int(2**(dim-1))]	
-	print "\nimproperFacets =",improperFacets,"\n"
-	fathers = [coface for facet in improperFacets for coface in cells 
-				if set(facet).intersection(coface)==set(facet)]
-	brothers = [sorted( [ facet for facet in facets 
-					if set(facet).intersection(coface)==set(facet) ], 
-					key=lambda x: len(x) )
-						for coface in fathers]
-	out = [list(set(bros[-1]).difference(b)) for bros in brothers for b in bros[:-1]]
-	return [facet for facet in facets+out if len(facet)==int(2**(dim-1))]
-@}
-%-------------------------------------------------------------------------------
 
 \subsubsection{Random polytopal complexes}
 

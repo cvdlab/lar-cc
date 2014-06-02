@@ -1,6 +1,5 @@
 """ A mesh model and various incidence operators """
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from larcc import *
 from largrid import *
 

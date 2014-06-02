@@ -1,5 +1,4 @@
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
 

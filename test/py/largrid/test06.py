@@ -1,4 +1,4 @@
-""" Extraction of boundary vertices of a cuboidal complex """
+""" Extraction of oriented boundary of a cuboidal 3-complex """
 import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 from random import random

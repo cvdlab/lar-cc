@@ -1,6 +1,5 @@
 """ comparing oriented boundary and unoriented boundary extraction on a simple example """
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 from larcc import *
 

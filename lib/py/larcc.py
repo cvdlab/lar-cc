@@ -296,14 +296,33 @@ def modelIndexing(shape):
       hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
    return STRUCT(hpcs)
 """ Numbered visualization of a LAR model """
-def larModelNumbering(V,bases,submodel):
+def larModelNumbering(V,bases,submodel,numberScaling=1):
    color = [YELLOW,CYAN,GREEN,WHITE]
    nums = AA(range)(AA(len)(bases))
    hpcs = [submodel]
    for k in range(len(bases)):
-      hpcs += [cellNumbering((V,bases[k]),submodel)(nums[k],color[k],0.3+0.2*k)]
+      hpcs += [cellNumbering((V,bases[k]),submodel)
+               (nums[k],color[k],(0.3+0.2*k)*numberScaling)]
    return STRUCT(hpcs)
 
+
+""" Drawing of oriented edges (2D) """
+def mkSignedEdges (model):
+   V,EV = model
+   assert len(V[0])==2
+   hpcs = []
+   times = C(SCALARVECTPROD)
+   for e0,e1 in EV:
+      v0,v1 = V[e0], V[e1]
+      vx,vy = DIFF([ v1, v0 ])
+      nx,ny = [-vy, vx]
+      v2 = SUM([ v0, times(0.66)([vx,vy]) ])
+      v3 = SUM([ v0, times(0.6)([vx,vy]), times(0.06)([nx,ny]) ])
+      v4 = SUM([ v0, times(0.6)([vx,vy]), times(-0.06)([nx,ny]) ])
+      verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]
+      hpcs += [MKPOL([verts,cells,None])]
+   hpc = STRUCT(hpcs)
+   return hpc
 
 
 if __name__ == "__main__": 

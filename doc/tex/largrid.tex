@@ -834,44 +834,15 @@ how to use the components of the LAR cell stack, computed as \texttt{larSimplici
 \subsection{Cuboidal complexes}
 %-------------------------------------------------------------------------------
 
-In order to compute the faces stack of a cuboidal $d$-complex, we are going to preeliminary extract the subset of boundary vertices, identified by the condition of having less than 8 incident 3-cells, and in general---for a cuboidal $d$-complex---a number less than $2^d$ of incident $d$-cells. 
-
-\paragraph{Identification of boundary vertices}
-
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap23}
-\protect\makebox[0ex][r]{\NWtarget{nuweb16a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Identification of boundary vertices of a cuboidal complex\nobreak\ {\footnotesize 16a}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@""" Boundary vertices of a cuboidal complex """@\\
-\mbox{}\verb@def cuboidalComplexBoundaryVertices(model):@\\
-\mbox{}\verb@   V,CV = model@\\
-\mbox{}\verb@   d = len(V[0])@\\
-\mbox{}\verb@   csrVC = csrCreate(CV).T@\\
-\mbox{}\verb@   print csrVC.todense()@\\
-\mbox{}\verb@   exterior = [v for v in range(csrVC.shape[0]) @\\
-\mbox{}\verb@            if 0 < int(sum(csrVC[v].data)) < int(2**d) ]@\\
-\mbox{}\verb@   return exterior@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item {\NWtxtMacroNoRef}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------		
-
-
 
 \paragraph{Example 2D}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb16b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test05.py"@\nobreak\ {\footnotesize 16b }$\equiv$
+\begin{flushleft} \small \label{scrap23}
+\protect\makebox[0ex][r]{\NWtarget{nuweb16a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test05.py"@\nobreak\ {\footnotesize 16a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@""" Extraction of boundary vertices of a cuboidal complex """@\\
+\mbox{}\verb@""" Extraction of oriented boundary of a cuboidal 2-complex """@\\
 \mbox{}\verb@import sys; sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from largrid import *@\\
 \mbox{}\verb@from random import random@\\
@@ -884,20 +855,45 @@ In order to compute the faces stack of a cuboidal $d$-complex, we are going to p
 \mbox{}\verb@cells = [cells[k] for k in range(cellSpan) if not k in remove]@\\
 \mbox{}\verb@V,EV = larCuboidsFacets((V,cells))@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@boundaryCells = signedBoundaryCells(V,cells,EV)@\\
+\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
+\mbox{}\verb@orientedBoundary = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells]@\\
+\mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned0} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned1} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned2} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/2Dsigned3} 
+   \caption{Extraction of oriented boundary of a cuboidal 2-complex: (a) The cellular 2-complex; (b) complex of 1-cells; (c) oriented boundary; (d) exploded boundary.}
+	\vspace{3mm}
+   \centering
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned0} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned1} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned2} 
+   \includegraphics[height=0.245\linewidth,width=0.244\linewidth]{images/3Dsigned3} 
+   \caption{Extraction of oriented boundary of a cuboidal 3-complex: (a) Cellular 3-complex; (b) complex of 2-cells; (c) (exploded) oriented boundary; (d) view from the boundary interior.}
+   \label{fig:2-3-complex}
+\end{figure}
+
+
 \paragraph{Example 3D}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap25}
-\protect\makebox[0ex][r]{\NWtarget{nuweb17a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test06.py"@\nobreak\ {\footnotesize 17a }$\equiv$
+\begin{flushleft} \small \label{scrap24}
+\protect\makebox[0ex][r]{\NWtarget{nuweb16b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test06.py"@\nobreak\ {\footnotesize 16b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@""" Extraction of boundary vertices of a cuboidal complex """@\\
+\mbox{}\verb@""" Extraction of oriented boundary of a cuboidal 3-complex """@\\
 \mbox{}\verb@import sys; sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@from largrid import *@\\
 \mbox{}\verb@from random import random@\\
@@ -918,51 +914,13 @@ In order to compute the faces stack of a cuboidal $d$-complex, we are going to p
 
 
 
-\subsubsection{Improper facets decomposition}
-
-When computing the $(d-1)$-facets adjacent to the \emph{exterior} face, by using the \texttt{larFacets} function, some output elements may be said \emph{improper}, since they contain a number of vertices higher than $2^{d-1}$, as shown by the previous examples 
-\texttt{test/py/largrid/test05.py} and \texttt{test/py/largrid/test06.py}. Hence the necessity of properly decomposing such improper subsets of exterior vertices into a suitable collection of regular $(d-1)$-facets (each with $2^{d-1}$ vertices).
-
-\paragraph{Cofaces of improper facets}
-
-The input is the set of facets extracted by the \texttt{larFacets} function, that include some improper facet, i.e.~some vertex subset $\sigma_{d-1}$, with $|\sigma_{d-1}|>2^{d-1}$.
-The output of the \texttt{improperFacetsCovering} function is the full set of regular facets, including the covering  with two or more facets of $2^{d-1}$ cardinality, of each of the improper facets. The first step is the computation of the $\sigma_{d}$ cofaces of improper facets.
-The default case is 3D. To use the \texttt{improperFacetsCovering} function for lower (or higher) dimensionality, the dimension \texttt{dim} of the input LAR \texttt{cells} must be explicitly given.
-
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap26}
-\protect\makebox[0ex][r]{\NWtarget{nuweb17b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Identification of cofaces of improper facets\nobreak\ {\footnotesize 17b}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@""" Improper facets decomposition """@\\
-\mbox{}\verb@def improperFacetsCovering(facets,cells,dim=3):@\\
-\mbox{}\verb@   improperFacets = [facet for facet in facets if len(facet)>int(2**(dim-1))] @\\
-\mbox{}\verb@   print "\nimproperFacets =",improperFacets,"\n"@\\
-\mbox{}\verb@   fathers = [coface for facet in improperFacets for coface in cells @\\
-\mbox{}\verb@            if set(facet).intersection(coface)==set(facet)]@\\
-\mbox{}\verb@   brothers = [sorted( [ facet for facet in facets @\\
-\mbox{}\verb@               if set(facet).intersection(coface)==set(facet) ], @\\
-\mbox{}\verb@               key=lambda x: len(x) )@\\
-\mbox{}\verb@                  for coface in fathers]@\\
-\mbox{}\verb@   out = [list(set(bros[-1]).difference(b)) for bros in brothers for b in bros[:-1]]@\\
-\mbox{}\verb@   return [facet for facet in facets+out if len(facet)==int(2**(dim-1))]@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item {\NWtxtMacroNoRef}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
-
 \subsubsection{Random polytopal complexes}
 
 
 \paragraph{Extraction of facets from cuboidal complexes}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap27}
+\begin{flushleft} \small \label{scrap25}
 \protect\makebox[0ex][r]{\NWtarget{nuweb18}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Extraction of facets from cuboidal complexes\nobreak\ {\footnotesize 18}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1012,7 +970,7 @@ The \texttt{larModelProduct} function takes as input a pair of LAR models and re
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap28}
+\begin{minipage}{\linewidth} \label{scrap26}
 \protect\makebox[0ex][r]{\NWtarget{nuweb19a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cartesian product of two lar models\nobreak\ {\footnotesize 19a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1038,7 +996,7 @@ The following macro is used to generate a dictionary mapping between integer ids
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap29}
+\begin{minipage}{\linewidth} \label{scrap27}
 \protect\makebox[0ex][r]{\NWtarget{nuweb19b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cartesian product of vertices\nobreak\ {\footnotesize 19b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1065,7 +1023,7 @@ Another macro generates the cells of the topological product, represented as lis
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap30}
+\begin{minipage}{\linewidth} \label{scrap28}
 \protect\makebox[0ex][r]{\NWtarget{nuweb19c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Topological product of cells\nobreak\ {\footnotesize 19c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1084,7 +1042,7 @@ Another macro generates the cells of the topological product, represented as lis
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap31}
+\begin{minipage}{\linewidth} \label{scrap29}
 \protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of Cartesian product\nobreak\ {\footnotesize 20a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1114,14 +1072,14 @@ Another macro generates the cells of the topological product, represented as lis
 \label{sec:largrid}
 In this section we assemble top-down the \texttt{largrid} module, by orderly listing the macros it is composed of. As might be expected, the present one is the module version corresponding to the current state of the system, i.e.~to a very initial state. Other functions will be added when needed, and the module translation in different languages (C/C++, Javascript, Haskell, OpenCL kernels) will be (hopefully soon) appended.
 %------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap32}
+\begin{flushleft} \small \label{scrap30}
 \protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/largrid.py"@\nobreak\ {\footnotesize 20b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@"""Module with functions for grid generation and Cartesian product"""@\\
 \mbox{}\verb@import collections@\\
 \mbox{}\verb@@\hbox{$\langle\,$Importing \texttt{simplexn} and \texttt{numpy} libraries\nobreak\ {\footnotesize \NWlink{nuweb23a}{23a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb20c}{20c}\label{scrap33}
+\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb20c}{20c}\label{scrap31}
  }\mbox{}\verb@larcc@ ) {\footnotesize \NWlink{nuweb23d}{23d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generation of vertices of decompositions of 1D intervals\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generation of uniform 0D cellular complex\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
@@ -1158,7 +1116,7 @@ A possible unit test strategy is to create a directory for unit tests associated
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap34}
+\begin{minipage}{\linewidth} \label{scrap32}
 \protect\makebox[0ex][r]{\NWtarget{nuweb21a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create directory and echo of creation\nobreak\ {\footnotesize 21a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1178,11 +1136,11 @@ A possible unit test strategy is to create a directory for unit tests associated
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap35}
+\begin{minipage}{\linewidth} \label{scrap33}
 \protect\makebox[0ex][r]{\NWtarget{nuweb21b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test01.py"@\nobreak\ {\footnotesize 21b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Create directory and echo of creation:\nobreak\ ({\footnotesize \NWtarget{nuweb21c}{21c}\label{scrap36}
+\mbox{}\verb@@\hbox{$\langle\,$Create directory and echo of creation:\nobreak\ ({\footnotesize \NWtarget{nuweb21c}{21c}\label{scrap34}
  }\mbox{}\verb@test/py/largrid/@ ) {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1200,7 +1158,7 @@ A possible unit test strategy is to create a directory for unit tests associated
 Some test examples of the \texttt{larSplit} function are given in the following. First the unit interval $[0,1]$ is splitter into 10 sub intervals, then the $[0,2\pi]$ interval is split into 12 parts, used to generate a polyonal approximatetion of the unit circle $S_1$, centred in the origin and with unit radius.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap37}
+\begin{flushleft} \small \label{scrap35}
 \protect\makebox[0ex][r]{\NWtarget{nuweb21d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test01.py"@\nobreak\ {\footnotesize 21d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1226,7 +1184,7 @@ Some test examples of the \texttt{larSplit} function are given in the following.
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap38}
+\begin{flushleft} \small \label{scrap36}
 \protect\makebox[0ex][r]{\NWtarget{nuweb21e}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid/test02.py"@\nobreak\ {\footnotesize 21e }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1273,8 +1231,6 @@ The list of macros follow.
 \item $\langle\,$Generation of uniform 1D cellular complex\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$ {\footnotesize {\NWtxtRefIn} \NWlink{nuweb20b}{20b}.}
 \item $\langle\,$Generation of vertices of decompositions of 1D intervals\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$ {\footnotesize {\NWtxtRefIn} \NWlink{nuweb20b}{20b}\NWlink{nuweb21d}{, 21d}.
 }
-\item $\langle\,$Identification of boundary vertices of a cuboidal complex\nobreak\ {\footnotesize \NWlink{nuweb16a}{16a}}$\,\rangle$ {\footnotesize {\NWtxtNoRef}.}
-\item $\langle\,$Identification of cofaces of improper facets\nobreak\ {\footnotesize \NWlink{nuweb17b}{17b}}$\,\rangle$ {\footnotesize {\NWtxtNoRef}.}
 \item $\langle\,$Import the module\nobreak\ {\footnotesize \NWlink{nuweb23d}{23d}}$\,\rangle$ {\footnotesize {\NWtxtRefIn} \NWlink{nuweb20b}{20b}\NWlink{nuweb24a}{, 24a}.
 }
 \item $\langle\,$Importing \texttt{simplexn} and \texttt{numpy} libraries\nobreak\ {\footnotesize \NWlink{nuweb23a}{23a}}$\,\rangle$ {\footnotesize {\NWtxtRefIn} \NWlink{nuweb20b}{20b}.}
@@ -1299,7 +1255,7 @@ The list of macros follow.
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap39}
+\begin{minipage}{\linewidth} \label{scrap37}
 \protect\makebox[0ex][r]{\NWtarget{nuweb23a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing \texttt{simplexn} and \texttt{numpy} libraries\nobreak\ {\footnotesize 23a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1319,7 +1275,7 @@ The list of macros follow.
 An useful utility will allow for the creation of a subdirectory from a \texttt{dirpath} \emph{string}.
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap40}
+\begin{minipage}{\linewidth} \label{scrap38}
 \protect\makebox[0ex][r]{\NWtarget{nuweb23b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create directory from path\nobreak\ {\footnotesize 23b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1341,7 +1297,7 @@ An useful utility will allow for the creation of a subdirectory from a \texttt{d
 It may be useful to define the repository(ies) for the unit tests associated to the module:
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap41}
+\begin{minipage}{\linewidth} \label{scrap39}
 \protect\makebox[0ex][r]{\NWtarget{nuweb23c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/largrid-tests.py"@\nobreak\ {\footnotesize 23c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1358,7 +1314,7 @@ It may be useful to define the repository(ies) for the unit tests associated to 
 First we define a parametric macro to allow the importing of \texttt{larcc} modules from the project repository \texttt{lib/py/}. When the user needs to import some project's module, she may call this macro as done in Section~\ref{sec:lar2psm}.
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap42}
+\begin{minipage}{\linewidth} \label{scrap40}
 \protect\makebox[0ex][r]{\NWtarget{nuweb23d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 23d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1379,12 +1335,12 @@ First we define a parametric macro to allow the importing of \texttt{larcc} modu
 \paragraph{Importing a module} A function used to import a generic \texttt{lacccc} module within the current environment is also useful.
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap43}
+\begin{minipage}{\linewidth} \label{scrap41}
 \protect\makebox[0ex][r]{\NWtarget{nuweb24a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Function to import a generic module\nobreak\ {\footnotesize 24a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def importModule(moduleName):@\\
-\mbox{}\verb@   @\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb24b}{24b}\label{scrap44}
+\mbox{}\verb@   @\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb24b}{24b}\label{scrap42}
  }\mbox{}\verb@moduleName@ ) {\footnotesize \NWlink{nuweb23d}{23d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
