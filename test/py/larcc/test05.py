@@ -10,7 +10,7 @@ VV = larSimplexFacets(EV)
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,VV))))
 
 np.set_printoptions(threshold='nan')
-csrSignedBoundaryMat = signedBoundary (FV,EV)
+csrSignedBoundaryMat = signedSimplicialBoundary (FV,EV)
 Z = csr2DenseMatrix(csrSignedBoundaryMat)
 print "\ncsrSignedBoundaryMat =\n", Z
 from pylab import *

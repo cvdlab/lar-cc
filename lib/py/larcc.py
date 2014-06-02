@@ -131,7 +131,7 @@ def boundaryCells(cells,facets):
    boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
    return boundaryCells
 
-def signedBoundary (CV,FV):
+def signedSimplicialBoundary (CV,FV):
    # compute the set of pairs of indices to [boundary face,incident coface]
    coo = boundary(CV,FV).tocoo()
    pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
@@ -153,7 +153,7 @@ def signedBoundary (CV,FV):
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def signedBoundaryCells(verts,cells,facets):
-   csrSignedBoundaryMat = signedBoundary(cells,facets)
+   csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
 
    csrTotalChain = totalChain(cells)
    csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
@@ -302,7 +302,7 @@ def larModelNumbering(V,bases,submodel,numberScaling=1):
    hpcs = [submodel]
    for k in range(len(bases)):
       hpcs += [cellNumbering((V,bases[k]),submodel)
-               (nums[k],color[k],(0.3+0.2*k)*numberScaling)]
+               (nums[k],color[k],(0.5+0.1*k)*numberScaling)]
    return STRUCT(hpcs)
 
 
@@ -323,6 +323,12 @@ def mkSignedEdges (model):
       hpcs += [MKPOL([verts,cells,None])]
    hpc = STRUCT(hpcs)
    return hpc
+
+""" Incidence chain computation """
+def incidenceChain(bases):
+   relations = [larIncidence(cells,facets) 
+               for cells,facets in zip(bases[1:],bases[:-1])]
+   return REVERSE(relations)
 
 
 if __name__ == "__main__": 

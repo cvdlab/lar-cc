@@ -420,7 +420,7 @@ def larModelNumbering(V,bases,submodel,numberScaling=1):
 	hpcs = [submodel]
 	for k in range(len(bases)):
 		hpcs += [cellNumbering((V,bases[k]),submodel)
-					(nums[k],color[k],(0.3+0.2*k)*numberScaling)]
+					(nums[k],color[k],(0.5+0.1*k)*numberScaling)]
 	return STRUCT(hpcs)
 @}
 %-------------------------------------------------------------------------------
@@ -604,6 +604,88 @@ FE = larCellFace(FV,EV)
 @}
 %-------------------------------------------------------------------------------
 
+\subsubsection{Incidence chain}
+
+Let denote with \texttt{CF}, \texttt{FE}, \texttt{EV} the three consecutive incidence relations between $k$-cells and $(k-1)$-cells ($3\leq k\leq 0$) in a 3-complex. In the general multidimensional case, let us call \texttt{CF}$_d$  the generic \emph{binary} incidence operator, between $d$-cells and $(d-1)$-facets, as:
+\[
+\texttt{CF}_d = M_{d-1} M_d^t, 
+\]
+with
+\[
+\texttt{CF}_d := \{a_{ij}\}, \qquad a_{ij} = 
+\left\{
+\begin{array}{cl}
+1 & \mbox{if\ } M_{d-1}(i) M_d(j) = |f_j|  \\
+0 & \mbox{otherwise}  \\  
+\end{array}
+\right.
+\]
+
+\paragraph{Incidence chain computation}
+The function \texttt{incidenceChain}, given below, returns the full stack of \texttt{BRC} incidence matrices of a LAR representation for a cellular complex, starting from its list of bases, i.e.~from \texttt{[VV,EV,FV,CV,...]}. Notice that the function returns the inverse sequence 
+\texttt{[EV,FE,CF,...]}, i.e., \texttt{CF}$_k$ ($1\leq k\leq d$).
+
+%-------------------------------------------------------------------------------
+@d Incidence chain computation
+@{""" Incidence chain computation """
+def incidenceChain(bases):
+	relations = [larIncidence(cells,facets) 
+					for cells,facets in zip(bases[1:],bases[:-1])]
+	return REVERSE(relations)
+@}
+%-------------------------------------------------------------------------------
+
+
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test13.py
+@{""" Example of incidence chain computation """
+import sys; sys.path.insert(0, 'lib/py/')
+from larcc import *
+from largrid import *
+
+shape = (1,1,2) 
+print "\n\nFor a better example provide a greater shape!"
+V,bases = larCuboids(shape,True)
+
+VV,EV,FV,CV = bases
+incidence = incidenceChain([VV,EV,FV,CV])
+relations = ["CF","FE","EV"]
+for k in range(3):
+	print "\n\n incidence", relations[k], "=\n", incidence[k],
+print "\n\n"
+
+submodel = SKEL_1(STRUCT(MKPOLS((V,EV))))
+VIEW(larModelNumbering(V,[VV,EV,FV,CV],submodel,1))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Example of incidence chain computation}
+When running the \texttt{test/py/larcc/test13.py} file one obtains the following printout. 
+Notice that 
+it provides the links between $d$-cell numerations and the numerations of their faces.
+See Figure~\ref{incidenceChain} for this purpose.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/incidenceChain} 
+   \caption{Che stack of incidence relations gives the common links between cell numerations.}
+   \label{incidenceChain}
+\end{figure}
+
+
+%-------------------------------------------------------------------------------
+@d Incidence chain for a 3D cuboidal complex
+@{incidence CF = [[0,2,4,6,8,9],[1,3,5,7,9,10]]
+
+incidence FE = [[0,2,8,9],[1,3,9,10],[4,6,11,12],[5,7,12,13],[0,4,14,15],
+[1,5,15,16],[2,6,17,18],[3,7,18,19],[8,11,14,17],[9,12,15,18],[10,13,16,19]]
+
+incidence EV = [[0,1],[1,2],[3,4],[4,5],[6,7],[7,8],[9,10],[10,11],[0,3],
+[1,4],[2,5],[6,9],[7,10],[8,11],[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]]
+@}
+%-------------------------------------------------------------------------------
 
 
 
@@ -683,7 +765,7 @@ contains all the pairs of incident ($(d-1)$-cell, $d$-cell), corresponding to al
 the 1 elements in the binary boundary matrix. Of course, their number equates the product
 of the number of $d$-cells, times the number of $(d-1)$-facets on the boundary of each $d$-cell.
 For the case of a 3-simplicial complex \texttt{CV}, we have $4|\texttt{CV}|$ \texttt{pairs}
-elements.  The actual goal of the function \texttt{signedBoundary}, in the macro below, is to compute a sign for
+elements.  The actual goal of the function \texttt{signedSimplicialBoundary}, in the macro below, is to compute a sign for
 each of them.
 
 The \texttt{pairs} values must be interpreted as $(i,j)$ values in the incidence matrix \texttt{FC} 
@@ -704,7 +786,7 @@ $\langle v_0, \ldots, v_d \rangle$ cell.
 
 %-------------------------------------------------------------------------------
 @D Signed boundary matrix for simplicial models
-@{def signedBoundary (CV,FV):
+@{def signedSimplicialBoundary (CV,FV):
 	# compute the set of pairs of indices to [boundary face,incident coface]
 	coo = boundary(CV,FV).tocoo()
 	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
@@ -755,7 +837,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 @{def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def signedBoundaryCells(verts,cells,facets):
-	csrSignedBoundaryMat = signedBoundary(cells,facets)
+	csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
 
 	csrTotalChain = totalChain(cells)
 	csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
@@ -980,6 +1062,7 @@ from lar2psm import *
 @< Visualization of cell indices @>
 @< Numbered visualization of a LAR model @>
 @< Drawing of oriented edges @>
+@< Incidence chain computation @>
 
 if __name__ == "__main__": 
 	@< Test examples @>
@@ -1329,7 +1412,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 
 %-------------------------------------------------------------------------------
 @d Computing and viewing the oriented boundary of simplicial grid
-@{csrSignedBoundaryMat = signedBoundary (CV,FV)
+@{csrSignedBoundaryMat = signedSimplicialBoundary (CV,FV)
 boundaryCells_2 = signedBoundaryCells(V,CV,FV)
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
 boundary = (V,boundaryFV)
@@ -1368,7 +1451,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,VV))))
 %-------------------------------------------------------------------------------
 @d Oriented boundary matrix visualization
 @{np.set_printoptions(threshold='nan')
-csrSignedBoundaryMat = signedBoundary (FV,EV)
+csrSignedBoundaryMat = signedSimplicialBoundary (FV,EV)
 Z = csr2DenseMatrix(csrSignedBoundaryMat)
 print "\ncsrSignedBoundaryMat =\n", Z
 from pylab import *
