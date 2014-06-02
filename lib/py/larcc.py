@@ -150,6 +150,8 @@ def signedBoundary (CV,FV):
    csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
    return csrSignedBoundaryMat
 
+def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+
 def signedBoundaryCells(verts,cells,facets):
    csrSignedBoundaryMat = signedBoundary(cells,facets)
 
@@ -168,8 +170,6 @@ def signedBoundaryCells(verts,cells,facets):
       
    boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
    boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
-   
-   def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
    orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
    
    return orientedBoundaryCells

@@ -7,7 +7,6 @@ V,CV = larSimplexGrid1([1,1,1])
 FV = larSimplexFacets(CV)
 
 orientedBoundary = signedBoundaryCells(V,CV,FV)
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 orientedBoundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in orientedBoundary]
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,orientedBoundaryFV))))
 

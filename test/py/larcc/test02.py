@@ -17,7 +17,6 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 print "\nboundaryCells_2 =\n", boundaryCells_2
 
 boundaryCells_2 = signedBoundaryCells(V,CV,FV)
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))

@@ -752,7 +752,9 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 @D Oriented boundary cells for simplicial models
-@{def signedBoundaryCells(verts,cells,facets):
+@{def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
+
+def signedBoundaryCells(verts,cells,facets):
 	csrSignedBoundaryMat = signedBoundary(cells,facets)
 
 	csrTotalChain = totalChain(cells)
@@ -770,8 +772,6 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 		
 	boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
 	boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
-	
-	def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 	orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
 	
 	return orientedBoundaryCells
@@ -1019,7 +1019,6 @@ V,CV = larSimplexGrid1([1,1,1])
 FV = larSimplexFacets(CV)
 
 orientedBoundary = signedBoundaryCells(V,CV,FV)
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 orientedBoundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in orientedBoundary]
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,orientedBoundaryFV))))
 
@@ -1041,7 +1040,6 @@ EV = larSimplexFacets(FV)
 VIEW(mkSignedEdges((V,EV)))
 
 orientedBoundary = signedBoundaryCells(V,FV,EV)
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 orientedBoundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in orientedBoundary]
 VIEW(mkSignedEdges((V,orientedBoundaryEV)))
 @}
@@ -1233,7 +1231,6 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 print "\nboundaryCells_2 =\n", boundaryCells_2
 
 boundaryCells_2 = signedBoundaryCells(V,CV,FV)
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))
@@ -1295,7 +1292,6 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
 @d Computing and viewing its oriented boundary
 @{boundaryCells_2 = signedBoundaryCells(V,CV,FV)
 print "\nboundaryCells_2 =\n", boundaryCells_2
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
 boundaryModel = (V,boundaryFV)
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
@@ -1335,7 +1331,6 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 @d Computing and viewing the oriented boundary of simplicial grid
 @{csrSignedBoundaryMat = signedBoundary (CV,FV)
 boundaryCells_2 = signedBoundaryCells(V,CV,FV)
-def swap(l): return [l[1],l[0],l[2]]
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
 boundary = (V,boundaryFV)
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
@@ -1386,7 +1381,6 @@ show()
 @d Computation of oriented boundary cells 
 @{boundaryCells_1 = signedBoundaryCells(V,FV,EV)
 print "\nboundaryCells_1 =\n", boundaryCells_1
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 boundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells_1]
 bndry = (V,boundaryEV)
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
@@ -1447,7 +1441,6 @@ VIEW(EXPLODE(1.5,1.5,1.5)(pols2D))
 @d Boundary computation and visualisation 
 @{boundaryCells_1 = signedBoundaryCells(V,FV,EV)
 print "\nboundaryCells_1 =\n", boundaryCells_1
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 boundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells_1]
 bndry = (V,boundaryEV)
 VIEW(STRUCT(MKPOLS(bndry) + pols2D))

@@ -1126,6 +1126,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \protect\makebox[0ex][r]{\NWtarget{nuweb18}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 18}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@def signedBoundaryCells(verts,cells,facets):@\\
 \mbox{}\verb@   csrSignedBoundaryMat = signedBoundary(cells,facets)@\\
 \mbox{}\verb@@\\
@@ -1144,8 +1146,6 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@      @\\
 \mbox{}\verb@   boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]@\\
 \mbox{}\verb@   boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))@\\
-\mbox{}\verb@   @\\
-\mbox{}\verb@   def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@   orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))@\\
 \mbox{}\verb@   @\\
 \mbox{}\verb@   return orientedBoundaryCells@\\
@@ -1509,13 +1509,35 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@FV = larSimplexFacets(CV)@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@orientedBoundary = signedBoundaryCells(V,CV,FV)@\\
-\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@orientedBoundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in orientedBoundary]@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,orientedBoundaryFV))))@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@BF = boundaryCells(CV,FV)@\\
 \mbox{}\verb@boundaryCellsFV = [FV[k] for k in BF]@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryCellsFV))))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap43}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test12.py"@\nobreak\ {\footnotesize 26c }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" comparing edge orientation and oriented boundary extraction """@\\
+\mbox{}\verb@import sys; sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from largrid import *@\\
+\mbox{}\verb@from larcc import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V,FV = larSimplexGrid1([5,5])@\\
+\mbox{}\verb@EV = larSimplexFacets(FV)@\\
+\mbox{}\verb@VIEW(mkSignedEdges((V,EV)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@orientedBoundary = signedBoundaryCells(V,FV,EV)@\\
+\mbox{}\verb@orientedBoundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in orientedBoundary]@\\
+\mbox{}\verb@VIEW(mkSignedEdges((V,orientedBoundaryEV)))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1533,7 +1555,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap43}
+\begin{minipage}{\linewidth} \label{scrap44}
 \protect\makebox[0ex][r]{\NWtarget{nuweb27a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test01.py"@\nobreak\ {\footnotesize 27a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1541,16 +1563,16 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@from largrid import *@\\
 \mbox{}\verb@@\hbox{$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWlink{nuweb27b}{27b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWlink{nuweb27c}{27c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWlink{nuweb27d}{27d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWlink{nuweb28a}{28a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWlink{nuweb28b}{28b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb28c}{28c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb29c}{29c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWlink{nuweb28a}{28a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWlink{nuweb28b}{28b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWlink{nuweb28c}{28c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWlink{nuweb28d}{28d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb29c}{29c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWlink{nuweb30c}{30c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1560,7 +1582,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap44}
+\begin{minipage}{\linewidth} \label{scrap45}
 \protect\makebox[0ex][r]{\NWtarget{nuweb27b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize 27b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1582,8 +1604,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap45}
-\protect\makebox[0ex][r]{\NWtarget{nuweb27c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$characteristic matrices\nobreak\ {\footnotesize 27c}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap46}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$characteristic matrices\nobreak\ {\footnotesize 28a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# characteristic matrices@\\
@@ -1604,8 +1626,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap46}
-\protect\makebox[0ex][r]{\NWtarget{nuweb27d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$incidence matrix\nobreak\ {\footnotesize 27d}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap47}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$incidence matrix\nobreak\ {\footnotesize 28b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product@\\
@@ -1624,8 +1646,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap47}
-\protect\makebox[0ex][r]{\NWtarget{nuweb28a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize 28a}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap48}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize 28c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -1646,8 +1668,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap48}
-\protect\makebox[0ex][r]{\NWtarget{nuweb28b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$product of cell complexes\nobreak\ {\footnotesize 28b}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap49}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$product of cell complexes\nobreak\ {\footnotesize 28d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product operator@\\
@@ -1673,8 +1695,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap49}
-\protect\makebox[0ex][r]{\NWtarget{nuweb28c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize 28c}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap50}
+\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 2-skeleton of the 3D product complex@\\
@@ -1700,8 +1722,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap50}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap51}
+\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 1-skeleton of the 3D product complex @\\
@@ -1727,8 +1749,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap51}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$0-coboundary computation\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap52}
+\protect\makebox[0ex][r]{\NWtarget{nuweb29c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$0-coboundary computation\nobreak\ {\footnotesize 29c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -1753,8 +1775,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap52}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-coboundary computation\nobreak\ {\footnotesize 29c}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap53}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-coboundary computation\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrEF3 = matrixProduct(csrEV3, csrTranspose(csrFV3))@\\
@@ -1775,8 +1797,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap53}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-coboundary computation\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap54}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-coboundary computation\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrCV = csrCreate(CV)@\\
@@ -1798,8 +1820,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap54}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap55}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize 30c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary chain visualisation@\\
@@ -1823,8 +1845,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap55}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test02.py"@\nobreak\ {\footnotesize 30c }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap56}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test02.py"@\nobreak\ {\footnotesize 30d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import sys; sys.path.insert(0, 'lib/py/')@\\
@@ -1838,7 +1860,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap56}
+\begin{minipage}{\linewidth} \label{scrap57}
 \protect\makebox[0ex][r]{\NWtarget{nuweb31a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize 31a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1860,7 +1882,6 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@print "\nboundaryCells_2 =\n", boundaryCells_2@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
-\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))@\\
@@ -1870,7 +1891,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb30c}{30c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb30d}{30d}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -1882,7 +1903,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap57}
+\begin{minipage}{\linewidth} \label{scrap58}
 \protect\makebox[0ex][r]{\NWtarget{nuweb31b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test03.py"@\nobreak\ {\footnotesize 31b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1900,7 +1921,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap58}
+\begin{minipage}{\linewidth} \label{scrap59}
 \protect\makebox[0ex][r]{\NWtarget{nuweb31c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing external modules\nobreak\ {\footnotesize 31c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1923,7 +1944,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap59}
+\begin{minipage}{\linewidth} \label{scrap60}
 \protect\makebox[0ex][r]{\NWtarget{nuweb32a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize 32a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1949,7 +1970,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap60}
+\begin{minipage}{\linewidth} \label{scrap61}
 \protect\makebox[0ex][r]{\NWtarget{nuweb32b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize 32b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -1972,13 +1993,12 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap61}
+\begin{minipage}{\linewidth} \label{scrap62}
 \protect\makebox[0ex][r]{\NWtarget{nuweb32c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize 32c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
 \mbox{}\verb@print "\nboundaryCells_2 =\n", boundaryCells_2@\\
-\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]@\\
 \mbox{}\verb@boundaryModel = (V,boundaryFV)@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))@\\
@@ -1997,7 +2017,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap62}
+\begin{minipage}{\linewidth} \label{scrap63}
 \protect\makebox[0ex][r]{\NWtarget{nuweb32d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test04.py"@\nobreak\ {\footnotesize 32d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2014,7 +2034,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap63}
+\begin{minipage}{\linewidth} \label{scrap64}
 \protect\makebox[0ex][r]{\NWtarget{nuweb33a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize 33a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2036,7 +2056,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap64}
+\begin{minipage}{\linewidth} \label{scrap65}
 \protect\makebox[0ex][r]{\NWtarget{nuweb33b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize 33b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2056,13 +2076,12 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap65}
+\begin{minipage}{\linewidth} \label{scrap66}
 \protect\makebox[0ex][r]{\NWtarget{nuweb33c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize 33c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrSignedBoundaryMat = signedBoundary (CV,FV)@\\
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
-\mbox{}\verb@def swap(l): return [l[1],l[0],l[2]]@\\
 \mbox{}\verb@boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]@\\
 \mbox{}\verb@boundary = (V,boundaryFV)@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))@\\
@@ -2083,7 +2102,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap66}
+\begin{minipage}{\linewidth} \label{scrap67}
 \protect\makebox[0ex][r]{\NWtarget{nuweb33d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test05.py"@\nobreak\ {\footnotesize 33d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2102,7 +2121,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap67}
+\begin{minipage}{\linewidth} \label{scrap68}
 \protect\makebox[0ex][r]{\NWtarget{nuweb34a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize 34a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2127,7 +2146,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap68}
+\begin{minipage}{\linewidth} \label{scrap69}
 \protect\makebox[0ex][r]{\NWtarget{nuweb34b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize 34b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2151,13 +2170,12 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap69}
+\begin{minipage}{\linewidth} \label{scrap70}
 \protect\makebox[0ex][r]{\NWtarget{nuweb34c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize 34c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_1 = signedBoundaryCells(V,FV,EV)@\\
 \mbox{}\verb@print "\nboundaryCells_1 =\n", boundaryCells_1@\\
-\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@boundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells_1]@\\
 \mbox{}\verb@bndry = (V,boundaryEV)@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))@\\
@@ -2176,7 +2194,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap70}
+\begin{minipage}{\linewidth} \label{scrap71}
 \protect\makebox[0ex][r]{\NWtarget{nuweb34d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test06.py"@\nobreak\ {\footnotesize 34d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2206,7 +2224,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap71}
+\begin{minipage}{\linewidth} \label{scrap72}
 \protect\makebox[0ex][r]{\NWtarget{nuweb35a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize 35a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2230,7 +2248,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap72}
+\begin{minipage}{\linewidth} \label{scrap73}
 \protect\makebox[0ex][r]{\NWtarget{nuweb35b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize 35b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2256,13 +2274,12 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap73}
+\begin{minipage}{\linewidth} \label{scrap74}
 \protect\makebox[0ex][r]{\NWtarget{nuweb36a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize 36a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_1 = signedBoundaryCells(V,FV,EV)@\\
 \mbox{}\verb@print "\nboundaryCells_1 =\n", boundaryCells_1@\\
-\mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@boundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells_1]@\\
 \mbox{}\verb@bndry = (V,boundaryEV)@\\
 \mbox{}\verb@VIEW(STRUCT(MKPOLS(bndry) + pols2D))@\\
@@ -2280,7 +2297,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap74}
+\begin{minipage}{\linewidth} \label{scrap75}
 \protect\makebox[0ex][r]{\NWtarget{nuweb36b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the topologically ordered chain of boundary vertices\nobreak\ {\footnotesize 36b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2298,7 +2315,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap75}
+\begin{minipage}{\linewidth} \label{scrap76}
 \protect\makebox[0ex][r]{\NWtarget{nuweb36c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize 36c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2334,7 +2351,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap76}
+\begin{minipage}{\linewidth} \label{scrap77}
 \protect\makebox[0ex][r]{\NWtarget{nuweb37a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test07.py"@\nobreak\ {\footnotesize 37a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2362,7 +2379,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap77}
+\begin{minipage}{\linewidth} \label{scrap78}
 \protect\makebox[0ex][r]{\NWtarget{nuweb37b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize 37b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2383,7 +2400,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap78}
+\begin{minipage}{\linewidth} \label{scrap79}
 \protect\makebox[0ex][r]{\NWtarget{nuweb37c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 37c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2405,7 +2422,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap79}
+\begin{minipage}{\linewidth} \label{scrap80}
 \protect\makebox[0ex][r]{\NWtarget{nuweb38}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 38}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
