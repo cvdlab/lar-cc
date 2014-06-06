@@ -1,11 +1,6 @@
 """Module with functions needed to interface LAR with pyplasm"""
-import sys
-sys.path.insert(0, 'lib/py/')
-import simplexn
-
 def importModule(moduleName):
-   import sys
-   sys.path.insert(0, 'lib/py/')
+   import sys; sys.path.insert(0, 'lib/py/')
    import moduleName
    
 
@@ -14,6 +9,8 @@ from pyplasm import *
 def CCOMB(vectors):
     return (sp.array(VECTSUM(vectors)) / float(len(vectors))).tolist()  
 
+import simplexn
+from simplexn import *
 """ class definitions for LAR """
 import scipy
 class Mat(scipy.ndarray): pass

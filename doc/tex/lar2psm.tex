@@ -92,7 +92,7 @@ An useful utility will allow for the creation of a subdirectory from a \texttt{d
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb2c}{2c}\NWlink{nuweb6e}{, 6e}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb2c}{2c}\NWlink{nuweb6d}{, 6d}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -315,15 +315,14 @@ First we define a parametric macro to allow the importing of \texttt{larcc} modu
 \protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Import the module\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@import sys@\\
-\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@import sys; sys.path.insert(0, 'lib/py/')@\\
 \mbox{}\verb@import @@1\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb3a}{3a}\NWlink{nuweb4c}{, 4c}\NWlink{nuweb6a}{, 6a}\NWlink{nuweb6c}{c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb3a}{3a}\NWlink{nuweb4c}{, 4c}\NWlink{nuweb6a}{, 6a}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -362,10 +361,10 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@"""Module with functions needed to interface LAR with pyplasm"""@\\
-\mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb6d}{6d}\label{scrap17}
- }\mbox{}\verb@simplexn@ ) {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Function to import a generic module\nobreak\ {\footnotesize \NWlink{nuweb6a}{6a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Compute the convex combination of a list of vectors\nobreak\ {\footnotesize \NWlink{nuweb2d}{2d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@import simplexn@\\
+\mbox{}\verb@from simplexn import *@\\
 \mbox{}\verb@@\hbox{$\langle\,$types Mat and Verts\nobreak\ {\footnotesize \NWlink{nuweb8a}{8a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Model class\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Struct class\nobreak\ {\footnotesize \NWlink{nuweb8c}{8c}}$\,\rangle$}\verb@@\\
@@ -386,8 +385,8 @@ A possible unit test strategy is to create a directory for unit tests associated
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap18}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$create directory and echo of creation\nobreak\ {\footnotesize 6e}$\,\rangle\equiv$
+\begin{minipage}{\linewidth} \label{scrap17}
+\protect\makebox[0ex][r]{\NWtarget{nuweb6d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$create directory and echo of creation\nobreak\ {\footnotesize 6d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Create directory from path\nobreak\ {\footnotesize \NWlink{nuweb2b}{2b}}$\,\rangle$}\verb@@\\
@@ -406,11 +405,11 @@ A possible unit test strategy is to create a directory for unit tests associated
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap19}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6f}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm/test01.py"@\nobreak\ {\footnotesize 6f }$\equiv$
+\begin{minipage}{\linewidth} \label{scrap18}
+\protect\makebox[0ex][r]{\NWtarget{nuweb6e}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm/test01.py"@\nobreak\ {\footnotesize 6e }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$create directory and echo of creation:\nobreak\ ({\footnotesize \NWtarget{nuweb6g}{6g}\label{scrap20}
+\mbox{}\verb@@\hbox{$\langle\,$create directory and echo of creation:\nobreak\ ({\footnotesize \NWtarget{nuweb6f}{6f}\label{scrap19}
  }\mbox{}\verb@test/py/lar2psm/@ ) {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -425,7 +424,7 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap21}
+\begin{minipage}{\linewidth} \label{scrap20}
 \protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$View model examples\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -462,7 +461,7 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 
 %------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap22}
+\begin{minipage}{\linewidth} \label{scrap21}
 \protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize 7b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -498,7 +497,7 @@ In order to implement a structure as a list of models and transformations, we ne
 
 \paragraph{\texttt{Mat} and \texttt{Verts} classes}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap23}
+\begin{flushleft} \small \label{scrap22}
 \protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$types Mat and Verts\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -518,7 +517,7 @@ In order to implement a structure as a list of models and transformations, we ne
 
 \paragraph{\texttt{Model} class}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap24}
+\begin{flushleft} \small \label{scrap23}
 \protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Model class\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -541,7 +540,7 @@ In order to implement a structure as a list of models and transformations, we ne
 
 \paragraph{\texttt{Struct} iterable class}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap25}
+\begin{flushleft} \small \label{scrap24}
 \protect\makebox[0ex][r]{\NWtarget{nuweb8c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Struct class\nobreak\ {\footnotesize 8c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item

@@ -307,6 +307,47 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(SK1)))
 
 
 
+\subsection{Converting a LAR B-Rep into a set of triangles}
+
+In this section we show how to convert a LAR boundary representation (B-Rep), i.e.~a LAR model $\texttt{V,FV}$ made of 2D faces, usually quads but also general polygons, into a LAR model \texttt{verts,triangles} made by triangles.
+
+\paragraph{From LAR faces to LAR triangles}
+From every boundary face we generate a new vertex in \texttt{V}, computed as the centroid of face vertices, and transform each face in a set of triangles, each one given by the face's centroid and by one of the boundary edges. 
+
+Since each face is known as a spatially unordered set of vertices, we need to make some more work to extract its edges. First, the face is affinely transformed into the $z=0$ plane, then its (now 2D) vertices are circularly ordered around the origin, so that the original vertex indices are also circularly ordered. Such set of edges provides the indices of vertices to be attached to the centroid index to give the needed triangle indices.
+
+%-------------------------------------------------------------------------------
+@D From LAR faces to LAR triangles
+@{def quads2tria(model):
+	V,FV = model
+	out = []
+	nverts = len(V)-1
+	for face in FV:
+		centroid = CCOMB([V[v] for v in face])
+		V += [centroid] 
+		nverts += 1
+		
+		v1, v2 = DIFF([V[face[0]],centroid]), DIFF([V[face[1]],centroid])
+		v3 = VECTPROD([v1,v2])
+		if ABS(VECTNORM(v3)) < 10**3:
+			v1, v2 = DIFF([V[face[0]],centroid]), DIFF([V[face[2]],centroid])
+			v3 = VECTPROD([v1,v2])
+		transf = mat(INV([v1,v2,v3]))
+		verts = [(V[v]*transf).tolist()[0][:-1]  for v in face]
+
+		tcentroid = CCOMB(verts)
+		tverts = [DIFF([v,tcentroid]) for v in verts]	
+		rverts = sorted([[ATAN2(vert),v] for vert,v in zip(tverts,face)])
+		ord = [pair[1] for pair in rverts]
+		ord = ord + [ord[0]]
+		edges = [[n,ord[k+1]] for k,n in enumerate(ord[:-1])]
+		triangles = [[nverts] + edge for edge in edges]
+		out += triangles
+	return V,out
+@}
+%-------------------------------------------------------------------------------
+
+
 \subsection{Exporting the $Simple_x^n$ library}
 The current version of the \texttt{simplexn} library is exported here. Next versions will take care of the OpenCL acceleration and data partitioning with very-large size simplicial grids and their sets of faces.
 
@@ -315,14 +356,16 @@ The current version of the \texttt{simplexn} library is exported here. Next vers
 @{# -*- coding: utf-8 -*-
 """Module for facet extraction, extrusion and simplicial grids"""
 from pyplasm import *
-from lar2psm import *
 from scipy import *
+import sys; sys.path.insert(0, 'lib/py/')
+from lar2psm import *
 
 VOID = V0,CV0 = [[]],[[0]]    # the empty simplicial model
 @< Cumulative sum  @>
 @< Simplicial model extrusion in accord with a 1D pattern @>
 @< Generation of simplicial grids @>
 @< Facets extraction from a set of simplices @>
+@< From LAR faces to LAR triangles @>
 if __name__ == "__main__":
 	@< Examples of simplicial complex extrusions @>
 	@< Examples of simplicial grids @>

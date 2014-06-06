@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Module for facet extraction, extrusion and simplicial grids"""
 from pyplasm import *
-from lar2psm import *
 from scipy import *
+import sys; sys.path.insert(0, 'lib/py/')
+from lar2psm import *
 
 VOID = V0,CV0 = [[]],[[0]]    # the empty simplicial model
 
@@ -45,6 +46,33 @@ def larSimplexFacets(simplices):
     out = sorted(out)
     return [facet for k,facet in enumerate(out[:-1]) if out[k] != out[k+1]] \
       + [out[-1]] 
+
+def quads2tria(model):
+   V,FV = model
+   out = []
+   nverts = len(V)-1
+   for face in FV:
+      centroid = CCOMB([V[v] for v in face])
+      V += [centroid] 
+      nverts += 1
+      
+      v1, v2 = DIFF([V[face[0]],centroid]), DIFF([V[face[1]],centroid])
+      v3 = VECTPROD([v1,v2])
+      if ABS(VECTNORM(v3)) < 10**3:
+         v1, v2 = DIFF([V[face[0]],centroid]), DIFF([V[face[2]],centroid])
+         v3 = VECTPROD([v1,v2])
+      transf = mat(INV([v1,v2,v3]))
+      verts = [(V[v]*transf).tolist()[0][:-1]  for v in face]
+
+      tcentroid = CCOMB(verts)
+      tverts = [DIFF([v,tcentroid]) for v in verts]   
+      rverts = sorted([[ATAN2(vert),v] for vert,v in zip(tverts,face)])
+      ord = [pair[1] for pair in rverts]
+      ord = ord + [ord[0]]
+      edges = [[n,ord[k+1]] for k,n in enumerate(ord[:-1])]
+      triangles = [[nverts] + edge for edge in edges]
+      out += triangles
+   return V,out
 
 if __name__ == "__main__":
    # example 1

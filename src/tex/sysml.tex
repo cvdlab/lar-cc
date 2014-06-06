@@ -567,8 +567,7 @@ DRAW(master)
 Here we develop the same example \texttt{} given above, but using also a cochain of empty cells,
 in order to be able to extract the boundary and coboundary operators of the cell decompositions. 
 The \texttt{exteriorChain}
-of the \texttt{master} diagram is first computed after the \texttt{master} initialisation, and later
-updated with cells defined as empty
+of the \texttt{master} diagram is first computed after the \texttt{master} initialisation, and later updated with cells defined as empty
 
 %-------------------------------------------------------------------------------
 @O test/py/sysml/test05.py
@@ -608,11 +607,22 @@ boundaryFaces = [FV[face] for face in BF]
 B_Rep = V,boundaryFaces
 VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS(B_Rep)))
 VIEW(STRUCT(MKPOLS(B_Rep)))
+
+@< Transform the LAR boundary model in a triangles model @>
 @}
 %-------------------------------------------------------------------------------
 
 
-
+%-------------------------------------------------------------------------------
+@D Transform the LAR boundary model in a triangles model
+@{
+verts, triangles = quads2tria(B_Rep)
+B_Rep = V,boundaryFaces
+VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((verts, triangles))))
+VIEW(STRUCT(MKPOLS((verts, triangles))))
+@}
+@}
+%-------------------------------------------------------------------------------
 
 
 %===============================================================================
@@ -648,7 +658,6 @@ def boundaryOfChain(cells,facets):
 @{from pyplasm import *
 from scipy import *
 import os,sys
-""" import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
 from lar2psm import *
 from simplexn import *

@@ -180,8 +180,7 @@ It works by computing the centroid of each object, and by applying to each of th
 First we define a parametric macro to allow the importing of \texttt{larcc} modules from the project repository \texttt{lib/py/}. When the user needs to import some project's module, she may call this macro as done in Section~\ref{sec:lar2psm}.
 %------------------------------------------------------------------
 @d Import the module
-@{import sys
-sys.path.insert(0, 'lib/py/')
+@{import sys; sys.path.insert(0, 'lib/py/')
 import @1
 @}
 %------------------------------------------------------------------
@@ -203,9 +202,10 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 %------------------------------------------------------------------
 @O lib/py/lar2psm.py
 @{"""Module with functions needed to interface LAR with pyplasm"""
-@< Import the module @(simplexn@) @>
 @< Function to import a generic module @>
 @< Compute the convex combination of a list of vectors @>
+import simplexn
+from simplexn import *
 @< types Mat and Verts @>
 @< Model class @>
 @< Struct class @>

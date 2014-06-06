@@ -1,5 +1,4 @@
-import sys
-sys.path.insert(0, 'lib/py/')
+import sys; sys.path.insert(0, 'lib/py/')
 import lar2psm
 
 from lar2psm import *

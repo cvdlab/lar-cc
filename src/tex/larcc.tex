@@ -630,12 +630,20 @@ The function \texttt{incidenceChain}, given below, returns the full stack of \te
 @d Incidence chain computation
 @{""" Incidence chain computation """
 def incidenceChain(bases):
+	print "\n len(bases) = ",len(bases),"\n"
+	pairsOfBases = zip(bases[1:],bases[:-1])
 	relations = [larIncidence(cells,facets) 
-					for cells,facets in zip(bases[1:],bases[:-1])]
+					for cells,facets in pairsOfBases]
 	return REVERSE(relations)
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/2Doriented} 
+   \caption{The orientation of the boundary of a random cuboidal 2-complex.}
+   \label{2Doriented}
+\end{figure}
 
 
 %-------------------------------------------------------------------------------

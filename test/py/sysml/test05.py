@@ -2,7 +2,6 @@
 from pyplasm import *
 from scipy import *
 import os,sys
-""" import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
 from lar2psm import *
 from simplexn import *
@@ -45,3 +44,10 @@ boundaryFaces = [FV[face] for face in BF]
 B_Rep = V,boundaryFaces
 VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS(B_Rep)))
 VIEW(STRUCT(MKPOLS(B_Rep)))
+
+
+verts, triangles = quads2tria(B_Rep)
+B_Rep = V,boundaryFaces
+VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((verts, triangles))))
+VIEW(STRUCT(MKPOLS((verts, triangles))))
+

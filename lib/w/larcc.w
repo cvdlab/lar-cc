@@ -432,18 +432,19 @@ The following function return the \texttt{hpc} of the drawing with arrows of the
 %-------------------------------------------------------------------------------
 @D Drawing of oriented edges
 @{""" Drawing of oriented edges (2D) """
-def mkSignedEdges (model):
+def mkSignedEdges (model,scalingFactor=1):
 	V,EV = model
 	assert len(V[0])==2
 	hpcs = []
 	times = C(SCALARVECTPROD)
+	frac = 0.06*scalingFactor
 	for e0,e1 in EV:
 		v0,v1 = V[e0], V[e1]
 		vx,vy = DIFF([ v1, v0 ])
 		nx,ny = [-vy, vx]
 		v2 = SUM([ v0, times(0.66)([vx,vy]) ])
-		v3 = SUM([ v0, times(0.6)([vx,vy]), times(0.06)([nx,ny]) ])
-		v4 = SUM([ v0, times(0.6)([vx,vy]), times(-0.06)([nx,ny]) ])
+		v3 = SUM([ v0, times(0.6-frac)([vx,vy]), times(frac)([nx,ny]) ])
+		v4 = SUM([ v0, times(0.6-frac)([vx,vy]), times(-frac)([nx,ny]) ])
 		verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]
 		hpcs += [MKPOL([verts,cells,None])]
 	hpc = STRUCT(hpcs)
@@ -629,12 +630,20 @@ The function \texttt{incidenceChain}, given below, returns the full stack of \te
 @d Incidence chain computation
 @{""" Incidence chain computation """
 def incidenceChain(bases):
+	print "\n len(bases) = ",len(bases),"\n"
+	pairsOfBases = zip(bases[1:],bases[:-1])
 	relations = [larIncidence(cells,facets) 
-					for cells,facets in zip(bases[1:],bases[:-1])]
+					for cells,facets in pairsOfBases]
 	return REVERSE(relations)
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/2Doriented} 
+   \caption{The orientation of the boundary of a random cuboidal 2-complex.}
+   \label{2Doriented}
+\end{figure}
 
 
 %-------------------------------------------------------------------------------
