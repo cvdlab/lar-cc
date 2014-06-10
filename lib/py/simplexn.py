@@ -42,8 +42,8 @@ def larSimplexFacets(simplices):
     out = []
     d = len(simplices[0])
     for simplex in simplices:
-        out += [simplex[0:k]+simplex[k+1:d] for k in range(d)]
-    out = set(AA(str)(sorted(out)))
+        out += AA(sorted)([simplex[0:k]+simplex[k+1:d] for k in range(d)])
+    out = set(AA(str)(out))
     return  sorted(AA(eval)(out))
 
 """ Transformation to triangles by sorting circularly the vertices of faces """

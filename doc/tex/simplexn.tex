@@ -391,8 +391,8 @@ The \texttt{larSimplexFacets} function, for estraction of non-oriented $(d-1)$-f
 \mbox{}\verb@    out = []@\\
 \mbox{}\verb@    d = len(simplices[0])@\\
 \mbox{}\verb@    for simplex in simplices:@\\
-\mbox{}\verb@        out += [simplex[0:k]+simplex[k+1:d] for k in range(d)]@\\
-\mbox{}\verb@    out = set(AA(str)(sorted(out)))@\\
+\mbox{}\verb@        out += AA(sorted)([simplex[0:k]+simplex[k+1:d] for k in range(d)])@\\
+\mbox{}\verb@    out = set(AA(str)(out))@\\
 \mbox{}\verb@    return  sorted(AA(eval)(out))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}

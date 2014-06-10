@@ -172,7 +172,7 @@ csr(EV) = <9x6 sparse matrix of type '<type 'numpy.int64'>'
 The transformation from BRC to CSR format is implemented slightly differently, according to the fact that the matrix dimension is either unknown (\texttt{shape=(0,0)}) or known.
 %-------------------------------------------------------------------------------
 @D Brc to Csr transformation
-@{def csrCreate(BRCmatrix,shape=(0,0)):
+@{def csrCreate(BRCmatrix,lenV=0,shape=(0,0)):
     triples = brc2Coo(BRCmatrix)
     if shape == (0,0):
         CSRmatrix = coo2Csr(triples)
@@ -760,14 +760,6 @@ def incidenceChain(bases):
 @}
 %-------------------------------------------------------------------------------
 
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.5\linewidth]{images/2Doriented} 
-   \caption{The orientation of the boundary of a random cuboidal 2-complex.}
-   \label{2Doriented}
-\end{figure}
-
-
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test13.py
 @{""" Example of incidence chain computation """
@@ -845,11 +837,15 @@ print "\ncoboundary_1 =\n", csr2DenseMatrix(coboundary(FV,EV))
 print "\ncoboundary_0 =\n", csr2DenseMatrix(coboundary(EV,VV))
 @}
 %-------------------------------------------------------------------------------
+
+In the script below it is necessary to guarantee that both \texttt{csrFV} and \texttt{csrCV} are created with the same number of column. The initial steps have this purpose.
+
 %-------------------------------------------------------------------------------
 @D From cells and facets to boundary operator
 @{def boundary(cells,facets):
-    csrCV = csrCreate(cells)
-    csrFV = csrCreate(facets)
+    lenV = max(max(cells),max(facets))
+    csrCV = csrCreate(cells,lenV)
+    csrFV = csrCreate(facets,lenV)
     csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
     facetLengths = [csrCell.getnnz() for csrCell in csrCV]
     return csrBoundaryFilter(csrFC,facetLengths)
@@ -941,7 +937,7 @@ with the matrices having per row the position vectors of vertices of a coface, i
 homogeneous coordinates. The list of signed face indices \texttt{orientedBoundaryCells} is returned by the function.
 
 %-------------------------------------------------------------------------------
-@D Oriented boundary cells for simplicial models
+@D Orientation of general convex cells
 @{def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def signedBoundaryCells(verts,cells,facets):
@@ -1071,13 +1067,45 @@ VIEW(EXPLODE(1.25,1.25,1.25)(MKPOLS((V,orientedBoundary))))
 @}
 %-------------------------------------------------------------------------------
 
-\subsubsection{Boundary orientation of a random triangulation}
+\subsubsection{Boundary orientation of a random (2D) cubical complex}
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test17.py
+@{""" Boundary orientation of a random 2D cubical complex """
+import sys;sys.path.insert(0, 'lib/py/')
+from scipy import linalg
+from larcc import *
+from random import random
+
+# test model generation
+shape = 20,20
+V,FV = larCuboids(shape)
+cellSpan = prod(shape)
+fraction = 0.5
+remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
+FV = [FV[k] for k in range(cellSpan) if not (k in remove)]
+_,EV = larCuboidsFacets((V,FV))
+VV = AA(LIST)(range(len(V)))
+orientedBoundaryCells = signedCellularBoundaryCells(V,[VV,EV,FV])
+
+# test model visualization
+VIEW(STRUCT(MKPOLS((V,FV))))
+VIEW(STRUCT(MKPOLS((V,EV))))
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,orientedBoundaryCells))))
+VIEW(STRUCT(MKPOLS((V,orientedBoundaryCells))))
+VIEW(mkSignedEdges((V,orientedBoundaryCells),2))
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsubsection{Boundary orientation of a random (2D) triangulation}
 
 Here we provide a 2D example of computation of the oriented boundary of a quite convoluted random cellular complex. The steps performed by the scripts in the following paragraphs are listed below:
 
 \begin{enumerate}
 \item	vertices are generated as random point in the unit circle
 \item	the Delaunay triangulation of the whole set of points is built.
+\item	spike-like triangles elimination
 \item	the 90\% of triangles is randomly discarded
 \item	the input LAR is provided by the remaining triangles
 \item	the 1-cells are computed, and —  if  $n_i < n_j$ -- oriented as $v_i \to v_j$
@@ -1087,6 +1115,27 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \item	the signed boundary 1-chain (the red one) is computed by $[\partial_2][\mathbf{1}_2]$,
 	where $[\mathbf{1}_2]$ is the coordinate representation of the “total” 2-chain
 \end{enumerate}
+
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.243\linewidth,width=0.243\linewidth]{images/zigzag1} 
+   \includegraphics[height=0.243\linewidth,width=0.243\linewidth]{images/zigzag2} 
+   \includegraphics[height=0.243\linewidth,width=0.243\linewidth]{images/zigzag3} 
+   \includegraphics[height=0.243\linewidth,width=0.243\linewidth]{images/zigzag4} 
+   \caption{The orientation of the boundary of a random cuboidal 2-complex;
+   (a) 2-cells; (b) 1-cells; (c) exploded boundary 1-chain; (d) oriented boundary 1-chain.}
+   \label{zigzag}
+\vspace{5mm}
+   \centering
+   \includegraphics[height=0.328\linewidth,width=0.328\linewidth]{images/randomdelaunay1} 
+   \includegraphics[height=0.328\linewidth,width=0.328\linewidth]{images/randomdelaunay2} 
+   \includegraphics[height=0.328\linewidth,width=0.328\linewidth]{images/randomdelaunay3} 
+   \caption{The orientation of the boundary of a random simplicial 2-complex;
+   (a) 2-cells; (b) 1-cells; (c) oriented boundary 1-chain (red).}
+   \label{randomdelaunay}
+\end{figure}
 
 
 \paragraph{Top-down implementation}
@@ -1114,7 +1163,8 @@ from random import random
 @D Vertices V generated as random point in the unit circle
 @{""" Vertices V generated as random point in the unit circle """
 verts = []
-for k in range(100):
+npoints = 200
+for k in range(npoints):
 	t = 2*pi*random()
 	u = random()+random()
 	if u > 1: r = 2-u 
@@ -1129,7 +1179,8 @@ VIEW(STRUCT(AA(MK)(verts)))
 @D Delaunay triangulation of the whole set V of points
 @{""" Delaunay triangulation of the whole set V of points """
 triangles = Delaunay(verts)
-cells = [ cell for cell in triangles.vertices.tolist() ]
+def area(cell): return linalg.det([verts[v]+[1] for v in cell])/2
+cells = [ cell for cell in triangles.vertices.tolist() if area(cell)>PI/(3*npoints)]
 V, FV = AA(list)(verts), cells
 @}
 %-------------------------------------------------------------------------------
@@ -1138,7 +1189,7 @@ V, FV = AA(list)(verts), cells
 %-------------------------------------------------------------------------------
 @D Fraction of triangles randomly discarded
 @{""" Fraction of triangles randomly discarded """
-fraction = 0.9
+fraction = 0.7
 cellSpan = len(FV)
 remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
 FV = [FV[k] for k in range(cellSpan) if not k in remove]
@@ -1184,30 +1235,33 @@ orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])
 %-------------------------------------------------------------------------------
 @D Display the boundary 1-chain
 @{""" Display the boundary 1-chain """
+VIEW(STRUCT(MKPOLS((V,FV))))
 VIEW(STRUCT(
 	MKPOLS((V,FV)) +
-	[COLOR(RED)(mkSignedEdges((V,orientedBoundary)))]
-))
+	[COLOR(RED)(mkSignedEdges((V,orientedBoundary)))]  ))
 @}
 %-------------------------------------------------------------------------------
 
 
 %-------------------------------------------------------------------------------
 
-\paragraph{Orienting polytopal cells}
-\begin{description}
-	\item[input]:  "cell" indices of a convex and solid polytopes and "V" vertices;
-	\item[output]:  biggest "simplex" indices spanning the polytope.
-	\item[\tt m]: number of cell vertices
-	\item[\tt d]: dimension (number of coordinates) of cell vertices
-	\item[\tt d+1]: number of simplex vertices
-	\item[\tt vcell]: cell vertices
-	\item[\tt vsimplex]: simplex vertices
-	\item[\tt Id]: identity matrix
-	\item[\tt basis]: orthonormal spanning set of vectors $e_k$
-	\item[\tt vector]: position vector of a simplex vertex in translated coordinates
-	\item[\tt unUsedIndices]: cell indices not moved to simplex
-\end{description}
+\subsection{Orienting polytopal cells}
+
+An orientation can be allocated to a general convex (polytopal) cell by computing the biggest simplex in its interior, and attributing to the cell the orientation of the contained simplex. 
+It is in fact easy to see that the orientation can be propagated via adjacent coherently oriented simplexes, until to cover the whole cell.
+
+The variables in the following script have the meaning specified below:
+{input} :  "cell" indices of a convex and solid polytopes and "V" vertices;
+{output} :  biggest "simplex" indices spanning the polytope;
+{\tt m} : number of cell vertices;
+{\tt d} : dimension (number of coordinates) of cell vertices;
+{\tt d+1} : number of simplex vertices;
+{\tt vcell} : cell vertices;
+{\tt vsimplex} : simplex vertices;
+{\tt Id} : identity matrix;
+{\tt basis} : orthonormal spanning set of vectors $e_k$;
+{\tt vector} : position vector of a simplex vertex in translated coordinates;
+{\tt unUsedIndices} : cell indices not moved to simplex.
 
 %-------------------------------------------------------------------------------
 @D Oriented boundary cells for simplicial models
@@ -1326,7 +1380,7 @@ from lar2psm import *
 @< From cells and facets to boundary operator @>
 @< From cells and facets to boundary cells @>
 @< Signed boundary matrix for simplicial models @>
-@< Oriented boundary cells for simplicial models @>
+@< Orientation of general convex cells @>
 @< Computation of cell adjacencies @>
 @< Extraction of facets of a cell complex @>
 @< Some incidence operators @>

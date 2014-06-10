@@ -670,10 +670,10 @@ def larCuboidsFacets((V,cells)):
 		doubleFacets = [sorted(coords,key=(lambda x: x[k])) for k in range(dim)]
 		facets += AA(AA(LAST))(CAT([[pair[:n],pair[n:]] for pair in doubleFacets]))
 	facets = AA(eval)(set(AA(str)(facets))) # remove duplicates
-	return V,facets
+	return V,sorted(facets)
 
 if __name__ == "__main__":
-	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(cuboidsFacets(larCuboids([3,3,3])))))
+	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(larCuboidsFacets(larCuboids([3,3,3])))))
 @}
 %-------------------------------------------------------------------------------
 
