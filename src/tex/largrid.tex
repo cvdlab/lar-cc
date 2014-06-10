@@ -673,7 +673,7 @@ def larCuboidsFacets((V,cells)):
 	return V,facets
 
 if __name__ == "__main__":
-	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(cuboidsFacets(larCuboids([3,3,3])))))
+	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(larCuboidsFacets(larCuboids([3,3,3])))))
 @}
 %-------------------------------------------------------------------------------
 

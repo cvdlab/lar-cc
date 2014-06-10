@@ -608,13 +608,15 @@ B_Rep = V,boundaryFaces
 VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS(B_Rep)))
 VIEW(STRUCT(MKPOLS(B_Rep)))
 
-@< Transform the LAR boundary model in a triangles model @>
+@< Transform the LAR boundary model in a triangle model @>
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Transform the LAR boundary model in a triangles model}
+The transformation from a boundary representation made by general 2D convex faces to a set of triangle faces is provided below.
 
 %-------------------------------------------------------------------------------
-@D Transform the LAR boundary model in a triangles model
+@D Transform the LAR boundary model in a triangle model
 @{
 verts, triangles = quads2tria(B_Rep)
 B_Rep = V,boundaryFaces

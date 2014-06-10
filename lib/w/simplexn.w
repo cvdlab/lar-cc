@@ -276,7 +276,7 @@ The chain of oriented boundary facets of $\sigma^d$, usually denoted as $\partia
 
 \paragraph{Implementation}
 
-The \texttt{larSimplexFacets} function, for estraction of non-oriented $(d-1)$-facets of $d$-dimensional simplices, returns a list of $d$-tuples of integers, i.e.~the input LAR representation of the topology of a cellular complex. The final \emph{list comprehension} is used to remove the duplicated facets, by taking only the last element of any subsequence with possibly duplicated elements.
+The \texttt{larSimplexFacets} function, for estraction of non-oriented $(d-1)$-facets of $d$-dimensional simplices, returns a list of $d$-tuples of integers, i.e.~the input LAR representation of the topology of a cellular complex. The final steps are used to remove the duplicated facets, by transforming the sorted facets into a \emph{set of strings}, so removing the duplicated elements.
         
 %-------------------------------------------------------------------------------
 @d Facets extraction from a set of simplices
@@ -285,9 +285,8 @@ The \texttt{larSimplexFacets} function, for estraction of non-oriented $(d-1)$-f
     d = len(simplices[0])
     for simplex in simplices:
         out += [simplex[0:k]+simplex[k+1:d] for k in range(d)]
-    out = sorted(out)
-    return [facet for k,facet in enumerate(out[:-1]) if out[k] != out[k+1]] \
-    	+ [out[-1]] 
+    out = set(AA(str)(sorted(out)))
+    return  sorted(AA(eval)(out))
 @}
 %-------------------------------------------------------------------------------
 
@@ -311,14 +310,15 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(SK1)))
 
 In this section we show how to convert a LAR boundary representation (B-Rep), i.e.~a LAR model $\texttt{V,FV}$ made of 2D faces, usually quads but also general polygons, into a LAR model \texttt{verts,triangles} made by triangles.
 
-\paragraph{From LAR faces to LAR triangles}
+\paragraph{From LAR faces to LAR triangles by vertex sorting}
 From every boundary face we generate a new vertex in \texttt{V}, computed as the centroid of face vertices, and transform each face in a set of triangles, each one given by the face's centroid and by one of the boundary edges. 
 
 Since each face is known as a spatially unordered set of vertices, we need to make some more work to extract its edges. First, the face is affinely transformed into the $z=0$ plane, then its (now 2D) vertices are circularly ordered around the origin, so that the original vertex indices are also circularly ordered. Such set of edges provides the indices of vertices to be attached to the centroid index to give the needed triangle indices.
 
 %-------------------------------------------------------------------------------
 @D From LAR faces to LAR triangles
-@{def quads2tria(model):
+@{""" Transformation to triangles by sorting circularly the vertices of faces """
+def quads2tria(model):
 	V,FV = model
 	out = []
 	nverts = len(V)-1

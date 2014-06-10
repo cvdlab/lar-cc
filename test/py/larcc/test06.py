@@ -10,7 +10,7 @@ def quasiEquilateral(tria):
     if m/a < 1.7 and m/b < 1.7 and m/c < 1.7: return True
     else: return False
 
-verts = np.random.rand(20,2)
+verts = np.random.rand(50,2)
 verts = (verts - [0.5,0.5]) * 2
 triangles = Delaunay(verts)
 cells = [ cell for cell in triangles.vertices.tolist()
@@ -20,10 +20,7 @@ EV = larSimplexFacets(FV)
 pols2D = MKPOLS((V,FV))
 VIEW(EXPLODE(1.5,1.5,1.5)(pols2D))
 
-boundaryCells_1 = signedBoundaryCells(V,FV,EV)
-print "\nboundaryCells_1 =\n", boundaryCells_1
-boundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells_1]
-bndry = (V,boundaryEV)
-VIEW(STRUCT(MKPOLS(bndry) + pols2D))
-VIEW(COLOR(RED)(STRUCT(MKPOLS(bndry))))
+orientedBoundary = signedBoundaryCells(V,FV,EV)
+submodel = mkSignedEdges((V,orientedBoundary))
+VIEW(submodel)
 

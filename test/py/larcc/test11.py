@@ -20,4 +20,8 @@ _,EV = larFacets((V,FV+[range(16)]),dim=2,emptyCellNumber=1)
 
 submodel = mkSignedEdges((V,EV))
 VIEW(submodel)
-VIEW(larModelNumbering(V,[VV,EV,FV],submodel,3))
+VIEW(larModelNumbering(V,[VV,EV,FV],submodel,2))
+
+orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])
+submodel = mkSignedEdges((V,orientedBoundary))
+VIEW(submodel)

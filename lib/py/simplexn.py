@@ -43,10 +43,10 @@ def larSimplexFacets(simplices):
     d = len(simplices[0])
     for simplex in simplices:
         out += [simplex[0:k]+simplex[k+1:d] for k in range(d)]
-    out = sorted(out)
-    return [facet for k,facet in enumerate(out[:-1]) if out[k] != out[k+1]] \
-      + [out[-1]] 
+    out = set(AA(str)(sorted(out)))
+    return  sorted(AA(eval)(out))
 
+""" Transformation to triangles by sorting circularly the vertices of faces """
 def quads2tria(model):
    V,FV = model
    out = []

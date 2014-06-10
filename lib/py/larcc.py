@@ -116,9 +116,6 @@ def coboundary(cells,facets):
     Boundary = boundary(cells,facets)
     return csrTranspose(Boundary)
 
-def zeroChain(cells):
-   pass
-
 def totalChain(cells):
    return csrCreate([[0] for cell in cells])  # ????  zero ??
 
@@ -184,7 +181,7 @@ def pivotSimplices(V,CV,d=3):
       simplex += [cell[0]]
       basis = []
       tensor = np.array(IDNT(d))
-      # look for most far cell vertex
+      # look for most distant cell vertex
       dists = [SUM([SQR(x) for x in v])**0.5 for v in vcell]
       maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
       vector = np.array([vcell[maxDistIndex]])
@@ -200,7 +197,7 @@ def pivotSimplices(V,CV,d=3):
          e = basis[-1]
          tensor = tensor - np.dot(e.T, e)
          # compute the index h of a best vector
-         # look for most far cell vertex
+         # look for most distant cell vertex
          dists = [SUM([SQR(x) for x in np.dot(tensor,v)])**0.5
          if h in unUsedIndices else 0.0
          for (h,v) in zip(cell,vcell)]
@@ -230,9 +227,8 @@ def setup(model,dim):
     csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
     return V,cells,csr,csrAdjSquareMat
 
-def larFacets(model,dim=3,emptyCellNumber=0):
-    """
-        Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
+def larFacets(model, dim=3, emptyCellNumber=0):
+    """ Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
         Return (V, (d-1)-cellFacets)
       """
     V,cells,csr,csrAdjSquareMat = setup(model,dim)
@@ -333,6 +329,46 @@ def incidenceChain(bases):
                for cells,facets in pairsOfBases]
    return REVERSE(relations)
 
+""" Signed boundary matrix for polytopal complexes """
+def signedCellularBoundary(V,bases):
+   coo = boundary(bases[-1],bases[-2]).tocoo()
+   pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
+   signs = []
+   dim = len(bases)-1
+   chain = incidenceChain(bases)
+   
+   for pair in pairs:      # for each facet/coface pair
+      flag = REVERSE(pair) #  [c,f]
+      print "flag 1 =",flag
+      for k in range(dim-1):
+         cell = flag[-1]
+         flag += [chain[k+1][cell][1]]
+      
+      verts = [CCOMB([V[v] for v in bases[dim-k][flag[k]]]) for k in range(dim+1)]
+      flagMat = [verts[v]+[1] for v in range(dim+1)]
+      flagSign = SIGN(np.linalg.det(flagMat))
+      signs += [flagSign]
+   
+   csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )
+   # numpy.set_printoptions(threshold=numpy.nan)
+   print csrSignedBoundaryMat.todense()
+   return csrSignedBoundaryMat
+
+""" Signed boundary cells for polytopal complexes """
+def signedCellularBoundaryCells(verts,bases):
+   cells,facets = bases[-1],bases[-2]
+   csrSignedBoundaryMat = signedCellularBoundary(verts,bases)
+   csrChain = totalChain(cells)
+   csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrChain)
+   cooCells = csrBoundaryChain.tocoo()
+   
+   boundaryCells = []
+   for k in range(len(facets)):
+      val = csrBoundaryChain[k,0]
+      if val==1: boundaryCells += [facets[k]]
+      elif val==-1: boundaryCells += [REVERSE(facets[k])]
+   return boundaryCells
+
 
 if __name__ == "__main__": 
    
@@ -384,23 +420,18 @@ if __name__ == "__main__":
    CSRm = csrPredFilter(matrixProduct(csrFV, csrTranspose(csrEV)).T, GE(2)).T
    print "\nccsrPredFilter(csrFE) =\n", csr2DenseMatrix(CSRm)
    
-   V = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], 
-   [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [0.0, 1.0, 1.0], [1.0, 1.0, 1.0]]
-   
-   CV =[[0, 1, 2, 4], [1, 2, 4, 5], [2, 4, 5, 6], [1, 2, 3, 5], [2, 3, 5, 6], 
-   [3, 5, 6, 7]]
-   
-   FV =[[0, 1, 2], [0, 1, 4], [0, 2, 4], [1, 2, 3], [1, 2, 4], [1, 2, 5], 
-   [1, 3, 5], [1, 4, 5], [2, 3, 5], [2, 3, 6], [2, 4, 5], [2, 4, 6], [2, 5, 6], 
-   [3, 5, 6], [3, 5, 7], [3, 6, 7], [4, 5, 6], [5, 6, 7]]
-   
-   EV =[[0, 1], [0, 2], [0, 4], [1, 2], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], 
-   [2, 5], [2, 6], [3, 5], [3, 6], [3, 7], [4, 5], [4, 6], [5, 6], [5, 7], 
-   [6, 7]]
+   V = [[0.0,0.0,0.0],[1.0,0.0,0.0],[0.0,1.0,0.0],[1.0,1.0,0.0],
+         [0.0,0.0,1.0],[1.0,0.0,1.0],[0.0,1.0,1.0],[1.0,1.0,1.0]]
+   CV = [[0,1,2,4],[1,2,4,5],[2,4,5,6],[1,2,3,5],[2,3,5,6],[3,5,6,7]]
+   FV = [[0,1,2],[0,1,4],[0,2,4],[1,2,3],[1,2,4],[1,2,5],[1,3,5],[1,4,5],[2,3,5],
+        [2,3,6],[2,4,5],[2,4,6],[2,5,6],[3,5,6],[3,5,7],[3,6,7],[4,5,6],[5,6,7]]
+   EV = [[0,1],[0,2],[0,4],[1,2],[1,3],[1,4],[1,5],[2,3],[2,4],[2,5],
+         [2,6],[3,5],[3,6],[3,7],[4,5],[4,6],[5,6],[5,7],[6,7]]
+   VV = AA(LIST)(range(len(V)))
    
    print "\ncoboundary_2 =\n", csr2DenseMatrix(coboundary(CV,FV))
    print "\ncoboundary_1 =\n", csr2DenseMatrix(coboundary(FV,EV))
-   print "\ncoboundary_0 =\n", csr2DenseMatrix(coboundary(EV,AA(LIST)(range(len(V)))))
+   print "\ncoboundary_0 =\n", csr2DenseMatrix(coboundary(EV,VV))
    
    boundaryCells_2 = boundaryCells(CV,FV)
    boundaryCells_1 = boundaryCells([FV[k] for k in boundaryCells_2],EV)
@@ -411,24 +442,31 @@ if __name__ == "__main__":
    boundaryModel = (V,[FV[k] for k in boundaryCells_2])
    VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
    
+   
    print "\n>>> larCellAdjacencies"
-   adj_2_cells = larCellAdjacencies(csrFV)
+   adj_2_cells = larCellAdjacencies(csrCreate(FV))
    print "\nadj_2_cells =\n", csr2DenseMatrix(adj_2_cells)
-   adj_1_cells = larCellAdjacencies(csrEV)
+   adj_1_cells = larCellAdjacencies(csrCreate(EV))
    print "\nadj_1_cells =\n", csr2DenseMatrix(adj_1_cells)
    
-   V = [[0.,0.],[3.,0.],[0.,3.],[3.,3.],[1.,2.],[2.,2.],[1.,1.],[2.,1.]]
-   FV = [[0,1,6,7],[0,2,4,6],[4,5,6,7],[1,3,5,7],[2,3,4,5],[0,1,2,3]]
+   submodel = mkSignedEdges((V,EV))
+   VIEW(submodel)
+   VIEW(larModelNumbering(V,[VV,EV,FV],submodel,2))
    
+   """ A first (simplicial) example """
+   V = [[0.,0.],[3.,0.],[0.,3.],[3.,3.],[1.,2.],[2.,2.],[1.,1.],[2.,1.]]
+   FV = [[0,1,3],[1,2,4],[2,4,5],[3,4,6],[4,6,7],[5,7,8], # full
+      [1,3,4],[4,5,7], # empty
+      [0,1,2],[6,7,8],[0,3,6],[2,5,8]] # exterior     
    _,EV = larFacets((V,FV),dim=2)
    print "\nEV =",EV
    VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))
    
-   FV = [[0,1,3],[1,2,4],[2,4,5],[3,4,6],[4,6,7],[5,7,8], # full
-      [1,3,4],[4,5,7], # empty
-      [0,1,2],[6,7,8],[0,3,6],[2,5,8]] # exterior
-         
+   """ Another (cuboidal) example """
+   FV = [[0,1,6,7],[0,2,4,6],[4,5,6,7],[1,3,5,7],[2,3,4,5],[0,1,2,3]]
    _,EV = larFacets((V,FV),dim=2)
    print "\nEV =",EV
+   VV = AA(LIST)(range(len(V)))
+   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))
    
    
