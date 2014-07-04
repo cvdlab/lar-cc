@@ -62,7 +62,7 @@ In this section we introduce and shortly outline our novel algorithm for Boolean
 The input objects are denoted in the remainder as $X_1$ and $X_2$, and their finite cell decompositions as $\Lambda^1$ and $\Lambda^1$. Our goal is to compute $X = X_1\, op\, X_2$, where $op \in \{\cup ,\cap , - ,\ominus \}$ or $\complement X$, based on a common decomposition $\Lambda = \Lambda^1\, op\, \Lambda^2$, with $\Lambda$ being a suitably fragmented decomposition of the X space.
 
 Of course, we aim to compute a minimal (in some sense) decomposition, making the best use of the LAR framework, based on CSR representation of sparse binary matrices and standard matrix algebra operations.
-However, in this first implementation of the chain approach to Boolean operations, we are satisfied with a solution using simplicial triangulations of input spaces. Future revisions of our algorithm will be based on more general cellular complexes.
+However, in this first implementation of the chain approach to Boolean operations, we are satisfied with a solution using (partial) simplicial triangulations of input spaces. Future revisions of our algorithm will be based on more general cellular complexes.
 
 \subsection{User interface}
 
@@ -90,7 +90,7 @@ First we embed both the (two) arguments $X_1, X_2$ in the same space, and order 
 
 \paragraph{Input boundaries extraction}
 Then we construct the boundary operators $\partial_d^1$ and $\partial_d^2$ over $\Lambda^1$ and $\Lambda^2$, respectively.
-Then the boundary $(d-1)$-chains $B_{d-1}^1,B_{d-1}^2$ and $0$-chains $B_{0}^1,B_{0}^2$ are extracted, as relative to $V = V_{1} + V_{12} + V_{2} = V_{1} \cup V_{2} - V_{1} \cap V_{2}$.
+Then the boundary $(d-1)$-chains $B_{d-1}^1,B_{d-1}^2$ and the boundary $0$-chains $B_{0}^1,B_{0}^2$ are extracted, as relative to $V = V_{1} + V_{12} + V_{2} = V_{1} \cup V_{2} - V_{1} \cap V_{2}$.
 
 \paragraph{Delaunay triangulation of boundary vertices}
 The Delaunay triangulation $T$, with $|T| = \conv (X_1 \cup X_2)$, is then built over the 0-chain of boundary points $B = (B_{0}^1 \cup B_{0}^2) \subset V$.
@@ -360,6 +360,7 @@ The two bases of $d$-cells, given as input to the \texttt{boundaryVertices} func
 @D Compute boundary vertices of both arguments
 @{""" Second stage of Boolean operations """
 def boundaryVertices( V, CV1,CV2, cell='simplex', facets1=None,facets2=None ):
+	from larcc import boundaryCells
 	if cell=='simplex': 
 		FV1 = larSimplexFacets(CV1)
 		FV2 = larSimplexFacets(CV2)
@@ -475,6 +476,8 @@ The \texttt{boolean.py} module is exported to the library \texttt{lar-cc/lib}. T
 @o lib/py/boolean.py
 @{""" Module with Boolean operators using chains and CSR matrices """
 @< Initial import of modules @>
+import larcc
+from larcc import *
 @< Symbolic utility to represent points as strings @>
 @< High-level Boolean operations @>
 @< Boolean subdivided complex @>

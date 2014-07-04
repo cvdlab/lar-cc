@@ -6,7 +6,7 @@ from random import random
 shape = 20,20
 V,cells = larCuboids(shape)
 cellSpan = prod(shape)
-fraction = 0.9
+fraction = 0.5
 remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
 cells = [cells[k] for k in range(cellSpan) if not k in remove]
 V,EV = larCuboidsFacets((V,cells))

@@ -33,6 +33,7 @@ from scipy import zeros,arange,mat,amin,amax,array
 from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 
 from lar2psm import *
+from sysml import *
 
 def triples2mat(triples,shape="csr"):
     n = len(triples)
@@ -126,8 +127,8 @@ def boundaryCells(cells,facets):
    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
    for k,value in enumerate(csrBoundaryChain.data):
       if value % 2 == 0: csrBoundaryChain.data[k] = 0
-   boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-   return boundaryCells
+   out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+   return out
 
 def signedSimplicialBoundary (CV,FV):
    # compute the set of pairs of indices to [boundary face,incident coface]
@@ -150,22 +151,22 @@ def signedSimplicialBoundary (CV,FV):
 
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
-def signedBoundaryCells(verts,cells,facets):
+def boundaryCellsCocells(cells,facets):
    csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
-
    csrTotalChain = totalChain(cells)
    csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
-   cooCells = csrBoundaryChain.tocoo()
-   
+   cooCells = csrBoundaryChain.tocoo() 
    boundaryCells = []
    for k,v in enumerate(cooCells.data):
       if abs(v) == 1:
-         boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]
-         
+         boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]        
    boundaryCocells = []
    for k,v in enumerate(boundaryCells):
-      boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)
-      
+      boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)    
+   return boundaryCells,boundaryCocells
+
+def signedBoundaryCells(verts,cells,facets):
+   boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)      
    boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
    boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
    orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
@@ -295,7 +296,6 @@ def signedCellularBoundary(V,bases):
    
    for pair in pairs:      # for each facet/coface pair
       flag = REVERSE(pair) #  [c,f]
-      print "flag 1 =",flag
       for k in range(dim-1):
          cell = flag[-1]
          flag += [chain[k+1][cell][1]]
@@ -307,7 +307,7 @@ def signedCellularBoundary(V,bases):
    
    csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )
    # numpy.set_printoptions(threshold=numpy.nan)
-   print csrSignedBoundaryMat.todense()
+   # print csrSignedBoundaryMat.todense()
    return csrSignedBoundaryMat
 
 """ Signed boundary cells for polytopal complexes """
@@ -321,8 +321,8 @@ def signedCellularBoundaryCells(verts,bases):
    boundaryCells = []
    for k in range(len(facets)):
       val = csrBoundaryChain[k,0]
-      if val==1: boundaryCells += [facets[k]]
-      elif val==-1: boundaryCells += [REVERSE(facets[k])]
+      if val==1.0: boundaryCells += [facets[k]]
+      elif val==-1.0: boundaryCells += [REVERSE(facets[k])]
    return boundaryCells
 
 

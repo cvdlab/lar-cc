@@ -866,8 +866,8 @@ def boundaryCells(cells,facets):
 	csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
 	for k,value in enumerate(csrBoundaryChain.data):
 		if value % 2 == 0: csrBoundaryChain.data[k] = 0
-	boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-	return boundaryCells
+	out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+	return out
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -940,22 +940,22 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 @D Orientation of general convex cells
 @{def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
-def signedBoundaryCells(verts,cells,facets):
+def boundaryCellsCocells(cells,facets):
 	csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
-
 	csrTotalChain = totalChain(cells)
 	csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
-	cooCells = csrBoundaryChain.tocoo()
-	
+	cooCells = csrBoundaryChain.tocoo()	
 	boundaryCells = []
 	for k,v in enumerate(cooCells.data):
 		if abs(v) == 1:
-			boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]
-			
+			boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]			
 	boundaryCocells = []
 	for k,v in enumerate(boundaryCells):
-		boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)
-		
+		boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)		
+	return boundaryCells,boundaryCocells
+
+def signedBoundaryCells(verts,cells,facets):
+	boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)		
 	boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
 	boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
 	orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
@@ -1010,8 +1010,8 @@ def signedCellularBoundaryCells(verts,bases):
 	boundaryCells = []
 	for k in range(len(facets)):
 		val = csrBoundaryChain[k,0]
-		if val==1: boundaryCells += [facets[k]]
-		elif val==-1: boundaryCells += [REVERSE(facets[k])]
+		if val==1.0: boundaryCells += [facets[k]]
+		elif val==-1.0: boundaryCells += [REVERSE(facets[k])]
 	return boundaryCells
 @}
 %-------------------------------------------------------------------------------
@@ -1153,7 +1153,7 @@ from random import random
 @< Fraction of triangles randomly discarded @>
 @< Coherently orient the input LAR model (V,FV)  @>
 @< Compute the 1-cell and 0-cell bases EV and VV @>
-@< Signed 2-boundary matrix and signed boundary 1-chain @>
+@< Signed 2-boundary matrix and signed boundary 1-chain @>	
 @< Display the boundary 1-chain @>
 @}
 %-------------------------------------------------------------------------------
@@ -1357,6 +1357,7 @@ from scipy import zeros,arange,mat,amin,amax,array
 from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 
 from lar2psm import *
+from sysml import *
 @}
 %-------------------------------------------------------------------------------
 
@@ -1855,18 +1856,6 @@ VIEW(submodel)
 @}
 %-------------------------------------------------------------------------------
 
-%-------------------------------------------------------------------------------
-@D Compute the topologically ordered chain of boundary vertices
-@{
-def positiveOrientation(model):
-	V,simplices = model
-	out = []
-	for simplex in simplices:
-		matrix = [V[v]+[1] for v in simplex]
-		if linalg.det(matrix) > 0.0:  out += [simplex]
-		else: out += [REVERSE(simplex)]
-@}
-%-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @D Decompose a permutation into cycles 

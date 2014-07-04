@@ -1228,8 +1228,8 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \mbox{}\verb@   csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)@\\
 \mbox{}\verb@   for k,value in enumerate(csrBoundaryChain.data):@\\
 \mbox{}\verb@      if value % 2 == 0: csrBoundaryChain.data[k] = 0@\\
-\mbox{}\verb@   boundaryCells = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]@\\
-\mbox{}\verb@   return boundaryCells@\\
+\mbox{}\verb@   out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]@\\
+\mbox{}\verb@   return out@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
@@ -1332,22 +1332,22 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \begin{list}{}{} \item
 \mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@def signedBoundaryCells(verts,cells,facets):@\\
+\mbox{}\verb@def boundaryCellsCocells(cells,facets):@\\
 \mbox{}\verb@   csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)@\\
-\mbox{}\verb@@\\
 \mbox{}\verb@   csrTotalChain = totalChain(cells)@\\
 \mbox{}\verb@   csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)@\\
-\mbox{}\verb@   cooCells = csrBoundaryChain.tocoo()@\\
-\mbox{}\verb@   @\\
+\mbox{}\verb@   cooCells = csrBoundaryChain.tocoo() @\\
 \mbox{}\verb@   boundaryCells = []@\\
 \mbox{}\verb@   for k,v in enumerate(cooCells.data):@\\
 \mbox{}\verb@      if abs(v) == 1:@\\
-\mbox{}\verb@         boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]@\\
-\mbox{}\verb@         @\\
+\mbox{}\verb@         boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]        @\\
 \mbox{}\verb@   boundaryCocells = []@\\
 \mbox{}\verb@   for k,v in enumerate(boundaryCells):@\\
-\mbox{}\verb@      boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)@\\
-\mbox{}\verb@      @\\
+\mbox{}\verb@      boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)    @\\
+\mbox{}\verb@   return boundaryCells,boundaryCocells@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def signedBoundaryCells(verts,cells,facets):@\\
+\mbox{}\verb@   boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)      @\\
 \mbox{}\verb@   boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]@\\
 \mbox{}\verb@   boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))@\\
 \mbox{}\verb@   orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))@\\
@@ -1422,8 +1422,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@   boundaryCells = []@\\
 \mbox{}\verb@   for k in range(len(facets)):@\\
 \mbox{}\verb@      val = csrBoundaryChain[k,0]@\\
-\mbox{}\verb@      if val==1: boundaryCells += [facets[k]]@\\
-\mbox{}\verb@      elif val==-1: boundaryCells += [REVERSE(facets[k])]@\\
+\mbox{}\verb@      if val==1.0: boundaryCells += [facets[k]]@\\
+\mbox{}\verb@      elif val==-1.0: boundaryCells += [REVERSE(facets[k])]@\\
 \mbox{}\verb@   return boundaryCells@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1593,7 +1593,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \mbox{}\verb@@\hbox{$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize \NWlink{nuweb29c}{29c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb29d}{29d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb29d}{29d}}$\,\rangle$}\verb@   @\\
 \mbox{}\verb@@\hbox{$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1893,6 +1893,7 @@ The variables in the following script have the meaning specified below:
 \mbox{}\verb@from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@from lar2psm import *@\\
+\mbox{}\verb@from sysml import *@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
@@ -2726,32 +2727,10 @@ The variables in the following script have the meaning specified below:
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap91}
-\protect\makebox[0ex][r]{\NWtarget{nuweb42c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the topologically ordered chain of boundary vertices\nobreak\ {\footnotesize 42c}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@@\\
-\mbox{}\verb@def positiveOrientation(model):@\\
-\mbox{}\verb@   V,simplices = model@\\
-\mbox{}\verb@   out = []@\\
-\mbox{}\verb@   for simplex in simplices:@\\
-\mbox{}\verb@      matrix = [V[v]+[1] for v in simplex]@\\
-\mbox{}\verb@      if linalg.det(matrix) > 0.0:  out += [simplex]@\\
-\mbox{}\verb@      else: out += [REVERSE(simplex)]@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item {\NWtxtMacroNoRef}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap92}
-\protect\makebox[0ex][r]{\NWtarget{nuweb42d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize 42d}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap91}
+\protect\makebox[0ex][r]{\NWtarget{nuweb42c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize 42c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def permutationOrbits(List):@\\
@@ -2785,7 +2764,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap93}
+\begin{minipage}{\linewidth} \label{scrap92}
 \protect\makebox[0ex][r]{\NWtarget{nuweb43a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test07.py"@\nobreak\ {\footnotesize 43a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2794,8 +2773,8 @@ The variables in the following script have the meaning specified below:
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@from largrid import *@\\
 \mbox{}\verb@@\hbox{$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWlink{nuweb43b}{43b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWlink{nuweb44a}{44a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWlink{nuweb44b}{44b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWlink{nuweb43c}{43c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWlink{nuweb44}{44}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -2812,7 +2791,7 @@ The variables in the following script have the meaning specified below:
 \end{figure}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap94}
+\begin{flushleft} \small \label{scrap93}
 \protect\makebox[0ex][r]{\NWtarget{nuweb43b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize 43b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2831,8 +2810,8 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap95}
-\protect\makebox[0ex][r]{\NWtarget{nuweb44a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 44a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap94}
+\protect\makebox[0ex][r]{\NWtarget{nuweb43c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 43c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@squares = larModelProduct([mod_0,mod_1])@\\
@@ -2851,8 +2830,8 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap96}
-\protect\makebox[0ex][r]{\NWtarget{nuweb44b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 44b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap95}
+\protect\makebox[0ex][r]{\NWtarget{nuweb44}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 44}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from largrid import *@\\

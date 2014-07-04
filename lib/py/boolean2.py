@@ -99,7 +99,7 @@ def boolOps(lar1,lar2):
    CV = Delaunay(array(V)).vertices
    setCV = set([tuple(sorted(cell)) for cell in CV])
    # Second stage of Boolean algorithm
-   B1,B2 = boundaryVertices( V, CV1, CV2 )
+   B1,B2,BF1,BF2 = boundaryVertices( V, CV1, CV2 )
    # Extraction of coboundary of boundary chains
    BSupCells1 = boundarySuperCells( V, CV1 )
    BSupCells2 = boundarySuperCells( V, CV2 )
@@ -212,7 +212,7 @@ def boundaryVertices( V, CV1,CV2 ):
    VIEW(STRUCT([ 
       COLOR(GREEN)(STRUCT(AA(MK)([V[v] for v in BV1]))), 
       COLOR(MAGENTA)(STRUCT(AA(MK)([V[v] for v in BV2]))) ]))
-   return BV1, BV2
+   return BV1, BV2,BF1,BF2
 
 """ Select the $d$-chain incident on a $0$-chain """
 def selectIncidentChain( V, CV ):

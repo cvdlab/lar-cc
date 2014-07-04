@@ -657,27 +657,16 @@ def scalePoints (points, svect):
 A small set of utilityy functions is used to transform a point representation as array of coordinates into a string of fixed format to be used as point key into python dictionaries.
 
 %------------------------------------------------------------------
-@d Symbolic utility to represent points as strings
+@D Symbolic utility to represent points as strings
 @{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
-ROUND_ZERO = 1E-07
-def round_or_zero (x,prec=7):
-	"""
-	Decision procedure to approximate a small number to zero.
-	Return either the input number or zero.
-	"""
-	def myround(x):
-		return eval(('%.'+str(prec)+'f') % round(x,prec))
-	xx = myround(x)
-	if abs(xx) < ROUND_ZERO: return 0.0
-	else: return xx
+PRECISION = 4 
 
 def prepKey (args): return "["+", ".join(args)+"]"
 
 def fixedPrec(value):
-	if abs(value - int(value))<ROUND_ZERO: value = int(value)
-	out = ('%0.7f'% value).rstrip('0')
-	if out == '-0.': out = '0.'
-	return out
+	out = round(value*10**PRECISION)/10**PRECISION
+	if out == -0.0: out = 0.0
+	return str(out)
 	
 def vcode (vect): 
 	"""

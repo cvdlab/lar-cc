@@ -46,7 +46,7 @@ VIEW(mkSignedEdges((V,EV)))
 
 """ Signed 2-boundary matrix  and signed boundary 1-chain """
 orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])
-
+   
 """ Display the boundary 1-chain """
 VIEW(STRUCT(MKPOLS((V,FV))))
 VIEW(STRUCT(

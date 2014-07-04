@@ -11,6 +11,8 @@ from largrid import *
 from myfont import *
 from mapper import *
 
+import larcc
+from larcc import *
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 ROUND_ZERO = 1E-07
 def round_or_zero (x,prec=7):
@@ -121,7 +123,7 @@ def boolOps(lar1,lar2,cell='simplex', facets1=None,facets2=None):
    n1,n2 = len(V1),len(V2)
    V, CV1, CV2, n12 = vertexSieve(lar1, lar2)
    CV = Delaunay(array(V)).vertices
-   BV1, BV2 = boundaryVertices( V, CV1,CV2, cell, facets1,facets2 )
+   BV1, BV2,BF1,BF2 = boundaryVertices( V, CV1,CV2, cell, facets1,facets2 )
    print "\n BV1 =",BV1
    print "\n BV2 =",BV2
    """ Delaunay triangulation of boundary vertices """
@@ -146,6 +148,7 @@ def boolOps(lar1,lar2,cell='simplex', facets1=None,facets2=None):
 
 """ Second stage of Boolean operations """
 def boundaryVertices( V, CV1,CV2, cell='simplex', facets1=None,facets2=None ):
+   from larcc import boundaryCells
    if cell=='simplex': 
       FV1 = larSimplexFacets(CV1)
       FV2 = larSimplexFacets(CV2)
@@ -162,7 +165,7 @@ def boundaryVertices( V, CV1,CV2, cell='simplex', facets1=None,facets2=None ):
    VIEW(STRUCT([ 
       COLOR(GREEN)(STRUCT(AA(MK)([V[v] for v in BV1]))), 
       COLOR(YELLOW)(STRUCT(AA(MK)([V[v] for v in BV2]))) ]))
-   return BV1, BV2
+   return BV1, BV2,BF1,BF2
 
 def splitDelaunayComplex(CV,n1,n2,n12):
    def test(cell):

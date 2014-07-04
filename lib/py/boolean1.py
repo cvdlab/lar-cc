@@ -95,7 +95,7 @@ def boolOps(lar1,lar2):
    CV_un, CV_int = splitDelaunayComplex(CV,n1,n2,n12)
    
    # Second stage of Boolean algorithm
-   B1,B2 = boundaryVertices( V, CV1, CV2 )
+   B1,B2,BF1,BF2 = boundaryVertices( V, CV1, CV2 )
    # Extraction of $(d)$-star of boundary vertices
    cells1 = selectIncidentChain( V, CV1, B1 )
    cells2 = selectIncidentChain( V, CV2, B2 )
@@ -186,7 +186,7 @@ def boundaryVertices( V, CV1,CV2 ):
    VIEW(STRUCT([ 
       COLOR(GREEN)(STRUCT(AA(MK)([V[v] for v in BV1]))), 
       COLOR(MAGENTA)(STRUCT(AA(MK)([V[v] for v in BV2]))) ]))
-   return BV1, BV2
+   return BV1, BV2,BF1,BF2
 
 """ Select the $d$-chain incident on a $0$-chain """
 def selectIncidentChain( V, cells, vertices ):
