@@ -51,6 +51,211 @@
 
 \section{Merging arguments}
 
+%-------------------------------------------------------------------------------
+\subsection{Reordering of vertex coordinates}
+%-------------------------------------------------------------------------------
+A global reordering of vertex coordinates is executed as the first step of the Boolean algorithm, in order to eliminate the duplicate vertices, by substituting duplicate vertex copies (coming from two close points) with a single instance. 
+
+Two dictionaries are created, then merged in a single dictionary, and finally split into three subsets of (vertex,index) pairs, with the aim of rebuilding the input representations, by making use of a novel and more useful vertex indexing.
+
+The union set of vertices is finally reordered using the three subsets of vertices belonging (a) only to the first argument, (b) only to the second argument and (c) to both, respectively denoted as $V_1, V_2, V_{12}$. A top-down description of this initial computational step is provided by the set of macros discussed in this section.
+
+%-------------------------------------------------------------------------------
+@D Place the vertices of Boolean arguments in a common space
+@{""" First step of Boolean Algorithm """
+@< Initial indexing of vertex positions @>
+@< Merge two dictionaries with keys the point locations @>
+@< Filter the common dictionary into three subsets @>
+@< Compute an inverted index to reorder the vertices of Boolean arguments @>
+@< Return the single reordered pointset and the two $d$-cell arrays @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsubsection{Re-indexing of vertices}
+%-------------------------------------------------------------------------------
+
+\paragraph{Initial indexing of vertex positions}
+The input LAR models are located in a common space by (implicitly) joining \texttt{V1} and \texttt{V2} in a same array, and (explicitly) shifting the vertex indices in \texttt{CV2} by the length of \texttt{V1}.
+%-------------------------------------------------------------------------------
+@D Initial indexing of vertex positions
+@{from collections import defaultdict, OrderedDict
+
+""" TODO: change defaultdict to OrderedDefaultdict """
+
+class OrderedDefaultdict(collections.OrderedDict):
+    def __init__(self, *args, **kwargs):
+        if not args:
+            self.default_factory = None
+        else:
+            if not (args[0] is None or callable(args[0])):
+                raise TypeError('first argument must be callable or None')
+            self.default_factory = args[0]
+            args = args[1:]
+        super(OrderedDefaultdict, self).__init__(*args, **kwargs)
+
+    def __missing__ (self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = default = self.default_factory()
+        return default
+
+    def __reduce__(self):  # optional, for pickle support
+        args = (self.default_factory,) if self.default_factory else tuple()
+        return self.__class__, args, None, None, self.iteritems()
+
+
+def vertexSieve(model1, model2):
+	from lar2psm import larModelBreak
+	V1,CV1 = larModelBreak(model1) 
+	V2,CV2 = larModelBreak(model2)
+	n = len(V1); m = len(V2)
+	def shift(CV, n): 
+		return [[v+n for v in cell] for cell in CV]
+	CV2 = shift(CV2,n)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Merge two dictionaries with point location as keys}
+Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger than their initial sets 
+\texttt{V1} and \texttt{V2}, we index the set $\texttt{V1} \cup \texttt{V2}$ using a Python \texttt{defaultdict} dictionary, in order to avoid errors of "missing key". As dictionary keys, we use the string representation of the vertex position vector provided by the \texttt{vcode} function given in the Appendix.
+%-------------------------------------------------------------------------------
+@D Merge two dictionaries with keys the point locations
+@{	vdict1 = defaultdict(list)
+	for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
+	vdict2 = defaultdict(list)
+	for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
+	
+	vertdict = defaultdict(list)
+	for point in vdict1.keys(): vertdict[point] += vdict1[point]
+	for point in vdict2.keys(): vertdict[point] += vdict2[point]
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Example of string coding of a vertex position}
+The position vector of a point of real coordinates is provided by the function \texttt{vcode}.
+An example of coding is given below. The \emph{precision} of the string representation can be tuned at will.
+{\small
+\begin{verbatim}
+>>> vcode([-0.011660381062724849, 0.297350056848685860])
+'[-0.0116604, 0.2973501]'
+\end{verbatim}}
+
+
+
+\paragraph{Filter the common dictionary into three subsets}
+\texttt{Vertdict}, dictionary of vertices, uses as key the position vectors of vertices coded as string, and as values the list of integer indices of vertices on the given position. If the point position belongs either to the first or to second argument only, it is stored in \texttt{case1} or \texttt{case2} lists respectively. If the position (\texttt{item.key}) is shared between two vertices, it is stored in \texttt{case12}.
+The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of vertices respectively stored in each repository.
+%-------------------------------------------------------------------------------
+@D Filter the common dictionary into three subsets
+@{	case1, case12, case2 = [],[],[]
+	for item in vertdict.items():
+		key,val = item
+		if len(val)==2:  case12 += [item]
+		elif val[0] < n: case1 += [item]
+		else: case2 += [item]
+	n1 = len(case1); n2 = len(case12); n3 = len(case2)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Compute an inverted index to reorder the vertices of Boolean arguments}
+The new indices of vertices are computed according with their position within the storage repositories \texttt{case1}, \texttt{case2}, and \texttt{case12}. Notice that every \texttt{item[1]} stored in \texttt{case1} or \texttt{case2} is a list with only one integer member. Two such values are conversely stored in each \texttt{item[1]} within \texttt{case12}.
+%-------------------------------------------------------------------------------
+@D Compute an inverted index to reorder the vertices of Boolean arguments 
+@{
+	invertedindex = list(0 for k in range(n+m))
+	for k,item in enumerate(case1):
+		invertedindex[item[1][0]] = k
+	for k,item in enumerate(case12):
+		invertedindex[item[1][0]] = k+n1
+		invertedindex[item[1][1]] = k+n1
+	for k,item in enumerate(case2):
+		invertedindex[item[1][0]] = k+n1+n2
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsubsection{Re-indexing of d-cells}
+%-------------------------------------------------------------------------------
+
+\paragraph{Return the single reordered pointset and the two $d$-cell arrays}
+We are now finally ready to return two reordered LAR models defined over the same set \texttt{V} of vertices, and where (a) the vertex array \texttt{V} can be written as the union of three disjoint sets of points $C_1,C_{12},C_2$; (b) the $d$-cell array \texttt{CV1} is indexed over $C_1\cup C_{12}$; (b) the $d$-cell array \texttt{CV2} is indexed over $C_{12}\cup C_{2}$. 
+
+The \texttt{vertexSieve} function will return the new reordered vertex set $V = (V_1 \cup V_2) \setminus (V_1 \cap V_2)$, the two renumbered $s$-cell sets \texttt{CV1} and \texttt{CV2}, and the size \texttt{len(case12)} of $V_1 \cap V_2$.
+%-------------------------------------------------------------------------------
+@D Return the single reordered pointset and the two $d$-cell arrays
+@{
+	V = [eval(p[0]) for p in case1] + [eval(p[0]) for p in case12] + [eval(
+				p[0]) for p in case2]
+	CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]
+	CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]
+	return V, CV1, CV2, len(case12)
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsubsection{Example of input with some coincident vertices}
+In this example we give two very simple LAR representations of 2D cell complexes, with some coincident vertices, and go ahead to re-index the vertices, according to the method implemented by the function \texttt{vertexSieve}.
+
+%-------------------------------------------------------------------------------
+@o test/py/bool/test02.py
+@{@< Initial import of modules @>
+from bool import *
+V1 = [[1,1],[3,3],[3,1],[2,3],[2,1],[1,3]]
+V2 = [[1,1],[1,3],[2,3],[2,2],[3,2],[0,1],[0,0],[2,0],[3,0]]
+CV1 = [[0,3,4,5],[1,2,3,4]]
+CV2 = [[3,4,7,8],[0,1,2,3,5,6,7]]
+model1 = V1,CV1; model2 = V2,CV2
+VIEW(STRUCT([ 
+	COLOR(CYAN)(SKEL_1(STRUCT(MKPOLS(model1)))), 
+	COLOR(RED)(SKEL_1(STRUCT(MKPOLS(model2)))) ]))
+# V, n1,n2,n12,BV1,BV2 = boolOps(model1,model2)
+# VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[:n1]+CV_int )))))
+# VIEW(SKEL_1(STRUCT(MKPOLS((V, CV_un[n1-n12:]+CV_int )))))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Example discussion} 
+The aim of the \texttt{vertexSieve} function is twofold: (a) eliminate vertex duplicates before entering the main part of the Boolean algorithm; (b) reorder the input representations so that it becomes less expensive to check whether a 0-cell can be shared by both the arguments of a Boolean expression, so that its coboundaries must be eventually split. Remind that for any set it is:
+\[
+|A\cup B| = |A|+|B|-|A\cap B|.
+\]
+Let us notice that in the previous example
+\[
+|V| = |V_1 \cup V_2| = 12 \leq |V_1|+|V_2| = 6+9 = 15,
+\]
+and that 
+\[
+|V_1|+|V_2| - |V_1 \cup V_2| = 15 - 12 = 3 = |C_{12}| = |V_1 \cap V_2|,
+\]
+where $C_{12}$ is the subset of vertices with duplicated instances.
+%-------------------------------------------------------------------------------
+@D Output from \texttt{test/py/boolean/test02.py}
+@{V   = [[3.0,1.0],[2.0,1.0],[3.0,3.0],[1.0,1.0],[1.0,3.0],[2.0,3.0],
+		 [3.0,2.0],[2.0,0.0],[2.0,2.0],[0.0,0.0],[3.0,0.0],[0.0,1.0]]
+CV1 = [[3,5,1,4],[2,0,5,1]]
+CV2 = [[8,6,7,10],[3,4,5,8,11,9,7]]
+@}
+%-------------------------------------------------------------------------------
+Notice also that \texttt{V} has been reordered in three consecutive subsets $C_{1},C_{12},C_{2}$ such that \texttt{CV1} is indexed within $C_{1}\cup C_{12}$, whereas \texttt{CV2} is indexed within $C_{12}\cup C_{2}$. In our example we have  $C_{12}=\{\texttt{3,4,5}\}$: 
+%-------------------------------------------------------------------------------
+@D Reordering of vertex indexing of cells
+@{
+>>> sorted(CAT(CV1))
+[0, 1, 1, 2, 3, 4, 5, 5]
+>>> sorted(CAT(CV2))
+[3, 4, 5, 6, 7, 7, 8, 8, 9, 10, 11]
+@}
+%-------------------------------------------------------------------------------
+\paragraph{Cost analysis} 
+Of course, this reordering after elimination of duplicate vertices will allow to perform a cheap $O(n)$ discovering of (Delaunay) cells whose vertices belong both to \texttt{V1} \emph{and} to \texttt{V2}. 
+Actually, the \emph{same test} can be now used both when the vertices of the input arguments are all different, \emph{and} when they have some coincident vertices.
+The total cost of such pre-processing, executed using dictionaries, is $O(n\ln n)$.
+
+%-------------------------------------------------------------------------------
+
+\subsubsection{Example}
+
 \paragraph{Building a covering of common convex hull}
 
 %-------------------------------------------------------------------------------
@@ -145,15 +350,15 @@ def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
 		for v in cutVerts:
 			cutFacets = [e for e in VE[v] if e in BF]
 			cells2cut = VC[v]
-			for facet,cell2cut in CART([cutFacets,cells2cut]):
-				polytope = CV[cell2cut]
-				points = [V[w] for w in EEV[facet]]
+			for face,cell in CART([cutFacets,cells2cut]):
+				polytope = CV[cell]
+				points = [V[w] for w in EEV[face]]
 				dim = len(points[0])
 				theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
 				cuttingHyperplane = [(-1)**(col)*theMat.minor(0,col).determinant() 
 									for col in range(dim+1)]
 				if cuttingTest(cuttingHyperplane,polytope,V):
-					tasks += [[facet,cell2cut,cuttingHyperplane]]
+					tasks += [[face,cell,cuttingHyperplane]]
 	tasks = AA(eval)(set(AA(str)(tasks)))
 	tasks = TrivialIntersection(tasks,V,EEV,CV)
 	print "\ntasks =",tasks
@@ -163,9 +368,9 @@ def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
 
 \paragraph{facet-cell trivial intersection filtering}
 
-A final filtering is applied to the pairs \texttt{(cuttingHyperplane,polytope} in the \texttt{tasks} array, in order to remove those pairs whose intersection reduces to a single point, i.e.~to the comman vertex between the boundary $(d-1)$-face, having \texttt{cuttingHyperplane} as affine hull, and the \texttt{polytope} $d$-cell.
+A final filtering is applied to the pairs \texttt{(cutting\-Hyper\-plane,polytope} in the \texttt{tasks} array, in order to remove those facets (pairs in 2D) whose intersection reduces to a single point, i.e.~to the comman vertex between the boundary $(d-1)$-face, having \texttt{cuttingHyperplane} as affine hull, and the \texttt{polytope} $d$-cell.
 
-For this purpose, it is checked that at leaf one of the facet vertices, transformed into the common-vertex-based coordinate frame, have all positive coordinates. This fact guarantees the existence of a non trivial intersection between the $(d-1)$-face and the $d$-cell.
+For this purpose, it is checked that at least one of the facet vertices, transformed into the common-vertex-based coordinate frame, have all positive coordinates. This fact guarantees the existence of a non trivial intersection between the $(d-1)$-face and the $d$-cell.
 
 %-------------------------------------------------------------------------------
 @D Trivial intersection filtering
@@ -175,10 +380,11 @@ def TrivialIntersection(tasks,V,EEV,CV):
 	for face,cell,affineHull in tasks:
 		faceVerts, cellVerts = EEV[face], CV[cell]
 		v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-		transformMat = mat([VECTDIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).I
-		vects = (transformMat * mat([VECTDIFF([V[v],V[v0]]) for v in faceVerts 
-					if v != v0]).T).tolist()
-		if any([all([x>0 for x in list(vect)]) for vect in vects]): out += [[face,cell,affineHull]]
+		transformMat = mat([VECTDIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
+		vects = (transformMat * (mat([VECTDIFF([V[v],V[v0]]) for v in faceVerts 
+					if v != v0]).T)).T.tolist()
+		if any([all([x>0 for x in list(vect)]) for vect in vects]): 
+			out += [[face,cell,affineHull]]
 	return out
 @}
 %-------------------------------------------------------------------------------
@@ -226,22 +432,142 @@ def cellSplitting(face,cell,covector,V,EEV,CV):
 	rototranslSubspace = T(range(1,dim+1))(t)(rotatedSubspace)
 	cellHpc = MKPOL([V,[[v+1 for v in CV[cell]]],None])
 	print "\ncell =",UKPOL(cellHpc)[0]
-	# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
 	
+	# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
 	tolerance=0.0001
 	use_octree=False
 	cell1 = Plasm.boolop(BOOL_CODE_AND, 
 		[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-	
-	# cell2 = DIFFERENCE([cellHpc,rototranslSubspace])
-	
+	verts,cells,pols = UKPOL(cell1)
+	cell1 = AA(vcode)(verts)
+
+	# cell2 = DIFFERENCE([cellHpc,rototranslSubspace])	
 	cell2 = Plasm.boolop(BOOL_CODE_DIFF, 
 		[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
+	verts,cells,pols = UKPOL(cell2)
+	cell2 = AA(vcode)(verts)
 
 	return cell1,cell2
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.6\linewidth]{images/seeds} 
+   \caption{example caption}
+   \label{fig:example}
+\end{figure}
+
+
+\subsection{Cross-building of two task dictionaries}
+
+The correct and efficient splitting of the combined Delaunay complex (CDC) with the  (closed and orientable) boundaries of two Boolean arguments, requires the use of two special dictionaries, respectively named \texttt{dict\_fc} (for \emph{face-cell}), and \texttt{dict\_cf} (for \emph{cell-face}).
+ 
+On one side, for each splitting facet ($(d-1)$-face), used as key, we store in \texttt{dict\_fc} the list of traversed $d$-cells of CDC, starting in 2D with the two cells containing the two extreme vertices of the cutting edge, and in higher dimensions, with all the $d$-cells containing one of vertices of the splitting $(d-1)$-face.
+
+On the other side, for each $d$-cell to be split, used as key, we store in \texttt{dict\_cf} the list of cutting $(d-1)$-cells, since a single $d$-cell may be traversed and split by more than one facet. 
+
+
+\paragraph{Init face-cell and cell-face dictionaries}
+
+%-------------------------------------------------------------------------------
+@D Init face-cell and cell-face dictionaries
+@{""" Init face-cell and cell-face dictionaries """
+def initTasks(tasks):
+	dict_fc = defaultdict(list)
+	dict_cf = defaultdict(list)
+	for task in tasks:
+		face,cell,covector = task
+		dict_fc[face] += [(cell,covector)] 
+		dict_cf[cell] += [(face,covector)] 
+	return dict_fc,dict_cf
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Example of face-cell and cell-face dictionaries}
+
+%-------------------------------------------------------------------------------
+@D Example of face-cell and cell-face dictionaries
+@{""" Example of face-cell and cell-face dictionaries """
+tasks (face,cell) = [
+ [0, 4, [-10.0, 2.0, 110.0]],
+ [31, 5, [3.0, -14.0, 112.0]],
+ [17, 18, [10.0, 2.0, -30.0]],
+ [22, 3, [-1.0, -14.0, 42.0]],
+ [17, 19, [10.0, 2.0, -30.0]],
+ [31, 18, [3.0, -14.0, 112.0]],
+ [22, 19, [-1.0, -14.0, 42.0]],
+ [0, 3, [-10.0, 2.0, 110.0]]]
+
+tasks (dict_fc) = defaultdict(<type 'list'>, {
+  0: [(4, [-10.0, 2.0, 110.0]), (3, [-10.0, 2.0, 110.0])],
+ 17: [(18, [10.0, 2.0, -30.0]), (19, [10.0, 2.0, -30.0])],
+ 22: [(3, [-1.0, -14.0, 42.0]), (19, [-1.0, -14.0, 42.0])],
+ 31: [(5, [3.0, -14.0, 112.0]), (18, [3.0, -14.0, 112.0])]  })
+
+tasks (dict_cf) = defaultdict(<type 'list'>, {
+ 19: [(17, [10.0, 2.0, -30.0]), (22, [-1.0, -14.0, 42.0])],
+ 18: [(17, [10.0, 2.0, -30.0]), (31, [3.0, -14.0, 112.0])],
+  3: [(22, [-1.0, -14.0, 42.0]), (0, [-10.0, 2.0, 110.0])],
+  4: [(0, [-10.0, 2.0, 110.0])],
+  5: [(31, [3.0, -14.0, 112.0])]  })
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Updating the vertex set and dictionary}
+
+\paragraph{Updating the vertex set  of split cells}
+
+%-------------------------------------------------------------------------------
+@D Updating the vertex set  of split cells
+@{""" Updating the vertex set of split cells """
+def splitCellsCreateVertices(dict_fc,dict_cf,V,EEV,CV,VC):
+	out = []; nverts = len(V); cellPairs = []
+	vertdict = defaultdict(list)
+	for k,v in enumerate(V): vertdict[vcode(v)] += [k]
+	for face,tasks in dict_fc.items():
+		for task in tasks:
+			cell,covector = task
+			print "face,cell,covector =",face,cell,covector
+			cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
+			newVerts = splitCellUpdate(cell,cell1,cell2,V,CV,VC)
+			vcell1 = []
+			for k in cell1:
+				if vertdict[k]==[]: 
+					vertdict[k] += [nverts]
+					nverts += 1
+				vcell1 += [vertdict[k]]
+			vcell2 = [vertdict[k] for k in cell2]
+			cellPairs += [[CAT(vcell1), CAT(vcell2)]]
+	return vertdict, cellPairs, nverts
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Updating the split cell and the stack of seeds}
+
+When a $d$-cell of the combined Delaunay complex (CDC) is split into two $d$-cells, the first task to perform is to update its representation as vertex list, and to update the list of $d$-cells. In particular, as \texttt{cell}, and \texttt{cell1}, \texttt{cell2} are the input $d$-cell and the two output $d$-cells, respectively, we go to substitute \texttt{cell} with \texttt{cell1}, and to add the \texttt{cell2} as a new row of the \texttt{CSR}$(M_d)$ matrix, i.e.~as the new terminal element of the \texttt{CV} array. Of course, the reverse relation \texttt{VC} must be updated too.
+
+\paragraph{Updating the split cell} 
+First of all notice that, whereas \texttt{cell} is given as an integer index to a \texttt{CV} row,
+\texttt{cell1}, \texttt{cell2} are returned by the \texttt{cellSplitting} function as lists of lists of coordinates (of vertices). Therefore such vectors must be suitably transformed into dictionary keys, in order to return the corresponding vertex indices. When transformed into two lists of vector indices, \texttt{cell1}, \texttt{cell2} will be in the form needed to update the \texttt{CV} and \texttt{VC} relations.
+
+%-------------------------------------------------------------------------------
+@D Updating the split cell
+@{""" Updating the split cell """
+def splitCellUpdate(cell,cell1,cell2,V,CV,VC):
+	print "\ncell,cell1,cell2 =",cell,cell1,cell2
+	newVerts = None
+	return newVerts
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsection{Updating the cells adjacent to the split cell}
+
+Once the list of $d$-cells has been updated with respect to the results of a split operation, it is necessary to consider the possible update of all the cells that are adjacent to the split one.  It particular we need to update their lists of vertices, introducing the new vertices produced by the split.
 
 \section{Reconstruction of results}
 
@@ -254,6 +580,7 @@ def cellSplitting(face,cell,covector,V,EEV,CV):
 from matrix import *
 @< Initial import of modules @>
 @< Symbolic utility to represent points as strings @>
+@< Place the vertices of Boolean arguments in a common space @>
 @< Building a covering of common convex hull @>
 @< Building a partition of common convex hull of vertices @>
 @< Characteristic matrix transposition @>
@@ -262,6 +589,9 @@ from matrix import *
 @< Build intersection tasks @>
 @< Trivial intersection filtering @>
 @< Cell splitting @>
+@< Init face-cell and cell-face dictionaries @>
+@< Updating the split cell @>
+@< Updating the vertex set  of split cells @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -328,19 +658,25 @@ VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
 cells12 = mixedCells(CV,n0,n1,m0,m1)
 pivots = mixedCellsOnBoundaries(cells12,BV1,BV2)
 tasks = splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE)
-print "\ntasks (facet,cell2cut) =",tasks
-
-out = []
-for task in tasks:
-	face,cell,covector = task
-	cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
-	verts,cells,pols = UKPOL(cell1)
-	print "\n cell1 =",AA(vcode)(verts), cells, pols
-	verts,cells,pols = UKPOL(cell2)
-	print " cell2 =",AA(vcode)(verts), cells, pols
-	out += [ COLOR(GREEN)(cell2), COLOR(CYAN)(cell1) ]
+print "\ntasks (face,cell) =",tasks
 	
-VIEW(STRUCT([ STRUCT(out), submodel ]))
+	
+dict_fc,dict_cf = initTasks(tasks)
+print "\ntasks (dict_fc) =",dict_fc
+print "\ntasks (dict_cf) =",dict_cf
+
+vertdict,cellPairs,nverts = splitCellsCreateVertices(dict_fc,dict_cf,V,EEV,CV,VC)
+
+V = list(None for k in range(nverts))	
+for item in vertdict.items(): V[item[1][0]] = eval(item[0])
+VV = AA(LIST)(range(len(V)))
+cells1,cells2 = TRANS(cellPairs)
+out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
+		COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
+
+boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
+submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ])
+VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,4) ]))
 @}
 %-------------------------------------------------------------------------------
 

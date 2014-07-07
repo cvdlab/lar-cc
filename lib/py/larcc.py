@@ -241,7 +241,7 @@ from sysml import *
 def modelIndexing(shape):
    V, bases = larCuboids(shape,True)
    # bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
-   color = [YELLOW,CYAN,GREEN,WHITE]
+   color = [RED,CYAN,GREEN,WHITE]
    nums = AA(range)(AA(len)(bases))
    hpcs = []
    for k in range(4):
@@ -250,7 +250,7 @@ def modelIndexing(shape):
    return STRUCT(hpcs)
 """ Numbered visualization of a LAR model """
 def larModelNumbering(V,bases,submodel,numberScaling=1):
-   color = [YELLOW,CYAN,GREEN,WHITE]
+   color = [RED,CYAN,GREEN,WHITE]
    nums = AA(range)(AA(len)(bases))
    hpcs = [submodel]
    for k in range(len(bases)):
@@ -296,6 +296,7 @@ def signedCellularBoundary(V,bases):
    
    for pair in pairs:      # for each facet/coface pair
       flag = REVERSE(pair) #  [c,f]
+      print "flag 1 =",flag
       for k in range(dim-1):
          cell = flag[-1]
          flag += [chain[k+1][cell][1]]
@@ -307,7 +308,7 @@ def signedCellularBoundary(V,bases):
    
    csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )
    # numpy.set_printoptions(threshold=numpy.nan)
-   # print csrSignedBoundaryMat.todense()
+   print csrSignedBoundaryMat.todense()
    return csrSignedBoundaryMat
 
 """ Signed boundary cells for polytopal complexes """

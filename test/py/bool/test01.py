@@ -48,17 +48,23 @@ VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
 cells12 = mixedCells(CV,n0,n1,m0,m1)
 pivots = mixedCellsOnBoundaries(cells12,BV1,BV2)
 tasks = splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE)
-print "\ntasks (facet,cell2cut) =",tasks
-
-out = []
-for task in tasks:
-   face,cell,covector = task
-   cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
-   verts,cells,pols = UKPOL(cell1)
-   print "\n cell1 =",AA(vcode)(verts), cells, pols
-   verts,cells,pols = UKPOL(cell2)
-   print " cell2 =",AA(vcode)(verts), cells, pols
-   out += [ COLOR(GREEN)(cell2), COLOR(CYAN)(cell1) ]
+print "\ntasks (face,cell) =",tasks
    
-VIEW(STRUCT([ STRUCT(out), submodel ]))
+   
+dict_fc,dict_cf = initTasks(tasks)
+print "\ntasks (dict_fc) =",dict_fc
+print "\ntasks (dict_cf) =",dict_cf
+
+vertdict,cellPairs,nverts = splitCellsCreateVertices(dict_fc,dict_cf,V,EEV,CV,VC)
+
+V = list(None for k in range(nverts))  
+for item in vertdict.items(): V[item[1][0]] = eval(item[0])
+VV = AA(LIST)(range(len(V)))
+cells1,cells2 = TRANS(cellPairs)
+out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
+      COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
+
+boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
+submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ])
+VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,4) ]))
 

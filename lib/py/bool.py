@@ -26,6 +26,77 @@ def vcode (vect):
    """
    return prepKey(AA(fixedPrec)(vect))
 
+""" First step of Boolean Algorithm """
+from collections import defaultdict, OrderedDict
+
+""" TODO: change defaultdict to OrderedDefaultdict """
+
+class OrderedDefaultdict(collections.OrderedDict):
+    def __init__(self, *args, **kwargs):
+        if not args:
+            self.default_factory = None
+        else:
+            if not (args[0] is None or callable(args[0])):
+                raise TypeError('first argument must be callable or None')
+            self.default_factory = args[0]
+            args = args[1:]
+        super(OrderedDefaultdict, self).__init__(*args, **kwargs)
+
+    def __missing__ (self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = default = self.default_factory()
+        return default
+
+    def __reduce__(self):  # optional, for pickle support
+        args = (self.default_factory,) if self.default_factory else tuple()
+        return self.__class__, args, None, None, self.iteritems()
+
+
+def vertexSieve(model1, model2):
+   from lar2psm import larModelBreak
+   V1,CV1 = larModelBreak(model1) 
+   V2,CV2 = larModelBreak(model2)
+   n = len(V1); m = len(V2)
+   def shift(CV, n): 
+      return [[v+n for v in cell] for cell in CV]
+   CV2 = shift(CV2,n)
+
+   vdict1 = defaultdict(list)
+   for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
+   vdict2 = defaultdict(list)
+   for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
+   
+   vertdict = defaultdict(list)
+   for point in vdict1.keys(): vertdict[point] += vdict1[point]
+   for point in vdict2.keys(): vertdict[point] += vdict2[point]
+
+   case1, case12, case2 = [],[],[]
+   for item in vertdict.items():
+      key,val = item
+      if len(val)==2:  case12 += [item]
+      elif val[0] < n: case1 += [item]
+      else: case2 += [item]
+   n1 = len(case1); n2 = len(case12); n3 = len(case2)
+
+
+   invertedindex = list(0 for k in range(n+m))
+   for k,item in enumerate(case1):
+      invertedindex[item[1][0]] = k
+   for k,item in enumerate(case12):
+      invertedindex[item[1][0]] = k+n1
+      invertedindex[item[1][1]] = k+n1
+   for k,item in enumerate(case2):
+      invertedindex[item[1][0]] = k+n1+n2
+
+
+   V = [eval(p[0]) for p in case1] + [eval(p[0]) for p in case12] + [eval(
+            p[0]) for p in case2]
+   CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]
+   CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]
+   return V, CV1, CV2, len(case12)
+
+
 def covering(model1,model2):
    V, CV1, CV2, n12 = vertexSieve(model1,model2)
    _,EEV1 = larFacets((V,CV1),dim=2,emptyCellNumber=1)
@@ -78,15 +149,15 @@ def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
       for v in cutVerts:
          cutFacets = [e for e in VE[v] if e in BF]
          cells2cut = VC[v]
-         for facet,cell2cut in CART([cutFacets,cells2cut]):
-            polytope = CV[cell2cut]
-            points = [V[w] for w in EEV[facet]]
+         for face,cell in CART([cutFacets,cells2cut]):
+            polytope = CV[cell]
+            points = [V[w] for w in EEV[face]]
             dim = len(points[0])
             theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
             cuttingHyperplane = [(-1)**(col)*theMat.minor(0,col).determinant() 
                            for col in range(dim+1)]
             if cuttingTest(cuttingHyperplane,polytope,V):
-               tasks += [[facet,cell2cut,cuttingHyperplane]]
+               tasks += [[face,cell,cuttingHyperplane]]
    tasks = AA(eval)(set(AA(str)(tasks)))
    tasks = TrivialIntersection(tasks,V,EEV,CV)
    print "\ntasks =",tasks
@@ -98,10 +169,11 @@ def TrivialIntersection(tasks,V,EEV,CV):
    for face,cell,affineHull in tasks:
       faceVerts, cellVerts = EEV[face], CV[cell]
       v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-      transformMat = mat([VECTDIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).I
-      vects = (transformMat * mat([VECTDIFF([V[v],V[v0]]) for v in faceVerts 
-               if v != v0]).T).tolist()
-      if any([all([x>0 for x in list(vect)]) for vect in vects]): out += [[face,cell,affineHull]]
+      transformMat = mat([VECTDIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
+      vects = (transformMat * (mat([VECTDIFF([V[v],V[v0]]) for v in faceVerts 
+               if v != v0]).T)).T.tolist()
+      if any([all([x>0 for x in list(vect)]) for vect in vects]): 
+         out += [[face,cell,affineHull]]
    return out
 
 """ Cell splitting in two cells """
@@ -118,17 +190,57 @@ def cellSplitting(face,cell,covector,V,EEV,CV):
    rototranslSubspace = T(range(1,dim+1))(t)(rotatedSubspace)
    cellHpc = MKPOL([V,[[v+1 for v in CV[cell]]],None])
    print "\ncell =",UKPOL(cellHpc)[0]
-   # cell1 = INTERSECTION([cellHpc,rototranslSubspace])
    
+   # cell1 = INTERSECTION([cellHpc,rototranslSubspace])
    tolerance=0.0001
    use_octree=False
    cell1 = Plasm.boolop(BOOL_CODE_AND, 
       [cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-   
-   # cell2 = DIFFERENCE([cellHpc,rototranslSubspace])
-   
+   verts,cells,pols = UKPOL(cell1)
+   cell1 = AA(vcode)(verts)
+
+   # cell2 = DIFFERENCE([cellHpc,rototranslSubspace]) 
    cell2 = Plasm.boolop(BOOL_CODE_DIFF, 
       [cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
+   verts,cells,pols = UKPOL(cell2)
+   cell2 = AA(vcode)(verts)
 
    return cell1,cell2
+
+""" Init face-cell and cell-face dictionaries """
+def initTasks(tasks):
+   dict_fc = defaultdict(list)
+   dict_cf = defaultdict(list)
+   for task in tasks:
+      face,cell,covector = task
+      dict_fc[face] += [(cell,covector)] 
+      dict_cf[cell] += [(face,covector)] 
+   return dict_fc,dict_cf
+
+""" Updating the split cell """
+def splitCellUpdate(cell,cell1,cell2,V,CV,VC):
+   print "\ncell,cell1,cell2 =",cell,cell1,cell2
+   newVerts = None
+   return newVerts
+
+""" Updating the vertex set of split cells """
+def splitCellsCreateVertices(dict_fc,dict_cf,V,EEV,CV,VC):
+   out = []; nverts = len(V); cellPairs = []
+   vertdict = defaultdict(list)
+   for k,v in enumerate(V): vertdict[vcode(v)] += [k]
+   for face,tasks in dict_fc.items():
+      for task in tasks:
+         cell,covector = task
+         print "face,cell,covector =",face,cell,covector
+         cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
+         newVerts = splitCellUpdate(cell,cell1,cell2,V,CV,VC)
+         vcell1 = []
+         for k in cell1:
+            if vertdict[k]==[]: 
+               vertdict[k] += [nverts]
+               nverts += 1
+            vcell1 += [vertdict[k]]
+         vcell2 = [vertdict[k] for k in cell2]
+         cellPairs += [[CAT(vcell1), CAT(vcell2)]]
+   return vertdict, cellPairs, nverts
 
