@@ -66,5 +66,6 @@ out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])),
 
 boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
 submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ])
-VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,4) ]))
+VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,4), 
+         cellNumbering ((V,EEV),submodel)(BF) ]))
 

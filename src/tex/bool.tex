@@ -420,6 +420,7 @@ The actual subdivision of the input \texttt{cell} onto the two output cells \tex
 @D Cell splitting
 @{""" Cell splitting in two cells """
 def cellSplitting(face,cell,covector,V,EEV,CV):
+	print "\nV,CV =",V,CV
 	dim = len(V[0])
 	subspace = (T(range(1,dim+1))(dim*[-50])(CUBOID(dim*[100])))
 	normal = covector[:-1]
@@ -431,7 +432,6 @@ def cellSplitting(face,cell,covector,V,EEV,CV):
 	t = V[EEV[face][0]]
 	rototranslSubspace = T(range(1,dim+1))(t)(rotatedSubspace)
 	cellHpc = MKPOL([V,[[v+1 for v in CV[cell]]],None])
-	print "\ncell =",UKPOL(cellHpc)[0]
 	
 	# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
 	tolerance=0.0001
@@ -517,7 +517,89 @@ tasks (dict_cf) = defaultdict(<type 'list'>, {
 
 \subsection{Updating the vertex set and dictionary}
 
+In any dimension, the split of a $d$-cell with an hyperplane (crossing its interior) produces two $d$-cells and some new vertices living upon the splitting hyperplane.
+
+When the $d$-cell $c$ is contained in only one seed of the CDC decomposition, i.e.~when \texttt{dict\_cf[c]} has cardinality one (in other words: it is crossed only by one boundary facet), the two generated cells \texttt{vcell1,vcell2} can be safely output, and accommodated in two slots of the \texttt{CV} list.
+
+Conversely, when more than one facet crosses $c$, much more care must be taken to guarantee the correct fragmentation of this cell.
+
+
+\paragraph{Managing the splitting dictionaries}
+The function \texttt{splittingControl} takes care of cells that must be split several times, as crossed by several boundary faces. 
+
+If the dictionary item \texttt{dict\_cf[cell]} has \emph{length} one (i.e.~is crossed  \emph{only} by one face) the \texttt{CV} list is updated and the function returns, in order to update the \texttt{dict\_fc} dictionary.
+
+Otherwise, the function subdivides the facets cutting \texttt{cell} between those to be associated to \texttt{vcell1} and to \texttt{vcell2}. 
+For each pair \texttt{aface,covector} in \texttt{dict\_cf[cell]} \emph{and} in position following \texttt{face} in the list of pairs, check if either \texttt{vcell1} or \texttt{vcell2} or both, have intersection with the subset of vertices shared between \texttt{cell} and \texttt{aface}, and respectively put in \texttt{alist1}, in \texttt{alist2}, or in both.
+Finally, store \texttt{vcell1} and \texttt{vcell2} in \texttt{CV}, and \texttt{alist1}, \texttt{alist2} in \texttt{dict\_cf}.
+
+TODO: update \texttt{dict\_fc} ...
+
+%-------------------------------------------------------------------------------
+@D Managing the splitting dictionaries
+@{""" Managing the splitting dictionaries """
+def splittingControl(face,cell,vcell1,vcell2,dict_fc,dict_cf,V,EEV,CV,VC):
+
+	# only one facet covector crossing the cell
+
+	print "***** 1"
+	cellVerts = CV[cell]
+	print "cellVerts =",cellVerts
+	CV[cell] = vcell1
+	CV += [vcell2]
+	covector = dict_cf[cell][0][1]
+	dict_fc[face].remove((cell,covector))   # remove the split cell
+	dict_cf[cell].remove((face,covector))   # remove the splitting face
+	print "dict_fc =",dict_fc
+	print "dict_cf =",dict_cf
+			
+	# more than one facet covectors crossing the cell
+		
+	print "***** 2"
+	alist1,alist2 = list(),list()
+	print "alist1,alist2 =",alist1,alist2
+	
+	for aface,covector in dict_cf[cell]:
+	
+		# for each facet crossing the cell
+		# compute the intersection between the facet and the cell
+		
+		print "***** 3"
+		print "aface,covector =",aface,covector
+				
+		faceVerts = EEV[aface]
+		print "faceVerts =",faceVerts
+		commonVerts = list(set(faceVerts).intersection(cellVerts))
+		print "commonVerts =",commonVerts
+		
+		# and attribute the intersection to the split subcells
+		
+		if set(vcell1).intersection(commonVerts) != set():
+			alist1.append((aface,covector))
+			print "alist1 =",alist1
+		else: dict_fc[aface].remove((cell,covector)) 
+				
+		if set(vcell2).intersection(commonVerts) != set():
+			alist2.append((aface,covector))
+			print "alist2 =",alist2
+			dict_fc[aface] += [(len(CV)-1,covector)]
+	
+	print "***** 4"
+	dict_cf[cell] = alist1	
+	dict_cf[len(CV)-1] = alist2
+	print "dict_cf =",dict_cf
+	# for f in alist1: dict_fc[f] = cell
+	# for f in alist2: dict_fc[f] = len(CV)-1
+
+	return V,CV, dict_cf, dict_fc
+@}
+%-------------------------------------------------------------------------------
+
+
 \paragraph{Updating the vertex set  of split cells}
+
+TODO: update V dynamically (not only at the end of splitting process) 
+
 
 %-------------------------------------------------------------------------------
 @D Updating the vertex set  of split cells
@@ -526,20 +608,29 @@ def splitCellsCreateVertices(dict_fc,dict_cf,V,EEV,CV,VC):
 	out = []; nverts = len(V); cellPairs = []
 	vertdict = defaultdict(list)
 	for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-	for face,tasks in dict_fc.items():
-		for task in tasks:
-			cell,covector = task
-			print "face,cell,covector =",face,cell,covector
-			cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
-			newVerts = splitCellUpdate(cell,cell1,cell2,V,CV,VC)
-			vcell1 = []
-			for k in cell1:
-				if vertdict[k]==[]: 
-					vertdict[k] += [nverts]
-					nverts += 1
-				vcell1 += [vertdict[k]]
-			vcell2 = [vertdict[k] for k in cell2]
-			cellPairs += [[CAT(vcell1), CAT(vcell2)]]
+	while any([item[1]!=[] for item in dict_fc.items()]) : 
+		for face,tasks in dict_fc.items():
+			for task in tasks:
+				cell,covector = task
+				print "\nface,cell,covector =",face,cell,covector
+				cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
+				print "\ncell1,cell2 =",cell1,cell2
+				vcell1 = []
+				for k in cell1:
+					if vertdict[k]==[]: 
+						vertdict[k] += [nverts]
+						V += [eval(k)]
+						nverts += 1
+					vcell1 += [vertdict[k]]
+				vcell1 = CAT(vcell1)
+				vcell2 = CAT([vertdict[k] for k in cell2])
+				newVerts = splitCellUpdate(cell,vcell1,vcell2,CV)
+				print "\nnewVerts =",newVerts
+				V,CV, dict_cf, dict_fc = splittingControl(face,cell,vcell1,vcell2, 
+												dict_fc,dict_cf,V,EEV,CV,VC)
+				cellPairs += [[vcell1, vcell2]]
+	print "\n***** dict_fc.items()",dict_fc.items()
+	print "\n***** dict_cf.items()",dict_cf.items()
 	return vertdict, cellPairs, nverts
 @}
 %-------------------------------------------------------------------------------
@@ -556,9 +647,9 @@ First of all notice that, whereas \texttt{cell} is given as an integer index to 
 %-------------------------------------------------------------------------------
 @D Updating the split cell
 @{""" Updating the split cell """
-def splitCellUpdate(cell,cell1,cell2,V,CV,VC):
-	print "\ncell,cell1,cell2 =",cell,cell1,cell2
-	newVerts = None
+def splitCellUpdate(cell,vcell1,vcell2,CV):
+	print "cell,vcell1,vcell2 =",cell,vcell1,vcell2
+	newVerts = list(set(vcell1).difference(CV[cell]))
 	return newVerts
 @}
 %-------------------------------------------------------------------------------
@@ -592,6 +683,7 @@ from matrix import *
 @< Init face-cell and cell-face dictionaries @>
 @< Updating the split cell @>
 @< Updating the vertex set  of split cells @>
+@< Managing the splitting dictionaries @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -676,7 +768,8 @@ out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])),
 
 boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
 submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ])
-VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,4) ]))
+VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,4), 
+			cellNumbering ((V,EEV),submodel)(BF) ]))
 @}
 %-------------------------------------------------------------------------------
 
