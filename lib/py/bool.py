@@ -140,7 +140,8 @@ def mixedCellsOnBoundaries(cells12,BV1,BV2):
 """ Build intersection tasks """
 def cuttingTest(cuttingHyperplane,polytope,V):
    signs = [INNERPROD([cuttingHyperplane, V[v]+[1.]]) for v in polytope]
-   return any([value<0 for value in signs]) and any([value>0 for value in signs])
+   signs = eval(vcode(signs))
+   return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
 
 def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
    tasks = []
@@ -160,7 +161,6 @@ def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
                tasks += [[face,cell,cuttingHyperplane]]
    tasks = AA(eval)(set(AA(str)(tasks)))
    tasks = TrivialIntersection(tasks,V,EEV,CV)
-   print "\ntasks =",tasks
    return tasks
 
 """ Trivial intersection filtering """
@@ -178,7 +178,7 @@ def TrivialIntersection(tasks,V,EEV,CV):
 
 """ Cell splitting in two cells """
 def cellSplitting(face,cell,covector,V,EEV,CV):
-   print "\nV,CV =",V,CV
+
    dim = len(V[0])
    subspace = (T(range(1,dim+1))(dim*[-50])(CUBOID(dim*[100])))
    normal = covector[:-1]
@@ -219,93 +219,89 @@ def initTasks(tasks):
 
 """ Updating the split cell """
 def splitCellUpdate(cell,vcell1,vcell2,CV):
-   print "cell,vcell1,vcell2 =",cell,vcell1,vcell2
    newVerts = list(set(vcell1).difference(CV[cell]))
    return newVerts
 
 """ Updating the vertex set of split cells """
-def splitCellsCreateVertices(dict_fc,dict_cf,V,EEV,CV,VC):
-   out = []; nverts = len(V); cellPairs = []
-   vertdict = defaultdict(list)
-   for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-   while any([item[1]!=[] for item in dict_fc.items()]) : 
+def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF):
+   nverts = len(V); cellPairs = []
+   while any([tasks != [] for face,tasks in dict_fc.items()]) : 
       for face,tasks in dict_fc.items():
          for task in tasks:
             cell,covector = task
-            print "\nface,cell,covector =",face,cell,covector
-            cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
-            print "\ncell1,cell2 =",cell1,cell2
-            vcell1 = []
-            for k in cell1:
-               if vertdict[k]==[]: 
-                  vertdict[k] += [nverts]
-                  V += [eval(k)]
-                  nverts += 1
-               vcell1 += [vertdict[k]]
-            vcell1 = CAT(vcell1)
-            vcell2 = CAT([vertdict[k] for k in cell2])
-            newVerts = splitCellUpdate(cell,vcell1,vcell2,CV)
-            print "\nnewVerts =",newVerts
-            V,CV, dict_cf, dict_fc = splittingControl(face,cell,vcell1,vcell2, 
-                                    dict_fc,dict_cf,V,EEV,CV,VC)
-            cellPairs += [[vcell1, vcell2]]
-   print "\n***** dict_fc.items()",dict_fc.items()
-   print "\n***** dict_cf.items()",dict_cf.items()
-   return vertdict, cellPairs, nverts
+            if cuttingTest(covector,CV[cell],V):
+               
+               cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
+               
+               if cell1 == [] or cell2 == []:
+                  print "\nface,cell,covector =",face,cell,covector
+                  print "cell1,cell2 =",cell1,cell2
+               else:
+               
+                  adjCells = adjacencyQuery(V,CV)(cell)
+                                    
+                  vcell1 = []
+                  for k in cell1:
+                     if vertdict[k]==[]: 
+                        vertdict[k] += [nverts]
+                        V += [eval(k)]
+                        nverts += 1
+                     vcell1 += [vertdict[k]]
+                  
+                  vcell1 = CAT(vcell1)
+                  vcell2 = CAT([vertdict[k] for k in cell2])
+                  newVerts = splitCellUpdate(cell,vcell1,vcell2,CV)
+                  V,CV, dict_cf, dict_fc = splittingControl(face,cell,vcell1,vcell2, 
+                                          dict_fc,dict_cf,V,EEV,CV,VC)
+                  for adjCell in adjCells:
+                     if cuttingTest(covector,CV[adjCell],V):
+                        dict_fc[face] += [(adjCell,covector)] 
+                        dict_cf[adjCell] += [(face,covector)] 
+      
+                  cellPairs += [[vcell1, vcell2]]
+   return cellPairs
 
 """ Managing the splitting dictionaries """
 def splittingControl(face,cell,vcell1,vcell2,dict_fc,dict_cf,V,EEV,CV,VC):
 
    # only one facet covector crossing the cell
-
-   print "***** 1"
    cellVerts = CV[cell]
-   print "cellVerts =",cellVerts
    CV[cell] = vcell1
    CV += [vcell2]
    covector = dict_cf[cell][0][1]
    dict_fc[face].remove((cell,covector))   # remove the split cell
    dict_cf[cell].remove((face,covector))   # remove the splitting face
-   print "dict_fc =",dict_fc
-   print "dict_cf =",dict_cf
          
    # more than one facet covectors crossing the cell
-      
-   print "***** 2"
    alist1,alist2 = list(),list()
-   print "alist1,alist2 =",alist1,alist2
-   
    for aface,covector in dict_cf[cell]:
    
       # for each facet crossing the cell
       # compute the intersection between the facet and the cell
-      
-      print "***** 3"
-      print "aface,covector =",aface,covector
-            
       faceVerts = EEV[aface]
-      print "faceVerts =",faceVerts
       commonVerts = list(set(faceVerts).intersection(cellVerts))
-      print "commonVerts =",commonVerts
       
       # and attribute the intersection to the split subcells
-      
       if set(vcell1).intersection(commonVerts) != set():
          alist1.append((aface,covector))
-         print "alist1 =",alist1
       else: dict_fc[aface].remove((cell,covector)) 
             
       if set(vcell2).intersection(commonVerts) != set():
          alist2.append((aface,covector))
-         print "alist2 =",alist2
          dict_fc[aface] += [(len(CV)-1,covector)]
    
-   print "***** 4"
    dict_cf[cell] = alist1  
    dict_cf[len(CV)-1] = alist2
-   print "dict_cf =",dict_cf
-   # for f in alist1: dict_fc[f] = cell
-   # for f in alist2: dict_fc[f] = len(CV)-1
-
    return V,CV, dict_cf, dict_fc
+
+""" Computing the adjacent cells of a given cell """
+def adjacencyQuery (V,CV):
+   dim = len(V[0])
+   def adjacencyQuery0 (cell):
+      nverts = len(CV[cell])
+      csrCV =  csrCreate(CV)
+      csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
+      cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
+      return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
+   return adjacencyQuery0
 
