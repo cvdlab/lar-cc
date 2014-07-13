@@ -121,7 +121,8 @@ Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger 
 \texttt{V1} and \texttt{V2}, we index the set $\texttt{V1} \cup \texttt{V2}$ using a Python \texttt{defaultdict} dictionary, in order to avoid errors of "missing key". As dictionary keys, we use the string representation of the vertex position vector provided by the \texttt{vcode} function given in the Appendix.
 %-------------------------------------------------------------------------------
 @D Merge two dictionaries with keys the point locations
-@{	vdict1 = defaultdict(list)
+@{	
+	vdict1 = defaultdict(list)
 	for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
 	vdict2 = defaultdict(list)
 	for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
@@ -148,7 +149,8 @@ An example of coding is given below. The \emph{precision} of the string represen
 The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of vertices respectively stored in each repository.
 %-------------------------------------------------------------------------------
 @D Filter the common dictionary into three subsets
-@{	case1, case12, case2 = [],[],[]
+@{	
+	case1, case12, case2 = [],[],[]
 	for item in vertdict.items():
 		key,val = item
 		if len(val)==2:  case12 += [item]
@@ -260,12 +262,12 @@ The total cost of such pre-processing, executed using dictionaries, is $O(n\ln n
 
 %-------------------------------------------------------------------------------
 @D Building a covering of common convex hull
-@{def covering(model1,model2):
+@{def covering(model1,model2,dim=2,emptyCellNumber=1):
 	V, CV1, CV2, n12 = vertexSieve(model1,model2)
-	_,EEV1 = larFacets((V,CV1),dim=2,emptyCellNumber=1)
-	_,EEV2 = larFacets((V,CV2),dim=2,emptyCellNumber=1)
-	CV1 = CV1[:-1]
-	CV2 = CV2[:-1]
+	_,EEV1 = larFacets((V,CV1),dim,emptyCellNumber)
+	_,EEV2 = larFacets((V,CV2),dim,emptyCellNumber)
+	if emptyCellNumber !=0: CV1 = CV1[:-emptyCellNumber]
+	if emptyCellNumber !=0: CV2 = CV2[:-emptyCellNumber]
 	VV = AA(LIST)(range(len(V)))
 	return V,[VV,EEV1,EEV2,CV1,CV2],n12
 @}
@@ -316,7 +318,9 @@ def invertRelation(V,CV):
 %-------------------------------------------------------------------------------
 @D Look for cells in Delaunay, with vertices in both operands
 @{""" Look for cells in Delaunay, with vertices in both operands """
-def mixedCells(CV,n0,n1,m0,m1):
+def mixedCells(CV,CV1,CV2,n12):
+	n0,n1 = 0, max(AA(max)(CV1))			# vertices in CV1 (extremes included)
+	m0,m1 = n1+1-n12, max(AA(max)(CV2))		# vertices in CV2 (extremes included)
 	return [list(cell) for cell in CV if any([ n0<=v<=n1 for v in cell]) 
 		and any([ m0<=v<=m1 for v in cell])]
 @}
@@ -325,14 +329,10 @@ def mixedCells(CV,n0,n1,m0,m1):
 %-------------------------------------------------------------------------------
 @D Look for cells in cells12, with vertices on boundaries
 @{""" Look for cells in cells12, with vertices on boundaries """
-def mixedCellsOnBoundaries(cells12,BV1,BV2):
-	cells12BV1 = [cell for cell in cells12
-					if len(list(set(cell).intersection(BV1))) != 0]
-	cells12BV2 = [cell for cell in cells12
-					if len(list(set(cell).intersection(BV2))) != 0]
-	pivots = sorted(AA(sorted)(cells12BV1+cells12BV2))
-	pivots = [cell for k,cell in enumerate(pivots[:-1]) if cell==pivots[k+1]]
-	return pivots
+def mixedCellsOnBoundaries(cells12,BV):
+	cells12BV = [cell for cell in cells12
+					if len(list(set(cell).intersection(BV))) != 0]
+	return cells12BV
 @}
 %-------------------------------------------------------------------------------
 
@@ -344,16 +344,16 @@ def cuttingTest(cuttingHyperplane,polytope,V):
 	signs = eval(vcode(signs))
 	return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
 
-def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
+def splittingTasks(V,pivots,BV,BC,VBC,CV,VC):
 	tasks = []
 	for pivotCell in pivots:
 		cutVerts = [v for v in pivotCell if v in BV]
 		for v in cutVerts:
-			cutFacets = [e for e in VE[v] if e in BF]
+			cutFacets = VBC[v]
 			cells2cut = VC[v]
 			for face,cell in CART([cutFacets,cells2cut]):
 				polytope = CV[cell]
-				points = [V[w] for w in EEV[face]]
+				points = [V[w] for w in BC[face]]
 				dim = len(points[0])
 				theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
 				cuttingHyperplane = [(-1)**(col)*theMat.minor(0,col).determinant() 
@@ -361,7 +361,7 @@ def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
 				if cuttingTest(cuttingHyperplane,polytope,V):
 					tasks += [[face,cell,cuttingHyperplane]]
 	tasks = AA(eval)(set(AA(str)(tasks)))
-	tasks = TrivialIntersection(tasks,V,EEV,CV)
+	tasks = TrivialIntersection(tasks,V,BC,CV)
 	return tasks
 @}
 %-------------------------------------------------------------------------------
@@ -538,37 +538,38 @@ TODO: update \texttt{dict\_fc} ...
 %-------------------------------------------------------------------------------
 @D Managing the splitting dictionaries
 @{""" Managing the splitting dictionaries """
-def splittingControl(face,cell,vcell1,vcell2,dict_fc,dict_cf,V,EEV,CV,VC):
+def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC):
 
-	# only one facet covector crossing the cell
-	cellVerts = CV[cell]
-	CV[cell] = vcell1
-	CV += [vcell2]
-	covector = dict_cf[cell][0][1]
-	dict_fc[face].remove((cell,covector))   # remove the split cell
-	dict_cf[cell].remove((face,covector))   # remove the splitting face
-			
-	# more than one facet covectors crossing the cell
-	alist1,alist2 = list(),list()
-	for aface,covector in dict_cf[cell]:
-	
-		# for each facet crossing the cell
-		# compute the intersection between the facet and the cell
-		faceVerts = EEV[aface]
-		commonVerts = list(set(faceVerts).intersection(cellVerts))
-		
-		# and attribute the intersection to the split subcells
-		if set(vcell1).intersection(commonVerts) != set():
-			alist1.append((aface,covector))
-		else: dict_fc[aface].remove((cell,covector)) 
-				
-		if set(vcell2).intersection(commonVerts) != set():
-			alist2.append((aface,covector))
-			dict_fc[aface] += [(len(CV)-1,covector)]
-	
-	dict_cf[cell] = alist1	
-	dict_cf[len(CV)-1] = alist2
-	return V,CV, dict_cf, dict_fc
+   print "vcell1,vcell2 =",vcell1,vcell2
+   # only one facet covector crossing the cell
+   cellVerts = CV[cell]
+   CV[cell] = vcell1
+   CV += [vcell2]
+   print "covector =",covector
+   dict_fc[face].remove((cell,covector))   # remove the split cell
+   dict_cf[cell].remove((face,covector))   # remove the splitting face
+         
+   # more than one facet covectors crossing the cell
+   alist1,alist2 = list(),list()
+   for aface,covector in dict_cf[cell]:
+   
+      # for each facet crossing the cell
+      # compute the intersection between the facet and the cell
+      faceVerts = BC[aface]
+      commonVerts = list(set(faceVerts).intersection(cellVerts))
+      
+      # and attribute the intersection to the split subcells
+      if set(vcell1).intersection(commonVerts) != set():
+         alist1.append((aface,covector))
+      else: dict_fc[aface].remove((cell,covector)) 
+            
+      if set(vcell2).intersection(commonVerts) != set():
+         alist2.append((aface,covector))
+         dict_fc[aface] += [(len(CV)-1,covector)]
+   
+   dict_cf[cell] = alist1  
+   dict_cf[len(CV)-1] = alist2
+   return V,CV, dict_cf, dict_fc
 @}
 %-------------------------------------------------------------------------------
 
@@ -580,23 +581,20 @@ This function, and the ones called by its, provide the dynamic update of the two
 %-------------------------------------------------------------------------------
 @D Updating the vertex set  of split cells
 @{""" Updating the vertex set of split cells """
-def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF):
+def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
+	DEBUG = False
 	nverts = len(V); cellPairs = []
 	while any([tasks != [] for face,tasks in dict_fc.items()]) : 
 		for face,tasks in dict_fc.items():
 			for task in tasks:
 				cell,covector = task
 				if cuttingTest(covector,CV[cell],V):
-					
-					cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
-					
+					cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
 					if cell1 == [] or cell2 == []:
 						print "\nface,cell,covector =",face,cell,covector
 						print "cell1,cell2 =",cell1,cell2
 					else:
-					
 						adjCells = adjacencyQuery(V,CV)(cell)
-												
 						vcell1 = []
 						for k in cell1:
 							if vertdict[k]==[]: 
@@ -606,16 +604,18 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF):
 							vcell1 += [vertdict[k]]
 						
 						vcell1 = CAT(vcell1)
-						vcell2 = CAT([vertdict[k] for k in cell2])
-						newVerts = splitCellUpdate(cell,vcell1,vcell2,CV)
-						V,CV, dict_cf, dict_fc = splittingControl(face,cell,vcell1,vcell2, 
-														dict_fc,dict_cf,V,EEV,CV,VC)
+						vcell2 = CAT([vertdict[k] for k in cell2])						
+						V,CV, dict_cf, dict_fc = splittingControl(face,cell,covector,vcell1,vcell2, 
+														dict_fc,dict_cf,V,BC,CV,VC)
 						for adjCell in adjCells:
-							if cuttingTest(covector,CV[adjCell],V):
+							if cuttingTest(covector,CV[adjCell],V) and not ((face,covector) in dict_cf[adjCell]):
 								dict_fc[face] += [(adjCell,covector)] 
 								dict_cf[adjCell] += [(face,covector)] 
-		
 						cellPairs += [[vcell1, vcell2]]
+					if DEBUG: showSplitting(V,cellPairs,BC,CV)
+				else:
+					dict_fc[face].remove((cell,covector))   # remove the split cell
+					dict_cf[cell].remove((face,covector))   # remove the splitting face
 	return cellPairs
 @}
 %-------------------------------------------------------------------------------
@@ -677,6 +677,47 @@ pass
 
 \section{Reconstruction of results}
 
+
+\subsection{The Boolean algorithm flow}
+
+
+\paragraph{The splitting of Common Delaunay Complex}
+
+%-------------------------------------------------------------------------------
+@D Splitting the Common Delaunay Complex
+@{""" Splitting of Common Delaunay Complex """
+def booleanBulk(V,n12,EEV,CV,VC,BF,CV1,CV2,EEV1,EEV2,BV,BV1,BV2,VEE1,VEE2):
+	VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
+	cells12 = mixedCells(CV,CV1,CV2,n12)
+	pivots = mixedCellsOnBoundaries(cells12,BV1,BV2)
+	tasks = splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE)
+		
+	dict_fc,dict_cf = initTasks(tasks)
+	vertdict = defaultdict(list)
+	for k,v in enumerate(V): vertdict[vcode(v)] += [k]
+	cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
+	return cellPairs
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Show the process of CDC splitting}
+
+%-------------------------------------------------------------------------------
+@D Show the process of CDC splitting
+@{""" Show the process of CDC splitting """
+def showSplitting(V,cellPairs,BC,CV):
+	VV = AA(LIST)(range(len(V)))
+	cells1,cells2 = TRANS(cellPairs)
+	out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
+			COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
+	boundaries = COLOR(RED)(SKEL_1(STRUCT(MKPOLS((V,BC)))))
+	submodel = COLOR(CYAN)(STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ]))
+	VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
+@}
+%-------------------------------------------------------------------------------
+
+
+
 \section{Exporting the library}
 
 
@@ -700,15 +741,18 @@ from matrix import *
 @< Updating the vertex set  of split cells @>
 @< Managing the splitting dictionaries @>
 @< Computing the adjacent cells of a given cell @>
+@< Splitting the Common Delaunay Complex @>
+@< Show the process of CDC splitting @>
 @}
 %-------------------------------------------------------------------------------
 
 \section{Tests}
 
+
+
 \subsection{2D examples}
 
 \subsubsection{First examples}
-
 
 Three sets of input 2D data are prepared here, ranging from very simple to a small instance of the hardest kind of dataset, known to produce an output of size $O(n^2)$.
 
@@ -719,9 +763,14 @@ Three sets of input 2D data are prepared here, ranging from very simple to a sma
 V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
 	[8,4], [10,3]]
 FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8], [2,3,11],
-	[3,4,10], [5,6,9], [6,7,8], range(8)]
+	[3,4,10], [5,6,9], [6,7,8]]
+EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,3],[2,11],[3,4],[3,10],[3,11],[4,5],[4,10],[5,6],[5,9],[6,7],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
+VV1 = AA(LIST)(range(len(V1)))
+
 V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
-FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6], range(6)]
+FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
+EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
+VV2 = AA(LIST)(range(len(V2)))
 @}
 %-------------------------------------------------------------------------------
 
@@ -733,13 +782,11 @@ FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6], range(6)]
 @{""" Computation of edges an input visualisation """
 model1 = V1,FV1
 model2 = V2,FV2
-submodel = SKEL_1(STRUCT(MKPOLS(model1)+MKPOLS(model2)))
-VV1 = AA(LIST)(range(len(V1)))
-_,EV1 = larFacets((V1,FV1),dim=2,emptyCellNumber=1)
-VV2 = AA(LIST)(range(len(V2)))
-_,EV2 = larFacets((V2,FV2),dim=2,emptyCellNumber=1)
-VIEW(larModelNumbering(V1,[VV1,EV1,FV1],submodel,4))
-VIEW(larModelNumbering(V2,[VV2,EV2,FV2],submodel,4))
+basis1 = [VV1,EV1,FV1]
+basis2 = [VV2,EV2,FV2]
+submodel12 = STRUCT(MKPOLS((V1,EV1))+MKPOLS((V2,basis2[1])))
+VIEW(larModelNumbering(V1,basis1,submodel12,4))
+VIEW(larModelNumbering(V2,basis2,submodel12,4))
 @}
 %-------------------------------------------------------------------------------
 
@@ -749,46 +796,42 @@ VIEW(larModelNumbering(V2,[VV2,EV2,FV2],submodel,4))
 @D Bulk of Boolean task computation
 @{""" Bulk of Boolean task computation """
 @< Computation of lower-dimensional cells @>
-V,[VV,EEV1,EEV2,CV1,CV2],n12 = covering(model1,model2)
-CCV = CV1+CV2
-EEV = EEV1+EEV2
-VIEW(larModelNumbering(V,[VV,EEV,CCV],submodel,4))
 
-CV, BV1, BV2, BF1, BF2, BV, BF, nE1 = partition(V, CV1,CV2, EEV1,EEV2)
-boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
-submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ])
-VIEW(larModelNumbering(V,[VV,EEV,CV],submodel,4))
-@< Inversion of incidences @>
-
-n0,n1 = 0, max(AA(max)(CV1))			# vertices in CV1 (extremes included)
-m0,m1 = n1+1-n12, max(AA(max)(CV2))		# vertices in CV2 (extremes included)
-VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
-cells12 = mixedCells(CV,n0,n1,m0,m1)
-pivots = mixedCellsOnBoundaries(cells12,BV1,BV2)
-tasks = splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE)
-	
-dict_fc,dict_cf = initTasks(tasks)
+V,[VV,_,_,CV1,CV2],n12 = covering(model1,model2,2,0)
+CV = sorted(AA(sorted)(Delaunay(array(V)).vertices))
 vertdict = defaultdict(list)
 for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
 
+BC1 = boundaryCells(basis1[-1],basis1[-2])
+BC2 = boundaryCells(basis2[-1],basis2[-2])
+BC = [[ vertdict[vcode(V1[v])][0] for v in basis1[-2][cell]] for cell in BC1] + [ [ vertdict[vcode(V2[v])][0] for v in basis2[-2][cell]] for cell in BC2]
+BC = sorted(AA(sorted)(BC))
+
+BV1 = list(set(CAT([basis1[-2][bc] for bc in BC1])))
+BV1 = [vertdict[vcode(V1[v])][0] for v in BV1]
+BV2 = list(set(CAT([basis2[-2][bc] for bc in BC2])))
+BV1 = [vertdict[vcode(V2[v])][0] for v in BV2]
+BV = list(set(CAT([v for v in BC])))
 VV = AA(LIST)(range(len(V)))
-cells1,cells2 = TRANS(cellPairs)
-out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
-		COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
+submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
+VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
 
-boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
-submodel = COLOR(CYAN)(STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ]))
-VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,2), 
-			cellNumbering ((V,EEV),submodel)(BF) ]))
+cells12 = mixedCells(CV,CV1,CV2,n12)
+pivots = mixedCellsOnBoundaries(cells12,BV)
+VBC = invertRelation(V,BC)
+VC = invertRelation(V,CV)
+tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
+dict_fc,dict_cf = initTasks(tasks)
+
+cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC)
+showSplitting(V,cellPairs,BC,CV)
 @}
 %-------------------------------------------------------------------------------
 
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test01.py
-@{
-import sys
+@{import sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
 from bool import *
@@ -798,20 +841,41 @@ from bool import *
 %-------------------------------------------------------------------------------
 
 
-\paragraph{association of cells and boundaries}
+\subsubsection{Two squares}
+
+
+
 
 %-------------------------------------------------------------------------------
-@D Inversion of incidences
-@{""" Inversion of incidences """
-VC = invertRelation(V,CV)
-VC1 = invertRelation(V,CV1)
-VC2 = invertRelation(V,CV2)
-VEE1 = invertRelation(V,EEV1)
-VEE2 = [[e+nE1  for e in vE] for vE in invertRelation(V,EEV2)]
-submodel = SKEL_1(STRUCT(MKPOLS((V,CV1+CV2))))
-VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
+@o test/py/bool/test02.py
+@{""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool import *
+
+V1 = [[0,0],[10,0],[10,10],[0,10]]
+FV1 = [range(4)]
+EV1 = [[0,1],[1,2],[2,3],[3,0]]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[2.5,2.5],[12.5,2.5],[12.5,12.5],[2.5,12.5]]
+FV2 = [range(4)]
+EV2 = [[0,1],[1,2],[2,3],[3,0]]
+VV2 = AA(LIST)(range(len(V2)))
+@< Bulk of Boolean task computation @>
 @}
 %-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares1} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares2} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares3} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares4} 
+   \caption{Partitioning of the CDC (Common Delaunay Complex): (a) the two Boolean arguments merged in a single covering; (b) the CDC together with the two (yellow) boundaries; (c) the split CDC cells; (d) the exploded CDC partition.}
+   \label{fig:example}
+\end{figure}
 
 
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -823,6 +887,9 @@ VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
 @D Initial import of modules
 @{from pyplasm import *
 from scipy import *
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
 from lar2psm import *
 from simplexn import *
 from larcc import *

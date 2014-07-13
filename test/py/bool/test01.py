@@ -1,4 +1,3 @@
-
 import sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
@@ -7,60 +6,52 @@ from bool import *
 V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
    [8,4], [10,3]]
 FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8], [2,3,11],
-   [3,4,10], [5,6,9], [6,7,8], range(8)]
+   [3,4,10], [5,6,9], [6,7,8]]
+EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,3],[2,11],[3,4],[3,10],[3,11],[4,5],[4,10],[5,6],[5,9],[6,7],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
+VV1 = AA(LIST)(range(len(V1)))
+
 V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
-FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6], range(6)]
+FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
+EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
+VV2 = AA(LIST)(range(len(V2)))
 
 """ Bulk of Boolean task computation """
 """ Computation of edges an input visualisation """
 model1 = V1,FV1
 model2 = V2,FV2
-submodel = SKEL_1(STRUCT(MKPOLS(model1)+MKPOLS(model2)))
-VV1 = AA(LIST)(range(len(V1)))
-_,EV1 = larFacets((V1,FV1),dim=2,emptyCellNumber=1)
-VV2 = AA(LIST)(range(len(V2)))
-_,EV2 = larFacets((V2,FV2),dim=2,emptyCellNumber=1)
-VIEW(larModelNumbering(V1,[VV1,EV1,FV1],submodel,4))
-VIEW(larModelNumbering(V2,[VV2,EV2,FV2],submodel,4))
-
-V,[VV,EEV1,EEV2,CV1,CV2],n12 = covering(model1,model2)
-CCV = CV1+CV2
-EEV = EEV1+EEV2
-VIEW(larModelNumbering(V,[VV,EEV,CCV],submodel,4))
-
-CV, BV1, BV2, BF1, BF2, BV, BF, nE1 = partition(V, CV1,CV2, EEV1,EEV2)
-boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
-submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ])
-VIEW(larModelNumbering(V,[VV,EEV,CV],submodel,4))
-""" Inversion of incidences """
-VC = invertRelation(V,CV)
-VC1 = invertRelation(V,CV1)
-VC2 = invertRelation(V,CV2)
-VEE1 = invertRelation(V,EEV1)
-VEE2 = [[e+nE1  for e in vE] for vE in invertRelation(V,EEV2)]
-submodel = SKEL_1(STRUCT(MKPOLS((V,CV1+CV2))))
-VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
+basis1 = [VV1,EV1,FV1]
+basis2 = [VV2,EV2,FV2]
+submodel12 = STRUCT(MKPOLS((V1,EV1))+MKPOLS((V2,basis2[1])))
+VIEW(larModelNumbering(V1,basis1,submodel12,4))
+VIEW(larModelNumbering(V2,basis2,submodel12,4))
 
 
-n0,n1 = 0, max(AA(max)(CV1))        # vertices in CV1 (extremes included)
-m0,m1 = n1+1-n12, max(AA(max)(CV2))    # vertices in CV2 (extremes included)
-VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
-cells12 = mixedCells(CV,n0,n1,m0,m1)
-pivots = mixedCellsOnBoundaries(cells12,BV1,BV2)
-tasks = splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE)
-   
-dict_fc,dict_cf = initTasks(tasks)
+V,[VV,_,_,CV1,CV2],n12 = covering(model1,model2,2,0)
+CV = sorted(AA(sorted)(Delaunay(array(V)).vertices))
 vertdict = defaultdict(list)
 for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
 
+BC1 = boundaryCells(basis1[-1],basis1[-2])
+BC2 = boundaryCells(basis2[-1],basis2[-2])
+BC = [[ vertdict[vcode(V1[v])][0] for v in basis1[-2][cell]] for cell in BC1] + [ [ vertdict[vcode(V2[v])][0] for v in basis2[-2][cell]] for cell in BC2]
+BC = sorted(AA(sorted)(BC))
+
+BV1 = list(set(CAT([basis1[-2][bc] for bc in BC1])))
+BV1 = [vertdict[vcode(V1[v])][0] for v in BV1]
+BV2 = list(set(CAT([basis2[-2][bc] for bc in BC2])))
+BV1 = [vertdict[vcode(V2[v])][0] for v in BV2]
+BV = list(set(CAT([v for v in BC])))
 VV = AA(LIST)(range(len(V)))
-cells1,cells2 = TRANS(cellPairs)
-out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
-      COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
+submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
+VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
 
-boundaries = COLOR(YELLOW)(SKEL_1(STRUCT(MKPOLS((V,[EEV[e] for e in BF])))))
-submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ])
-VIEW(STRUCT([ STRUCT(out), larModelNumbering(V,[VV,[],CV],submodel,2), 
-         cellNumbering ((V,EEV),submodel)(BF) ]))
+cells12 = mixedCells(CV,CV1,CV2,n12)
+pivots = mixedCellsOnBoundaries(cells12,BV)
+VBC = invertRelation(V,BC)
+VC = invertRelation(V,CV)
+tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
+dict_fc,dict_cf = initTasks(tasks)
+
+cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC)
+showSplitting(V,cellPairs,BC,CV)
 

@@ -523,7 +523,7 @@ from sysml import *
 def modelIndexing(shape):
 	V, bases = larCuboids(shape,True)
 	# bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
-	color = [RED,CYAN,GREEN,WHITE]
+	color = [ORANGE,CYAN,GREEN,WHITE]
 	nums = AA(range)(AA(len)(bases))
 	hpcs = []
 	for k in range(4):
@@ -538,7 +538,7 @@ def modelIndexing(shape):
 @D Visualization of cell indices
 @{""" Numbered visualization of a LAR model """
 def larModelNumbering(V,bases,submodel,numberScaling=1):
-	color = [RED,CYAN,GREEN,WHITE]
+	color = [ORANGE,CYAN,GREEN,WHITE]
 	nums = AA(range)(AA(len)(bases))
 	hpcs = [submodel]
 	for k in range(len(bases)):

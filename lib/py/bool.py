@@ -2,6 +2,9 @@
 from matrix import *
 from pyplasm import *
 from scipy import *
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
 from lar2psm import *
 from simplexn import *
 from larcc import *
@@ -62,6 +65,7 @@ def vertexSieve(model1, model2):
       return [[v+n for v in cell] for cell in CV]
    CV2 = shift(CV2,n)
 
+   
    vdict1 = defaultdict(list)
    for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
    vdict2 = defaultdict(list)
@@ -71,6 +75,7 @@ def vertexSieve(model1, model2):
    for point in vdict1.keys(): vertdict[point] += vdict1[point]
    for point in vdict2.keys(): vertdict[point] += vdict2[point]
 
+   
    case1, case12, case2 = [],[],[]
    for item in vertdict.items():
       key,val = item
@@ -97,12 +102,12 @@ def vertexSieve(model1, model2):
    return V, CV1, CV2, len(case12)
 
 
-def covering(model1,model2):
+def covering(model1,model2,dim=2,emptyCellNumber=1):
    V, CV1, CV2, n12 = vertexSieve(model1,model2)
-   _,EEV1 = larFacets((V,CV1),dim=2,emptyCellNumber=1)
-   _,EEV2 = larFacets((V,CV2),dim=2,emptyCellNumber=1)
-   CV1 = CV1[:-1]
-   CV2 = CV2[:-1]
+   _,EEV1 = larFacets((V,CV1),dim,emptyCellNumber)
+   _,EEV2 = larFacets((V,CV2),dim,emptyCellNumber)
+   if emptyCellNumber !=0: CV1 = CV1[:-emptyCellNumber]
+   if emptyCellNumber !=0: CV2 = CV2[:-emptyCellNumber]
    VV = AA(LIST)(range(len(V)))
    return V,[VV,EEV1,EEV2,CV1,CV2],n12
 
@@ -123,19 +128,17 @@ def invertRelation(V,CV):
    return VC
 
 """ Look for cells in Delaunay, with vertices in both operands """
-def mixedCells(CV,n0,n1,m0,m1):
+def mixedCells(CV,CV1,CV2,n12):
+   n0,n1 = 0, max(AA(max)(CV1))        # vertices in CV1 (extremes included)
+   m0,m1 = n1+1-n12, max(AA(max)(CV2))    # vertices in CV2 (extremes included)
    return [list(cell) for cell in CV if any([ n0<=v<=n1 for v in cell]) 
       and any([ m0<=v<=m1 for v in cell])]
 
 """ Look for cells in cells12, with vertices on boundaries """
-def mixedCellsOnBoundaries(cells12,BV1,BV2):
-   cells12BV1 = [cell for cell in cells12
-               if len(list(set(cell).intersection(BV1))) != 0]
-   cells12BV2 = [cell for cell in cells12
-               if len(list(set(cell).intersection(BV2))) != 0]
-   pivots = sorted(AA(sorted)(cells12BV1+cells12BV2))
-   pivots = [cell for k,cell in enumerate(pivots[:-1]) if cell==pivots[k+1]]
-   return pivots
+def mixedCellsOnBoundaries(cells12,BV):
+   cells12BV = [cell for cell in cells12
+               if len(list(set(cell).intersection(BV))) != 0]
+   return cells12BV
 
 """ Build intersection tasks """
 def cuttingTest(cuttingHyperplane,polytope,V):
@@ -143,16 +146,16 @@ def cuttingTest(cuttingHyperplane,polytope,V):
    signs = eval(vcode(signs))
    return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
 
-def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
+def splittingTasks(V,pivots,BV,BC,VBC,CV,VC):
    tasks = []
    for pivotCell in pivots:
       cutVerts = [v for v in pivotCell if v in BV]
       for v in cutVerts:
-         cutFacets = [e for e in VE[v] if e in BF]
+         cutFacets = VBC[v]
          cells2cut = VC[v]
          for face,cell in CART([cutFacets,cells2cut]):
             polytope = CV[cell]
-            points = [V[w] for w in EEV[face]]
+            points = [V[w] for w in BC[face]]
             dim = len(points[0])
             theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
             cuttingHyperplane = [(-1)**(col)*theMat.minor(0,col).determinant() 
@@ -160,7 +163,7 @@ def splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE):
             if cuttingTest(cuttingHyperplane,polytope,V):
                tasks += [[face,cell,cuttingHyperplane]]
    tasks = AA(eval)(set(AA(str)(tasks)))
-   tasks = TrivialIntersection(tasks,V,EEV,CV)
+   tasks = TrivialIntersection(tasks,V,BC,CV)
    return tasks
 
 """ Trivial intersection filtering """
@@ -223,23 +226,20 @@ def splitCellUpdate(cell,vcell1,vcell2,CV):
    return newVerts
 
 """ Updating the vertex set of split cells """
-def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF):
+def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
+   DEBUG = False
    nverts = len(V); cellPairs = []
    while any([tasks != [] for face,tasks in dict_fc.items()]) : 
       for face,tasks in dict_fc.items():
          for task in tasks:
             cell,covector = task
             if cuttingTest(covector,CV[cell],V):
-               
-               cell1,cell2 = cellSplitting(face,cell,covector,V,EEV,CV)
-               
+               cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
                if cell1 == [] or cell2 == []:
                   print "\nface,cell,covector =",face,cell,covector
                   print "cell1,cell2 =",cell1,cell2
                else:
-               
                   adjCells = adjacencyQuery(V,CV)(cell)
-                                    
                   vcell1 = []
                   for k in cell1:
                      if vertdict[k]==[]: 
@@ -249,26 +249,29 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF):
                      vcell1 += [vertdict[k]]
                   
                   vcell1 = CAT(vcell1)
-                  vcell2 = CAT([vertdict[k] for k in cell2])
-                  newVerts = splitCellUpdate(cell,vcell1,vcell2,CV)
-                  V,CV, dict_cf, dict_fc = splittingControl(face,cell,vcell1,vcell2, 
-                                          dict_fc,dict_cf,V,EEV,CV,VC)
+                  vcell2 = CAT([vertdict[k] for k in cell2])                  
+                  V,CV, dict_cf, dict_fc = splittingControl(face,cell,covector,vcell1,vcell2, 
+                                          dict_fc,dict_cf,V,BC,CV,VC)
                   for adjCell in adjCells:
-                     if cuttingTest(covector,CV[adjCell],V):
+                     if cuttingTest(covector,CV[adjCell],V) and not ((face,covector) in dict_cf[adjCell]):
                         dict_fc[face] += [(adjCell,covector)] 
                         dict_cf[adjCell] += [(face,covector)] 
-      
                   cellPairs += [[vcell1, vcell2]]
+               if DEBUG: showSplitting(V,cellPairs,BC,CV)
+            else:
+               dict_fc[face].remove((cell,covector))   # remove the split cell
+               dict_cf[cell].remove((face,covector))   # remove the splitting face
    return cellPairs
 
 """ Managing the splitting dictionaries """
-def splittingControl(face,cell,vcell1,vcell2,dict_fc,dict_cf,V,EEV,CV,VC):
+def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC):
 
+   print "vcell1,vcell2 =",vcell1,vcell2
    # only one facet covector crossing the cell
    cellVerts = CV[cell]
    CV[cell] = vcell1
    CV += [vcell2]
-   covector = dict_cf[cell][0][1]
+   print "covector =",covector
    dict_fc[face].remove((cell,covector))   # remove the split cell
    dict_cf[cell].remove((face,covector))   # remove the splitting face
          
@@ -278,7 +281,7 @@ def splittingControl(face,cell,vcell1,vcell2,dict_fc,dict_cf,V,EEV,CV,VC):
    
       # for each facet crossing the cell
       # compute the intersection between the facet and the cell
-      faceVerts = EEV[aface]
+      faceVerts = BC[aface]
       commonVerts = list(set(faceVerts).intersection(cellVerts))
       
       # and attribute the intersection to the split subcells
@@ -304,4 +307,27 @@ def adjacencyQuery (V,CV):
       cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
       return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
    return adjacencyQuery0
+
+""" Splitting of Common Delaunay Complex """
+def booleanBulk(V,n12,EEV,CV,VC,BF,CV1,CV2,EEV1,EEV2,BV,BV1,BV2,VEE1,VEE2):
+   VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
+   cells12 = mixedCells(CV,CV1,CV2,n12)
+   pivots = mixedCellsOnBoundaries(cells12,BV1,BV2)
+   tasks = splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE)
+      
+   dict_fc,dict_cf = initTasks(tasks)
+   vertdict = defaultdict(list)
+   for k,v in enumerate(V): vertdict[vcode(v)] += [k]
+   cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
+   return cellPairs
+
+""" Show the process of CDC splitting """
+def showSplitting(V,cellPairs,BC,CV):
+   VV = AA(LIST)(range(len(V)))
+   cells1,cells2 = TRANS(cellPairs)
+   out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
+         COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
+   boundaries = COLOR(RED)(SKEL_1(STRUCT(MKPOLS((V,BC)))))
+   submodel = COLOR(CYAN)(STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ]))
+   VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
 

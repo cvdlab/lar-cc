@@ -755,7 +755,7 @@ As already outlined, the \texttt{modelIndexing} function return the \emph{hpc} v
 \mbox{}\verb@def modelIndexing(shape):@\\
 \mbox{}\verb@   V, bases = larCuboids(shape,True)@\\
 \mbox{}\verb@   # bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]@\\
-\mbox{}\verb@   color = [RED,CYAN,GREEN,WHITE]@\\
+\mbox{}\verb@   color = [ORANGE,CYAN,GREEN,WHITE]@\\
 \mbox{}\verb@   nums = AA(range)(AA(len)(bases))@\\
 \mbox{}\verb@   hpcs = []@\\
 \mbox{}\verb@   for k in range(4):@\\
@@ -781,7 +781,7 @@ As already outlined, the \texttt{modelIndexing} function return the \emph{hpc} v
 \begin{list}{}{} \item
 \mbox{}\verb@""" Numbered visualization of a LAR model """@\\
 \mbox{}\verb@def larModelNumbering(V,bases,submodel,numberScaling=1):@\\
-\mbox{}\verb@   color = [RED,CYAN,GREEN,WHITE]@\\
+\mbox{}\verb@   color = [ORANGE,CYAN,GREEN,WHITE]@\\
 \mbox{}\verb@   nums = AA(range)(AA(len)(bases))@\\
 \mbox{}\verb@   hpcs = [submodel]@\\
 \mbox{}\verb@   for k in range(len(bases)):@\\
