@@ -324,10 +324,13 @@ def booleanBulk(V,n12,EEV,CV,VC,BF,CV1,CV2,EEV1,EEV2,BV,BV1,BV2,VEE1,VEE2):
 """ Show the process of CDC splitting """
 def showSplitting(V,cellPairs,BC,CV):
    VV = AA(LIST)(range(len(V)))
-   cells1,cells2 = TRANS(cellPairs)
-   out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
-         COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
    boundaries = COLOR(RED)(SKEL_1(STRUCT(MKPOLS((V,BC)))))
    submodel = COLOR(CYAN)(STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ]))
-   VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
+   if cellPairs != []:
+      cells1,cells2 = TRANS(cellPairs)
+      out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
+            COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
+      VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
+   else:
+      VIEW(STRUCT([ larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
 
