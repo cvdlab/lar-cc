@@ -49,6 +49,33 @@
 
 \section{Introduction}
 
+\subsection{Preview of the algorithm}
+
+
+\begin{enumerate}
+\item 
+Embed both cellular complexes $A$ and $B$ in the same space (say, identify their common vertices) by $V_{ab} = V_a \cup V_b$.
+\item 
+Build their CDC  (Common Delaunay Complex) as the LAR of Delaunay triangulation of the vertex set $V_{ab}$.
+\item 
+Split the (highest-dimensional) cells of CDC crossed by $\partial A$ or $\partial B$;
+\item 
+With respect to the (split) CDC basis, compute two coordinate chains $\alpha,\beta: CDC \to \{0,1\}$, such that: 
+\[
+	\alpha(cell) = 1  \quad\mbox{if\ } |cell| \subset A;  \quad\mbox{else\ } \alpha(cell) = 0, 
+\]
+\[
+	\beta(cell) = 1  \quad\mbox{if\ } |cell| \subset B;  \quad\mbox{else\ } \beta(cell) = 0.
+\]
+\item 
+Extract accordingly the CDC chain corresponding to $A op B$, with $op\in \{\cup, \cap, -\}$.
+\end{enumerate}
+
+You may think to the split CDC as a CDT (constrained Delaunay Complex).  In part they coincide, but in general, CDC is a polytopal complex (not a simplicial complex).
+
+
+
+
 \section{Merging arguments}
 
 %-------------------------------------------------------------------------------
@@ -545,6 +572,7 @@ def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC
    cellVerts = CV[cell]
    CV[cell] = vcell1
    CV += [vcell2]
+   twoCells = [cell,len(CV)-1]
    print "covector =",covector
    dict_fc[face].remove((cell,covector))   # remove the split cell
    dict_cf[cell].remove((face,covector))   # remove the splitting face
@@ -569,7 +597,7 @@ def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC
    
    dict_cf[cell] = alist1  
    dict_cf[len(CV)-1] = alist2
-   return V,CV, dict_cf, dict_fc
+   return V,CV, dict_cf, dict_fc,twoCells
 @}
 %-------------------------------------------------------------------------------
 
@@ -583,7 +611,7 @@ This function, and the ones called by its, provide the dynamic update of the two
 @{""" Updating the vertex set of split cells """
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
 	DEBUG = False
-	nverts = len(V); cellPairs = []
+	nverts = len(V); cellPairs = []; twoCellIndices = []; cuttingFaces = []
 	while any([tasks != [] for face,tasks in dict_fc.items()]) : 
 		for face,tasks in dict_fc.items():
 			for task in tasks:
@@ -605,18 +633,20 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
 						
 						vcell1 = CAT(vcell1)
 						vcell2 = CAT([vertdict[k] for k in cell2])						
-						V,CV, dict_cf, dict_fc = splittingControl(face,cell,covector,vcell1,vcell2, 
+						V,CV, dict_cf, dict_fc,twoCells = splittingControl(face,cell,covector,vcell1,vcell2, 
 														dict_fc,dict_cf,V,BC,CV,VC)
 						for adjCell in adjCells:
 							if cuttingTest(covector,CV[adjCell],V) and not ((face,covector) in dict_cf[adjCell]):
 								dict_fc[face] += [(adjCell,covector)] 
 								dict_cf[adjCell] += [(face,covector)] 
 						cellPairs += [[vcell1, vcell2]]
+						twoCellIndices += [twoCells]
+						cuttingFaces += [face]
 					if DEBUG: showSplitting(V,cellPairs,BC,CV)
 				else:
 					dict_fc[face].remove((cell,covector))   # remove the split cell
 					dict_cf[cell].remove((face,covector))   # remove the splitting face
-	return cellPairs
+	return cellPairs,twoCellIndices,cuttingFaces
 @}
 %-------------------------------------------------------------------------------
 
@@ -695,8 +725,8 @@ def booleanBulk(V,n12,EEV,CV,VC,BF,CV1,CV2,EEV1,EEV2,BV,BV1,BV2,VEE1,VEE2):
 	dict_fc,dict_cf = initTasks(tasks)
 	vertdict = defaultdict(list)
 	for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-	cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
-	return cellPairs
+	cellPairs,twoCellIndices = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
+	return cellPairs,twoCellIndices
 @}
 %-------------------------------------------------------------------------------
 
@@ -719,6 +749,38 @@ def showSplitting(V,cellPairs,BC,CV):
 @}
 %-------------------------------------------------------------------------------
 
+
+
+\paragraph{Computation of bits of split cells}
+
+In order to compute, in the simplest and more general way, whether each of the two split $d$-cells is internal or external to the splitting boundary $d-1$-facet, it is necessary to consider the oriented covector $\phi$ (or one-form) canonically associated to the facet $f$ by the covector representation theorem, i.e.~the corresponding oriented hyperplane. In this case, the internal/external attribute of the split cell will be computed by evaluating the pairing $<v,\phi>$.
+
+%-------------------------------------------------------------------------------
+@D Computation of bits of split cells
+@{""" Computation of bits of split cells """
+def splitCellsBits(cuttingFaces,cellPairs,twoCellIndices,CV1,CV2,n12,BC):
+	n0,n1 = 0, max(AA(max)(CV1))			# vertices in CV1 (extremes included)
+	m0,m1 = n1+1-n12, max(AA(max)(CV2))		# vertices in CV2 (extremes included)
+	print "\nn0,n1 =",n0,n1,"m0,m1 =",m0,m1
+	for k,(v1,v2) in enumerate(BC):
+		if v1>n1 or v2>n1: break
+	boundarySpan1 = [0,k-1]
+	boundarySpan2 = [k,len(BC)-1]
+	print "boundarySpan1,boundarySpan2 =",boundarySpan1,boundarySpan2
+	for face,cells,indices in zip(cuttingFaces,cellPairs,twoCellIndices):
+		print "\ncells =", cells, "cell indices =", indices, "cutting face =",face
+		cell1,cell2 = cells  # sets of vertex indices in V
+		c1,c2 = indices  # cell indices in CV  (d-cells of CDC)
+		v1s = list(set(cell1).difference(cell2))
+		v2s = list(set(cell2).difference(cell1))
+		faceVerts = BC[face]
+		print "v1s,v2s =",v1s,v2s,"faceVerts =",faceVerts,
+		if all([n0<=v<=n1 for v in v1s]) and all([m0<=v<=m1 for v in v2s]): print "bits = 1 0"
+		elif all([n0<=v<=n1 for v in v2s]) and all([m0<=v<=m1 for v in v1s]): print "bits = 0 1"
+		else: print "error"
+
+@}
+%-------------------------------------------------------------------------------
 
 
 \section{Exporting the library}
@@ -746,6 +808,7 @@ from matrix import *
 @< Computing the adjacent cells of a given cell @>
 @< Splitting the Common Delaunay Complex @>
 @< Show the process of CDC splitting @>
+@< Computation of bits of split cells @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -805,14 +868,16 @@ CV = sorted(AA(sorted)(Delaunay(array(V)).vertices))
 vertdict = defaultdict(list)
 for k,v in enumerate(V): vertdict[vcode(v)] += [k]
 
-BC1 = boundaryCells(basis1[-1],basis1[-2])
-BC2 = boundaryCells(basis2[-1],basis2[-2])
-BC = [[ vertdict[vcode(V1[v])][0] for v in basis1[-2][cell]] for cell in BC1] + [ [ vertdict[vcode(V2[v])][0] for v in basis2[-2][cell]] for cell in BC2]
-BC = sorted(AA(sorted)(BC))
+BC1 = signedCellularBoundaryCells(V1,basis1)
+print "\nsignedBoundaryCells1 =",BC1
+BC2 = signedCellularBoundaryCells(V2,basis2)
+print "\nsignedBoundaryCells2 =",BC2
+BC = [[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ [ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2]
+BC = sorted(BC)
 
-BV1 = list(set(CAT([basis1[-2][bc] for bc in BC1])))
+BV1 = list(set(CAT(BC1)))
 BV1 = [vertdict[vcode(V1[v])][0] for v in BV1]
-BV2 = list(set(CAT([basis2[-2][bc] for bc in BC2])))
+BV2 = list(set(CAT(BC2)))
 BV1 = [vertdict[vcode(V2[v])][0] for v in BV2]
 BV = list(set(CAT([v for v in BC])))
 VV = AA(LIST)(range(len(V)))
@@ -826,7 +891,7 @@ VC = invertRelation(V,CV)
 tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
 dict_fc,dict_cf = initTasks(tasks)
 
-cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC)
+cellPairs,twoCellIndices,cuttingFaces = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC)
 showSplitting(V,cellPairs,BC,CV)
 @}
 %-------------------------------------------------------------------------------
@@ -840,6 +905,7 @@ sys.path.insert(0, 'lib/py/')
 from bool import *
 @< First set of 2D data: Fork-0 input @>
 @< Bulk of Boolean task computation @>
+splitCellsBits(cuttingFaces,cellPairs,twoCellIndices,CV1,CV2,n12,BC)
 @}
 %-------------------------------------------------------------------------------
 
@@ -890,6 +956,26 @@ VV2 = AA(LIST)(range(len(V2)))
 @}
 %-------------------------------------------------------------------------------
 
+%-------------------------------------------------------------------------------
+@o test/py/bool/test05.py
+@{""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool import *
+
+V1 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]
+FV1 = [range(4)]
+EV1 = [[0,1],[1,2],[2,3],[3,0]]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]
+FV2 = [range(4)]
+EV2 = [[0,1],[1,2],[2,3],[3,0]]
+VV2 = AA(LIST)(range(len(V2)))
+@< Bulk of Boolean task computation @>
+@}
+%-------------------------------------------------------------------------------
+
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
@@ -897,6 +983,16 @@ VV2 = AA(LIST)(range(len(V2)))
    \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares2} 
    \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares3} 
    \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares4} 
+   \caption{Partitioning of the CDC (Common Delaunay Complex): (a) the two Boolean arguments merged in a single covering; (b) the CDC together with the two (yellow) boundaries; (c) the split CDC cells; (d) the exploded CDC partition.}
+   \label{fig:example}
+\end{figure}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks01} 
+   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks02} 
+   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks03} 
+   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks04} 
    \caption{Partitioning of the CDC (Common Delaunay Complex): (a) the two Boolean arguments merged in a single covering; (b) the CDC together with the two (yellow) boundaries; (c) the split CDC cells; (d) the exploded CDC partition.}
    \label{fig:example}
 \end{figure}

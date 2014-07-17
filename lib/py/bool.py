@@ -228,7 +228,7 @@ def splitCellUpdate(cell,vcell1,vcell2,CV):
 """ Updating the vertex set of split cells """
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
    DEBUG = False
-   nverts = len(V); cellPairs = []
+   nverts = len(V); cellPairs = []; twoCellIndices = []; cuttingFaces = []
    while any([tasks != [] for face,tasks in dict_fc.items()]) : 
       for face,tasks in dict_fc.items():
          for task in tasks:
@@ -250,18 +250,20 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
                   
                   vcell1 = CAT(vcell1)
                   vcell2 = CAT([vertdict[k] for k in cell2])                  
-                  V,CV, dict_cf, dict_fc = splittingControl(face,cell,covector,vcell1,vcell2, 
+                  V,CV, dict_cf, dict_fc,twoCells = splittingControl(face,cell,covector,vcell1,vcell2, 
                                           dict_fc,dict_cf,V,BC,CV,VC)
                   for adjCell in adjCells:
                      if cuttingTest(covector,CV[adjCell],V) and not ((face,covector) in dict_cf[adjCell]):
                         dict_fc[face] += [(adjCell,covector)] 
                         dict_cf[adjCell] += [(face,covector)] 
                   cellPairs += [[vcell1, vcell2]]
+                  twoCellIndices += [twoCells]
+                  cuttingFaces += [face]
                if DEBUG: showSplitting(V,cellPairs,BC,CV)
             else:
                dict_fc[face].remove((cell,covector))   # remove the split cell
                dict_cf[cell].remove((face,covector))   # remove the splitting face
-   return cellPairs
+   return cellPairs,twoCellIndices,cuttingFaces
 
 """ Managing the splitting dictionaries """
 def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC):
@@ -271,6 +273,7 @@ def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC
    cellVerts = CV[cell]
    CV[cell] = vcell1
    CV += [vcell2]
+   twoCells = [cell,len(CV)-1]
    print "covector =",covector
    dict_fc[face].remove((cell,covector))   # remove the split cell
    dict_cf[cell].remove((face,covector))   # remove the splitting face
@@ -295,7 +298,7 @@ def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC
    
    dict_cf[cell] = alist1  
    dict_cf[len(CV)-1] = alist2
-   return V,CV, dict_cf, dict_fc
+   return V,CV, dict_cf, dict_fc,twoCells
 
 """ Computing the adjacent cells of a given cell """
 def adjacencyQuery (V,CV):
@@ -318,8 +321,8 @@ def booleanBulk(V,n12,EEV,CV,VC,BF,CV1,CV2,EEV1,EEV2,BV,BV1,BV2,VEE1,VEE2):
    dict_fc,dict_cf = initTasks(tasks)
    vertdict = defaultdict(list)
    for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-   cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
-   return cellPairs
+   cellPairs,twoCellIndices = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
+   return cellPairs,twoCellIndices
 
 """ Show the process of CDC splitting """
 def showSplitting(V,cellPairs,BC,CV):
@@ -333,4 +336,27 @@ def showSplitting(V,cellPairs,BC,CV):
       VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
    else:
       VIEW(STRUCT([ larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
+
+""" Computation of bits of split cells """
+def splitCellsBits(cuttingFaces,cellPairs,twoCellIndices,CV1,CV2,n12,BC):
+   n0,n1 = 0, max(AA(max)(CV1))        # vertices in CV1 (extremes included)
+   m0,m1 = n1+1-n12, max(AA(max)(CV2))    # vertices in CV2 (extremes included)
+   print "\nn0,n1 =",n0,n1,"m0,m1 =",m0,m1
+   for k,(v1,v2) in enumerate(BC):
+      if v1>n1 or v2>n1: break
+   boundarySpan1 = [0,k-1]
+   boundarySpan2 = [k,len(BC)-1]
+   print "boundarySpan1,boundarySpan2 =",boundarySpan1,boundarySpan2
+   for face,cells,indices in zip(cuttingFaces,cellPairs,twoCellIndices):
+      print "\ncells =", cells, "cell indices =", indices, "cutting face =",face
+      cell1,cell2 = cells  # sets of vertex indices in V
+      c1,c2 = indices  # cell indices in CV  (d-cells of CDC)
+      v1s = list(set(cell1).difference(cell2))
+      v2s = list(set(cell2).difference(cell1))
+      faceVerts = BC[face]
+      print "v1s,v2s =",v1s,v2s,"faceVerts =",faceVerts,
+      if all([n0<=v<=n1 for v in v1s]) and all([m0<=v<=m1 for v in v2s]): print "bits = 1 0"
+      elif all([n0<=v<=n1 for v in v2s]) and all([m0<=v<=m1 for v in v1s]): print "bits = 0 1"
+      else: print "error"
+
 

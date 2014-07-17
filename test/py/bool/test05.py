@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool import *
 
-V1 = [[0,0],[10,0],[10,10],[0,10]]
+V1 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]
 FV1 = [range(4)]
 EV1 = [[0,1],[1,2],[2,3],[3,0]]
 VV1 = AA(LIST)(range(len(V1)))

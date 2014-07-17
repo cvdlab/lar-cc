@@ -31,14 +31,16 @@ CV = sorted(AA(sorted)(Delaunay(array(V)).vertices))
 vertdict = defaultdict(list)
 for k,v in enumerate(V): vertdict[vcode(v)] += [k]
 
-BC1 = boundaryCells(basis1[-1],basis1[-2])
-BC2 = boundaryCells(basis2[-1],basis2[-2])
-BC = [[ vertdict[vcode(V1[v])][0] for v in basis1[-2][cell]] for cell in BC1] + [ [ vertdict[vcode(V2[v])][0] for v in basis2[-2][cell]] for cell in BC2]
-BC = sorted(AA(sorted)(BC))
+BC1 = signedCellularBoundaryCells(V1,basis1)
+print "\nsignedBoundaryCells1 =",BC1
+BC2 = signedCellularBoundaryCells(V2,basis2)
+print "\nsignedBoundaryCells2 =",BC2
+BC = [[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ [ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2]
+BC = sorted(BC)
 
-BV1 = list(set(CAT([basis1[-2][bc] for bc in BC1])))
+BV1 = list(set(CAT(BC1)))
 BV1 = [vertdict[vcode(V1[v])][0] for v in BV1]
-BV2 = list(set(CAT([basis2[-2][bc] for bc in BC2])))
+BV2 = list(set(CAT(BC2)))
 BV1 = [vertdict[vcode(V2[v])][0] for v in BV2]
 BV = list(set(CAT([v for v in BC])))
 VV = AA(LIST)(range(len(V)))
@@ -52,6 +54,7 @@ VC = invertRelation(V,CV)
 tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
 dict_fc,dict_cf = initTasks(tasks)
 
-cellPairs = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC)
+cellPairs,twoCellIndices,cuttingFaces = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC)
 showSplitting(V,cellPairs,BC,CV)
 
+splitCellsBits(cuttingFaces,cellPairs,twoCellIndices,CV1,CV2,n12,BC)
