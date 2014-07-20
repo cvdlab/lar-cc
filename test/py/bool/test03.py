@@ -23,34 +23,12 @@ VIEW(larModelNumbering(V1,basis1,submodel12,4))
 VIEW(larModelNumbering(V2,basis2,submodel12,4))
 
 
-V,[VV,_,_,CV1,CV2],n12 = covering(model1,model2,2,0)
-CV = sorted(AA(sorted)(Delaunay(array(V)).vertices))
-vertdict = defaultdict(list)
-for k,v in enumerate(V): vertdict[vcode(v)] += [k]
+V,CV,chain1,chain2 = booleanChains((V1,basis1), (V2,basis2))
 
-BC1 = signedCellularBoundaryCells(V1,basis1)
-print "\nsignedBoundaryCells1 =",BC1
-BC2 = signedCellularBoundaryCells(V2,basis2)
-print "\nsignedBoundaryCells2 =",BC2
-BC = [[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ [ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2]
-BC = sorted(BC)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain1) if c==1] ))))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain2) if c==1] ))))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2==2] ))))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2==1] ))))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2>=1] ))))
 
-BV1 = list(set(CAT(BC1)))
-BV1 = [vertdict[vcode(V1[v])][0] for v in BV1]
-BV2 = list(set(CAT(BC2)))
-BV1 = [vertdict[vcode(V2[v])][0] for v in BV2]
-BV = list(set(CAT([v for v in BC])))
-VV = AA(LIST)(range(len(V)))
-submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
-VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
-
-cells12 = mixedCells(CV,CV1,CV2,n12)
-pivots = mixedCellsOnBoundaries(cells12,BV)
-VBC = invertRelation(V,BC)
-VC = invertRelation(V,CV)
-tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
-dict_fc,dict_cf = initTasks(tasks)
-
-cellPairs,twoCellIndices,cuttingFaces = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC)
-showSplitting(V,cellPairs,BC,CV)
 

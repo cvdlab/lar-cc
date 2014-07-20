@@ -13,6 +13,7 @@ from myfont import *
 from mapper import *
 
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
+global PRECISION
 PRECISION = 4 
 
 def prepKey (args): return "["+", ".join(args)+"]"
@@ -111,13 +112,6 @@ def covering(model1,model2,dim=2,emptyCellNumber=1):
    VV = AA(LIST)(range(len(V)))
    return V,[VV,EEV1,EEV2,CV1,CV2],n12
 
-def partition(V, CV1,CV2, EEV1,EEV2):
-   CV = sorted(AA(sorted)(Delaunay(array(V)).vertices))
-   BV1, BV2, BF1, BF2 = boundaryVertices( V, CV1,CV2, 'cuboid', EEV1,EEV2 )
-   BV = BV1+BV2
-   nE1 = len(EEV1)
-   BF = BF1+[e+nE1 for e in BF2]
-   return CV, BV1, BV2, BF1, BF2, BV, BF, nE1
 
 """ Characteristic matrix transposition """
 def invertRelation(V,CV):
@@ -226,9 +220,15 @@ def splitCellUpdate(cell,vcell1,vcell2,CV):
    return newVerts
 
 """ Updating the vertex set of split cells """
-def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
-   DEBUG = False
-   nverts = len(V); cellPairs = []; twoCellIndices = []; cuttingFaces = []
+def testingSubspace(V,covector):
+   def testingSubspace0(vcell):
+      inout = SIGN(sum([INNERPROD([V[v]+[1.],covector]) for v in vcell]))
+      return inout
+   return testingSubspace0
+
+def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
+   DEBUG = False; CVbits = [[-1,-1] for k in range(len(CV))] 
+   nverts = len(V); cellPairs = []; twoCellIndices = []; cuttingFaces = []; 
    while any([tasks != [] for face,tasks in dict_fc.items()]) : 
       for face,tasks in dict_fc.items():
          for task in tasks:
@@ -236,7 +236,6 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
             if cuttingTest(covector,CV[cell],V):
                cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
                if cell1 == [] or cell2 == []:
-                  print "\nface,cell,covector =",face,cell,covector
                   print "cell1,cell2 =",cell1,cell2
                else:
                   adjCells = adjacencyQuery(V,CV)(cell)
@@ -249,34 +248,47 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC):
                      vcell1 += [vertdict[k]]
                   
                   vcell1 = CAT(vcell1)
-                  vcell2 = CAT([vertdict[k] for k in cell2])                  
-                  V,CV, dict_cf, dict_fc,twoCells = splittingControl(face,cell,covector,vcell1,vcell2, 
-                                          dict_fc,dict_cf,V,BC,CV,VC)
+                  vcell2 = CAT([vertdict[k] for k in cell2])   
+                                             
+                  V,CV,CVbits, dict_cf, dict_fc,twoCells = splittingControl(
+                     face,cell,covector,vcell1,vcell2, dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1)
+
                   for adjCell in adjCells:
                      if cuttingTest(covector,CV[adjCell],V) and not ((face,covector) in dict_cf[adjCell]):
                         dict_fc[face] += [(adjCell,covector)] 
                         dict_cf[adjCell] += [(face,covector)] 
                   cellPairs += [[vcell1, vcell2]]
-                  twoCellIndices += [twoCells]
+                  twoCellIndices += [[twoCells]]
                   cuttingFaces += [face]
                if DEBUG: showSplitting(V,cellPairs,BC,CV)
             else:
                dict_fc[face].remove((cell,covector))   # remove the split cell
                dict_cf[cell].remove((face,covector))   # remove the splitting face
-   return cellPairs,twoCellIndices,cuttingFaces
+            showSplitting(V,cellPairs,BC,CV)
+   #for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   return CVbits,cellPairs,twoCellIndices,cuttingFaces
 
 """ Managing the splitting dictionaries """
-def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC):
+def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1):
 
-   print "vcell1,vcell2 =",vcell1,vcell2
    # only one facet covector crossing the cell
    cellVerts = CV[cell]
    CV[cell] = vcell1
    CV += [vcell2]
-   twoCells = [cell,len(CV)-1]
-   print "covector =",covector
-   dict_fc[face].remove((cell,covector))   # remove the split cell
-   dict_cf[cell].remove((face,covector))   # remove the splitting face
+   CVbits += [copy(CVbits[cell])]
+   c1,c2 = cell,len(CV)-1
+
+   firstCell,secondCell = AA(testingSubspace(V,covector))([vcell1,vcell2])
+   if face < lenBC1 and firstCell==-1:       # face in boundary(op1)
+      CVbits[c1][0] = 0
+      CVbits[c2][0] = 1
+   elif face >= lenBC1 and firstCell==-1:    # face in boundary(op2)
+      CVbits[c1][1] = 0 
+      CVbits[c2][1] = 1
+   else: print "error splitting face,c1,c2 =",face,c1,c2
+
+   dict_fc[face].remove((cell,covector))  # remove the split cell
+   dict_cf[cell].remove((face,covector))  # remove the splitting face
          
    # more than one facet covectors crossing the cell
    alist1,alist2 = list(),list()
@@ -298,7 +310,7 @@ def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC
    
    dict_cf[cell] = alist1  
    dict_cf[len(CV)-1] = alist2
-   return V,CV, dict_cf, dict_fc,twoCells
+   return V,CV,CVbits, dict_cf, dict_fc,[c1,c2]
 
 """ Computing the adjacent cells of a given cell """
 def adjacencyQuery (V,CV):
@@ -310,19 +322,6 @@ def adjacencyQuery (V,CV):
       cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
       return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
    return adjacencyQuery0
-
-""" Splitting of Common Delaunay Complex """
-def booleanBulk(V,n12,EEV,CV,VC,BF,CV1,CV2,EEV1,EEV2,BV,BV1,BV2,VEE1,VEE2):
-   VE = [VEE1[v]+VEE2[v] for v in range(len(V))]
-   cells12 = mixedCells(CV,CV1,CV2,n12)
-   pivots = mixedCellsOnBoundaries(cells12,BV1,BV2)
-   tasks = splittingTasks(V,pivots,BV,BF,VC,CV,EEV,VE)
-      
-   dict_fc,dict_cf = initTasks(tasks)
-   vertdict = defaultdict(list)
-   for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-   cellPairs,twoCellIndices = splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,EEV,CV,VC,BF)
-   return cellPairs,twoCellIndices
 
 """ Show the process of CDC splitting """
 def showSplitting(V,cellPairs,BC,CV):
@@ -337,26 +336,63 @@ def showSplitting(V,cellPairs,BC,CV):
    else:
       VIEW(STRUCT([ larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
 
-""" Computation of bits of split cells """
-def splitCellsBits(cuttingFaces,cellPairs,twoCellIndices,CV1,CV2,n12,BC):
-   n0,n1 = 0, max(AA(max)(CV1))        # vertices in CV1 (extremes included)
-   m0,m1 = n1+1-n12, max(AA(max)(CV2))    # vertices in CV2 (extremes included)
-   print "\nn0,n1 =",n0,n1,"m0,m1 =",m0,m1
-   for k,(v1,v2) in enumerate(BC):
-      if v1>n1 or v2>n1: break
-   boundarySpan1 = [0,k-1]
-   boundarySpan2 = [k,len(BC)-1]
-   print "boundarySpan1,boundarySpan2 =",boundarySpan1,boundarySpan2
-   for face,cells,indices in zip(cuttingFaces,cellPairs,twoCellIndices):
-      print "\ncells =", cells, "cell indices =", indices, "cutting face =",face
-      cell1,cell2 = cells  # sets of vertex indices in V
-      c1,c2 = indices  # cell indices in CV  (d-cells of CDC)
-      v1s = list(set(cell1).difference(cell2))
-      v2s = list(set(cell2).difference(cell1))
-      faceVerts = BC[face]
-      print "v1s,v2s =",v1s,v2s,"faceVerts =",faceVerts,
-      if all([n0<=v<=n1 for v in v1s]) and all([m0<=v<=m1 for v in v2s]): print "bits = 1 0"
-      elif all([n0<=v<=n1 for v in v2s]) and all([m0<=v<=m1 for v in v1s]): print "bits = 0 1"
-      else: print "error"
+""" Traversing a Boolean argument within the CDC """
+def booleanChainTraverse(h,cell,V,CV,CVbits,value):
+   adjCells = adjacencyQuery(V,CV)(cell)
+   for adjCell in adjCells: 
+      if CVbits[adjCell][h] == -1:
+         CVbits[adjCell][h] = value
+         CVbits = booleanChainTraverse(h,adjCell,V,CV,CVbits,value)
+   return CVbits
 
+""" Boolean fragmentation and classification of CDC """
+def booleanChains(arg1,arg2):
+   (V1,basis1), (V2,basis2) = arg1,arg2
+   model1, model2 = (V1,basis1[-1]), (V2,basis2[-1])
+   V,[VV,_,_,CV1,CV2],n12 = covering(model1,model2,2,0)
+   CV = sorted(AA(sorted)(Delaunay(array(V)).vertices))
+   vertdict = defaultdict(list)
+   for k,v in enumerate(V): vertdict[vcode(v)] += [k]
+   
+   BC1 = signedCellularBoundaryCells(V1,basis1)
+   BC2 = signedCellularBoundaryCells(V2,basis2)
+   submodel1 = mkSignedEdges((V1,BC1))
+   submodel2 = mkSignedEdges((V2,BC2))
+   VIEW(STRUCT([submodel1,submodel2]))
+
+   BC = sorted([[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
+         [ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2])
+   BV = list(set(CAT([v for v in BC])))
+   VV = AA(LIST)(range(len(V)))
+   submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
+   VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
+   submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
+   VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
+   
+   cells12 = mixedCells(CV,CV1,CV2,n12)
+   pivots = mixedCellsOnBoundaries(cells12,BV)
+   VBC = invertRelation(V,BC)
+   VC = invertRelation(V,CV)
+   tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
+   dict_fc,dict_cf = initTasks(tasks)
+   
+   CVbits,cellPairs,twoCellIndices,cuttingFaces = splitCellsCreateVertices( 
+      vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1))
+   showSplitting(V,cellPairs,BC,CV)
+
+   for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   
+   for cell in range(len(CV)):
+      if CVbits[cell][0] == 1:
+         CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,1)      
+      if CVbits[cell][0] == 0:
+         CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,0)
+      if CVbits[cell][1] == 1:
+         CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,1)
+      if CVbits[cell][1] == 0:
+         CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
+   
+   for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   chain1,chain2 = TRANS(CVbits)
+   return V,CV,chain1,chain2
 
