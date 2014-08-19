@@ -1,4 +1,5 @@
 """ Module for Boolean ops with LAR """
+DEBUG = True
 from matrix import *
 from pyplasm import *
 from scipy import *
@@ -212,9 +213,6 @@ def initTasks(tasks):
       face,cell,covector = task
       dict_fc[face] += [(cell,covector)] 
       dict_cf[cell] += [(face,covector)] 
-      print "\n>>>>>>>>>>>>"
-      print "dict_cf",dict_cf
-      print "dict_fc",dict_fc,"\n"
    return dict_fc,dict_cf
 
 
@@ -226,7 +224,7 @@ def testingSubspace(V,covector):
    return testingSubspace0
 
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
-   DEBUG = False; CVbits = [[-1,-1] for k in range(len(CV))] 
+   CVbits = [[-1,-1] for k in range(len(CV))] 
    nverts = len(V); cellPairs = []; twoCellIndices = []; 
    while any([tasks != [] for face,tasks in dict_fc.items()]) : 
       for face,tasks in dict_fc.items():
@@ -236,14 +234,11 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 
             if cuttingTest(covector,vcell,V):
                cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
-               print " \ncell,face,cell1,cell2",cell,face,cell1,cell2
                if cell1 == [] or cell2 == []:
                   print "cell1,cell2 =",cell1,cell2
                else:
                   adjCells = adjacencyQuery(V,CV)(cell)
-                  
-                  print "cell,adjCells =",cell,adjCells,cell1,cell2
-                  
+                                    
                   vcell1 = []
                   for k in cell1:
                      if vertdict[k]==[]: 
@@ -265,6 +260,7 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
                         cellPairs += [[vcell1, vcell2]]
                         twoCellIndices += [[twoCells]]
                                     
+               DEBUG = False
                if DEBUG: showSplitting(V,cellPairs,BC,CV)
             else:
                dict_fc[face].remove((cell,covector))   # remove the split cell
@@ -277,7 +273,6 @@ def splittingControl(face,cell,covector,vcell,vcell1,vcell2,dict_fc,dict_cf,V,BC
    boundaryFacet = BC[face]
    translVector = V[boundaryFacet[0]]
    tcovector = [cv+tv*covector[-1] for (cv,tv) in zip(covector[:-1],translVector) ]+[0.0]
-   print "tcovector =",tcovector
 
    c1,c2 = cell,cell
    if not haltingSplitTest(cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,V) :
@@ -286,7 +281,6 @@ def splittingControl(face,cell,covector,vcell,vcell1,vcell2,dict_fc,dict_cf,V,BC
       cellVerts = CV[cell]
       CV[cell] = vcell1
       CV += [vcell2]
-      print "\n>>>> cell,len(CV) =",cell,len(CV)
       CVbits += [copy(CVbits[cell])]
       c1,c2 = cell,len(CV)-1
    
@@ -299,8 +293,8 @@ def splittingControl(face,cell,covector,vcell,vcell1,vcell2,dict_fc,dict_cf,V,BC
          CVbits[c2][1] = 1
       else: print "error splitting face,c1,c2 =",face,c1,c2
    
-      dict_fc[face].remove((cell,covector))  # remove the split cell
-      dict_cf[cell].remove((face,covector))  # remove the splitting face
+      #dict_fc[face].remove((cell,covector)) # remove the split cell
+      #dict_cf[cell].remove((face,covector)) # remove the splitting face
             
       # more than one facet covectors crossing the cell
       alist1,alist2 = list(),list()
@@ -332,35 +326,26 @@ def splittingControl(face,cell,covector,vcell,vcell1,vcell2,dict_fc,dict_cf,V,BC
 """ Test for split halting along a boundary facet """
 def haltingSplitTest(cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,V):
    newFacet = list(set(vcell1).intersection(vcell2))
-   print "\nvcell,vcell1,vcell2 =",vcell,vcell1,vcell2
-   print "newFacet,boundaryFacet =",newFacet,boundaryFacet
    
    # translation 
    newFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in newFacet ]
    boundaryFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in boundaryFacet ]
-   print "newFacet,boundaryFacet =",newFacet,boundaryFacet
    
    # linear transformation: newFacet -> standard (d-1)-simplex
    transformMat = mat( boundaryFacet[1:] + [tcovector[:-1]] ).T.I
-   print "transformMat =",transformMat
    
    # transformation in the subspace x_d = 0
    newFacet = AA(COMP([eval,vcode]))((transformMat * (mat(newFacet).T)).T.tolist())
    boundaryFacet = AA(COMP([eval,vcode]))((transformMat * (mat(boundaryFacet).T)).T.tolist())
-   print "newFacet,boundaryFacet =",newFacet,boundaryFacet
    
    # projection in E^{d-1} space and Boolean test
    newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
    boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
    verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
-   print "verts,cells,pols =",verts,cells,pols,"\n"
    if verts == []: 
-      print('\a')
       print "\n****** cell =",cell
-      #sys.exit()
       return True
    else: return False
-
 
 # cell1 = INTERSECTION([cellHpc,rototranslSubspace])
 # tolerance=0.0001
@@ -405,6 +390,7 @@ def booleanChainTraverse(h,cell,V,CV,CVbits,value):
    return CVbits
 
 """ Boolean fragmentation and classification of CDC """
+
 def booleanChains(arg1,arg2):
    (V1,basis1), (V2,basis2) = arg1,arg2
    model1, model2 = (V1,basis1[-1]), (V2,basis2[-1])
@@ -415,31 +401,38 @@ def booleanChains(arg1,arg2):
    
    BC1 = signedCellularBoundaryCells(V1,basis1)
    BC2 = signedCellularBoundaryCells(V2,basis2)
-   submodel1 = mkSignedEdges((V1,BC1))
-   submodel2 = mkSignedEdges((V2,BC2))
-   VIEW(STRUCT([submodel1,submodel2]))
-
    BC = sorted([[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
          [ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2])
    BV = list(set(CAT([v for v in BC])))
    VV = AA(LIST)(range(len(V)))
-   submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
-   VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
-   submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
-   VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
-   
+
+   if DEBUG: 
+      """ Input and CDC visualisation """
+      submodel1 = mkSignedEdges((V1,BC1))
+      submodel2 = mkSignedEdges((V2,BC2))
+      VIEW(STRUCT([submodel1,submodel2]))
+      submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
+      VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
+      submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
+      VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
+      
+   """ Initialization of splitting dictionaries """
    cells12 = mixedCells(CV,CV1,CV2,n12)
    pivots = mixedCellsOnBoundaries(cells12,BV)
    VBC = invertRelation(V,BC)
    VC = invertRelation(V,CV)
    tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
    dict_fc,dict_cf = initTasks(tasks)
+   print "\n>>>>> dict_fc =",dict_fc
+   print ">>>>> dict_cf =",dict_cf,"\n"
+   
    
    CVbits,cellPairs,twoCellIndices = splitCellsCreateVertices( 
       vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1))
    showSplitting(V,cellPairs,BC,CV)
-
-   for k in range(len(CV)):  print "\nk,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   
+   print "\n"
+   for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
    
    for cell in range(len(CV)):
       if CVbits[cell][0] == 1:
@@ -451,7 +444,8 @@ def booleanChains(arg1,arg2):
       if CVbits[cell][1] == 0:
          CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
    
-   for k in range(len(CV)):  print "\nk,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   print "\n"
+   for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
    
    chain1,chain2 = TRANS(CVbits)
    print "\ndict_cf",dict_cf
