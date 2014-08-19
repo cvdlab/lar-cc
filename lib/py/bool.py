@@ -212,12 +212,11 @@ def initTasks(tasks):
       face,cell,covector = task
       dict_fc[face] += [(cell,covector)] 
       dict_cf[cell] += [(face,covector)] 
+      print "\n>>>>>>>>>>>>"
+      print "dict_cf",dict_cf
+      print "dict_fc",dict_fc,"\n"
    return dict_fc,dict_cf
 
-""" Updating the split cell """
-def splitCellUpdate(cell,vcell1,vcell2,CV):
-   newVerts = list(set(vcell1).difference(CV[cell]))
-   return newVerts
 
 """ Updating the vertex set of split cells """
 def testingSubspace(V,covector):
@@ -228,17 +227,23 @@ def testingSubspace(V,covector):
 
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
    DEBUG = False; CVbits = [[-1,-1] for k in range(len(CV))] 
-   nverts = len(V); cellPairs = []; twoCellIndices = []; cuttingFaces = []; 
+   nverts = len(V); cellPairs = []; twoCellIndices = []; 
    while any([tasks != [] for face,tasks in dict_fc.items()]) : 
       for face,tasks in dict_fc.items():
          for task in tasks:
             cell,covector = task
-            if cuttingTest(covector,CV[cell],V):
+            vcell = CV[cell]
+
+            if cuttingTest(covector,vcell,V):
                cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
+               print " \ncell,face,cell1,cell2",cell,face,cell1,cell2
                if cell1 == [] or cell2 == []:
                   print "cell1,cell2 =",cell1,cell2
                else:
                   adjCells = adjacencyQuery(V,CV)(cell)
+                  
+                  print "cell,adjCells =",cell,adjCells,cell1,cell2
+                  
                   vcell1 = []
                   for k in cell1:
                      if vertdict[k]==[]: 
@@ -248,69 +253,123 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
                      vcell1 += [vertdict[k]]
                   
                   vcell1 = CAT(vcell1)
-                  vcell2 = CAT([vertdict[k] for k in cell2])   
+                  vcell2 = CAT([vertdict[k] for k in cell2])                     
                                              
                   V,CV,CVbits, dict_cf, dict_fc,twoCells = splittingControl(
-                     face,cell,covector,vcell1,vcell2, dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1)
+                     face,cell,covector,vcell,vcell1,vcell2, dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1)
+                  if twoCells[0] != twoCells[1]:
 
-                  for adjCell in adjCells:
-                     if cuttingTest(covector,CV[adjCell],V) and not ((face,covector) in dict_cf[adjCell]):
+                     for adjCell in adjCells:
                         dict_fc[face] += [(adjCell,covector)] 
                         dict_cf[adjCell] += [(face,covector)] 
-                  cellPairs += [[vcell1, vcell2]]
-                  twoCellIndices += [[twoCells]]
-                  cuttingFaces += [face]
+                        cellPairs += [[vcell1, vcell2]]
+                        twoCellIndices += [[twoCells]]
+                                    
                if DEBUG: showSplitting(V,cellPairs,BC,CV)
             else:
                dict_fc[face].remove((cell,covector))   # remove the split cell
                dict_cf[cell].remove((face,covector))   # remove the splitting face
-            showSplitting(V,cellPairs,BC,CV)
-   #for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
-   return CVbits,cellPairs,twoCellIndices,cuttingFaces
+   return CVbits,cellPairs,twoCellIndices
 
 """ Managing the splitting dictionaries """
-def splittingControl(face,cell,covector,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1):
+def splittingControl(face,cell,covector,vcell,vcell1,vcell2,dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1):
 
-   # only one facet covector crossing the cell
-   cellVerts = CV[cell]
-   CV[cell] = vcell1
-   CV += [vcell2]
-   CVbits += [copy(CVbits[cell])]
-   c1,c2 = cell,len(CV)-1
+   boundaryFacet = BC[face]
+   translVector = V[boundaryFacet[0]]
+   tcovector = [cv+tv*covector[-1] for (cv,tv) in zip(covector[:-1],translVector) ]+[0.0]
+   print "tcovector =",tcovector
 
-   firstCell,secondCell = AA(testingSubspace(V,covector))([vcell1,vcell2])
-   if face < lenBC1 and firstCell==-1:       # face in boundary(op1)
-      CVbits[c1][0] = 0
-      CVbits[c2][0] = 1
-   elif face >= lenBC1 and firstCell==-1:    # face in boundary(op2)
-      CVbits[c1][1] = 0 
-      CVbits[c2][1] = 1
-   else: print "error splitting face,c1,c2 =",face,c1,c2
+   c1,c2 = cell,cell
+   if not haltingSplitTest(cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,V) :
 
-   dict_fc[face].remove((cell,covector))  # remove the split cell
-   dict_cf[cell].remove((face,covector))  # remove the splitting face
-         
-   # more than one facet covectors crossing the cell
-   alist1,alist2 = list(),list()
-   for aface,covector in dict_cf[cell]:
+      # only one facet covector crossing the cell
+      cellVerts = CV[cell]
+      CV[cell] = vcell1
+      CV += [vcell2]
+      print "\n>>>> cell,len(CV) =",cell,len(CV)
+      CVbits += [copy(CVbits[cell])]
+      c1,c2 = cell,len(CV)-1
    
-      # for each facet crossing the cell
-      # compute the intersection between the facet and the cell
-      faceVerts = BC[aface]
-      commonVerts = list(set(faceVerts).intersection(cellVerts))
-      
-      # and attribute the intersection to the split subcells
-      if set(vcell1).intersection(commonVerts) != set():
-         alist1.append((aface,covector))
-      else: dict_fc[aface].remove((cell,covector)) 
+      firstCell,secondCell = AA(testingSubspace(V,covector))([vcell1,vcell2])
+      if face < lenBC1 and firstCell==-1:       # face in boundary(op1)
+         CVbits[c1][0] = 0
+         CVbits[c2][0] = 1
+      elif face >= lenBC1 and firstCell==-1:    # face in boundary(op2)
+         CVbits[c1][1] = 0 
+         CVbits[c2][1] = 1
+      else: print "error splitting face,c1,c2 =",face,c1,c2
+   
+      dict_fc[face].remove((cell,covector))  # remove the split cell
+      dict_cf[cell].remove((face,covector))  # remove the splitting face
             
-      if set(vcell2).intersection(commonVerts) != set():
-         alist2.append((aface,covector))
-         dict_fc[aface] += [(len(CV)-1,covector)]
-   
-   dict_cf[cell] = alist1  
-   dict_cf[len(CV)-1] = alist2
+      # more than one facet covectors crossing the cell
+      alist1,alist2 = list(),list()
+      for aface,covector in dict_cf[cell]:
+      
+         # for each facet crossing the cell
+         # compute the intersection between the facet and the cell
+         faceVerts = BC[aface]
+         commonVerts = list(set(faceVerts).intersection(cellVerts))
+         
+         # and attribute the intersection to the split subcells
+         if set(vcell1).intersection(commonVerts) != set():
+            alist1.append((aface,covector))
+         else: dict_fc[aface].remove((cell,covector)) 
+               
+         if set(vcell2).intersection(commonVerts) != set():
+            alist2.append((aface,covector))
+            dict_fc[aface] += [(len(CV)-1,covector)]
+      
+      dict_cf[cell] = alist1  
+      dict_cf[len(CV)-1] = alist2
+      
+   else:
+      dict_fc[face].remove((cell,covector))  # remove the split cell
+      dict_cf[cell].remove((face,covector))  # remove the splitting face   
+      
    return V,CV,CVbits, dict_cf, dict_fc,[c1,c2]
+
+""" Test for split halting along a boundary facet """
+def haltingSplitTest(cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,V):
+   newFacet = list(set(vcell1).intersection(vcell2))
+   print "\nvcell,vcell1,vcell2 =",vcell,vcell1,vcell2
+   print "newFacet,boundaryFacet =",newFacet,boundaryFacet
+   
+   # translation 
+   newFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in newFacet ]
+   boundaryFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in boundaryFacet ]
+   print "newFacet,boundaryFacet =",newFacet,boundaryFacet
+   
+   # linear transformation: newFacet -> standard (d-1)-simplex
+   transformMat = mat( boundaryFacet[1:] + [tcovector[:-1]] ).T.I
+   print "transformMat =",transformMat
+   
+   # transformation in the subspace x_d = 0
+   newFacet = AA(COMP([eval,vcode]))((transformMat * (mat(newFacet).T)).T.tolist())
+   boundaryFacet = AA(COMP([eval,vcode]))((transformMat * (mat(boundaryFacet).T)).T.tolist())
+   print "newFacet,boundaryFacet =",newFacet,boundaryFacet
+   
+   # projection in E^{d-1} space and Boolean test
+   newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
+   boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
+   verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
+   print "verts,cells,pols =",verts,cells,pols,"\n"
+   if verts == []: 
+      print('\a')
+      print "\n****** cell =",cell
+      #sys.exit()
+      return True
+   else: return False
+
+
+# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
+# tolerance=0.0001
+# use_octree=False
+# cell1 = Plasm.boolop(BOOL_CODE_AND, 
+#  [cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
+# verts,cells,pols = UKPOL(cell1)
+# cell1 = AA(vcode)(verts)
+# if 
 
 """ Computing the adjacent cells of a given cell """
 def adjacencyQuery (V,CV):
@@ -376,11 +435,11 @@ def booleanChains(arg1,arg2):
    tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
    dict_fc,dict_cf = initTasks(tasks)
    
-   CVbits,cellPairs,twoCellIndices,cuttingFaces = splitCellsCreateVertices( 
+   CVbits,cellPairs,twoCellIndices = splitCellsCreateVertices( 
       vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1))
    showSplitting(V,cellPairs,BC,CV)
 
-   for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   for k in range(len(CV)):  print "\nk,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
    
    for cell in range(len(CV)):
       if CVbits[cell][0] == 1:
@@ -392,7 +451,10 @@ def booleanChains(arg1,arg2):
       if CVbits[cell][1] == 0:
          CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
    
-   for k in range(len(CV)):  print "k,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   for k in range(len(CV)):  print "\nk,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+   
    chain1,chain2 = TRANS(CVbits)
-   return V,CV,chain1,chain2
+   print "\ndict_cf",dict_cf
+   print "\ndict_fc",dict_fc,"\n"
+   return V,CV,chain1,chain2,CVbits
 
