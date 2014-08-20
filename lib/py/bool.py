@@ -377,10 +377,7 @@ def booleanChains(arg1,arg2):
       VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
       
    """ New implementation of splitting dictionaries """
-   print "\nBC =",BC
-   
    VC = invertRelation(V,CV)
-   print "VC =",VC
    
    covectors = []
    for faceVerts in BC:
@@ -390,19 +387,13 @@ def booleanChains(arg1,arg2):
       covector = [(-1)**(col)*theMat.minor(0,col).determinant() 
                      for col in range(dim+1)]
       covectors += [covector]
-   print "faces,covectors =",zip(range(len(BC)),covectors),'\n'   
    
    """ to compute a single d-cell associated to (face,covector) """
    def covectorCell(face,faceVerts,covector,CV,VC):
-      print "\nface,faceVerts,covector =",face,faceVerts,covector
       incidentCells = VC[faceVerts[0]]
-      print "incidentCells =",incidentCells
       for cell in incidentCells:
-         print "cell =",cell
          cellVerts = CV[cell]
-         print "cellVerts =",cellVerts
          v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-         print "v0 =",v0,"\n"
          transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
          vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
                   if v != v0]).T)).T.tolist()
@@ -410,13 +401,13 @@ def booleanChains(arg1,arg2):
             return [face,cell,covector]
          else: print "error: found no face,cell,covector"
    
-   
+   """ Initialization of splitting dictionaries """
    tasks = []
    for face,covector in zip(range(len(BC)),covectors):
       tasks += [covectorCell(face,BC[face],covector,CV,VC)]
    
-   print "tasks =",tasks,'\n'
    dict_fc,dict_cf = initTasks(tasks)
+   
    
    
    CVbits,cellPairs,twoCellIndices = splitCellsCreateVertices( 

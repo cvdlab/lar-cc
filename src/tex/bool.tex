@@ -372,18 +372,14 @@ def invertRelation(V,CV):
 %-------------------------------------------------------------------------------
 
 
-\subsection{Selecting the boundary hyperplanes (BHs)}
+\subsection{Computing the boundary hyperplanes (BHs)}
 
 For each boundary $(d-1)$-face the affine hull is computed, producing a set of pairs (\texttt{face, covector}).
-
 
 %-------------------------------------------------------------------------------
 @D New implementation of splitting dictionaries
 @{""" New implementation of splitting dictionaries """
-print "\nBC =",BC
-
 VC = invertRelation(V,CV)
-print "VC =",VC
 
 covectors = []
 for faceVerts in BC:
@@ -393,16 +389,9 @@ for faceVerts in BC:
 	covector = [(-1)**(col)*theMat.minor(0,col).determinant() 
 						for col in range(dim+1)]
 	covectors += [covector]
-print "faces,covectors =",zip(range(len(BC)),covectors),'\n'	
 
 @< Association of covectors to d-cells @>
-
-tasks = []
-for face,covector in zip(range(len(BC)),covectors):
-	tasks += [covectorCell(face,BC[face],covector,CV,VC)]
-
-print "tasks =",tasks,'\n'
-dict_fc,dict_cf = initTasks(tasks)
+@< Initialization of splitting dictionaries @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -419,15 +408,10 @@ For this purpose, it is checked that at least one of the face vertices, transfor
 @D Association of covectors to d-cells
 @{""" to compute a single d-cell associated to (face,covector) """
 def covectorCell(face,faceVerts,covector,CV,VC):
-	print "\nface,faceVerts,covector =",face,faceVerts,covector
 	incidentCells = VC[faceVerts[0]]
-	print "incidentCells =",incidentCells
 	for cell in incidentCells:
-		print "cell =",cell
 		cellVerts = CV[cell]
-		print "cellVerts =",cellVerts
 		v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-		print "v0 =",v0,"\n"
 		transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
 		vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
 					if v != v0]).T)).T.tolist()
@@ -441,7 +425,20 @@ def covectorCell(face,faceVerts,covector,CV,VC):
 
 
 \subsection{Initialization of splitting dictionaries}
-The set of triples (\texttt{face, covector, cell}) previously computed is suitably accommodated into two dictionaries denoted as \texttt{dict\_fc} (for \emph{face, cell}) and \texttt{dict\_cf} (for \emph{cell, face}), respectively.
+The triples (\texttt{face, cell, covector}), computed by the \texttt{covectorCell} function, is suitably accommodated into two dictionaries denoted as \texttt{dict\_fc} (for \emph{face, cell}) and \texttt{dict\_cf} (for \emph{cell, face}), respectively.
+
+
+%-------------------------------------------------------------------------------
+@D Initialization of splitting dictionaries
+@{""" Initialization of splitting dictionaries """
+tasks = []
+for face,covector in zip(range(len(BC)),covectors):
+	tasks += [covectorCell(face,BC[face],covector,CV,VC)]
+
+dict_fc,dict_cf = initTasks(tasks)
+@}
+%-------------------------------------------------------------------------------
+
 
 
 \section{Splitting cells traversing the boundaries}
