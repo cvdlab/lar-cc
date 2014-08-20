@@ -417,7 +417,7 @@ def covectorCell(face,faceVerts,covector,CV,VC):
 					if v != v0]).T)).T.tolist()
 		if any([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
 			return [face,cell,covector]
-		else: print "error: found no face,cell,covector"
+	print "error: found no face,cell,covector","\n"
 @}
 %-------------------------------------------------------------------------------
 
@@ -436,6 +436,8 @@ for face,covector in zip(range(len(BC)),covectors):
 	tasks += [covectorCell(face,BC[face],covector,CV,VC)]
 
 dict_fc,dict_cf = initTasks(tasks)
+print "\n>dict_cf",dict_cf
+print "\n>dict_fc",dict_fc,"\n"
 @}
 %-------------------------------------------------------------------------------
 
@@ -683,6 +685,7 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 
 				if cuttingTest(covector,vcell,V):
 					cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
+					print "cell1,cell2 =",cell1,cell2
 					if cell1 == [] or cell2 == []:
 						print "cell1,cell2 =",cell1,cell2
 					else:
