@@ -122,57 +122,9 @@ def invertRelation(V,CV):
          VC[v] += [k]
    return VC
 
-""" Look for cells in Delaunay, with vertices in both operands """
-def mixedCells(CV,CV1,CV2,n12):
-   n0,n1 = 0, max(AA(max)(CV1))        # vertices in CV1 (extremes included)
-   m0,m1 = n1+1-n12, max(AA(max)(CV2))    # vertices in CV2 (extremes included)
-   return [list(cell) for cell in CV if any([ n0<=v<=n1 for v in cell]) 
-      and any([ m0<=v<=m1 for v in cell])]
 
-""" Look for cells in cells12, with vertices on boundaries """
-def mixedCellsOnBoundaries(cells12,BV):
-   cells12BV = [cell for cell in cells12
-               if len(list(set(cell).intersection(BV))) != 0]
-   return cells12BV
 
-""" Build intersection tasks """
-def cuttingTest(cuttingHyperplane,polytope,V):
-   signs = [INNERPROD([cuttingHyperplane, V[v]+[1.]]) for v in polytope]
-   signs = eval(vcode(signs))
-   return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
 
-def splittingTasks(V,pivots,BV,BC,VBC,CV,VC):
-   tasks = []
-   for pivotCell in pivots:
-      cutVerts = [v for v in pivotCell if v in BV]
-      for v in cutVerts:
-         cutFacets = VBC[v]
-         cells2cut = VC[v]
-         for face,cell in CART([cutFacets,cells2cut]):
-            polytope = CV[cell]
-            points = [V[w] for w in BC[face]]
-            dim = len(points[0])
-            theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
-            cuttingHyperplane = [(-1)**(col)*theMat.minor(0,col).determinant() 
-                           for col in range(dim+1)]
-            if cuttingTest(cuttingHyperplane,polytope,V):
-               tasks += [[face,cell,cuttingHyperplane]]
-   tasks = AA(eval)(set(AA(str)(tasks)))
-   tasks = TrivialIntersection(tasks,V,BC,CV)
-   return tasks
-
-""" Trivial intersection filtering """
-def TrivialIntersection(tasks,V,EEV,CV):
-   out = []
-   for face,cell,affineHull in tasks:
-      faceVerts, cellVerts = EEV[face], CV[cell]
-      v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-      transformMat = mat([VECTDIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
-      vects = (transformMat * (mat([VECTDIFF([V[v],V[v0]]) for v in faceVerts 
-               if v != v0]).T)).T.tolist()
-      if any([all([x>0 for x in list(vect)]) for vect in vects]): 
-         out += [[face,cell,affineHull]]
-   return out
 
 """ Cell splitting in two cells """
 def cellSplitting(face,cell,covector,V,EEV,CV):
@@ -222,6 +174,11 @@ def testingSubspace(V,covector):
       inout = SIGN(sum([INNERPROD([V[v]+[1.],covector]) for v in vcell]))
       return inout
    return testingSubspace0
+   
+def cuttingTest(cuttingHyperplane,polytope,V):
+   signs = [INNERPROD([cuttingHyperplane, V[v]+[1.]]) for v in polytope]
+   signs = eval(vcode(signs))
+   return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
 
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
    CVbits = [[-1,-1] for k in range(len(CV))] 
@@ -406,6 +363,9 @@ def booleanChains(arg1,arg2):
    BV = list(set(CAT([v for v in BC])))
    VV = AA(LIST)(range(len(V)))
 
+   print "\n BC =",BC,'\n'
+
+
    if DEBUG: 
       """ Input and CDC visualisation """
       submodel1 = mkSignedEdges((V1,BC1))
@@ -416,15 +376,47 @@ def booleanChains(arg1,arg2):
       submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
       VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
       
-   """ Initialization of splitting dictionaries """
-   cells12 = mixedCells(CV,CV1,CV2,n12)
-   pivots = mixedCellsOnBoundaries(cells12,BV)
-   VBC = invertRelation(V,BC)
+   """ New implementation of splitting dictionaries """
+   print "\nBC =",BC
+   
    VC = invertRelation(V,CV)
-   tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
+   print "VC =",VC
+   
+   covectors = []
+   for faceVerts in BC:
+      points = [V[v] for v in faceVerts]
+      dim = len(points[0])
+      theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
+      covector = [(-1)**(col)*theMat.minor(0,col).determinant() 
+                     for col in range(dim+1)]
+      covectors += [covector]
+   print "faces,covectors =",zip(range(len(BC)),covectors),'\n'   
+   
+   """ to compute a single d-cell associated to (face,covector) """
+   def covectorCell(face,faceVerts,covector,CV,VC):
+      print "\nface,faceVerts,covector =",face,faceVerts,covector
+      incidentCells = VC[faceVerts[0]]
+      print "incidentCells =",incidentCells
+      for cell in incidentCells:
+         print "cell =",cell
+         cellVerts = CV[cell]
+         print "cellVerts =",cellVerts
+         v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
+         print "v0 =",v0,"\n"
+         transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
+         vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
+                  if v != v0]).T)).T.tolist()
+         if any([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
+            return [face,cell,covector]
+         else: print "error: found no face,cell,covector"
+   
+   
+   tasks = []
+   for face,covector in zip(range(len(BC)),covectors):
+      tasks += [covectorCell(face,BC[face],covector,CV,VC)]
+   
+   print "tasks =",tasks,'\n'
    dict_fc,dict_cf = initTasks(tasks)
-   print "\n>>>>> dict_fc =",dict_fc
-   print ">>>>> dict_cf =",dict_cf,"\n"
    
    
    CVbits,cellPairs,twoCellIndices = splitCellsCreateVertices( 

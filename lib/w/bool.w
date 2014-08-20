@@ -344,7 +344,12 @@ The total cost of such pre-processing, executed using dictionaries, is $O(n\ln n
 \section{Selecting cells to split}
 
 The aim of this section is to provide some fast method to select a subset of CDC cells where to start the 
-splitting of the CDC along the $(d-1)$ boundary facets of operand complexes. Of course,  a lot of useful information is provided  by the incidence relation \texttt{VC} between CDC vertices and $d$-cells. Two different strategies are used for edges terminating by crossing the interior of some CDC cell, and for facets sharing the tangent space of the boundary of such cells.
+splitting of the CDC along the $(d-1)$ boundary facets of operand complexes. Of course,  a lot of useful information is provided  by the incidence relation \texttt{VC} between CDC vertices and $d$-cells. 
+
+Two dictionaries are used in order to split the CDC and compute the SCDC. The dictionary \texttt{dict\_fc} is used with key a boundary $(d-1)$-face and value the (dynamic) list of CDC $d$-cells crossed (and later split) by it. Conversely, the  \texttt{dict\_cf} dictionary is used with key a CDC $d$-cell and with value the list of boundary $(d-1)$-faces crossing it.
+
+Two different strategies may be used for boundary facets terminating by crossing the interior of some CDC cell, and for facets sharing the tangent space of the boundary of such cells.
+Alternatively to what initially implemented, all the boundary $(d-1)$-faces must be considered as ``splitting seeds", and tracked against the current state of the SCDC.
 
 
 \paragraph{Relational inversion (characteristic matrix transposition)}
@@ -366,110 +371,81 @@ def invertRelation(V,CV):
 @}
 %-------------------------------------------------------------------------------
 
-\subsection{CDC cells crossing the boundary}
 
-Two dictionaries are used in order to split the CDC and compute the SCDC. The dictionary \texttt{dict\_fc} is used with key a boundary $(d-1)$-face and value the (dynamic) list of CDC $d$-cells crossed (and later split) by it. Conversely, the  \texttt{dict\_cf} dictionary is used with key a CDC $d$-cell and with value the list of boundary $(d-1)$-faces crossing it.
+\subsection{Selecting the boundary hyperplanes (BHs)}
 
-\paragraph{Initialization of splitting dictionaries}
+For each boundary $(d-1)$-face the affine hull is computed, producing a set of pairs (\texttt{face, covector}).
+
 
 %-------------------------------------------------------------------------------
-@D Initialization of splitting dictionaries
-@{""" Initialization of splitting dictionaries """
-cells12 = mixedCells(CV,CV1,CV2,n12)
-pivots = mixedCellsOnBoundaries(cells12,BV)
-VBC = invertRelation(V,BC)
+@D New implementation of splitting dictionaries
+@{""" New implementation of splitting dictionaries """
+print "\nBC =",BC
+
 VC = invertRelation(V,CV)
-tasks = splittingTasks(V,pivots,BV,BC,VBC,CV,VC)
+print "VC =",VC
+
+covectors = []
+for faceVerts in BC:
+	points = [V[v] for v in faceVerts]
+	dim = len(points[0])
+	theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
+	covector = [(-1)**(col)*theMat.minor(0,col).determinant() 
+						for col in range(dim+1)]
+	covectors += [covector]
+print "faces,covectors =",zip(range(len(BC)),covectors),'\n'	
+
+@< Association of covectors to d-cells @>
+
+tasks = []
+for face,covector in zip(range(len(BC)),covectors):
+	tasks += [covectorCell(face,BC[face],covector,CV,VC)]
+
+print "tasks =",tasks,'\n'
 dict_fc,dict_cf = initTasks(tasks)
-print "\n>>>>> dict_fc =",dict_fc
-print ">>>>> dict_cf =",dict_cf,"\n"
 @}
 %-------------------------------------------------------------------------------
 
 
 
-%-------------------------------------------------------------------------------
-@D Look for cells in Delaunay, with vertices in both operands
-@{""" Look for cells in Delaunay, with vertices in both operands """
-def mixedCells(CV,CV1,CV2,n12):
-	n0,n1 = 0, max(AA(max)(CV1))			# vertices in CV1 (extremes included)
-	m0,m1 = n1+1-n12, max(AA(max)(CV2))		# vertices in CV2 (extremes included)
-	return [list(cell) for cell in CV if any([ n0<=v<=n1 for v in cell]) 
-		and any([ m0<=v<=m1 for v in cell])]
-@}
-%-------------------------------------------------------------------------------
+\subsection{Association of BHs to $d$-cells of CDC}
+
+Every pair (\texttt{face, covector}) is associated uniquely to a single $d$-cell of CDC, producing a set of triples (\texttt{face, covector, cell}). Two cases are possible: (a) the face hyperplane crosses the interior of the cell; (b) the face hyperplane contains the face, so that the cell is left on the interior subspace of the (oriented) face covector.
+
+For this purpose, it is checked that at least one of the face vertices, transformed into the common-vertex-based coordinate frame, have all positive coordinates. This fact guarantees the existence of a non trivial intersection between the $(d-1)$-face and the $d$-cell.
+
 
 %-------------------------------------------------------------------------------
-@D Look for cells in cells12, with vertices on boundaries
-@{""" Look for cells in cells12, with vertices on boundaries """
-def mixedCellsOnBoundaries(cells12,BV):
-	cells12BV = [cell for cell in cells12
-					if len(list(set(cell).intersection(BV))) != 0]
-	return cells12BV
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Build intersection tasks
-@{""" Build intersection tasks """
-def cuttingTest(cuttingHyperplane,polytope,V):
-	signs = [INNERPROD([cuttingHyperplane, V[v]+[1.]]) for v in polytope]
-	signs = eval(vcode(signs))
-	return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
-
-def splittingTasks(V,pivots,BV,BC,VBC,CV,VC):
-	tasks = []
-	for pivotCell in pivots:
-		cutVerts = [v for v in pivotCell if v in BV]
-		for v in cutVerts:
-			cutFacets = VBC[v]
-			cells2cut = VC[v]
-			for face,cell in CART([cutFacets,cells2cut]):
-				polytope = CV[cell]
-				points = [V[w] for w in BC[face]]
-				dim = len(points[0])
-				theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
-				cuttingHyperplane = [(-1)**(col)*theMat.minor(0,col).determinant() 
-									for col in range(dim+1)]
-				if cuttingTest(cuttingHyperplane,polytope,V):
-					tasks += [[face,cell,cuttingHyperplane]]
-	tasks = AA(eval)(set(AA(str)(tasks)))
-	tasks = TrivialIntersection(tasks,V,BC,CV)
-	return tasks
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Facet-cell trivial intersection filtering}
-
-A final filtering is applied to the pairs \texttt{(cutting\-Hyper\-plane,polytope)} in the \texttt{tasks} array, in order to remove those facets (pairs in 2D) whose intersection reduces to a single point, i.e.~to the common vertex between the boundary $(d-1)$-face, having \texttt{cuttingHyperplane} as affine hull, and the \texttt{polytope} $d$-cell.
-
-For this purpose, it is checked that at least one of the facet vertices, transformed into the common-vertex-based coordinate frame, have all positive coordinates. This fact guarantees the existence of a non trivial intersection between the $(d-1)$-face and the $d$-cell.
-
-%-------------------------------------------------------------------------------
-@D Trivial intersection filtering
-@{""" Trivial intersection filtering """
-def TrivialIntersection(tasks,V,EEV,CV):
-	out = []
-	for face,cell,affineHull in tasks:
-		faceVerts, cellVerts = EEV[face], CV[cell]
+@D Association of covectors to d-cells
+@{""" to compute a single d-cell associated to (face,covector) """
+def covectorCell(face,faceVerts,covector,CV,VC):
+	print "\nface,faceVerts,covector =",face,faceVerts,covector
+	incidentCells = VC[faceVerts[0]]
+	print "incidentCells =",incidentCells
+	for cell in incidentCells:
+		print "cell =",cell
+		cellVerts = CV[cell]
+		print "cellVerts =",cellVerts
 		v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-		transformMat = mat([VECTDIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
-		vects = (transformMat * (mat([VECTDIFF([V[v],V[v0]]) for v in faceVerts 
+		print "v0 =",v0,"\n"
+		transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
+		vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
 					if v != v0]).T)).T.tolist()
-		if any([all([x>0 for x in list(vect)]) for vect in vects]): 
-			out += [[face,cell,affineHull]]
-	return out
+		if any([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
+			return [face,cell,covector]
+		else: print "error: found no face,cell,covector"
 @}
 %-------------------------------------------------------------------------------
 
-\subsection{CDC cells touching the boundary}
 
-When the previous splitting phase has finished, the remaining boundary $(d-1)$-faces must be considered, and tracked against the current state of the SCDC.
 
-TODO
+
+\subsection{Initialization of splitting dictionaries}
+The set of triples (\texttt{face, covector, cell}) previously computed is suitably accommodated into two dictionaries denoted as \texttt{dict\_fc} (for \emph{face, cell}) and \texttt{dict\_cf} (for \emph{cell, face}), respectively.
+
 
 \section{Splitting cells traversing the boundaries}
-
+\label{sec:crossing}
 In the previous section we computed a set of "split seeds", each made by a boundary facet and by a Delaunay cell to be split by the facet's affine hull. Here we show how to partition ate each such cells into two cells, according to Figure~\ref{fig:splitting}, where the boundary facets of the two boolean arguments are shown in yellow color.
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
@@ -693,6 +669,11 @@ def testingSubspace(V,covector):
 		inout = SIGN(sum([INNERPROD([V[v]+[1.],covector]) for v in vcell]))
 		return inout
 	return testingSubspace0
+	
+def cuttingTest(cuttingHyperplane,polytope,V):
+	signs = [INNERPROD([cuttingHyperplane, V[v]+[1.]]) for v in polytope]
+	signs = eval(vcode(signs))
+	return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
 
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 	CVbits = [[-1,-1] for k in range(len(CV))] 
@@ -940,9 +921,12 @@ def booleanChains(arg1,arg2):
 	BV = list(set(CAT([v for v in BC])))
 	VV = AA(LIST)(range(len(V)))
 
+	print "\n BC =",BC,'\n'
+
+
 	if DEBUG: 
 		@< Input and CDC visualisation @>
-	@< Initialization of splitting dictionaries @>
+	@< New implementation of splitting dictionaries @>
 	
 	CVbits,cellPairs,twoCellIndices = splitCellsCreateVertices( 
 		vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1))
