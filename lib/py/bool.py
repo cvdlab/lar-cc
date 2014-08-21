@@ -175,10 +175,26 @@ def testingSubspace(V,covector):
       return inout
    return testingSubspace0
    
-def cuttingTest(cuttingHyperplane,polytope,V):
-   signs = [INNERPROD([cuttingHyperplane, V[v]+[1.]]) for v in polytope]
+def cuttingTest(covector,polytope,V):
+   signs = [INNERPROD([covector, V[v]+[1.]]) for v in polytope]
    signs = eval(vcode(signs))
    return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
+
+def tangentTest(face,polytope,V,BC):
+   faceVerts = BC[face]
+   cellVerts = polytope
+   print "faceVerts,cellVerts =",faceVerts,cellVerts
+   commonVerts = list(set(faceVerts).intersection(cellVerts))
+   if commonVerts != []:
+      v0 = commonVerts[0] # v0 = common vertex (TODO more general)
+      transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
+      vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
+               if v != v0]).T)).T.tolist()
+      if all([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
+         print "vects =",vects
+         return True
+   else: return False
+
 
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
    CVbits = [[-1,-1] for k in range(len(CV))] 
@@ -189,8 +205,8 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
             cell,covector = task
             vcell = CV[cell]
 
+            cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
             if cuttingTest(covector,vcell,V):
-               cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
                print "cell1,cell2 =",cell1,cell2
                if cell1 == [] or cell2 == []:
                   print "cell1,cell2 =",cell1,cell2
@@ -220,7 +236,26 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
                                     
                DEBUG = False
                if DEBUG: showSplitting(V,cellPairs,BC,CV)
+
+            elif tangentTest(face,vcell,V,BC):
+               print "facet tangent to cell"
+               
+               def inOutTest(face,cell,vertdict,covector,V,BC):
+                  vcell = CAT([vertdict[k] for k in cell])
+                  for v in list(set(vcell).difference(BC[face])):
+                     inOut = INNERPROD([covector, V[v]+[1.]])
+                     if abs(inOut) > 10**-PRECISION: return sign(inOut)
+               
+               if cell1 != []: theSign = inOutTest(face,cell1,vertdict,covector,V,BC)
+               if cell2 != []: theSign = inOutTest(face,cell2,vertdict,covector,V,BC)
+               print "theSign =",theSign
+               print "face,cell,covector =",face,cell,covector,"\n"
+               dict_fc[face].remove((cell,covector))   # remove the split cell
+               dict_cf[cell].remove((face,covector))   # remove the splitting face
+
             else:
+               print "facet out to cell"
+               print "face,cell,covector =",face,cell,covector,"\n"
                dict_fc[face].remove((cell,covector))   # remove the split cell
                dict_cf[cell].remove((face,covector))   # remove the splitting face
    return CVbits,cellPairs,twoCellIndices
