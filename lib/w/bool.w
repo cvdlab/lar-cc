@@ -146,25 +146,25 @@ The input LAR models are located in a common space by (implicitly) joining \text
 """ TODO: change defaultdict to OrderedDefaultdict """
 
 class OrderedDefaultdict(collections.OrderedDict):
-    def __init__(self, *args, **kwargs):
-        if not args:
-            self.default_factory = None
-        else:
-            if not (args[0] is None or callable(args[0])):
-                raise TypeError('first argument must be callable or None')
-            self.default_factory = args[0]
-            args = args[1:]
-        super(OrderedDefaultdict, self).__init__(*args, **kwargs)
+	def __init__(self, *args, **kwargs):
+		if not args:
+			self.default_factory = None
+		else:
+			if not (args[0] is None or callable(args[0])):
+				raise TypeError('first argument must be callable or None')
+			self.default_factory = args[0]
+			args = args[1:]
+		super(OrderedDefaultdict, self).__init__(*args, **kwargs)
 
-    def __missing__ (self, key):
-        if self.default_factory is None:
-            raise KeyError(key)
-        self[key] = default = self.default_factory()
-        return default
+	def __missing__ (self, key):
+		if self.default_factory is None:
+			raise KeyError(key)
+		self[key] = default = self.default_factory()
+		return default
 
-    def __reduce__(self):  # optional, for pickle support
-        args = (self.default_factory,) if self.default_factory else tuple()
-        return self.__class__, args, None, None, self.iteritems()
+	def __reduce__(self):  # optional, for pickle support
+		args = (self.default_factory,) if self.default_factory else tuple()
+		return self.__class__, args, None, None, self.iteritems()
 
 
 def vertexSieve(model1, model2):
@@ -363,12 +363,12 @@ small in most cases.
 %-------------------------------------------------------------------------------
 @D Characteristic matrix transposition
 @{""" Characteristic matrix transposition """
-def invertRelation(V,CV):
-	VC = [[] for k in range(len(V))]
+def invertRelation(dim,CV):
+	inverse = [[] for k in range(dim)]
 	for k,cell in enumerate(CV):
 		for v in cell:
-			VC[v] += [k]
-	return VC
+			inverse[v] += [k]
+	return inverse
 @}
 %-------------------------------------------------------------------------------
 
@@ -380,7 +380,7 @@ For each boundary $(d-1)$-face the affine hull is computed, producing a set of p
 %-------------------------------------------------------------------------------
 @D New implementation of splitting dictionaries
 @{""" New implementation of splitting dictionaries """
-VC = invertRelation(V,CV)
+VC = invertRelation(len(V),CV)
 
 covectors = []
 for faceVerts in BC:
@@ -437,8 +437,6 @@ for face,covector in zip(range(len(BC)),covectors):
 	tasks += [covectorCell(face,BC[face],covector,CV,VC)]
 
 dict_fc,dict_cf = initTasks(tasks)
-print "\n>dict_cf",dict_cf
-print "\n>dict_fc",dict_fc,"\n"
 @}
 %-------------------------------------------------------------------------------
 
@@ -488,7 +486,7 @@ def cellSplitting(face,cell,covector,V,EEV,CV):
 	cellHpc = MKPOL([V,[[v+1 for v in CV[cell]]],None])
 	
 	# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
-	tolerance=10**-PRECISION
+	tolerance=10**-(PRECISION)
 	use_octree=False
 	cell1 = Plasm.boolop(BOOL_CODE_AND, 
 		[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
@@ -592,7 +590,7 @@ Finally, store \texttt{vcell1} and \texttt{vcell2} in \texttt{CV}, and \texttt{a
 @D Managing the splitting dictionaries
 @{""" Managing the splitting dictionaries """
 def splittingControl(face,cell,covector,vcell,vcell1,vcell2,
-		dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1,splitBoundaryFacets):
+		dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1,splitBoundaryFacets,splittingCovectors):
 
 	boundaryFacet = BC[face]
 	translVector = V[boundaryFacet[0]]
@@ -600,15 +598,21 @@ def splittingControl(face,cell,covector,vcell,vcell1,vcell2,
 					covector[:-1],translVector) ]+[0.0]
 
 	c1,c2 = cell,cell
-	if not haltingSplitTest(cell,vcell,vcell1,vcell2,boundaryFacet,
-								translVector,tcovector,V,splitBoundaryFacets) :
+	if not haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,
+								translVector,tcovector,covector,
+								V,splitBoundaryFacets,splittingCovectors) :
 
 		# only one facet covector crossing the cell
 		cellVerts = CV[cell]
 		CV[cell] = vcell1
 		CV += [vcell2]
-		CVbits += [copy(CVbits[cell])]
+		CVbits += [list(copy(CVbits[cell]))]
 		c1,c2 = cell,len(CV)-1
+		
+		newFacet = list(set(vcell1).intersection(vcell2))
+		splitBoundaryFacets += [newFacet]  ## CAUTION: to verify
+		splittingCovectors[c1] += [(face,covector,newFacet)]
+		splittingCovectors[c2] = splittingCovectors[c1]
 	
 		firstCell,secondCell = AA(testingSubspace(V,covector))([vcell1,vcell2])
 		if face < lenBC1 and firstCell==-1:  		# face in boundary(op1)
@@ -674,21 +678,20 @@ This function, and the ones called by its, provide the dynamic update of the two
 def tangentTest(face,polytope,V,BC):
 	faceVerts = BC[face]
 	cellVerts = polytope
-	print "faceVerts,cellVerts =",faceVerts,cellVerts
 	commonVerts = list(set(faceVerts).intersection(cellVerts))
 	if commonVerts != []:
-    	v0 = commonVerts[0] # v0 = common vertex (TODO more general)
-    	transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
-    	vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
-    				if v != v0]).T)).T.tolist()
-    	if all([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
-    		print "vects =",vects
-    		return True
+		v0 = commonVerts[0] # v0 = common vertex (TODO more general)
+		transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
+		vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
+					if v != v0]).T)).T.tolist()
+		if all([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
+			return True
 	else: return False
 
+from collections import defaultdict
 
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
-	splitBoundaryFacets = []
+	splitBoundaryFacets = []; splittingCovectors = defaultdict(list)
 	CVbits = [[-1,-1] for k in range(len(CV))] 
 	nverts = len(V); cellPairs = []; twoCellIndices = []; 
 	while any([tasks != [] for face,tasks in dict_fc.items()]) : 
@@ -699,9 +702,8 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 
 				cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
 				if cuttingTest(covector,vcell,V):
-					print "cell1,cell2 =",cell1,cell2
 					if cell1 == [] or cell2 == []:
-						print "cell1,cell2 =",cell1,cell2
+						pass
 					else:
 						adjCells = adjacencyQuery(V,CV)(cell)
 												
@@ -718,7 +720,7 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 															
 						V,CV,CVbits, dict_cf, dict_fc,twoCells = splittingControl(
 							face,cell,covector,vcell,vcell1,vcell2, dict_fc,dict_cf,V,BC,CV,VC,
-							CVbits,lenBC1,splitBoundaryFacets)
+							CVbits,lenBC1,splitBoundaryFacets,splittingCovectors)
 						if twoCells[0] != twoCells[1]:
 
 							for adjCell in adjCells:
@@ -730,13 +732,11 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 					DEBUG = False
 					if DEBUG: showSplitting(V,cellPairs,BC,CV)
 
-				elif tangentTest(face,vcell,V,BC):
-					print "facet tangent to cell"
-					
-					def verySmall(number): return abs(number) < 10**-PRECISION
-					
-					splitBoundaryFacets += [[ v for v in vcell if 
-						verySmall(INNERPROD([covector,V[v]+[1.0]])) ]]
+				elif tangentTest(face,vcell,V,BC):										
+					newFacet = [ v for v in vcell if 
+						verySmall(INNERPROD([covector,V[v]+[1.0]])) ]
+					splitBoundaryFacets += [newFacet]
+					splittingCovectors[cell] += [(face,covector,newFacet)]
 					
 					def inOutTest(face,cell,vertdict,covector,V,BC):
 						vcell = CAT([vertdict[k] for k in cell])
@@ -746,24 +746,20 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 					
 					if cell1 != []: theSign = inOutTest(face,cell1,vertdict,covector,V,BC)
 					if cell2 != []: theSign = inOutTest(face,cell2,vertdict,covector,V,BC)
-					print "theSign =",theSign
 					if theSign  == 1.0 and face < lenBC1:  CVbits[cell][0] = 1
 					elif theSign  == 1.0 and face >= lenBC1:  CVbits[cell][1] = 1
 					elif theSign == -1.0 and face < lenBC1: CVbits[cell][0] = 0
 					elif theSign == -1.0 and face >= lenBC1: CVbits[cell][1] = 0
 					else: print "error with InOut test"
-					print "###>> face,cell,covector =",face,cell,covector,"\n"
+
 					dict_fc[face].remove((cell,covector))   # remove the split cell
 					dict_cf[cell].remove((face,covector))   # remove the splitting face
 
 				else:
-					print "facet out to cell"
-					print "face,cell,covector =",face,cell,covector,"\n"
 					dict_fc[face].remove((cell,covector))   # remove the split cell
 					dict_cf[cell].remove((face,covector))   # remove the splitting face
 	splitBoundaryFacets = sorted(list(AA(list)(set(AA(tuple)(AA(sorted)(splitBoundaryFacets))))))
-	print "\n###> splitBoundaryFacets =",splitBoundaryFacets,"\n"
-	return CVbits,cellPairs,twoCellIndices,splitBoundaryFacets
+	return CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors
 @}
 %-------------------------------------------------------------------------------
 
@@ -782,9 +778,9 @@ If this fact is not true, and hence $f_{12}$ is $out(f)$  in the induced topolog
 %-------------------------------------------------------------------------------
 @D Test for split halting along a boundary facet
 @{""" Test for split halting along a boundary facet """
-def haltingSplitTest(cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,V,splitBoundaryFacets):
+def haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,covector,
+						V,splitBoundaryFacets,splittingCovectors):
 	newFacet = list(set(vcell1).intersection(vcell2))
-	splitBoundaryFacets += [newFacet]  ## CAUTION: to verify
 	
 	# translation 
 	newFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in newFacet ]
@@ -801,11 +797,9 @@ def haltingSplitTest(cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovect
 	newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
 	boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
 	verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
-	if verts == []: 
-		print "\n****** cell =",cell
-		return True
-	else: 
-		return False
+	
+	if verts == []: return True
+	else: return False
 
 # cell1 = INTERSECTION([cellHpc,rototranslSubspace])
 # tolerance=0.0001
@@ -971,8 +965,8 @@ def qhullBoundary(V):
 	return sorted(AA(sorted)(out))
 	
 if __name__=="__main__":
-    BV = qhullBoundary(V)
-    VIEW(STRUCT(MKPOLS((V,BV))))
+	BV = qhullBoundary(V)
+	VIEW(STRUCT(MKPOLS((V,BV))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -992,12 +986,12 @@ We have chosen the second option  for the sake of efficiency in the current prot
 @D Extracting a $(d-1)$-basis of SCDC
 @{""" Extracting a $(d-1)$-basis of SCDC """
 def larConvexFacets (V,CV):
-    dim = len(V[0])
-    model = V,CV
-    V,FV = larFacets(model,dim)
-    FV = sorted(FV + qhullBoundary(V))
-    return FV
-    
+	dim = len(V[0])
+	model = V,CV
+	V,FV = larFacets(model,dim)
+	FV = sorted(FV + qhullBoundary(V))
+	return FV
+	
 if __name__=="__main__":
 	V = [[0.0,10.0],[0.0,0.0],[10.0,10.0],[10.0,0.0],[12.5,2.5],[2.5,2.5],[2.5,12.5],
 		 [12.5,12.5],[10.0,2.5],[2.5,10.0]]
@@ -1022,7 +1016,16 @@ As we already know, in order to make a partial tagging of $d$-cells of SCDC, nee
    \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/boundaryFacets2} 
    \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/boundaryFacets3} 
    \caption{The transformation of the boundaries of two 2D Boolean arguments: (a) the $(d-1)$-cells of the input boundaries; (b) such $(d-1)$-cells accumulated during the splitting, i.e.~in intermediate phases of the SCDC construction; (c) the whole set of $(d-1)$-cells (i.e. the $(d-1)$-skeleton) of the final SCDC.}
-   \label{fig:example}
+   \label{fig:boundaryFacets}
+\end{figure}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.26\linewidth,width=0.325\linewidth]{images/splitfacets0} 
+   \includegraphics[height=0.26\linewidth,width=0.325\linewidth]{images/splitfacets1} 
+   \includegraphics[height=0.26\linewidth,width=0.325\linewidth]{images/splitfacets2} 
+   \caption{The transformation of the boundaries of two 2D Boolean arguments: (a) input boundaries; (b) $(d-1)$-cells accumulated during the splitting; (c) $(d-1)$-skeleton of the final SCDC. In yellow the boundary facets accumulated during the splitting, that yet need later splits.}
+   \label{fig:splitfacets}
 \end{figure}
 
 
@@ -1039,7 +1042,20 @@ def facetBasisDict(model):
 	keys = AA(tuple)(FV)
 	dict_facets = dict(zip(keys,values))
 	return dict_facets
+	
+@< Searching for the split boundary facets in the dictionary @>
+@}
+%-------------------------------------------------------------------------------
 
+
+\paragraph{Searching for the split boundary facets in the dictionary}
+When performing a search---within the dictionary \texttt{dict\_facets}---of cells of the  \texttt{splitBoundaryFacets} list, accumulated during the construction of the SCDC, some
+will not found, because they were stored before that subsequent splits of their coboundary cells
+happened (in some later time instant of the splitting process). Such cells that are not retrieved within the $(d-1)$-skeleton of the SCDC are shown in yellow in the Figures~\ref{fig:boundaryFacets}b and~\ref{fig:splitfacets}b.
+
+%-------------------------------------------------------------------------------
+@D Searching for the split boundary facets in the dictionary
+@{""" Searching for the split boundary facets in the dictionary """
 if __name__=="__main__":
 	model = V,CV
 	dict_facets = facetBasisDict(model)
@@ -1050,10 +1066,142 @@ if __name__=="__main__":
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Improving the splitting of boundary facets}
+In order to get a record of Split Boundary Facets (SBFs) that coincides with a subset of $(d-1)$-skeleton of SCDC, we need an additional data structure (once again a dictionary, named \texttt{splittingCovectors}), with \emph{key} the split $d$-cells, and \emph{values} the list of pairs, made by (a) the splitting hyperplane used during its generation, i.e.~the minimal affine support of a SBF contained on its boundary, and (b) the LAR (list of vertices) of the split facet. At the end of the splitting we will reconstruct the correct and complete chain of SBFs using the coordinates of the SCDC basis.
 
-\paragraph{Searching for the split boundary facets in the dictionary}
+
+
 
 \paragraph{Coboundary of split boundary facets}
+
+Here we compute the matrix representation of the coboundary operator in the SCDC basis.
+
+%-------------------------------------------------------------------------------
+@D Boundary-Coboundary operators in the SCDC basis
+@{""" Boundary-Coboundary operators in the SCDC basis """
+dim = len(V[0])
+FV = larConvexFacets (V,CV)
+EV = larFacets((V,FV), dim)
+
+VV = AA(LIST)(range(len(V)))
+if dim == 3: bases = [VV,EV,FV,CV]
+elif dim == 2: bases = [VV,FV,CV]
+else: print "\nerror: not implemented\n"
+
+coBoundaryMat = signedCellularBoundary(V,bases).T
+@< Boundaries in SCDC coordinates @>
+@< Coboundary of boundaries @>
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Boundaries in SCDC coordinates}
+The \texttt{splitBoundaries} function given here takes as input the needed information, and returns two dictionaries of boundary facets of the Boolean arguments. The \emph{keys} are the indices of boundary faces as listed by the input lists \texttt{BC1} and \texttt{BC2} (which stand for \emph{boundary cells} 1 and 2) the \emph{values} are the lists of boundary facets in SCDC, i.e.~with respect to the SCDC cell basis.
+
+%-------------------------------------------------------------------------------
+@D Boundaries in SCDC coordinates
+@{""" Boundaries in SCDC coordinates """
+
+def removeDuplicates(dictOfLists):
+	values = AA(COMP([sorted,list,set,AA(abs)]))(dictOfLists.values())
+	keys = dictOfLists.keys()
+	return dict(zip(keys,values))
+
+def splitBoundaries(CV,FV,n_bf1,n_bf2,splittingCovectors,coBoundaryMat):
+	bucket1,bucket2 = defaultdict(list),defaultdict(list) 
+	for k,cell in enumerate(CV):
+		if splittingCovectors[k] != []:
+			facets = list(coBoundaryMat[k].tocoo().col)
+			signs = list(coBoundaryMat[k].tocoo().data)
+			orientedFacets = AA(prod)(zip(facets,signs))
+			for facet in orientedFacets:
+				for face,covector,verts in splittingCovectors[k]:
+					if all([ verySmall(INNERPROD([covector,V[v]+[1.0]])) 
+								for v in FV[abs(facet)] ]):
+						if face<n_bf1: bucket1[face] += [facet]
+						elif face<n_bf1+n_bf2: bucket2[face] += [facet]
+						else: print "error: separation of argument boundaries"
+						break		
+	facets1 = removeDuplicates(bucket1)
+	facets2 = removeDuplicates(bucket2)
+	return facets1,facets2
+@}
+%-------------------------------------------------------------------------------
+
+With respect to the SCDC complex generated by splitting the two 2D cuboidal complexes given by the example \texttt{test/py/bool/test03.py}, and shown in Figure~\ref{fig:test03}, the \texttt{facets1} and \texttt{facets2} data structure are the following:
+
+%-------------------------------------------------------------------------------
+@D From example test/py/bool/test03.py
+@{
+>>> boundary1,boundary2 = splitBoundaries(CV,FV,
+							n_bf1,n_bf2,splittingCovectors,coBoundaryMat)
+>>> boundary1
+{0: [10], 1: [4, 14], 2: [5, 9], 3: [6]}
+>>> boundary2
+{4: [16, 19], 5: [15], 6: [17], 7: [18, 20]}
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/boundaryfacets} 
+   \caption{The SCDC of example \texttt{test/py/bool/test03.py}}
+   \label{fig:test03}
+\end{figure}
+
+
+\paragraph{Coboundary of boundaries}
+When the boundaries of Boolean arguments $A$ and $B$, as embedded in SCDC, are known, we can compute the coboundaries of each such $(d-1)$-cell, and assign to each coboundary $d$-cell the proper in/out tag.
+
+%-------------------------------------------------------------------------------
+@D Coboundary of boundaries
+@{""" Coboundary of boundaries """
+
+FV = larConvexFacets (V,CV)
+boundary1,boundary2 = splitBoundaries(CV,FV,n_bf1,n_bf2,splittingCovectors,
+										coBoundaryMat)
+facets1 = [FV[facet] for face in boundary1 for facet in boundary1[face]]
+facets2 = [FV[facet] for face in boundary2 for facet in boundary2[face]]
+submodel1 = mkSignedEdges((V,facets1))
+submodel2 = mkSignedEdges((V,facets2))
+
+VIEW(STRUCT([submodel1,submodel2]))
+VIEW(STRUCT([ COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets1)))), 
+		COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets2)))) ]))
+		
+boundaryMat = coBoundaryMat.T
+
+def cellTagging(boundaryDict,boundaryMat,CV,FV,V,BC,CVbits,arg):
+	dim = len(V[0])
+	for face in boundaryDict:
+		for facet in boundaryDict[face]:
+			cofaces = list(boundaryMat[facet].tocoo().col)
+			cosigns = list(boundaryMat[facet].tocoo().data)
+			if len(cofaces) == 1: 
+				CVbits[cofaces[0]][arg] = 1
+			elif len(cofaces) == 2:
+				v0 = list(set(CV[cofaces[0]]).difference(FV[facet]))[0]
+				v1 = list(set(CV[cofaces[1]]).difference(FV[facet]))[0]
+				# take d affinity independent vertices in face (TODO)
+				simplex0 = BC[face][:dim] + [v0]
+				simplex1 = BC[face][:dim] + [v1]
+				sign0 = sign(det([V[v]+[1] for v in simplex0]))
+				sign1 = sign(det([V[v]+[1] for v in simplex1]))
+				if sign0 == 1: CVbits[cofaces[0]][arg] = 1
+				elif sign0 == -1: CVbits[cofaces[0]][arg] = 0
+				if sign1 == 1: CVbits[cofaces[1]][arg] = 1
+				elif sign1 == -1: CVbits[cofaces[1]][arg] = 0
+			else: 
+				print "error: too many cofaces of boundary facets"
+	return CVbits
+	
+CVbits = cellTagging(boundary1,boundaryMat,CV,FV,V,BC,CVbits,0)
+CVbits = cellTagging(boundary2,boundaryMat,CV,FV,V,BC,CVbits,1)
+@}
+%-------------------------------------------------------------------------------
+
+
+
 
 \paragraph{Tagging the coboundary}
 
@@ -1116,6 +1264,28 @@ VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Numerical instability of vertices curation}
+
+%-------------------------------------------------------------------------------
+@D Numerical instability of vertices curation
+@{""" Numerical instability of vertices curation """
+x,y = TRANS(V)
+tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel()))
+closestVertexPairs = AA(list)(tree.query(tree.data,2)[1])
+distances = sorted([[VECTNORM(VECTDIFF([V[v],V[w]])),v,w] for v,w in closestVertexPairs])
+coincidentVertexPairs = [[v,w] for k,(dist,v,w) in enumerate(distances) if dist < 10**-PRECISION]
+
+# remove w from CV (v <- w)
+if coincidentVertexPairs != []:
+	coincidentVertexPairs = list(set(AA(tuple)(AA(sorted)(coincidentVertexPairs))))
+	toChange = TRANS(coincidentVertexPairs)[1]
+	mapping = dict(AA(REVERSE)(coincidentVertexPairs))
+	CV_ = [[v  if v not in toChange else mapping[v] for v in cell] for cell in CV]
+	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,larConvexFacets (V,CV_)))))
+	CV = CV_
+@}
+%-------------------------------------------------------------------------------
+
 
 \paragraph{Boolean fragmentation and classification of CDC}
 
@@ -1133,21 +1303,22 @@ def booleanChains(arg1,arg2):
 	
 	BC1 = signedCellularBoundaryCells(V1,basis1)
 	BC2 = signedCellularBoundaryCells(V2,basis2)
-	BC = sorted([[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
-			[ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2])
+	n_bf1,n_bf2 = len(BC1),len(BC2)
+	BC = [[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
+			[ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2]
 	BV = list(set(CAT([v for v in BC])))
 	VV = AA(LIST)(range(len(V)))
-
-	print "\n BC =",BC,'\n'
-
+	
 	if DEBUG: 
 		@< Input and CDC visualisation @>
 		
 	@< New implementation of splitting dictionaries @>
 	
-	CVbits,cellPairs,twoCellIndices,splitBoundaryFacets = splitCellsCreateVertices( 
-		vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1))
+	CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors = \
+		splitCellsCreateVertices( vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1) )
 	showSplitting(V,cellPairs,BC,CV)
+	
+	@< Numerical instability of vertices curation @>
 	
 	@< Building a dictionary of SCDC $(d-1)$-cells @>
 	dict_facets = facetBasisDict((V,CV))
@@ -1156,8 +1327,10 @@ def booleanChains(arg1,arg2):
 			print dict_facets[cell]
 		else: print cell
 		
+	VV = AA(LIST)(range(len(V)))	
+	submodel = STRUCT(MKPOLS((V,larConvexFacets (V,CV))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,larConvexFacets (V,CV)))))
-	
+
 	for cell in range(len(CV)):
 		if CVbits[cell][0] == 1:
 			CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,1)		
@@ -1168,12 +1341,10 @@ def booleanChains(arg1,arg2):
 		if CVbits[cell][1] == 0:
 			CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
 	
-	chain1,chain2 = TRANS(CVbits)
-	print "\ndict_cf",dict_cf
-	print "\ndict_fc",dict_fc,"\n"
-	return V,CV,chain1,chain2,CVbits
+	return V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2
 @}
 %-------------------------------------------------------------------------------
+
 
 
 
@@ -1279,12 +1450,22 @@ VIEW(larModelNumbering(V2,basis2,submodel12,4))
 @{""" Bulk of Boolean task computation """
 @< Computation of lower-dimensional cells @>
 
-V,CV,chain1,chain2,CVbits = booleanChains((V1,basis1), (V2,basis2))
-for k in range(len(CV)):  print "\nk,CVbits[k],CV[k] =",k,CVbits[k],CV[k]
+V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2 = \
+	booleanChains((V1,basis1), (V2,basis2))
+	
+@< Boundary-Coboundary operators in the SCDC basis @>
+
+VV = AA(LIST)(range(len(V)))
+FV = larConvexFacets (V,CV)
+submodel = STRUCT(MKPOLS((V,FV)))
+VIEW(larModelNumbering(V,[VV,FV,CV],submodel,3))
+
+chain1,chain2 = TRANS(CVbits)
+
 if DEBUG:
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain1) if c==1] ))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain2) if c==1] ))))
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2==2] ))))
+	# VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1*c2==1] ))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2==1] ))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2>=1] ))))
 @}
@@ -1426,12 +1607,14 @@ A small set of utility functions is used to transform a \emph{point} representat
 @D Symbolic utility to represent points as strings
 @{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 3.975
+PRECISION = 3.95
+
+def verySmall(number): return abs(number) < 10**-(PRECISION/1.25)
 
 def prepKey (args): return "["+", ".join(args)+"]"
 
 def fixedPrec(value):
-	out = round(value*10**PRECISION)/10**PRECISION
+	out = round(value*10**(PRECISION*1.1))/10**(PRECISION*1.1)
 	if out == -0.0: out = 0.0
 	return str(out)
 	

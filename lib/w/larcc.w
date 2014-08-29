@@ -1391,6 +1391,7 @@ from sysml import *
 @< Incidence chain computation @>
 @< Signed boundary matrix for polytopal complexes @>
 @< Signed boundary cells for polytopal complexes @>
+@<  Oriented boundary cells for simplicial models @>
 
 if __name__ == "__main__": 
 	@< Test examples @>
