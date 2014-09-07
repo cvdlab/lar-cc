@@ -90,11 +90,12 @@ def cellTagging(boundaryDict,boundaryMat,CV,FV,V,BC,CVbits,arg):
          elif len(cofaces) == 2:
             v0 = list(set(CV[cofaces[0]]).difference(FV[facet]))[0]
             v1 = list(set(CV[cofaces[1]]).difference(FV[facet]))[0]
-            # take d affinity independent vertices in face (TODO)
+            # take d affinely independent vertices in face (TODO: use pivotSimplices() 
             simplex0 = BC[face][:dim] + [v0]
             simplex1 = BC[face][:dim] + [v1]
             sign0 = sign(det([V[v]+[1] for v in simplex0]))
             sign1 = sign(det([V[v]+[1] for v in simplex1]))
+            
             if sign0 == 1: CVbits[cofaces[0]][arg] = 1
             elif sign0 == -1: CVbits[cofaces[0]][arg] = 0
             if sign1 == 1: CVbits[cofaces[1]][arg] = 1
@@ -108,6 +109,16 @@ CVbits = cellTagging(boundary2,boundaryMat,CV,FV,V,BC,CVbits,1)
 
 
 
+for cell in range(len(CV)):
+   if CVbits[cell][0] == 1:
+      CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,1)      
+   if CVbits[cell][0] == 0:
+      CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,0)
+   if CVbits[cell][1] == 1:
+      CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,1)
+   if CVbits[cell][1] == 0:
+      CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
+
 VV = AA(LIST)(range(len(V)))
 FV = larConvexFacets (V,CV)
 submodel = STRUCT(MKPOLS((V,FV)))
@@ -118,7 +129,14 @@ chain1,chain2 = TRANS(CVbits)
 if DEBUG:
    VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain1) if c==1] ))))
    VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain2) if c==1] ))))
-   # VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1*c2==1] ))))
+   VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1*c2==1] ))))
    VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2==1] ))))
    VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2>=1] ))))
+   
+CVs = larBooleanPartition(CVbits,CV)
+colours = [RED,GREEN,BLUE,YELLOW]
+partitions = []
+for k,(bits,cells) in enumerate(CVs.items()):
+   partitions += [COLOR(colours[k])(EXPLODE(1.1,1.1,1)(MKPOLS((V,cells))))]
+VIEW(EXPLODE(1.3,1.3,1)(partitions))
 

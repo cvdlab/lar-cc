@@ -387,9 +387,12 @@ for faceVerts in BC:
 	points = [V[v] for v in faceVerts]
 	dim = len(points[0])
 	theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
-	covector = [(-1)**(col)*theMat.minor(0,col).determinant() 
+	covector1 = [(-1)**(col)*theMat.minor(0,col).determinant() 
 						for col in range(dim+1)]
-	covectors += [covector]
+	covector = COVECTOR(points)
+	covector2 = covector[1:]+[covector[0]] 
+	print "covector =",covector1,covector2
+	covectors += [covector1]
 
 @< Association of covectors to d-cells @>
 @< Initialization of splitting dictionaries @>
@@ -437,6 +440,8 @@ for face,covector in zip(range(len(BC)),covectors):
 	tasks += [covectorCell(face,BC[face],covector,CV,VC)]
 
 dict_fc,dict_cf = initTasks(tasks)
+print "\ndict_fc =",dict_fc
+print "dict_cf =",dict_cf,"\n"
 @}
 %-------------------------------------------------------------------------------
 
@@ -472,33 +477,11 @@ The actual subdivision of the input \texttt{cell} onto the two output cells \tex
 @D Cell splitting
 @{""" Cell splitting in two cells """
 def cellSplitting(face,cell,covector,V,EEV,CV):
-
-	dim = len(V[0])
-	subspace = (T(range(1,dim+1))(dim*[-50])(CUBOID(dim*[100])))
-	normal = covector[:-1]
-	if len(normal) == 2:  # 2D complex
-		rotatedSubspace = R([1,2])(ATAN2(normal)-PI/2)(T(2)(-50)(subspace))
-	elif len(normal) == 3:  # 3D complex
-		rotatedSubspace = R()()(subspace)
-	else: print "rotation error"
-	t = V[EEV[face][0]]
-	rototranslSubspace = T(range(1,dim+1))(t)(rotatedSubspace)
-	cellHpc = MKPOL([V,[[v+1 for v in CV[cell]]],None])
-	
-	# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
-	tolerance=10**-(PRECISION)
-	use_octree=False
-	cell1 = Plasm.boolop(BOOL_CODE_AND, 
-		[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-	verts,cells,pols = UKPOL(cell1)
-	cell1 = AA(vcode)(verts)
-
-	# cell2 = DIFFERENCE([cellHpc,rototranslSubspace])	
-	cell2 = Plasm.boolop(BOOL_CODE_DIFF, 
-		[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-	verts,cells,pols = UKPOL(cell2)
-	cell2 = AA(vcode)(verts)
-
+	plane = COVECTOR([V[v] for v in EEV[face]])
+	theCell = [V[v] for v in CV[cell]]
+	[below,equal,above] = SPLITCELL(plane,theCell)
+	cell1 = AA(vcode)(below)
+	cell2 = AA(vcode)(above)
 	return cell1,cell2
 @}
 %-------------------------------------------------------------------------------
@@ -601,6 +584,8 @@ def splittingControl(face,cell,covector,vcell,vcell1,vcell2,
 	if not haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,
 								translVector,tcovector,covector,
 								V,splitBoundaryFacets,splittingCovectors) :
+								
+		print "1.1> cell,vcell,face,covector =",cell,vcell,face,covector
 
 		# only one facet covector crossing the cell
 		cellVerts = CV[cell]
@@ -613,41 +598,43 @@ def splittingControl(face,cell,covector,vcell,vcell1,vcell2,
 		splitBoundaryFacets += [newFacet]  ## CAUTION: to verify
 		splittingCovectors[c1] += [(face,covector,newFacet)]
 		splittingCovectors[c2] = splittingCovectors[c1]
-	
-		firstCell,secondCell = AA(testingSubspace(V,covector))([vcell1,vcell2])
-		if face < lenBC1 and firstCell==-1:  		# face in boundary(op1)
-			CVbits[c1][0] = 0
-			CVbits[c2][0] = 1
-		elif face >= lenBC1 and firstCell==-1:  	# face in boundary(op2)
-			CVbits[c1][1] = 0 
-			CVbits[c2][1] = 1
-		else: print "error splitting face,c1,c2 =",face,c1,c2
-	
-		#dict_fc[face].remove((cell,covector))	# remove the split cell
-		#dict_cf[cell].remove((face,covector))	# remove the splitting face
+		
+		print "1.1.1> c1,c2,CVbits[c1],CVbits[c2] =",c1,c2,CVbits[c1],CVbits[c2]
+		
+		dict_fc[face].remove((cell,covector))	# remove the split cell
+		dict_cf[cell].remove((face,covector))	# remove the splitting face
 				
 		# more than one facet covectors crossing the cell
 		alist1,alist2 = list(),list()
 		for aface,covector in dict_cf[cell]:
+			if cuttingTest(covector,CV[cell],V):
 		
-			# for each facet crossing the cell
-			# compute the intersection between the facet and the cell
-			faceVerts = BC[aface]
-			commonVerts = list(set(faceVerts).intersection(cellVerts))
+    			# for each facet crossing the cell
+    			# compute the intersection between the facet and the cell
+    			faceVerts = BC[aface]
+    			commonVerts = list(set(faceVerts).intersection(cellVerts))
+    			
+    			# and attribute the intersection to the split subcells
+    			if set(vcell1).intersection(commonVerts) != set():
+    				alist1.append((aface,covector))
+    			else: dict_fc[aface].remove((cell,covector)) 
+    					
+    			if set(vcell2).intersection(commonVerts) != set():
+    				alist2.append((aface,covector))
+    				dict_fc[aface] += [(len(CV)-1,covector)]
+    		
+    			print "1.1.1.1> aface,dict_fc[aface] =",aface,dict_fc[aface]
 			
-			# and attribute the intersection to the split subcells
-			if set(vcell1).intersection(commonVerts) != set():
-				alist1.append((aface,covector))
-			else: dict_fc[aface].remove((cell,covector)) 
-					
-			if set(vcell2).intersection(commonVerts) != set():
-				alist2.append((aface,covector))
-				dict_fc[aface] += [(len(CV)-1,covector)]
-		
 		dict_cf[cell] = alist1  
 		dict_cf[len(CV)-1] = alist2
 		
+		print "1.1.2> cell,dict_cf[cell] =",cell,dict_cf[cell]
+		print "1.1.3> len(CV)-1,dict_cf[len(CV)-1] =",len(CV)-1,dict_cf[len(CV)-1]
+		
 	else:
+	
+		print "1.2> cell,vcell,face,covector =",cell,vcell,face,covector
+		
 		dict_fc[face].remove((cell,covector))	# remove the split cell
 		dict_cf[cell].remove((face,covector))	# remove the splitting face	
 		
@@ -691,6 +678,7 @@ def tangentTest(face,polytope,V,BC):
 from collections import defaultdict
 
 def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
+	DEBUG = False
 	splitBoundaryFacets = []; splittingCovectors = defaultdict(list)
 	CVbits = [[-1,-1] for k in range(len(CV))] 
 	nverts = len(V); cellPairs = []; twoCellIndices = []; 
@@ -699,6 +687,8 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 			for task in tasks:
 				cell,covector = task
 				vcell = CV[cell]
+				if (cell,vcell,face) == (29, [24, 1, 4], 3): break
+				print "\n1> cell,vcell,face,covector =",cell,vcell,face,covector
 
 				cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
 				if cuttingTest(covector,vcell,V):
@@ -723,14 +713,19 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 							CVbits,lenBC1,splitBoundaryFacets,splittingCovectors)
 						if twoCells[0] != twoCells[1]:
 
+							print "2> cell,adjCells =",cell,adjCells
+							
 							for adjCell in adjCells:
-								dict_fc[face] += [(adjCell,covector)] 
-								dict_cf[adjCell] += [(face,covector)] 
+								if cuttingTest(covector,CV[adjCell],V):
+    								dict_fc[face] += [(adjCell,covector)]     								
+    								dict_cf[adjCell] += [(face,covector)] 
+    								print "2.1> face,dict_fc[face] =",face,dict_fc[face]
+    								print "2.2> adjCell,dict_cf[adjCell] =",adjCell,dict_cf[adjCell]
+
 								cellPairs += [[vcell1, vcell2]]
 								twoCellIndices += [[twoCells]]
 												
-					DEBUG = False
-					if DEBUG: showSplitting(V,cellPairs,BC,CV)
+					if DEBUG: showSplitting("c",twoCells[1],V,cellPairs,BC,CV)
 
 				elif tangentTest(face,vcell,V,BC):										
 					newFacet = [ v for v in vcell if 
@@ -738,26 +733,14 @@ def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
 					splitBoundaryFacets += [newFacet]
 					splittingCovectors[cell] += [(face,covector,newFacet)]
 					
-					def inOutTest(face,cell,vertdict,covector,V,BC):
-						vcell = CAT([vertdict[k] for k in cell])
-						for v in list(set(vcell).difference(BC[face])):
-							inOut = INNERPROD([covector, V[v]+[1.]])
-							if not verySmall(inOut): return sign(inOut)
-					
-					if cell1 != []: theSign = inOutTest(face,cell1,vertdict,covector,V,BC)
-					if cell2 != []: theSign = inOutTest(face,cell2,vertdict,covector,V,BC)
-					if theSign  == 1.0 and face < lenBC1:  CVbits[cell][0] = 1
-					elif theSign  == 1.0 and face >= lenBC1:  CVbits[cell][1] = 1
-					elif theSign == -1.0 and face < lenBC1: CVbits[cell][0] = 0
-					elif theSign == -1.0 and face >= lenBC1: CVbits[cell][1] = 0
-					else: print "error with InOut test"
-
 					dict_fc[face].remove((cell,covector))   # remove the split cell
 					dict_cf[cell].remove((face,covector))   # remove the splitting face
 
-				else:
+				else: 
 					dict_fc[face].remove((cell,covector))   # remove the split cell
-					dict_cf[cell].remove((face,covector))   # remove the splitting face
+					# dict_cf[cell].remove((face,covector))   # remove the splitting face
+				if DEBUG: showSplitting("b",cell,V,cellPairs,BC,CV)
+			if DEBUG: showSplitting("a",cell,V,cellPairs,BC,CV)
 	splitBoundaryFacets = sorted(list(AA(list)(set(AA(tuple)(AA(sorted)(splitBoundaryFacets))))))
 	return CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors
 @}
@@ -800,15 +783,6 @@ def haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tc
 	
 	if verts == []: return True
 	else: return False
-
-# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
-# tolerance=0.0001
-# use_octree=False
-# cell1 = Plasm.boolop(BOOL_CODE_AND, 
-# 	[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-# verts,cells,pols = UKPOL(cell1)
-# cell1 = AA(vcode)(verts)
-# if 
 @}
 %-------------------------------------------------------------------------------
 
@@ -891,7 +865,7 @@ def cuttingTest(covector,polytope,V):
 %-------------------------------------------------------------------------------
 @D Show the process of CDC splitting
 @{""" Show the process of CDC splitting """
-def showSplitting(V,cellPairs,BC,CV):
+def showSplitting(step,theCell,V,cellPairs,BC,CV):
 	VV = AA(LIST)(range(len(V)))
 	boundaries = COLOR(RED)(SKEL_1(STRUCT(MKPOLS((V,BC)))))
 	submodel = COLOR(CYAN)(STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ]))
@@ -899,9 +873,11 @@ def showSplitting(V,cellPairs,BC,CV):
 		cells1,cells2 = TRANS(cellPairs)
 		out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
 				COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
-		VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
+		VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2), 
+			S([1,2])([0.1,0.1])(TEXT(str(theCell)+step)) ]))
 	else:
-		VIEW(STRUCT([ larModelNumbering(V,[VV,BC,CV],submodel,2) ]))
+		VIEW(STRUCT([ larModelNumbering(V,[VV,BC,CV],submodel,2),
+			S([1,2])([0.1,0.1])(TEXT(str(theCell)+step)) ]))
 @}
 %-------------------------------------------------------------------------------
 
@@ -953,16 +929,13 @@ It may be worth noting that the \texttt{neighbors} technique to denote the $d$-a
 def qhullBoundary(V):
 	dim = len(V[0])
 	triangulation = Delaunay(array(V))
-	CV = triangulation.simplices
-	Ad = triangulation.neighbors
-	out = []
-	for k,adjs in enumerate(Ad):
-		for h in range(dim):
-			if adjs[h] == -1:
-				a = list(CV[k])
-				a.remove(CV[k,h])
-				out += [a]
-	return sorted(AA(sorted)(out))
+	CV = triangulation.simplices.tolist()
+	Ad = triangulation.neighbors.tolist()
+	wingedRep = zip(CV,Ad)
+	boundaryCofaces = [simplex for simplex in wingedRep if any([ad==-1 for ad in simplex[1]])]
+	wingedPairs = [zip(*coface) for coface in boundaryCofaces]
+	out = [[v for v,ad in pairs if ad!=-1] for pairs in wingedPairs]
+	return sorted(out)
 	
 if __name__=="__main__":
 	BV = qhullBoundary(V)
@@ -1182,11 +1155,12 @@ def cellTagging(boundaryDict,boundaryMat,CV,FV,V,BC,CVbits,arg):
 			elif len(cofaces) == 2:
 				v0 = list(set(CV[cofaces[0]]).difference(FV[facet]))[0]
 				v1 = list(set(CV[cofaces[1]]).difference(FV[facet]))[0]
-				# take d affinity independent vertices in face (TODO)
+				# take d affinely independent vertices in face (TODO: use pivotSimplices() 
 				simplex0 = BC[face][:dim] + [v0]
 				simplex1 = BC[face][:dim] + [v1]
 				sign0 = sign(det([V[v]+[1] for v in simplex0]))
 				sign1 = sign(det([V[v]+[1] for v in simplex1]))
+				
 				if sign0 == 1: CVbits[cofaces[0]][arg] = 1
 				elif sign0 == -1: CVbits[cofaces[0]][arg] = 0
 				if sign1 == 1: CVbits[cofaces[1]][arg] = 1
@@ -1316,10 +1290,13 @@ def booleanChains(arg1,arg2):
 	
 	CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors = \
 		splitCellsCreateVertices( vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1) )
-	showSplitting(V,cellPairs,BC,CV)
+	showSplitting("z",len(CV),V,cellPairs,BC,CV)
 	
 	@< Numerical instability of vertices curation @>
-	
+
+	print "\ndict_fc =",dict_fc
+	print "dict_cf =",dict_cf,"\n"
+
 	@< Building a dictionary of SCDC $(d-1)$-cells @>
 	dict_facets = facetBasisDict((V,CV))
 	for cell in AA(tuple)(splitBoundaryFacets): 
@@ -1330,20 +1307,42 @@ def booleanChains(arg1,arg2):
 	VV = AA(LIST)(range(len(V)))	
 	submodel = STRUCT(MKPOLS((V,larConvexFacets (V,CV))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,larConvexFacets (V,CV)))))
-
-	for cell in range(len(CV)):
-		if CVbits[cell][0] == 1:
-			CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,1)		
-		if CVbits[cell][0] == 0:
-			CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,0)
-		if CVbits[cell][1] == 1:
-			CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,1)
-		if CVbits[cell][1] == 0:
-			CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
 	
 	return V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2
 @}
 %-------------------------------------------------------------------------------
+
+
+
+
+\section{Final aggregation of polytopes}
+
+The final step of the Boolean algorithm based on LAR is the greedy aggregation of adjacent cells, to return a minimal set of polytopes. The algorithm works on every maximal chain with a given fixed configuration of status bits, and returns a minimal decomposition of its support point-set with polytopal cells.
+
+
+\subsection{Boolean classification of SCDC}
+
+First, the LAR representation of the Split Common Delaunay Complex, completely provided by the current value of the \texttt{CV} array, is reordered into adjacent portions with same value of the Boolean status, represented by the bit values stored within the \texttt{CVbits} array. This operation is performed by a simple sort of the zipped pair \texttt{(CVbits,CV)}. 
+
+\paragraph{Extraction of LAR reps of common Boolean status}
+Several LARs of space subsets are returned by the \texttt{larBooleanPartition} function, given below.
+The input is the pair \texttt{CVbits,CV}. The output is a Python \texttt{defaultdict(list)} 
+
+%-------------------------------------------------------------------------------
+@D Extraction of CV subsets with common Boolean status
+@{""" Extraction of LAR reps of common Boolean status """
+def larBooleanPartition(CVbits,CV):
+	ordCV = sorted(zip(CVbits,CV))
+	out = defaultdict(list)
+	for status,cell in ordCV:
+		out[tuple(status)] += [cell]
+	return out
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Greedy polytopal decomposition of SCDC space}
+
 
 
 
@@ -1354,9 +1353,10 @@ def booleanChains(arg1,arg2):
 %-------------------------------------------------------------------------------
 @O lib/py/bool.py
 @{""" Module for Boolean ops with LAR """
+@< Initial import of modules @>
 DEBUG = True
 from matrix import *
-@< Initial import of modules @>
+from splitcell import *
 @< Symbolic utility to represent points as strings @>
 @< Place the vertices of Boolean arguments in a common space @>
 @< Building a covering of Common Delaunay Complex @>
@@ -1378,6 +1378,7 @@ from matrix import *
 @< Extracting a $(d-1)$-basis of SCDC @>
 @< Traversing a Boolean argument within the CDC @>
 @< Boolean fragmentation and classification of CDC @>
+@< Extraction of CV subsets with common Boolean status @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1443,7 +1444,7 @@ VIEW(larModelNumbering(V2,basis2,submodel12,4))
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Exporting test file}
+\subsection{Bulk of Boolean task computation}
 
 %-------------------------------------------------------------------------------
 @D Bulk of Boolean task computation
@@ -1455,6 +1456,16 @@ V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2 = \
 	
 @< Boundary-Coboundary operators in the SCDC basis @>
 
+for cell in range(len(CV)):
+	if CVbits[cell][0] == 1:
+		CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,1)		
+	if CVbits[cell][0] == 0:
+		CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,0)
+	if CVbits[cell][1] == 1:
+		CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,1)
+	if CVbits[cell][1] == 0:
+		CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
+
 VV = AA(LIST)(range(len(V)))
 FV = larConvexFacets (V,CV)
 submodel = STRUCT(MKPOLS((V,FV)))
@@ -1465,12 +1476,20 @@ chain1,chain2 = TRANS(CVbits)
 if DEBUG:
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain1) if c==1] ))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain2) if c==1] ))))
-	# VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1*c2==1] ))))
+	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1*c2==1] ))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2==1] ))))
 	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2>=1] ))))
+	
+CVs = larBooleanPartition(CVbits,CV)
+colours = [RED,GREEN,BLUE,YELLOW]
+partitions = []
+for k,(bits,cells) in enumerate(CVs.items()):
+	partitions += [COLOR(colours[k])(EXPLODE(1.1,1.1,1)(MKPOLS((V,cells))))]
+VIEW(EXPLODE(1.3,1.3,1)(partitions))
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Exporting test file}
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test01.py
@@ -1480,6 +1499,18 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool import *
 @< First set of 2D data: Fork-0 input @>
+@< Bulk of Boolean task computation @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test02.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool import *
+@< First set of 2D data: Fork-1 input @>
 @< Bulk of Boolean task computation @>
 @}
 %-------------------------------------------------------------------------------
@@ -1526,6 +1557,27 @@ VV1 = AA(LIST)(range(len(V1)))
 V2 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]
 FV2 = [range(4)]
 EV2 = [[0,1],[1,2],[2,3],[0,3]]
+VV2 = AA(LIST)(range(len(V2)))
+@< Bulk of Boolean task computation @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@o test/py/bool/test044.py
+@{""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool import *
+
+n = 24
+V1 = [[5*cos(angle*2*PI/n)+2.5, 5*sin(angle*2*PI/n)] for angle in range(n)]
+FV1 = [range(n)]
+EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]
+FV2 = [range(n)]
+EV2 = EV1
 VV2 = AA(LIST)(range(len(V2)))
 @< Bulk of Boolean task computation @>
 @}
@@ -1609,7 +1661,7 @@ A small set of utility functions is used to transform a \emph{point} representat
 global PRECISION
 PRECISION = 3.95
 
-def verySmall(number): return abs(number) < 10**-(PRECISION/1.25)
+def verySmall(number): return abs(number) < 10**-(PRECISION/1.15)
 
 def prepKey (args): return "["+", ".join(args)+"]"
 
