@@ -13,8 +13,8 @@ def SPLITCELL(plane,points,tolerance=1e-6,ntry=4):
   Vmat,Hmat=[Matf(),Matf()]
   graph=Graph.mkpol(Vmat,Hmat,pointdim,len(points),[item for sublist in points for item in sublist],tolerance)
   graph.transform(Vmat,Hmat)
-  assert(graph.getNCells(2)==1) 
-  [graph,cell]=[graph,graph.each(2).getNode()]  
+  #assert(graph.getNCells(2)==1)
+  [graph,cell]=[graph,graph.each(pointdim).getNode()]
   [below,equal,above]=graph.split(navigator,cell,Planef(plane),tolerance,ntry)
   assert(below>=0 and equal>=0 and above>=0) #otherwise failed
   

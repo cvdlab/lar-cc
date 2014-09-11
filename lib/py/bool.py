@@ -16,7 +16,7 @@ from matrix import *
 from splitcell import *
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 3.95
+PRECISION = 4.95
 
 def verySmall(number): return abs(number) < 10**-(PRECISION/1.15)
 
@@ -137,37 +137,6 @@ def cellSplitting(face,cell,covector,V,EEV,CV):
    cell1 = AA(vcode)(below)
    cell2 = AA(vcode)(above)
    return cell1,cell2
-"""
-def cellSplitting(face,cell,covector,V,EEV,CV):
-
-   dim = len(V[0])
-   subspace = (T(range(1,dim+1))(dim*[-50])(CUBOID(dim*[100])))
-   normal = covector[:-1]
-   if len(normal) == 2:  # 2D complex
-      rotatedSubspace = R([1,2])(ATAN2(normal)-PI/2)(T(2)(-50)(subspace))
-   elif len(normal) == 3:  # 3D complex
-      rotatedSubspace = R()()(subspace)
-   else: print "rotation error"
-   t = V[EEV[face][0]]
-   rototranslSubspace = T(range(1,dim+1))(t)(rotatedSubspace)
-   cellHpc = MKPOL([V,[[v+1 for v in CV[cell]]],None])
-   
-   # cell1 = INTERSECTION([cellHpc,rototranslSubspace])
-   tolerance=10**-(PRECISION)
-   use_octree=False
-   cell1 = Plasm.boolop(BOOL_CODE_AND, 
-      [cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-   verts,cells,pols = UKPOL(cell1)
-   cell1 = AA(vcode)(verts)
-
-   # cell2 = DIFFERENCE([cellHpc,rototranslSubspace]) 
-   cell2 = Plasm.boolop(BOOL_CODE_DIFF, 
-      [cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-   verts,cells,pols = UKPOL(cell2)
-   cell2 = AA(vcode)(verts)
-
-   return cell1,cell2
-"""
 
 """ Init face-cell and cell-face dictionaries """
 def initTasks(tasks):
@@ -397,6 +366,7 @@ def showSplitting(step,theCell,V,cellPairs,BC,CV):
          S([1,2])([0.1,0.1])(TEXT(str(theCell)+step)) ]))
 
 """ Boundary triangulation of a convex hull """
+"""
 def qhullBoundary(V):
    dim = len(V[0])
    triangulation = Delaunay(array(V))
@@ -406,6 +376,13 @@ def qhullBoundary(V):
    boundaryCofaces = [simplex for simplex in wingedRep if any([ad==-1 for ad in simplex[1]])]
    wingedPairs = [zip(*coface) for coface in boundaryCofaces]
    out = [[v for v,ad in pairs if ad!=-1] for pairs in wingedPairs]
+   return sorted(out)
+"""
+from scipy.spatial import ConvexHull
+def qhullBoundary(V):
+   points = array(V)
+   hull = ConvexHull(points)
+   out = hull.simplices.tolist()
    return sorted(out)
    
 if __name__=="__main__":
@@ -459,9 +436,11 @@ def booleanChains(arg1,arg2):
    
    if DEBUG: 
       """ Input and CDC visualisation """
-      submodel1 = mkSignedEdges((V1,BC1))
-      submodel2 = mkSignedEdges((V2,BC2))
-      VIEW(STRUCT([submodel1,submodel2]))
+      dim = len(V[0])
+      if dim == 2:
+          submodel1 = mkSignedEdges((V1,BC1))
+          submodel2 = mkSignedEdges((V2,BC2))
+          VIEW(STRUCT([submodel1,submodel2]))
       submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
       VIEW(larModelNumbering(V,[VV,[],CV],submodel,4))
       submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
@@ -474,14 +453,16 @@ def booleanChains(arg1,arg2):
    covectors = []
    for faceVerts in BC:
       points = [V[v] for v in faceVerts]
+      """
       dim = len(points[0])
       theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
       covector1 = [(-1)**(col)*theMat.minor(0,col).determinant() 
                      for col in range(dim+1)]
+      """
       covector = COVECTOR(points)
       covector2 = covector[1:]+[covector[0]] 
-      print "covector =",covector1,covector2
-      covectors += [covector1]
+      print "covector =",covector2
+      covectors += [covector2]
    
    """ to compute a single d-cell associated to (face,covector) """
    def covectorCell(face,faceVerts,covector,CV,VC):
@@ -512,8 +493,13 @@ def booleanChains(arg1,arg2):
    showSplitting("z",len(CV),V,cellPairs,BC,CV)
    
    """ Numerical instability of vertices curation """
-   x,y = TRANS(V)
-   tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel()))
+   dim = len(V[0])
+   if dim == 2:
+       x,y = TRANS(V)
+       tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel()))
+   elif dim == 3:
+       x,y,z = TRANS(V)
+       tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel(), array(z).ravel()))
    closestVertexPairs = AA(list)(tree.query(tree.data,2)[1])
    distances = sorted([[VECTNORM(VECTDIFF([V[v],V[w]])),v,w] for v,w in closestVertexPairs])
    coincidentVertexPairs = [[v,w] for k,(dist,v,w) in enumerate(distances) if dist < 10**-PRECISION]

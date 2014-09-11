@@ -385,14 +385,16 @@ VC = invertRelation(len(V),CV)
 covectors = []
 for faceVerts in BC:
 	points = [V[v] for v in faceVerts]
+	"""
 	dim = len(points[0])
 	theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
 	covector1 = [(-1)**(col)*theMat.minor(0,col).determinant() 
 						for col in range(dim+1)]
+	"""
 	covector = COVECTOR(points)
 	covector2 = covector[1:]+[covector[0]] 
-	print "covector =",covector1,covector2
-	covectors += [covector1]
+	print "covector =",covector2
+	covectors += [covector2]
 
 @< Association of covectors to d-cells @>
 @< Initialization of splitting dictionaries @>
@@ -483,37 +485,6 @@ def cellSplitting(face,cell,covector,V,EEV,CV):
 	cell1 = AA(vcode)(below)
 	cell2 = AA(vcode)(above)
 	return cell1,cell2
-"""
-def cellSplitting(face,cell,covector,V,EEV,CV):
-
-	dim = len(V[0])
-	subspace = (T(range(1,dim+1))(dim*[-50])(CUBOID(dim*[100])))
-	normal = covector[:-1]
-	if len(normal) == 2:  # 2D complex
-		rotatedSubspace = R([1,2])(ATAN2(normal)-PI/2)(T(2)(-50)(subspace))
-	elif len(normal) == 3:  # 3D complex
-		rotatedSubspace = R()()(subspace)
-	else: print "rotation error"
-	t = V[EEV[face][0]]
-	rototranslSubspace = T(range(1,dim+1))(t)(rotatedSubspace)
-	cellHpc = MKPOL([V,[[v+1 for v in CV[cell]]],None])
-	
-	# cell1 = INTERSECTION([cellHpc,rototranslSubspace])
-	tolerance=10**-(PRECISION)
-	use_octree=False
-	cell1 = Plasm.boolop(BOOL_CODE_AND, 
-		[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-	verts,cells,pols = UKPOL(cell1)
-	cell1 = AA(vcode)(verts)
-
-	# cell2 = DIFFERENCE([cellHpc,rototranslSubspace])	
-	cell2 = Plasm.boolop(BOOL_CODE_DIFF, 
-		[cellHpc,rototranslSubspace],tolerance,plasm_config.maxnumtry(),use_octree)
-	verts,cells,pols = UKPOL(cell2)
-	cell2 = AA(vcode)(verts)
-
-	return cell1,cell2
-"""
 @}
 %-------------------------------------------------------------------------------
 
@@ -957,6 +928,7 @@ It may be worth noting that the \texttt{neighbors} technique to denote the $d$-a
 %-------------------------------------------------------------------------------
 @D Boundary triangulation of a convex hull
 @{""" Boundary triangulation of a convex hull """
+"""
 def qhullBoundary(V):
 	dim = len(V[0])
 	triangulation = Delaunay(array(V))
@@ -966,6 +938,13 @@ def qhullBoundary(V):
 	boundaryCofaces = [simplex for simplex in wingedRep if any([ad==-1 for ad in simplex[1]])]
 	wingedPairs = [zip(*coface) for coface in boundaryCofaces]
 	out = [[v for v,ad in pairs if ad!=-1] for pairs in wingedPairs]
+	return sorted(out)
+"""
+from scipy.spatial import ConvexHull
+def qhullBoundary(V):
+	points = array(V)
+	hull = ConvexHull(points)
+	out = hull.simplices.tolist()
 	return sorted(out)
 	
 if __name__=="__main__":
@@ -1085,7 +1064,7 @@ Here we compute the matrix representation of the coboundary operator in the SCDC
 @{""" Boundary-Coboundary operators in the SCDC basis """
 dim = len(V[0])
 FV = larConvexFacets (V,CV)
-EV = larFacets((V,FV), dim)
+_,EV = larFacets((V,FV), dim=2)
 
 VV = AA(LIST)(range(len(V)))
 if dim == 3: bases = [VV,EV,FV,CV]
@@ -1166,12 +1145,12 @@ boundary1,boundary2 = splitBoundaries(CV,FV,n_bf1,n_bf2,splittingCovectors,
 										coBoundaryMat)
 facets1 = [FV[facet] for face in boundary1 for facet in boundary1[face]]
 facets2 = [FV[facet] for face in boundary2 for facet in boundary2[face]]
-submodel1 = mkSignedEdges((V,facets1))
-submodel2 = mkSignedEdges((V,facets2))
-
-VIEW(STRUCT([submodel1,submodel2]))
-VIEW(STRUCT([ COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets1)))), 
-		COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets2)))) ]))
+if len(V[0])==2:
+    submodel1 = mkSignedEdges((V,facets1))
+    submodel2 = mkSignedEdges((V,facets2))
+    VIEW(STRUCT([submodel1,submodel2]))
+    VIEW(STRUCT([ COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets1)))), 
+    		COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets2)))) ]))
 		
 boundaryMat = coBoundaryMat.T
 
@@ -1259,9 +1238,11 @@ def booleanChainTraverse(h,cell,V,CV,CVbits,value):
 %-------------------------------------------------------------------------------
 @D Input and CDC visualisation
 @{""" Input and CDC visualisation """
-submodel1 = mkSignedEdges((V1,BC1))
-submodel2 = mkSignedEdges((V2,BC2))
-VIEW(STRUCT([submodel1,submodel2]))
+dim = len(V[0])
+if dim == 2:
+    submodel1 = mkSignedEdges((V1,BC1))
+    submodel2 = mkSignedEdges((V2,BC2))
+    VIEW(STRUCT([submodel1,submodel2]))
 submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
 VIEW(larModelNumbering(V,[VV,[],CV],submodel,4))
 submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
@@ -1274,8 +1255,13 @@ VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
 %-------------------------------------------------------------------------------
 @D Numerical instability of vertices curation
 @{""" Numerical instability of vertices curation """
-x,y = TRANS(V)
-tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel()))
+dim = len(V[0])
+if dim == 2:
+    x,y = TRANS(V)
+    tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel()))
+elif dim == 3:
+    x,y,z = TRANS(V)
+    tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel(), array(z).ravel()))
 closestVertexPairs = AA(list)(tree.query(tree.data,2)[1])
 distances = sorted([[VECTNORM(VECTDIFF([V[v],V[w]])),v,w] for v,w in closestVertexPairs])
 coincidentVertexPairs = [[v,w] for k,(dist,v,w) in enumerate(distances) if dist < 10**-PRECISION]
@@ -1465,10 +1451,19 @@ VV2 = AA(LIST)(range(len(V2)))
 %-------------------------------------------------------------------------------
 @D Computation of lower-dimensional cells
 @{""" Computation of edges an input visualisation """
-model1 = V1,FV1
-model2 = V2,FV2
-basis1 = [VV1,EV1,FV1]
-basis2 = [VV2,EV2,FV2]
+dim = len(V1[0])
+assert len(V1[0]) == len(V2[0])
+if dim==2:
+    model1 = V1,FV1
+    model2 = V2,FV2
+    basis1 = [VV1,EV1,FV1]
+    basis2 = [VV2,EV2,FV2]
+elif dim==3:
+    model1 = V1,CV1
+    model2 = V2,CV2
+    basis1 = [VV1,EV1,FV1,CV1]
+    basis2 = [VV2,EV2,FV2,CV2]
+    
 submodel12 = STRUCT(MKPOLS((V1,EV1))+MKPOLS((V2,EV2)))
 VIEW(larModelNumbering(V1,basis1,submodel12,4))
 VIEW(larModelNumbering(V2,basis2,submodel12,4))
@@ -1515,7 +1510,8 @@ CVs = larBooleanPartition(CVbits,CV)
 colours = [RED,GREEN,BLUE,YELLOW]
 partitions = []
 for k,(bits,cells) in enumerate(CVs.items()):
-	partitions += [COLOR(colours[k])(EXPLODE(1.1,1.1,1)(MKPOLS((V,cells))))]
+	index = int("".join(AA(str)(bits)),2)
+	partitions += [COLOR(colours[index])(EXPLODE(1.1,1.1,1)(MKPOLS((V,cells))))]
 VIEW(EXPLODE(1.3,1.3,1)(partitions))
 @}
 %-------------------------------------------------------------------------------
@@ -1572,6 +1568,24 @@ VV2 = AA(LIST)(range(len(V2)))
 @}
 %-------------------------------------------------------------------------------
 
+%-------------------------------------------------------------------------------
+@o test/py/bool/test033.py
+@{""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool import *
+
+V1 = [[0,0,0],[10,0,0],[10,10,0],[0,10,0],[0,0,10],[10,0,10],[10,10,10],[0,10,10]]
+V1,[VV1,EV1,FV1,CV1] = larCuboids((1,1,1),True)
+V1 = [SCALARVECTPROD([5,v]) for v in V1]
+
+V2 = [SUM([v,[2.5,2.5,2.5]]) for v in V1]
+[VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]
+
+@< Bulk of Boolean task computation @>
+@}
+%-------------------------------------------------------------------------------
+
 
 %-------------------------------------------------------------------------------
 @o test/py/bool/test04.py
@@ -1601,7 +1615,7 @@ sys.path.insert(0, 'lib/py/')
 from bool import *
 
 n = 24
-V1 = [[5*cos(angle*2*PI/n)+2.5, 5*sin(angle*2*PI/n)] for angle in range(n)]
+V1 = [[5*cos(angle*2*PI/n)+2.5, 5*sin(angle*2*PI/n)+2.5] for angle in range(n)]
 FV1 = [range(n)]
 EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
 VV1 = AA(LIST)(range(len(V1)))
@@ -1626,11 +1640,53 @@ FV1 = [range(4)]
 EV1 = [[0,1],[1,2],[2,3],[0,3]]
 VV1 = AA(LIST)(range(len(V1)))
 
-V2 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]
+V2 = [[5,2.5],[10,2.5],[10,7.5],[5,7.5]]
 FV2 = [range(4)]
 EV2 = [[0,1],[1,2],[2,3],[0,3]]
 VV2 = AA(LIST)(range(len(V2)))
 @< Bulk of Boolean task computation @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@o test/py/bool/test06.py
+@{""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool import *
+
+V1 = [[0,0],[15,0],[15,14],[0,14]]
+FV1 = [range(4)]
+EV1 = [[0,1],[1,2],[2,3],[0,3]]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[1,1],[7,1],[7,6],[1,6], [8,1],[14,1],[14,7],[8,7], [1,7],[7,7],[7,13],[1,13], [8,8],[14,8],[14,13],[8,13]]
+FV2 = [range(4),range(4,8),range(8,12),range(12,16)]
+EV2 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11], [12,13],[13,14],[14,15],[12,15]]
+VV2 = AA(LIST)(range(len(V2)))
+
+@< Bulk of Boolean task computation @>
+
+VIEW(STRUCT(MKPOLS((V,CVs[(1,0)]))))
+
+V3 = V
+FV3 = CV
+B12 = CAT(boundary1.values() + boundary2.values())
+EV = larConvexFacets (V,CV)
+EV3 = [EV[e] for e in B12]
+VV3 = AA(LIST)(range(len(V3)))
+
+V1,FV1,EV1,VV1 = V3,FV3,EV3,VV3
+
+V3 = [[3,0],[5,0],[5,15],[3,15], [6,3],[9,3],[9,5],[6,5], [6,9],[9,9],[9,11],[6,11]]
+FV3 = [range(4),range(4,8),range(8,12)]
+EV3 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11]]
+VV3 = AA(LIST)(range(len(V3)))
+
+V2,FV2,EV2,VV2 = V3,FV3,EV3,VV3
+
+@< Bulk of Boolean task computation @>
+
 @}
 %-------------------------------------------------------------------------------
 
@@ -1690,7 +1746,7 @@ A small set of utility functions is used to transform a \emph{point} representat
 @D Symbolic utility to represent points as strings
 @{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 3.95
+PRECISION = 4.95
 
 def verySmall(number): return abs(number) < 10**-(PRECISION/1.15)
 

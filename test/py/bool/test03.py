@@ -14,10 +14,19 @@ EV2 = [[0,1],[1,2],[2,3],[0,3]]
 VV2 = AA(LIST)(range(len(V2)))
 """ Bulk of Boolean task computation """
 """ Computation of edges an input visualisation """
-model1 = V1,FV1
-model2 = V2,FV2
-basis1 = [VV1,EV1,FV1]
-basis2 = [VV2,EV2,FV2]
+dim = len(V1[0])
+assert len(V1[0]) == len(V2[0])
+if dim==2:
+    model1 = V1,FV1
+    model2 = V2,FV2
+    basis1 = [VV1,EV1,FV1]
+    basis2 = [VV2,EV2,FV2]
+elif dim==3:
+    model1 = V1,CV1
+    model2 = V2,CV2
+    basis1 = [VV1,EV1,FV1,CV1]
+    basis2 = [VV2,EV2,FV2,CV2]
+    
 submodel12 = STRUCT(MKPOLS((V1,EV1))+MKPOLS((V2,EV2)))
 VIEW(larModelNumbering(V1,basis1,submodel12,4))
 VIEW(larModelNumbering(V2,basis2,submodel12,4))
@@ -29,7 +38,7 @@ V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2 = \
 """ Boundary-Coboundary operators in the SCDC basis """
 dim = len(V[0])
 FV = larConvexFacets (V,CV)
-EV = larFacets((V,FV), dim)
+_,EV = larFacets((V,FV), dim=2)
 
 VV = AA(LIST)(range(len(V)))
 if dim == 3: bases = [VV,EV,FV,CV]
@@ -70,12 +79,12 @@ boundary1,boundary2 = splitBoundaries(CV,FV,n_bf1,n_bf2,splittingCovectors,
                               coBoundaryMat)
 facets1 = [FV[facet] for face in boundary1 for facet in boundary1[face]]
 facets2 = [FV[facet] for face in boundary2 for facet in boundary2[face]]
-submodel1 = mkSignedEdges((V,facets1))
-submodel2 = mkSignedEdges((V,facets2))
-
-VIEW(STRUCT([submodel1,submodel2]))
-VIEW(STRUCT([ COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets1)))), 
-      COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets2)))) ]))
+if len(V[0])==2:
+    submodel1 = mkSignedEdges((V,facets1))
+    submodel2 = mkSignedEdges((V,facets2))
+    VIEW(STRUCT([submodel1,submodel2]))
+    VIEW(STRUCT([ COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets1)))), 
+         COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets2)))) ]))
       
 boundaryMat = coBoundaryMat.T
 
@@ -137,6 +146,7 @@ CVs = larBooleanPartition(CVbits,CV)
 colours = [RED,GREEN,BLUE,YELLOW]
 partitions = []
 for k,(bits,cells) in enumerate(CVs.items()):
-   partitions += [COLOR(colours[k])(EXPLODE(1.1,1.1,1)(MKPOLS((V,cells))))]
+   index = int("".join(AA(str)(bits)),2)
+   partitions += [COLOR(colours[index])(EXPLODE(1.1,1.1,1)(MKPOLS((V,cells))))]
 VIEW(EXPLODE(1.3,1.3,1)(partitions))
 
