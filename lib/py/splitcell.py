@@ -26,14 +26,14 @@ def SPLITCELL(plane,points,tolerance=1e-6,ntry=4):
   return [findPoints(below),findPoints(equal),findPoints(above)]
 
 if __name__ == "__main__":
-  plane = COVECTOR([[0.0,0.5],  [1.0,0.5],  [2.0,0.5],  [3.0,0.5]]) # example of plane Y=0.5
-  cell  = [[0.0,0.0],  [1.0,0.0],  [1.0,1.0],  [0.0,1.0]] # example of cuboid in range [0,1]^2
-  [below,equal,above]=SPLITCELL(plane,cell)
-  print "plane",plane
-  print "below",below
-  print "equal",equal
-  print "above",above
+    plane = COVECTOR([[0.0,0.5],  [1.0,0.5],  [2.0,0.5],  [3.0,0.5]]) # example of plane Y=0.5
+    plane = COVECTOR([[0.0,0.0],  [1.0,0.0],  [2.0,0.0],  [3.0,0.0]]) # example of plane Y=0.0
+    plane = COVECTOR([[0.0,1.0],  [1.0,1.0],  [2.0,1.0],  [3.0,1.0]]) # example of plane Y=0.1
+    plane = COVECTOR([[0.0,2.0],  [1.0,2.0],  [2.0,2.0],  [3.0,2.0]]) # example of plane Y=0.2
+    cell  = [[0.0,0.0],  [1.0,0.0],  [1.0,1.0],  [0.0,1.0]] # example of cuboid in range [0,1]^2
+    [below,equal,above]=SPLITCELL(plane,cell)
+    print "plane",plane
+    print "below",below
+    print "equal",equal
+    print "above",above
 
-
-
-   

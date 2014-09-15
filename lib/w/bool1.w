@@ -125,7 +125,8 @@ A final recursive traversal of the SCDC, based on cell adjacencies, transforms e
 \subsection{Requirements}
 %-------------------------------------------------------------------------------
 
-The \emph{join} of two sets $P, Q \subset \E^d$ is the set $PQ = \{\alpha \v{x} + \beta \v{y}\,| \v{x} \in P,\  \v{y} \in Q\}$,where $\alpha, \beta \in \R$, $\alpha, \beta \geq 0$, and $\alpha + \beta = 1$. The join operation is associative and commutative.
+The \emph{join} of two sets $P, Q \subset \E^d$ is the set $PQ = \{\alpha \v{x} + \beta \v{y}\,| \v{x} \in P,\  \v{y} \in Q\}$,
+where $\alpha, \beta \in \R$, $\alpha, \beta \geq 0$, and $\alpha + \beta = 1$. The join operation is associative and commutative.
 
 
 \paragraph{Input} 
@@ -149,7 +150,7 @@ the numbers \texttt{n1}, \texttt{n12}, \texttt{n2} of the elements of \texttt{V1
 0 < \texttt{n} - \texttt{n2}  &\leq  \texttt{n1}  <  \texttt{n} 
 \end{align}
 
-\item the input boundary complex \texttt{(V,BV1+BV2)}, i.e.~the two $(d-1)$-complexes \texttt{(V,BV1)} and \texttt{(V,BV2)}, defined on the common vertices.
+\item the input boundary complex \texttt{(V,BC)}, with $\texttt{BC} = \texttt{BC1+BC2}$, i.e.~the union of the  two boundary $(d-1)$-complexes \texttt{(V,BC1)} and \texttt{(V,BC2)}, defined on the common vertices.
 \end{enumerate}
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
@@ -163,14 +164,26 @@ the numbers \texttt{n1}, \texttt{n12}, \texttt{n2} of the elements of \texttt{V1
 %-------------------------------------------------------------------------------
 
 
+%-------------------------------------------------------------------------------
+@D Compute model boundaries of complex of convex cells
+@{""" Compute model boundaries of complex of convex cells """
+
+def larFacetsOfPolytopalComplex(vertDict,cells,facets):
+	(V1,CV1),(V2,CV2) = model1,model2
+	for cell in CV1:
+		Vcell = [V1[v] for v in cell]
+
+@}
+%-------------------------------------------------------------------------------
+
 
 %-------------------------------------------------------------------------------
 @D Merge two dictionaries with keys the point locations
 @{""" Merge two dictionaries with keys the point locations """
 def mergeVertices(model1, model2):
 
-	V1,CV1 = larModelBreak(model1) 
-	V2,CV2 = larModelBreak(model2)
+	(V1,CV1),(V2,CV2) = model1, model2
+
 	n = len(V1); m = len(V2)
 	def shift(CV, n): 
 		return [[v+n for v in cell] for cell in CV]
@@ -217,7 +230,12 @@ def mergeVertices(model1, model2):
 %-------------------------------------------------------------------------------
 @D Make Common Delaunay Complex
 @{""" Make Common Delaunay Complex """
-def makeCDC(model1, model2):
+def makeCDC(arg1,arg2):
+
+	(V1,basis1), (V2,basis2) = arg1,arg2
+	(facets1,cells1),(facets2,cells2) = basis1[-2:],basis2[-2:]
+	model1, model2 = (V1,cells1),(V2,cells2)
+
 	V, _,_, n1,n12,n2 = mergeVertices(model1, model2)
 	n = len(V)
 	assert n == n1 - n12 + n2
@@ -226,9 +244,16 @@ def makeCDC(model1, model2):
 	vertDict = defaultdict(list)
 	for k,v in enumerate(V): vertDict[vcode(v)] += [k]
 	
-	return V,CV,vertDict,n1,n12,n2
+	BC1 = signedCellularBoundaryCells(V1,basis1)
+	BC2 = signedCellularBoundaryCells(V2,basis2)
+	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
+			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2]
+	
+	return V,CV,vertDict,n1,n12,n2,BC
 @}
 %-------------------------------------------------------------------------------
+
+
 
 
 %-------------------------------------------------------------------------------
@@ -236,6 +261,13 @@ def makeCDC(model1, model2):
 %-------------------------------------------------------------------------------
 
 The goal of this section is to transform the CDC simplicial complex, into the polytopal Split Common Delaunay Complex (SCDC), by splitting the $d$-cells of CDC crossed in their interior by some cell of the input boundary complex.
+
+\subsection{Requirements}
+%-------------------------------------------------------------------------------
+We call here for a sequential implementation, following every $(d-1)$-facet \texttt{lambda} in \texttt{BC} (for \emph{Boundary Cells}). We start the splitting with \texttt{COVECTOR(lambda)} from \texttt{cell}, one of the CDC $d$-cells  incident on a vertex of \texttt{lambda}, and continue the splitting on the $d$-cells $(d-1)$-adjacent  to \texttt{cell}, where (a) \texttt{COVECTOR(lambda)} either crosses the \texttt{cell}'s interior or contains one of \texttt{cell}'s $(d-1)$-facets \and{and} (b) such that the intersection with \texttt{lambda} is not empty, until the queue (or stack) of $d$-cells to intersect with \texttt{covector} is not empty.
+
+\paragraph{Best computational strategy}
+First associate to each cutting facet the list of cells it may cut; then execute all the cuts. In this way we can compute the adjacency matrix just one time at the beginning of the procedure, and do not need to update it after every split.
 
 \paragraph{Input}
 The output of previous algorithm stage.
@@ -248,6 +280,261 @@ This software module returns also
  a dictionary \texttt{splitFacets}, with keys the  input boundary faces and values the list of pairs\texttt{(covector,fragmentedFaces)}.   
 
 
+\subsection{Implementation}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Computing the adjacent cells of a given cell}
+To perform this task we make only use of the \texttt{CV} list. In a more efficient implementation we should make direct use of the sparse adjacency matrix, to be dynamically updated together with the \texttt{CV} list.
+The computation of the adjacent $d$-cells of a single $d$-cell is given here by extracting a column of the $\texttt{CSR}(M_d\, M_d^t)$. This can be done by multiplying $\texttt{CSR}(M_d)$ by its transposed row corresponding to the query $d$-cell. 
+
+%-------------------------------------------------------------------------------
+@D Computing the adjacent cells of a given cell
+@{""" Computing the adjacent cells of a given cell """
+def adjacencyQuery (V,CV):
+	dim = len(V[0])
+	def adjacencyQuery0 (cell):
+		nverts = len(CV[cell])
+		csrCV =  csrCreate(CV)
+		csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
+		cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
+		return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
+	return adjacencyQuery0
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Updating the adjacency matrix}
+At every step of the CDC splitting, generating two output cells \texttt{cell1} and  \texttt{cell2} from the input  \texttt{cell}, the element of such index in the list \texttt{CV} is restored with the \texttt{cell1} vertices, and a new (last) element is created in \texttt{CV}, to store the \texttt{cell2} vertices.
+Therefore the row of index \texttt{cell} of the symmetric  adjacency matrix must be recomputed, being the \texttt{cell} column updated consequently. Also, a new last row (and column) must be added to the matrix. 
+
+%-------------------------------------------------------------------------------
+@D Updating the adjacency matrix
+@{""" Updating the adjacency matrix """
+pass
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Relational inversion (characteristic matrix transposition)}
+
+The operation could be executed by simple matrix transposition of the CSR (Compressed Sparse Row) representation of the sparse characteristic matrix $M_d \equiv \texttt{CV}$.
+A simple relational inversion using Python lists is given here. The \texttt{invertRelation} function 
+is given here, linear in the size of the \texttt{CV} list, where the complexity of each cell is constant and 
+small in most cases.
+
+%-------------------------------------------------------------------------------
+@D Characteristic matrix transposition
+@{""" Characteristic matrix transposition """
+def invertRelation(CV):
+	columnNumber = max(AA(max)(CV))+1
+	VC = [[] for k in range(columnNumber)]
+	for k,cell in enumerate(CV):
+		for v in cell:
+			VC[v] += [k]
+	return VC
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Computation of splitting tests}
+
+In order to compute, in the simplest and more general way, whether each of the two split $d$-cells is internal or external to the splitting boundary $d-1$-facet, it is necessary to consider the oriented covector $\phi$ (or one-form) canonically associated to the facet $f$ by the covector representation theorem, i.e.~the corresponding oriented hyperplane. In this case, the internal/external attribute of the split cell will be computed by evaluating the pairing $<v,\phi>$.
+
+%-------------------------------------------------------------------------------
+@D Splitting tests
+@{""" Splitting tests """
+def testingSubspace(V,covector):
+	def testingSubspace0(vcell):
+		inout = SIGN(sum([INNERPROD([[1.]+V[v],covector]) for v in vcell]))
+		return inout
+	return testingSubspace0
+	
+def cuttingTest(covector,polytope,V):
+	signs = [INNERPROD([covector, [1.]+V[v]]) for v in polytope]
+	signs = eval(vcode(signs))
+	return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
+	
+def tangentTest(covector,facet,adjCell,V):
+	common = list(set(facet).intersection(adjCell))
+	signs = [INNERPROD([covector, [1.]+V[v]]) for v in common]
+	count = 0
+	for value in signs:
+		if -0.0001<value<0.0001: count +=1
+	if count >= len(V[0]): 
+		return True
+	else: 
+		return False	
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+\paragraph{Elementary splitting test}
+
+Let us remember that the adjacency matrix between $d$-cells is computed via SpMSpM multiplication by the double application 
+\[
+\texttt{adjacencyQuery(V,CV)(cell)}, 
+\] 
+where the first application \texttt{adjacencyQuery(V,CV)}
+returns a partial function with bufferisation of the adjacency matrix, and the second application to \texttt{cell} returns the list of adjacent $d$-cells sharing with it a $(d-1)$-dimensional facet.
+
+%-------------------------------------------------------------------------------
+@D Elementary splitting test
+@{
+@< Splitting tests @>
+
+""" Elementary splitting test """
+def dividenda(V,CV, cell,facet,covector,unchosen):
+	out = []
+	adjCells = adjacencyQuery(V,CV)(cell)
+	for adjCell in set(adjCells).difference(unchosen):
+		if (cuttingTest(covector,CV[adjCell],V) and \
+			cellFacetIntersecting(facet,adjCell,covector,V,CV)) or \
+			tangentTest(covector,facet,CV[adjCell],V): out += [adjCell]
+	return out
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{CDC cell splitting with one or more facets}
+
+%-------------------------------------------------------------------------------
+@D CDC cell splitting with one or more cutting facets
+@{""" CDC cell splitting with one or more cutting facets """
+def fragment(cell,cellCuts,V,CV,BC):
+	vcell = CV[cell]
+	cellFragments = [[V[v] for v in vcell]]
+	
+	for f in cellCuts[cell]:
+		facet = BC[f]
+		plane = COVECTOR([V[v] for v in facet])
+		for k,fragment in enumerate(cellFragments):
+		
+    		#if not tangentTest(plane,facet,fragment,V):
+			[below,equal,above] = SPLITCELL(plane,fragment)
+			if below != above:
+				cellFragments[k] = below
+				cellFragments += [above]
+	
+	return cellFragments
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{SCDC splitting with every boundary facet}
+The function \texttt{makeSCDC} is used  to compute the LAR model \texttt{(W,CW)} of the SCDC.
+It takes as input the LAR model \texttt{(V,CV)} of the CDC, and the LAR model \texttt{(V,BC)} of the input Boolean Complex, and returns also the vertex-cell relation \texttt{VC}, i.e.~the transposed of \texttt{CV}.
+
+For every $\texttt{k} \in \texttt{BC}$, a list \texttt{cellsToSplit}
+
+%-------------------------------------------------------------------------------
+@D SCDC splitting with every boundary facet
+@{""" SCDC splitting with every boundary facet """
+def makeSCDC(V,CV,BC):
+	index = -1
+	defaultValue = -1
+	VC = invertRelation(CV)
+	CW = []
+	Wdict = dict()
+	BCellcovering = boundaryCover(V,CV,BC,VC)
+	cellCuts = invertRelation(BCellcovering)
+	for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
+	
+	for k,frags in enumerate(cellCuts):
+		if cellCuts[k] == []:
+			cell = []
+			for v in CV[k]:
+				key = vcode(V[v])
+				if Wdict.get(key,defaultValue) == defaultValue:
+					index += 1
+					Wdict[key] = index
+					cell += [index]
+				else: 
+					cell += [Wdict[key]]
+			CW += [cell]
+		else:
+			cellFragments = fragment(k,cellCuts,V,CV,BC)
+			for cellFragment in cellFragments:
+				cellFrag = []
+				for v in cellFragment:
+					key = vcode(v)
+					if Wdict.get(key,defaultValue) == defaultValue:
+						index += 1
+						Wdict[key] = index
+						cellFrag += [index]
+					else: 
+						cellFrag += [Wdict[key]]
+				CW += [cellFrag]
+	W = sorted(zip( Wdict.values(), Wdict.keys() ))
+	W = AA(eval)(TRANS(W)[1])
+	return W,CW,VC,BCellcovering,cellCuts
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Computation of boundary facets covering with CDC cells}
+
+%-------------------------------------------------------------------------------
+@D Computation of boundary facets covering with CDC cells
+@{""" Computation of boundary facets covering with CDC cells """
+def boundaryCover(V,CV,BC,VC):
+	cellsToSplit = list()
+	boundaryCellCovering = []
+	for k,facet in enumerate(BC):
+		covector = COVECTOR([V[v] for v in facet])
+		seedsOnFacet = VC[facet[0]]
+		cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) for cell in seedsOnFacet ]
+		cellsToSplit = set(CAT(cellsToSplit))
+		while True:
+			newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) for cell in cellsToSplit ]
+			if newCells != []: newCells = CAT(newCells)
+			covering = cellsToSplit.union(newCells)
+			if covering == cellsToSplit: 
+    			break
+			cellsToSplit = covering
+		boundaryCellCovering += [list(covering)]
+	return boundaryCellCovering
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Cell-facet intersection test}
+
+%-------------------------------------------------------------------------------
+@D Cell-facet intersection test
+@{""" Cell-facet intersection test """
+def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
+	points = [V[v] for v in CV[cell]]
+	vcell1,newFacet,vcell2 = SPLITCELL(covector,points,tolerance=1e-4,ntry=4)
+	boundaryFacet = [V[v] for v in boundaryFacet]
+	translVector = boundaryFacet[0]
+	
+	# translation 
+	newFacet = [ VECTDIFF([v,translVector]) for v in newFacet ]
+	boundaryFacet = [ VECTDIFF([v,translVector]) for v in boundaryFacet ]
+	
+	# linear transformation: boundaryFacet -> standard (d-1)-simplex
+	d = len(V[0])
+	transformMat = mat( boundaryFacet[1:d] + [covector[1:]] ).T.I
+	
+	# transformation in the subspace x_d = 0
+	newFacet = (transformMat * (mat(newFacet).T)).T.tolist()
+	boundaryFacet = (transformMat * (mat(boundaryFacet).T)).T.tolist()
+	
+	# projection in E^{d-1} space and Boolean test
+	newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
+	boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
+	verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
+	
+	if verts == []: return False
+	else: return True
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+
+
+
 
 %-------------------------------------------------------------------------------
 \section{Step 3: cell labeling}
@@ -255,13 +542,17 @@ This software module returns also
 
 The goal of this stage is to label every cell of the SCDC with two bits, corresponding to the input spaces $A$ and $B$, and telling whether the cell is either internal (1) or external (0) to either spaces.
 
+\subsection{Requirements}
+%-------------------------------------------------------------------------------
+
+
 \paragraph{Input}
 The output of previous algorithm stage.
 
 \paragraph{Output}
 The array \texttt{cellLabels} with \emph{shape} $\texttt{len(PW)}\times 2$, and values in $\{0,1\}$.
 
-\section{Step 1: greedy cell gathering}
+\section{Step 4: greedy cell gathering}
 
 The goal of this stage is to make as lower as possible the number of cells in the  output LAR of the space $AB$, partitioned into convex cells.
 
@@ -282,8 +573,16 @@ The LAR representation \texttt{(W,RW)} of the final fragmented and labeled space
 @{""" Module for Boolean ops with LAR """
 @< Initial import of modules @>
 DEBUG = False
+from splitcell import *
 @< Merge two dictionaries with keys the point locations @>
 @< Make Common Delaunay Complex @>
+@< Cell-facet intersection test @>
+@< Elementary splitting test @>
+@< Computing the adjacent cells of a given cell @>
+@< Computation of boundary facets covering with CDC cells @>
+@< CDC cell splitting with one or more cutting facets @>
+@< SCDC splitting with every boundary facet @>
+@< Characteristic matrix transposition @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -294,26 +593,34 @@ DEBUG = False
 %-------------------------------------------------------------------------------
 @D Debug input and vertex merging
 @{
-if DEBUG: VIEW(STRUCT(MKPOLS((V1,EV1)) + MKPOLS((V2,EV2))))
+V1,basis1 = arg1
+V2,basis2 = arg2
+cells1 = basis1[-1]
+cells2 = basis2[-1]
 
-model1,model2 = (V1,FV1),(V2,FV2)
+if DEBUG: VIEW(STRUCT(MKPOLS((V1,basis1[1])) + MKPOLS((V2,basis2[1]))))
+
+model1,model2 = (V1,cells1),(V2,cells2)
 V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)	#<<<<<<<<<<<<<<<<
-
-print "\nV =", V
-print "\nCV1,CV2 =", CV1,CV2
-print "\nn1,n12,n2 =", n1,n12,n2
 
 submodel = SKEL_1(STRUCT(MKPOLS((V,CV1+CV2)))) 
 VV = AA(LIST)(range(len(V)))
 if DEBUG: VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,_,CV1+CV2],submodel,3)]))
 
-V,CV,vertDict,n1,n12,n2 = makeCDC(model1, model2)		#<<<<<<<<<<<<<<<<
+V,CV,vertDict,n1,n12,n2,BC = makeCDC(arg1,arg2)		#<<<<<<<<<<<<<<<<
 
-print "\nCV =", CV
-print "\nvertDict =", vertDict
+W,CW,VC,BCellCovering,cellCuts = makeSCDC(V,CV,BC)
+assert len(VC) == len(V) 
+assert len(BCellCovering) == len(BC)
 
-submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
-VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,_,CV],submodel,4)]))
+submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC)))) ])
+dim = len(V[0])
+VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,BC,CV],submodel,3)]))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CW))))
+"""
+for k in range(1,len(CW)+1):
+	VIEW(STRUCT([ STRUCT(MKPOLS((W,CW[:k]))), submodel,larModelNumbering(V,[VV,BC,CV],submodel,3) ]))
+"""
 @}
 %-------------------------------------------------------------------------------
 
@@ -339,6 +646,8 @@ FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
 EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
 VV2 = AA(LIST)(range(len(V2)))
 
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
@@ -363,12 +672,41 @@ FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
 EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
 VV2 = AA(LIST)(range(len(V2)))
 
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test3.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
+	[8,4], [10,3]]
+	
+FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8]]
+EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
+FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7]]
+EV2 = [[0,1],[0,5],[0,7],[1,7],[2,3],[2,7],[3,6],[4,5],[4,6],[5,6],[6,7]]
+VV2 = AA(LIST)(range(len(V2)))
+
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
+@< Debug input and vertex merging @>
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test4.py
 @{
 import sys
 """ import modules from larcc/lib """
@@ -385,12 +723,14 @@ FV2 = [range(4)]
 EV2 = [[0,1],[1,2],[2,3],[0,3]]
 VV2 = AA(LIST)(range(len(V2)))
 
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-@O test/py/bool1/test3a.py
+@O test/py/bool1/test5.py
 @{
 import sys
 """ import modules from larcc/lib """
@@ -407,12 +747,14 @@ FV2 = [range(4)]
 EV2 = [[0,1],[1,2],[2,3],[0,3]]
 VV2 = AA(LIST)(range(len(V2)))
 
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-@O test/py/bool1/test4.py
+@O test/py/bool1/test6.py
 @{
 import sys
 """ import modules from larcc/lib """
@@ -426,12 +768,14 @@ V1 = [SCALARVECTPROD([5,v]) for v in V1]
 V2 = [SUM([v,[2.5,2.5,2.5]]) for v in V1]
 [VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]
 
+arg1 = V1,(VV1,EV1,FV1,CV1)
+arg2 = V2,(VV2,EV2,FV2,CV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-@O test/py/bool1/test5.py
+@O test/py/bool1/test7.py
 @{
 import sys
 """ import modules from larcc/lib """
@@ -449,12 +793,14 @@ FV2 = [range(4)]
 EV2 = [[0,1],[1,2],[2,3],[0,3]]
 VV2 = AA(LIST)(range(len(V2)))
 
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-@O test/py/bool1/test6.py
+@O test/py/bool1/test8.py
 @{
 import sys
 """ import modules from larcc/lib """
@@ -462,7 +808,7 @@ sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
 
-n = 24
+n = 48
 V1 = [[5*cos(angle*2*PI/n)+2.5, 5*sin(angle*2*PI/n)+2.5] for angle in range(n)]
 FV1 = [range(n)]
 EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
@@ -473,12 +819,14 @@ FV2 = [range(n)]
 EV2 = EV1
 VV2 = AA(LIST)(range(len(V2)))
 
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-@O test/py/bool1/test7.py
+@O test/py/bool1/test9.py
 @{
 import sys
 """ import modules from larcc/lib """
@@ -495,6 +843,8 @@ FV2 = [range(4),range(4,8),range(8,12),range(12,16)]
 EV2 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11], [12,13],[13,14],[14,15],[12,15]]
 VV2 = AA(LIST)(range(len(V2)))
 
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------

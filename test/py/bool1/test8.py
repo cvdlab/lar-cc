@@ -4,14 +4,16 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
-V1 = [[0,0],[10,0],[10,10],[0,10]]
-FV1 = [range(4)]
-EV1 = [[0,1],[1,2],[2,3],[0,3]]
+
+n = 48
+V1 = [[5*cos(angle*2*PI/n)+2.5, 5*sin(angle*2*PI/n)+2.5] for angle in range(n)]
+FV1 = [range(n)]
+EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
 VV1 = AA(LIST)(range(len(V1)))
 
-V2 = [[2.5,2.5],[12.5,2.5],[12.5,12.5],[2.5,12.5]]
-FV2 = [range(4)]
-EV2 = [[0,1],[1,2],[2,3],[0,3]]
+V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]
+FV2 = [range(n)]
+EV2 = EV1
 VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
