@@ -399,6 +399,11 @@ def dividenda(V,CV, cell,facet,covector,unchosen):
 
 \paragraph{CDC cell splitting with one or more facets}
 
+When splitting a $d$-cell with some hyperplanes, we need to return not only either the two cut parts or the cell itself when the hyperplane is tangent to a $(d-1)$-face, but also the facet lying on the hyperplane. 
+In the first cade it is directly computed by the \texttt{SPLITCELL} function, and returned as the \texttt{equal} set of points. In the second case, the cell is transformed by the map that sends the hyperplane in the $x_d=0$ subspace ($z=0$ in 3D), and the searched facet is returned as the (back-transformed) set of cell vertices on this subspace. 
+
+Actually, the process is strongly complicated by the fact that the input cell (and its facets) may be cut by several hyperplanes. By now, we resort to the simplex computation, even if more time-expensive:  to compare each vertex of each cell fragment, against every hyperplanes. This approach will adapt well to the writing of a computational kernel on the GPU.
+
 %-------------------------------------------------------------------------------
 @D CDC cell splitting with one or more cutting facets
 @{""" CDC cell splitting with one or more cutting facets """
@@ -412,11 +417,11 @@ def fragment(cell,cellCuts,V,CV,BC):
 		for k,fragment in enumerate(cellFragments):
 		
     		#if not tangentTest(plane,facet,fragment,V):
-			[below,equal,above] = SPLITCELL(plane,fragment)
+			[below,equal,above] = SPLITCELL(plane,fragment,tolerance=1e-4,ntry=4)
 			if below != above:
 				cellFragments[k] = below
 				cellFragments += [above]
-	
+		facets = facetsOnCuts(cellFragments,cellCuts,V,BC)
 	return cellFragments
 @}
 %-------------------------------------------------------------------------------
@@ -431,14 +436,15 @@ For every $\texttt{k} \in \texttt{BC}$, a list \texttt{cellsToSplit}
 @D SCDC splitting with every boundary facet
 @{""" SCDC splitting with every boundary facet """
 def makeSCDC(V,CV,BC):
-	index = -1
-	defaultValue = -1
+	index,defaultValue = -1,-1
 	VC = invertRelation(CV)
-	CW = []
+	CW,BCfrags = [],[]
 	Wdict = dict()
 	BCellcovering = boundaryCover(V,CV,BC,VC)
 	cellCuts = invertRelation(BCellcovering)
 	for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
+	
+	def verySmall(number): return abs(number) < 10**-5.5
 	
 	for k,frags in enumerate(cellCuts):
 		if cellCuts[k] == []:
@@ -464,10 +470,20 @@ def makeSCDC(V,CV,BC):
 						cellFrag += [index]
 					else: 
 						cellFrag += [Wdict[key]]
-				CW += [cellFrag]
+				CW += [cellFrag]	
+				
+				BCfrags += [[Wdict[vcode(w)] for w in cellFragment if verySmall( 
+								PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ]
+							 for h in cellCuts[k]]
+			
 	W = sorted(zip( Wdict.values(), Wdict.keys() ))
 	W = AA(eval)(TRANS(W)[1])
-	return W,CW,VC,BCellcovering,cellCuts
+	dim = len(W[0])
+	BCfrags = [str(sorted(facet)) for facet in BCfrags if facet != [] and len(set(facet)) >= dim]
+	BCfrags = sorted(list(AA(eval)(set(BCfrags))))
+	print "\nBCfrags =", BCfrags
+	print "\nW =", W
+	return W,CW,VC,BCellcovering,cellCuts,BCfrags
 @}
 %-------------------------------------------------------------------------------
 
@@ -552,7 +568,78 @@ The output of previous algorithm stage.
 \paragraph{Output}
 The array \texttt{cellLabels} with \emph{shape} $\texttt{len(PW)}\times 2$, and values in $\{0,1\}$.
 
+
+\subsection{Implementation}
+%-------------------------------------------------------------------------------
+
+The labelling of LAR of the SCDC may be decomposed in five consecutive steps. The first step was actually executed during the splitting stage, by accumulating a single facet of every split cells embedded on the affine hull (the covector hyperplane) of the splitting boundary \texttt{facet}. The second  step provides the computation of the sparse matrix of the linear coboundary operator $\delta_{d-1}: C_{d-1} \to C_d$.
+The third step operates upon the previous two pieces of information, in order to compute the coboundary chain of the boundary chain of both input Boolean arguments.
+The fourth step attaches a \textsc{in/out} label to each $d$-cell of the previously computed $d$-chain.
+Finally, the fifth step spreads around the labels to cover all the $d$-cells of SCDC. This knowledge allows for the computation of every interesting Boolean expressions between the input complexes.
+
+
+\paragraph{Computation of boundary cells embedded in SCDC}
+
+%-------------------------------------------------------------------------------
+@D Computation of embedded boundary cells
+@{""" Computation of embedded boundary cells """
+def facetsOnCuts(cellFragments,cellCuts,V,BC):
+
+
+	pass
+	return #facets
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Coboundary operator on SCDC space decomposition}
+
+In this section we develop a stronger characterisation of the boundaries, by fully tagging in SCDC the internal coboundary of boundaries of $A$ and $B$ Boolean arguments. This novel strategy should allow the recursive tagging extension to work correctly in all cases.
+
+As we know, the  coboundary operators $\delta_{k-1}: C_{k-1} \to C_k$ are the transpose of the boundary operators $\partial_k: C_k \to C_{k-1}$ ($1\leq k\leq d$). We therefore proceed to the construction of the operator $\delta_{d-1}$, according to the procedure illustrated in~\cite{}. For this purpose we need to use both the $C_d$ and the $C_{d-1}$ bases of SCDC. The first basis is generated as \texttt{CV} array during the splitting. The second basis will be built from $C_d$ using the proper $d$-adjacency algorithm from~\cite{}. 
+
+Let us remember that a (co)boundary operator may be applied to \emph{any} chain from the linear space of chains defined upon a cellular complex. 
+In our case we have already generated the $(d-1)$-chains $\partial A$ and $\partial B$ while building the SCDC, by accumulating, in the course of the splitting phase, the $(d-1)$-facets discovered while tracking the boundaries of $A$ and $B$. We just need now to tag (a subset of) $\delta_{d-1}\partial_d A$ and $\delta_{d-1}\partial_d B$.
+
+%-------------------------------------------------------------------------------
+@D Coboundary operator on the convex decomposition of common space
+@{""" Coboundary operator on the convex decomposition of common space """
+
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Coboundary of boundary chains}
+
+%-------------------------------------------------------------------------------
+@D Coboundary of boundary chain
+@{""" Coboundary of boundary chain """
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Labeling seeds}
+
+%-------------------------------------------------------------------------------
+@D Writing labelling seeds on SCDC
+@{""" Writing labelling seeds on SCDC """
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Recursive diffusion of labels}
+
+%-------------------------------------------------------------------------------
+@D Recursive diffusion of labels on SCDC
+@{""" Recursive diffusion of labels on SCDC """
+@}
+%-------------------------------------------------------------------------------
+
+
+
+%-------------------------------------------------------------------------------
 \section{Step 4: greedy cell gathering}
+%-------------------------------------------------------------------------------
 
 The goal of this stage is to make as lower as possible the number of cells in the  output LAR of the space $AB$, partitioned into convex cells.
 
@@ -561,6 +648,8 @@ The LAR model \texttt{(W,PW)} of the SCDC and the array \texttt{cellLabels}.
 
 \paragraph{Output}
 The LAR representation \texttt{(W,RW)} of the final fragmented and labeled space $AB$.
+
+
 
 
 %-------------------------------------------------------------------------------
@@ -572,8 +661,9 @@ The LAR representation \texttt{(W,RW)} of the final fragmented and labeled space
 @O lib/py/bool1.py
 @{""" Module for Boolean ops with LAR """
 @< Initial import of modules @>
-DEBUG = False
 from splitcell import *
+DEBUG = False
+@< Symbolic utility to represent points as strings @>
 @< Merge two dictionaries with keys the point locations @>
 @< Make Common Delaunay Complex @>
 @< Cell-facet intersection test @>
@@ -583,6 +673,7 @@ from splitcell import *
 @< CDC cell splitting with one or more cutting facets @>
 @< SCDC splitting with every boundary facet @>
 @< Characteristic matrix transposition @>
+@< Computation of embedded boundary cells @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -609,14 +700,14 @@ if DEBUG: VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,_,CV1+CV2],submodel,3)]
 
 V,CV,vertDict,n1,n12,n2,BC = makeCDC(arg1,arg2)		#<<<<<<<<<<<<<<<<
 
-W,CW,VC,BCellCovering,cellCuts = makeSCDC(V,CV,BC)
+W,CW,VC,BCellCovering,cellCuts,BCfrags = makeSCDC(V,CV,BC)
 assert len(VC) == len(V) 
 assert len(BCellCovering) == len(BC)
 
 submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC)))) ])
 dim = len(V[0])
 VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,BC,CV],submodel,3)]))
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CW))))
+VIEW(EXPLODE(2,2,2)(MKPOLS((W,CW))))
 """
 for k in range(1,len(CW)+1):
 	VIEW(STRUCT([ STRUCT(MKPOLS((W,CW[:k]))), submodel,larModelNumbering(V,[VV,BC,CV],submodel,3) ]))
@@ -882,14 +973,14 @@ A small set of utility functions is used to transform a \emph{point} representat
 @D Symbolic utility to represent points as strings
 @{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 4.95
+PRECISION = 5.
 
-def verySmall(number): return abs(number) < 10**-(PRECISION/1.15)
+def verySmall(number): return abs(number) < 10**-(PRECISION)
 
 def prepKey (args): return "["+", ".join(args)+"]"
 
 def fixedPrec(value):
-	out = round(value*10**(PRECISION*1.1))/10**(PRECISION*1.1)
+	out = round(value*10**(PRECISION))/10**(PRECISION)
 	if out == -0.0: out = 0.0
 	return str(out)
 	

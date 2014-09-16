@@ -11,8 +11,28 @@ from largrid import *
 from myfont import *
 from mapper import *
 
-DEBUG = False
 from splitcell import *
+DEBUG = False
+""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
+global PRECISION
+PRECISION = 5.
+
+def verySmall(number): return abs(number) < 10**-(PRECISION)
+
+def prepKey (args): return "["+", ".join(args)+"]"
+
+def fixedPrec(value):
+   out = round(value*10**(PRECISION))/10**(PRECISION)
+   if out == -0.0: out = 0.0
+   return str(out)
+   
+def vcode (vect): 
+   """
+   To generate a string representation of a number array.
+   Used to generate the vertex keys in PointSet dictionary, and other similar operations.
+   """
+   return prepKey(AA(fixedPrec)(vect))
+
 """ Merge two dictionaries with keys the point locations """
 def mergeVertices(model1, model2):
 
@@ -180,23 +200,24 @@ def fragment(cell,cellCuts,V,CV,BC):
       for k,fragment in enumerate(cellFragments):
       
          #if not tangentTest(plane,facet,fragment,V):
-         [below,equal,above] = SPLITCELL(plane,fragment)
+         [below,equal,above] = SPLITCELL(plane,fragment,tolerance=1e-4,ntry=4)
          if below != above:
             cellFragments[k] = below
             cellFragments += [above]
-   
+      facets = facetsOnCuts(cellFragments,cellCuts,V,BC)
    return cellFragments
 
 """ SCDC splitting with every boundary facet """
 def makeSCDC(V,CV,BC):
-   index = -1
-   defaultValue = -1
+   index,defaultValue = -1,-1
    VC = invertRelation(CV)
-   CW = []
+   CW,BCfrags = [],[]
    Wdict = dict()
    BCellcovering = boundaryCover(V,CV,BC,VC)
    cellCuts = invertRelation(BCellcovering)
    for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
+   
+   def verySmall(number): return abs(number) < 10**-5.5
    
    for k,frags in enumerate(cellCuts):
       if cellCuts[k] == []:
@@ -222,10 +243,20 @@ def makeSCDC(V,CV,BC):
                   cellFrag += [index]
                else: 
                   cellFrag += [Wdict[key]]
-            CW += [cellFrag]
+            CW += [cellFrag]  
+            
+            BCfrags += [[Wdict[vcode(w)] for w in cellFragment if verySmall( 
+                        PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ]
+                      for h in cellCuts[k]]
+         
    W = sorted(zip( Wdict.values(), Wdict.keys() ))
    W = AA(eval)(TRANS(W)[1])
-   return W,CW,VC,BCellcovering,cellCuts
+   dim = len(W[0])
+   BCfrags = [str(sorted(facet)) for facet in BCfrags if facet != [] and len(set(facet)) >= dim]
+   BCfrags = sorted(list(AA(eval)(set(BCfrags))))
+   print "\nBCfrags =", BCfrags
+   print "\nW =", W
+   return W,CW,VC,BCellcovering,cellCuts,BCfrags
 
 """ Characteristic matrix transposition """
 def invertRelation(CV):
@@ -235,4 +266,11 @@ def invertRelation(CV):
       for v in cell:
          VC[v] += [k]
    return VC
+
+""" Computation of embedded boundary cells """
+def facetsOnCuts(cellFragments,cellCuts,V,BC):
+
+
+   pass
+   return #facets
 
