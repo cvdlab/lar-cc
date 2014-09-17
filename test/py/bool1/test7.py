@@ -35,6 +35,7 @@ if DEBUG: VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,_,CV1+CV2],submodel,3)]
 V,CV,vertDict,n1,n12,n2,BC = makeCDC(arg1,arg2)    #<<<<<<<<<<<<<<<<
 
 W,CW,VC,BCellCovering,cellCuts,BCfrags = makeSCDC(V,CV,BC)
+
 assert len(VC) == len(V) 
 assert len(BCellCovering) == len(BC)
 
@@ -46,4 +47,14 @@ VIEW(EXPLODE(2,2,2)(MKPOLS((W,CW))))
 for k in range(1,len(CW)+1):
    VIEW(STRUCT([ STRUCT(MKPOLS((W,CW[:k]))), submodel,larModelNumbering(V,[VV,BC,CV],submodel,3) ]))
 """
+
+
+WW = AA(LIST)(range(len(W)))
+FW = larConvexFacets (W,CW)
+#submodel = SKEL_1(STRUCT(MKPOLS((W,CW))))
+#VIEW(larModelNumbering(W,[WW,FW,CW],submodel,3))
+
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS((W,FW))))
+
+
 

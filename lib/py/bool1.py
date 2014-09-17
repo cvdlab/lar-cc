@@ -87,13 +87,14 @@ def makeCDC(arg1,arg2):
    assert n == n1 - n12 + n2
    
    CV = sorted(AA(sorted)(Delaunay(array(V)).simplices))
+   
    vertDict = defaultdict(list)
    for k,v in enumerate(V): vertDict[vcode(v)] += [k]
    
    BC1 = signedCellularBoundaryCells(V1,basis1)
    BC2 = signedCellularBoundaryCells(V2,basis2)
    BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
-         [ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2]
+         [ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
    
    return V,CV,vertDict,n1,n12,n2,BC
 
@@ -214,6 +215,9 @@ def makeSCDC(V,CV,BC):
    CW,BCfrags = [],[]
    Wdict = dict()
    BCellcovering = boundaryCover(V,CV,BC,VC)
+   #print "\nBCellcovering =",BCellcovering
+   #BCellcovering = [cell if cell!=[] else [-1] for cell in BCellcovering ]
+
    cellCuts = invertRelation(BCellcovering)
    for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
    
@@ -260,7 +264,10 @@ def makeSCDC(V,CV,BC):
 
 """ Characteristic matrix transposition """
 def invertRelation(CV):
-   columnNumber = max(AA(max)(CV))+1
+   def myMax(List):
+      if List==[]: return -1
+      else: return max(List)
+   columnNumber = max(AA(myMax)(CV))+1
    VC = [[] for k in range(columnNumber)]
    for k,cell in enumerate(CV):
       for v in cell:
@@ -273,4 +280,32 @@ def facetsOnCuts(cellFragments,cellCuts,V,BC):
 
    pass
    return #facets
+
+""" Coboundary operator on the convex decomposition of common space """
+from scipy.spatial import ConvexHull
+def qhullBoundary(V):
+   points = array(V)
+   hull = ConvexHull(points)
+   out = hull.simplices.tolist()
+   return sorted(out)
+
+""" Extracting a $(d-1)$-basis of SCDC """
+def larConvexFacets (V,CV):
+   dim = len(V[0])
+   model = V,CV
+   V,FV = larFacets(model,dim)
+   FV = sorted(FV + convexBoundary(V,CV))
+   return FV
+
+""" Computation of boundary operator of a convex LAR model"""
+def convexBoundary(W,CW):
+   points = array(W)
+   hull = ConvexHull(points,qhull_options="Qc")
+   coplanarVerts = hull.coplanar.tolist()
+   if coplanarVerts != []:  coplanarVerts = CAT(coplanarVerts)
+   BWchain = set( CAT(qhullBoundary(W)) + coplanarVerts )
+   dim = len(W[0])
+   bfacets = [list(BWchain.intersection(cell)) 
+               for cell in CW if len(BWchain.intersection(cell)) >= dim]
+   return bfacets
 
