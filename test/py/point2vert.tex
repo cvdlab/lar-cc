@@ -1,0 +1,40 @@
+%-------------------------------------------------------------------------------
+@D SCDC splitting with every boundary facet
+@{""" SCDC splitting with every boundary facet """
+def makeSCDC(V,CV,BC):
+	index = -1
+	defaultValue = -1
+	VC = invertRelation(CV)
+	CW = []
+	Wdict = dict()
+	BCellcovering = boundaryCover(V,CV,BC,VC)
+	cellCuts = invertRelation(BCellcovering)
+	for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
+	
+	def points2verts(points,Wdict,index,defaultValue):
+		cell = []
+		for v in points:
+			key = vcode(v)
+			if Wdict.get(key,defaultValue) == defaultValue:
+				index += 1
+				Wdict[key] = index
+				cell += [index]
+			else: 
+				cell += [Wdict[key]]
+		return cell
+	
+	for k,frags in enumerate(cellCuts):
+		if cellCuts[k] == []:
+			points = [V[v] for v in CV[k]]
+			cell = points2verts(points,Wdict,index,defaultValue)
+			CW += [cell]
+		else:
+			cellFragments = fragment(k,cellCuts,V,CV,BC)
+			for cellFragment in cellFragments:
+				cellFrag = points2verts(cellFragment,Wdict,index,defaultValue)
+				CW += [cellFrag]
+	W = sorted(zip( Wdict.values(), Wdict.keys() ))
+	W = AA(eval)(TRANS(W)[1])
+	return W,CW,VC,BCellcovering,cellCuts
+@}
+%-------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ from splitcell import *
 DEBUG = False
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 5.
+PRECISION = 4.
 
 def verySmall(number): return abs(number) < 10**-(PRECISION)
 
@@ -96,7 +96,7 @@ def makeCDC(arg1,arg2):
    BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
          [ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
    
-   return V,CV,vertDict,n1,n12,n2,BC
+   return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)
 
 """ Cell-facet intersection test """
 def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
@@ -209,14 +209,12 @@ def fragment(cell,cellCuts,V,CV,BC):
    return cellFragments
 
 """ SCDC splitting with every boundary facet """
-def makeSCDC(V,CV,BC):
+def makeSCDC(V,CV,BC,nbc1,nbc2):
    index,defaultValue = -1,-1
    VC = invertRelation(CV)
    CW,BCfrags = [],[]
    Wdict = dict()
    BCellcovering = boundaryCover(V,CV,BC,VC)
-   #print "\nBCellcovering =",BCellcovering
-   #BCellcovering = [cell if cell!=[] else [-1] for cell in BCellcovering ]
 
    cellCuts = invertRelation(BCellcovering)
    for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
@@ -249,18 +247,29 @@ def makeSCDC(V,CV,BC):
                   cellFrag += [Wdict[key]]
             CW += [cellFrag]  
             
-            BCfrags += [[Wdict[vcode(w)] for w in cellFragment if verySmall( 
-                        PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ]
-                      for h in cellCuts[k]]
+            BCfrags += [ (h, [Wdict[vcode(w)] for w in cellFragment if verySmall( 
+                        PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ] )
+                      for h in cellCuts[k]]  
+   
+   BCW = [ [ Wdict[vcode(V[v])] for v in cell ] for cell in BC]
+         
          
    W = sorted(zip( Wdict.values(), Wdict.keys() ))
    W = AA(eval)(TRANS(W)[1])
    dim = len(W[0])
-   BCfrags = [str(sorted(facet)) for facet in BCfrags if facet != [] and len(set(facet)) >= dim]
-   BCfrags = sorted(list(AA(eval)(set(BCfrags))))
-   print "\nBCfrags =", BCfrags
-   print "\nW =", W
-   return W,CW,VC,BCellcovering,cellCuts,BCfrags
+   
+   boundary1,boundary2 = defaultdict(list),defaultdict(list)                   
+   for h,frags in BCfrags:
+      if h < nbc1: boundary1[h] += [frags]
+      else: boundary2[h] += [frags] 
+   boundarylist1,boundarylist2 = [],[]
+   for h,facets in boundary1.items():
+      boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
+   for h,facets in boundary2.items():
+      boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
+   boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
+
+   return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
 
 """ Characteristic matrix transposition """
 def invertRelation(CV):
@@ -294,8 +303,8 @@ def larConvexFacets (V,CV):
    dim = len(V[0])
    model = V,CV
    V,FV = larFacets(model,dim)
-   FV = sorted(FV + convexBoundary(V,CV))
-   return FV
+   FV = AA(eval)(list(set(AA(str)(FV + convexBoundary(V,CV)))))
+   return sorted(AA(sorted)(FV))
 
 """ Computation of boundary operator of a convex LAR model"""
 def convexBoundary(W,CW):
@@ -308,4 +317,99 @@ def convexBoundary(W,CW):
    bfacets = [list(BWchain.intersection(cell)) 
                for cell in CW if len(BWchain.intersection(cell)) >= dim]
    return bfacets
+
+""" Writing labelling seeds on SCDC """
+def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):
+   dim = len(W[0])
+   for face in boundaryDict:
+      for facet in boundaryDict[face]:
+         cofaces = list(boundaryMat[facet].tocoo().col)
+         if len(cofaces) == 1: 
+            CWbits[cofaces[0]][arg] = 1
+         elif len(cofaces) == 2:
+            v0 = list(set(CW[cofaces[0]]).difference(FW[facet]))[0]
+            v1 = list(set(CW[cofaces[1]]).difference(FW[facet]))[0]
+            # take d affinely independent vertices in face (TODO: use pivotSimplices() 
+            simplex0 = BC[face][:dim] + [v0]
+            simplex1 = BC[face][:dim] + [v1]
+            sign0 = sign(det([W[v]+[1] for v in simplex0]))
+            sign1 = sign(det([W[v]+[1] for v in simplex1]))
+            
+            if sign0 == 1: CWbits[cofaces[0]][arg] = 1
+            elif sign0 == -1: CWbits[cofaces[0]][arg] = 0
+            if sign1 == 1: CWbits[cofaces[1]][arg] = 1
+            elif sign1 == -1: CWbits[cofaces[1]][arg] = 0
+         else: 
+            print "error: too many cofaces of boundary facets"
+   return CWbits
+
+""" Recursive diffusion of labels on SCDC """
+def booleanChainTraverse(h,cell,V,CV,CWbits,value):
+   adjCells = adjacencyQuery(V,CV)(cell)
+   for adjCell in adjCells: 
+      if CWbits[adjCell][h] == -1:
+         CWbits[adjCell][h] = value
+         CWbits = booleanChainTraverse(h,adjCell,V,CV,CWbits,value)
+   return CWbits
+
+""" Mapping from hyperplanes to lists of facets """
+def facet2covectors(W,FW):
+   return [COVECTOR([W[v] for v in facet]) for facet in FW]
+
+def boundaries(boundary1,boundary2):
+   return set(CAT(boundary1.values() + boundary2.values()))
+
+""" Mapping from hyperplanes to lists of facets """
+def facet2covectors(W,FW):
+   return [COVECTOR([W[v] for v in facet]) for facet in FW]
+
+def boundaries(boundary1,boundary2):
+   return set(CAT(boundary1.values() + boundary2.values()))
+
+""" Building the boundary complex of the current chain """
+def chain2complex(W,CW,FW,chain,coBoundaryMat,boundaryMat,constraints):
+   chainCoords = csc_matrix((len(CW), 1))
+   for cell in chain: chainCoords[cell] = 1
+   out = boundaryCells = set((boundaryMat * chainCoords
+                     ).tocoo().row).difference(constraints)
+   return out
+
+""" Sticking cells together """
+def testAttachment(usedCells,facet,chain, 
+         W,FW,coBoundaryMat,envelope,covectors):
+   pass
+
+def protrudeChain (W,CW,FW,chain,coBoundaryMat,boundaryMat,
+                  envelope,covectors,usedCells):
+   for facet in envelope:
+      done,usedCells = testAttachment(usedCells,facet,chain, 
+         W,FW,coBoundaryMat,envelope,covectors)
+      if done: 
+         usedCells[facet] = True
+         verts = list(set([FW[cell] for cell in envelope+[facet]]))
+         break
+   return done,verts
+
+""" Gathering and writing a polytopal complex """
+def gatherPolytopes(W,CW,FW,coBoundaryMat,boundaryMat,covectors,
+                  bounds1,bounds2):
+   usedCells = [False for cell in CW]
+   covectors = facet2covectors(W,FW)
+   constraints = boundaries(bounds1,bounds2)
+   Xdict,index = dict(),0
+   while not all(usedCells):
+      for cell in CW:
+         if not usedCells[cell]:
+            chain = [cell]
+            usedCells[cell] = True
+            done,verts = protrudeChain (W,CW,FW,chain,coBoundaryMat,boundaryMat,
+                  envelope,covectors,usedCells)
+            if done:
+               for v in verts:
+                  Xdict[vcode(W[v])] = index
+                  index += 1
+               CX += [chain]
+      X = AA(eval)(TRANS(sorted(Xdict.values(),Xdict.keys()))[1])
+   return X,CX
+
 

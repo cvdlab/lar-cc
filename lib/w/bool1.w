@@ -250,7 +250,7 @@ def makeCDC(arg1,arg2):
 	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
 			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
 	
-	return V,CV,vertDict,n1,n12,n2,BC
+	return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)
 @}
 %-------------------------------------------------------------------------------
 
@@ -427,14 +427,12 @@ For every $\texttt{k} \in \texttt{BC}$, a list \texttt{cellsToSplit}
 %-------------------------------------------------------------------------------
 @D SCDC splitting with every boundary facet
 @{""" SCDC splitting with every boundary facet """
-def makeSCDC(V,CV,BC):
+def makeSCDC(V,CV,BC,nbc1,nbc2):
 	index,defaultValue = -1,-1
 	VC = invertRelation(CV)
 	CW,BCfrags = [],[]
 	Wdict = dict()
 	BCellcovering = boundaryCover(V,CV,BC,VC)
-	#print "\nBCellcovering =",BCellcovering
-	#BCellcovering = [cell if cell!=[] else [-1] for cell in BCellcovering ]
 
 	cellCuts = invertRelation(BCellcovering)
 	for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
@@ -467,18 +465,29 @@ def makeSCDC(V,CV,BC):
 						cellFrag += [Wdict[key]]
 				CW += [cellFrag]	
 				
-				BCfrags += [[Wdict[vcode(w)] for w in cellFragment if verySmall( 
-								PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ]
-							 for h in cellCuts[k]]
+				BCfrags += [ (h, [Wdict[vcode(w)] for w in cellFragment if verySmall( 
+								PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ] )
+							 for h in cellCuts[k]]	
+	
+	BCW = [ [ Wdict[vcode(V[v])] for v in cell ] for cell in BC]
+			
 			
 	W = sorted(zip( Wdict.values(), Wdict.keys() ))
 	W = AA(eval)(TRANS(W)[1])
 	dim = len(W[0])
-	BCfrags = [str(sorted(facet)) for facet in BCfrags if facet != [] and len(set(facet)) >= dim]
-	BCfrags = sorted(list(AA(eval)(set(BCfrags))))
-	print "\nBCfrags =", BCfrags
-	print "\nW =", W
-	return W,CW,VC,BCellcovering,cellCuts,BCfrags
+	
+	boundary1,boundary2 = defaultdict(list),defaultdict(list)						 
+	for h,frags in BCfrags:
+		if h < nbc1: boundary1[h] += [frags]
+		else: boundary2[h] += [frags]	
+	boundarylist1,boundarylist2 = [],[]
+	for h,facets in boundary1.items():
+		boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
+	for h,facets in boundary2.items():
+		boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
+	boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
+
+	return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
 @}
 %-------------------------------------------------------------------------------
 
@@ -611,8 +620,8 @@ def larConvexFacets (V,CV):
 	dim = len(V[0])
 	model = V,CV
 	V,FV = larFacets(model,dim)
-	FV = sorted(FV + convexBoundary(V,CV))
-	return FV
+	FV = AA(eval)(list(set(AA(str)(FV + convexBoundary(V,CV)))))
+	return sorted(AA(sorted)(FV))
 @}
 %-------------------------------------------------------------------------------
 
@@ -654,15 +663,46 @@ def convexBoundary(W,CW):
 %-------------------------------------------------------------------------------
 @D Writing labelling seeds on SCDC
 @{""" Writing labelling seeds on SCDC """
+def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):
+	dim = len(W[0])
+	for face in boundaryDict:
+		for facet in boundaryDict[face]:
+			cofaces = list(boundaryMat[facet].tocoo().col)
+			if len(cofaces) == 1: 
+				CWbits[cofaces[0]][arg] = 1
+			elif len(cofaces) == 2:
+				v0 = list(set(CW[cofaces[0]]).difference(FW[facet]))[0]
+				v1 = list(set(CW[cofaces[1]]).difference(FW[facet]))[0]
+				# take d affinely independent vertices in face (TODO: use pivotSimplices() 
+				simplex0 = BC[face][:dim] + [v0]
+				simplex1 = BC[face][:dim] + [v1]
+				sign0 = sign(det([W[v]+[1] for v in simplex0]))
+				sign1 = sign(det([W[v]+[1] for v in simplex1]))
+				
+				if sign0 == 1: CWbits[cofaces[0]][arg] = 1
+				elif sign0 == -1: CWbits[cofaces[0]][arg] = 0
+				if sign1 == 1: CWbits[cofaces[1]][arg] = 1
+				elif sign1 == -1: CWbits[cofaces[1]][arg] = 0
+			else: 
+				print "error: too many cofaces of boundary facets"
+	return CWbits
 @}
 %-------------------------------------------------------------------------------
 
 
 \paragraph{Recursive diffusion of labels}
+A recursive function \texttt{booleanChainTraverse} is given in the script below, where 
 
 %-------------------------------------------------------------------------------
 @D Recursive diffusion of labels on SCDC
 @{""" Recursive diffusion of labels on SCDC """
+def booleanChainTraverse(h,cell,V,CV,CWbits,value):
+	adjCells = adjacencyQuery(V,CV)(cell)
+	for adjCell in adjCells: 
+		if CWbits[adjCell][h] == -1:
+			CWbits[adjCell][h] = value
+			CWbits = booleanChainTraverse(h,adjCell,V,CV,CWbits,value)
+	return CWbits
 @}
 %-------------------------------------------------------------------------------
 
@@ -681,6 +721,117 @@ The LAR model \texttt{(W,PW)} of the SCDC and the array \texttt{cellLabels}.
 The LAR representation \texttt{(W,RW)} of the final fragmented and labeled space $AB$.
 
 
+\subsection{Requirements}
+%-------------------------------------------------------------------------------
+
+The algorithm proposed here for $d$-cell gathering into bigger polytopes is local and greedy. Starting from an initial random $d$-cell, a $(d-1)$-connected $d$-chain is built, by attaching, one at a time, single cells to the boundary of the chain, after (local) verification that the support of the new chain will remain a convex set. 
+
+In case of failure of the test, the facets of the current chain boundary are checked for the gluing of their adjacent and external $d$-coface, until either a new convex is built, or no single cell can be attached convexly, so that the attachment process relative to that chain stops, and its boundary vertices are written in the LAR of a new complex, to gather a single new polytope generated by them. 
+
+Actually, during the stage of boundary checking for finding a new cocell to glue, only a subchain is checked, obtained by subtraction from the boundary of the cutting facets, where attachments are not possible, without
+violating the topology of Boolean results. 
+
+Two main algorithm components are needed here. The first one concerns the extraction of the current $d$-chain boundary, the subtraction from it of the splitting facets, and the selection of the facet where to glue another $d$-cell; the second one deals with the convexity test of the candidate (chain $+$ cocell) pair.
+
+The local convexity test will extract, using the (co)boundary matrix of the current chain, the coboundary of the boundary of the candidate facet, and, selected the matrix of hyperplanes associated to it, will compute the centroid of the facet and the vector of signs exposed by the point transformed by right product with this matrix. The local test of convexity is satisfied if and only if all new vertices expose the same signs (or zero), when transformed by this matrix. In other words, the test is satisfied  if all new vertices remain internal (or non external) to the cone generated by such set of boundary hyperplanes.
+
+Every time that a new cell has been selected to join the current chain, the cell is also signed as already used, and hence as no more available for other choices. Of course, the algorithm terminates when all the input  $d$-cells have been selected and signed.
+
+
+\subsection{Implementation}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Simplification of the output polytopal complex
+@{@< Mapping from facets to hyperplanes @>
+@< Building the boundary complex of the current chain @>
+@< Sticking cells together @>
+@< Gathering and writing a polytopal complex @>
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Mapping from facets to hyperplanes}
+The function \texttt{facet2covectors} return the list of hyperplane convectors, with first term homogeneous, i.e.~the row vector $(c,a,b)$ for the line equation $ax+by+c=0$, or the row vector $(d,a,b,c)$ for the plane equation $ax+by+cz+d=0$.
+%-------------------------------------------------------------------------------
+@D Mapping from facets to hyperplanes
+@{""" Mapping from hyperplanes to lists of facets """
+def facet2covectors(W,FW):
+	return [COVECTOR([W[v] for v in facet]) for facet in FW]
+
+def boundaries(boundary1,boundary2):
+	return set(CAT(boundary1.values() + boundary2.values()))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Building the complex of the current chain}
+The function \texttt{chain2complex} returns the boundary complex of the current \texttt{chain}, minus the facet in \texttt{constraints}, where non $d$-cell may be attached to the current \texttt{chain}.
+It is computed via multiplication between the matrix of boundary operator and the coordinate representation \texttt{chainCoords} of \texttt{chain}. The \texttt{constraint} set is finally subtracted to the result.  
+
+%-------------------------------------------------------------------------------
+@D Building the boundary complex of the current chain
+@{""" Building the boundary complex of the current chain """
+def chain2complex(W,CW,FW,chain,coBoundaryMat,boundaryMat,constraints):
+	chainCoords = csc_matrix((len(CW), 1))
+	for cell in chain: chainCoords[cell] = 1
+	out = boundaryCells = set((boundaryMat * chainCoords
+							).tocoo().row).difference(constraints)
+	return out
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Sticking cells together}
+A single cell is possibly attached to the boundary envelope of the current \texttt{chain}. In case of success
+the function \texttt{protrudeChain} returns \texttt{True}; otherwise returns \texttt{False}. 
+%-------------------------------------------------------------------------------
+@D Sticking cells together
+@{""" Sticking cells together """
+def testAttachment(usedCells,facet,chain, 
+			W,FW,coBoundaryMat,envelope,covectors):
+	pass
+
+def protrudeChain (W,CW,FW,chain,coBoundaryMat,boundaryMat,
+						envelope,covectors,usedCells):
+	for facet in envelope:
+		done,usedCells = testAttachment(usedCells,facet,chain, 
+			W,FW,coBoundaryMat,envelope,covectors)
+		if done: 
+			usedCells[facet] = True
+			verts = list(set([FW[cell] for cell in envelope+[facet]]))
+			break
+	return done,verts
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Gathering and writing a polytopal complex}
+The task of the \texttt{gatherPolytopes} function, given below, is to return the LAR \texttt{(X,CX)} of the SCDC \texttt{(W,CW)} generated by the previous phases of the Boolean algorithm, after reducing its representation to a much smaller size, (a) by gathering subsets of cells into single bigger polytopal cells within the characteristic matrix \texttt{CX}, and (b) by assembling their boundary vertices into the (reduced) vertex set \texttt{X}. Of course, while reducing the number of polytopal cells, the procedure should not change the Boolean structure of the input complex, i.e. the support spaces $|C_A|, |C_B|$ of proper chains $C_A$ and $C_B$ and of their Boolean combinations.
+
+%-------------------------------------------------------------------------------
+@D Gathering and writing a polytopal complex
+@{""" Gathering and writing a polytopal complex """
+def gatherPolytopes(W,CW,FW,coBoundaryMat,boundaryMat,covectors,
+						bounds1,bounds2):
+	usedCells = [False for cell in CW]
+	covectors = facet2covectors(W,FW)
+	constraints = boundaries(bounds1,bounds2)
+	Xdict,index = dict(),0
+	while not all(usedCells):
+		for cell in CW:
+			if not usedCells[cell]:
+				chain = [cell]
+				usedCells[cell] = True
+				done,verts = protrudeChain (W,CW,FW,chain,coBoundaryMat,boundaryMat,
+						envelope,covectors,usedCells)
+				if done:
+					for v in verts:
+						Xdict[vcode(W[v])] = index
+						index += 1
+					CX += [chain]
+		X = AA(eval)(TRANS(sorted(Xdict.values(),Xdict.keys()))[1])
+	return X,CX
+@}
+%-------------------------------------------------------------------------------
 
 
 %-------------------------------------------------------------------------------
@@ -707,6 +858,10 @@ DEBUG = False
 @< Computation of embedded boundary cells @>
 @< Coboundary operator on the convex decomposition of common space @>
 @< Computation of boundary operator of a convex LAR model @>
+@< Writing labelling seeds on SCDC @>
+@< Recursive diffusion of labels on SCDC @>
+@< Mapping from facets to hyperplanes @>
+@< Simplification of the output polytopal complex @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -731,34 +886,85 @@ submodel = SKEL_1(STRUCT(MKPOLS((V,CV1+CV2))))
 VV = AA(LIST)(range(len(V)))
 if DEBUG: VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,_,CV1+CV2],submodel,3)]))
 
-V,CV,vertDict,n1,n12,n2,BC = makeCDC(arg1,arg2)		#<<<<<<<<<<<<<<<<
+V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)		#<<<<<<<<<<<<<<<<
 
-W,CW,VC,BCellCovering,cellCuts,BCfrags = makeSCDC(V,CV,BC)
-
+W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
 assert len(VC) == len(V) 
 assert len(BCellCovering) == len(BC)
 
 submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC)))) ])
 dim = len(V[0])
-VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,BC,CV],submodel,3)]))
-VIEW(EXPLODE(2,2,2)(MKPOLS((W,CW))))
-"""
-for k in range(1,len(CW)+1):
-	VIEW(STRUCT([ STRUCT(MKPOLS((W,CW[:k]))), submodel,larModelNumbering(V,[VV,BC,CV],submodel,3) ]))
-"""
+if DEBUG: VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,BC,CV],submodel,3)]))
+if DEBUG: VIEW(EXPLODE(2,2,2)(MKPOLS((W,CW))))
+
+
+if DEBUG: VIEW(STRUCT([ COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((W,CAT(boundary1.values()))))), 
+				COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((W,CAT(boundary2.values()))))) ]))
 
 
 WW = AA(LIST)(range(len(W)))
 FW = larConvexFacets (W,CW)
-#submodel = SKEL_1(STRUCT(MKPOLS((W,CW))))
-#VIEW(larModelNumbering(W,[WW,FW,CW],submodel,3))
+_,EW = larFacets((W,FW), dim=2)
 
-VIEW(EXPLODE(1.5,1.5,1)(MKPOLS((W,FW))))
+FWdict = dict()
+for k,facet in enumerate (FW): FWdict[str(facet)] = k
+for key,value in boundary1.items():
+	value = [FWdict[str(facet)] for facet in value]
+	boundary1[key] = value
+for key,value in boundary2.items():
+	value = [FWdict[str(facet)] for facet in value]
+	boundary2[key] = value
+
+glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
+submodel = glass(STRUCT(MKPOLS((W,BCW))))
+if DEBUG: VIEW(STRUCT([ submodel, larModelNumbering(W,[WW,FW,CW],submodel,1.5) ]))
+
+if dim == 3: 
+	_,EW = larFacets((W,FW), dim=2)
+	bases = [WW,EW,FW,CW]
+elif dim == 2: bases = [WW,FW,CW]
+else: print "\nerror: not implemented\n"
+
+coBoundaryMat = signedCellularBoundary(W,bases).T
+boundaryMat = coBoundaryMat.T
+
+CWbits = [[-1,-1] for k in range(len(CW))]
+CWbits = cellTagging(boundary1,boundaryMat,CW,FW,W,BCW,CWbits,0)
+CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
+
+if DEBUG: VIEW(STRUCT(MKPOLS((W,BCW))))
 
 
+"""
+for k in range(1,len(CW)+1):
+	VIEW(STRUCT([ STRUCT(MKPOLS((W,CW[:k]))), submodel,larModelNumbering(W,[BCW],submodel,3) ]))
+"""
+
+for cell in range(len(CW)):
+	if CWbits[cell][0] == 1:
+		CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,1)		
+	if CWbits[cell][0] == 0:
+		CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,0)
+	if CWbits[cell][1] == 1:
+		CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,1)
+	if CWbits[cell][1] == 0:
+		CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
+
+chain1,chain2 = TRANS(CWbits)
+#VIEW(STRUCT([ submodel, STRUCT(MKPOLS((W,[cell for cell,c in zip(CW,chain1) if c==0] ))) ]) )
+#VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((W,[cell for cell,c in zip(CW,chain2) if c==1] ))))
+
+#VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1*c2==1] ))))
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2==1] ))))
+#VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2>=1] ))))
+
+submodel = STRUCT(MKPOLS((W,FW)))
+VIEW(STRUCT([ submodel,larModelNumbering(W,[FW],submodel,3) ]))
 @}
 %-------------------------------------------------------------------------------
 
+VIEW(STRUCT([ submodel, STRUCT(MKPOLS((W, [CW[2]] ))) ]))
+VIEW(STRUCT([ larModelNumbering(W,[WW[:6]],submodel,3),  STRUCT(MKPOLS((W, [CW[2]] ))) ]))
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test1.py
@@ -1017,7 +1223,7 @@ A small set of utility functions is used to transform a \emph{point} representat
 @D Symbolic utility to represent points as strings
 @{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 5.
+PRECISION = 4.
 
 def verySmall(number): return abs(number) < 10**-(PRECISION)
 
