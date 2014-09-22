@@ -366,50 +366,97 @@ def facet2covectors(W,FW):
 def boundaries(boundary1,boundary2):
    return set(CAT(boundary1.values() + boundary2.values()))
 
+from scipy.sparse import csc_matrix
 """ Building the boundary complex of the current chain """
-def chain2complex(W,CW,FW,chain,coBoundaryMat,boundaryMat,constraints):
+def chain2complex(W,CW,chain,boundaryMat,constraints):
    chainCoords = csc_matrix((len(CW), 1))
    for cell in chain: chainCoords[cell] = 1
-   out = boundaryCells = set((boundaryMat * chainCoords
-                     ).tocoo().row).difference(constraints)
-   return out
+   boundaryCells = set((boundaryMat * chainCoords).tocoo().row)
+   envelope = boundaryCells.difference(constraints)
+   return envelope,boundaryCells
 
 """ Sticking cells together """
-def testAttachment(usedCells,facet,chain, 
-         W,FW,coBoundaryMat,envelope,covectors):
-   pass
+def pairing(v,w):
+   value = PROD([v,w])
+   if -0.01 < value < 0.01: return 0
+   else: return SIGN(value)
 
-def protrudeChain (W,CW,FW,chain,coBoundaryMat,boundaryMat,
-                  envelope,covectors,usedCells):
-   for facet in envelope:
-      done,usedCells = testAttachment(usedCells,facet,chain, 
-         W,FW,coBoundaryMat,envelope,covectors)
-      if done: 
-         usedCells[facet] = True
-         verts = list(set([FW[cell] for cell in envelope+[facet]]))
-         break
-   return done,verts
+def convexTest(theSigns,vertex,theCone):
+   signs = [ pairing( [1]+vertex,covector ) for covector in theCone]
+   return all([theSign*sign >= 0 for (theSign,sign) in zip(theSigns,signs)])
+   
+def testAttachment(cell,usedCells,theFacet,chain,
+               W,CW,FW,boundaryMat,boundaryCells,covectors):
+   theFacetVerts = set(FW[theFacet])
+   flag = False
+   facetRing = [facet for facet in boundaryCells if facet!=theFacet and \
+             len(theFacetVerts.intersection(FW[facet])) >= len(W[0])-1]
+   theCone = [covectors[f] for f in facetRing]
+   theFacetPivot = CCOMB([W[v] for v in FW[theFacet]])
+   theSigns = [ pairing( [1]+theFacetPivot, covector ) for covector in theCone ]
+   if not any([sign==0 for sign in theSigns]):
+      testingSet = set(CW[cell]).difference(theFacetVerts)
+      print "testAttachment> testingSet =",testingSet
+      print "testAttachment> theSigns =",theSigns
+      flag = all([ convexTest(theSigns,W[vertex],theCone) for vertex in testingSet])
+   return flag
+
+def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
+   verts = []
+   while True: 
+      changed = False
+      envelope,boundaryCells = chain2complex(W,CW,chain,boundaryMat,constraints)
+      print "protrudeChain> envelope =",envelope
+      for facet in envelope:
+         print "protrudeChain> facet =",facet
+         success = False
+         chainCoords = csr_matrix((1,len(FW)))
+         chainCoords[0,facet] = 1
+         cocells = list((chainCoords * boundaryMat).tocoo().col)
+         print "\ncocells,chain =",cocells,chain
+         
+         if len(cocells)==2:
+            if cocells[0] in chain: cell = cocells[1]
+            elif cocells[1] in chain: cell = cocells[0]
+            print "protrudeChain> cell,facet =",cell,facet
+            if not usedCells[cell]:
+               success = testAttachment(cell,usedCells,facet,chain, \
+                                    W,CW,FW,boundaryMat,boundaryCells,covectors)
+            if success: 
+               print "protrudeChain> success =",success
+               changed = True
+               usedCells[cell] = True
+               chain += [cell]
+               print "protrudeChain> chain =",chain
+      if not changed: break      
+         
+   chainCoords = csc_matrix((len(CW),1))
+   for cell in chain: 
+      chainCoords[cell,0] = 1
+      usedCells[cell] = True
+   boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)
+   print "protrudeChain> boundaryFacets =",boundaryFacets
+   verts = [FW[facet] for facet in boundaryFacets]
+   verts = sorted(list(set(CAT(verts))))
+   print "protrudeChain> verts =",verts
+   print "protrudeChain> usedCells =",[k for k,val in enumerate(usedCells) if val==True]
+   return verts,usedCells
 
 """ Gathering and writing a polytopal complex """
-def gatherPolytopes(W,CW,FW,coBoundaryMat,boundaryMat,covectors,
-                  bounds1,bounds2):
+def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
    usedCells = [False for cell in CW]
    covectors = facet2covectors(W,FW)
    constraints = boundaries(bounds1,bounds2)
-   Xdict,index = dict(),0
+   Xdict,index,CX,defaultValue = dict(),0,[],-1
    while not all(usedCells):
-      for cell in CW:
-         if not usedCells[cell]:
-            chain = [cell]
-            usedCells[cell] = True
-            done,verts = protrudeChain (W,CW,FW,chain,coBoundaryMat,boundaryMat,
-                  envelope,covectors,usedCells)
-            if done:
-               for v in verts:
-                  Xdict[vcode(W[v])] = index
-                  index += 1
-               CX += [chain]
-      X = AA(eval)(TRANS(sorted(Xdict.values(),Xdict.keys()))[1])
-   return X,CX
+      for k,cell in enumerate(CW):
+         if not usedCells[k]:
+            chain = [k]
+            print "gatherPolytopes> chain =",chain
+            usedCells[k] = True
+            verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints)
+            CX += [ verts ]
+            print "\ncell,chain,CX[-1] =",cell,chain,CX[-1]
+   return W,CX
 
 

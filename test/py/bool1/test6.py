@@ -76,7 +76,6 @@ CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
 
 if DEBUG: VIEW(STRUCT(MKPOLS((W,BCW))))
 
-
 """
 for k in range(1,len(CW)+1):
    VIEW(STRUCT([ STRUCT(MKPOLS((W,CW[:k]))), submodel,larModelNumbering(W,[BCW],submodel,3) ]))
@@ -101,5 +100,11 @@ VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) 
 #VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2>=1] ))))
 
 submodel = STRUCT(MKPOLS((W,FW)))
-VIEW(STRUCT([ submodel,larModelNumbering(W,[FW],submodel,3) ]))
+VIEW(STRUCT([ submodel,larModelNumbering(W,[WW,FW,CW],submodel,2) ]))
+
+W,CX = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2)
+print "\n CX =",CX
+FX = larConvexFacets (W,CX)
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)( MKPOLS((W,CX)) )))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)( MKPOLS((W,FX)) )))                      
 
