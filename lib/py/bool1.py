@@ -118,8 +118,10 @@ def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
    boundaryFacet = (transformMat * (mat(boundaryFacet).T)).T.tolist()
    
    # projection in E^{d-1} space and Boolean test
-   newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
-   boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
+   newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), 
+                     [range(1,len(newFacet)+1)], None ])
+   boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), 
+                     [range(1,len(boundaryFacet)+1)], None ])
    verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
    
    if verts == []: return False
@@ -178,10 +180,12 @@ def boundaryCover(V,CV,BC,VC):
    for k,facet in enumerate(BC):
       covector = COVECTOR([V[v] for v in facet])
       seedsOnFacet = VC[facet[0]]
-      cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) for cell in seedsOnFacet ]
+      cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) 
+                     for cell in seedsOnFacet ]
       cellsToSplit = set(CAT(cellsToSplit))
       while True:
-         newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) for cell in cellsToSplit ]
+         newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) 
+                     for cell in cellsToSplit ]
          if newCells != []: newCells = CAT(newCells)
          covering = cellsToSplit.union(newCells)
          if covering == cellsToSplit: 
@@ -207,6 +211,22 @@ def fragment(cell,cellCuts,V,CV,BC):
             cellFragments += [above]
       facets = facetsOnCuts(cellFragments,cellCuts,V,BC)
    return cellFragments
+
+""" Boolean argument boundaries embedding in SCDC """
+def boundaryEmbedding(BCfrags,nbc1,dim):
+   boundary1,boundary2 = defaultdict(list),defaultdict(list)                   
+   for h,frags in BCfrags:
+      if h < nbc1: boundary1[h] += [frags]
+      else: boundary2[h] += [frags] 
+   boundarylist1,boundarylist2 = [],[]
+   for h,facets in boundary1.items():
+      boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) 
+                     for f in facets if len(set(f)) >= dim])) )]
+   for h,facets in boundary2.items():
+      boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) 
+                     for f in facets if len(set(f)) >= dim])) )]
+   boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
+   return boundary1,boundary2
 
 """ SCDC splitting with every boundary facet """
 def makeSCDC(V,CV,BC,nbc1,nbc2):
@@ -252,23 +272,10 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
                       for h in cellCuts[k]]  
    
    BCW = [ [ Wdict[vcode(V[v])] for v in cell ] for cell in BC]
-         
-         
    W = sorted(zip( Wdict.values(), Wdict.keys() ))
    W = AA(eval)(TRANS(W)[1])
    dim = len(W[0])
-   
-   boundary1,boundary2 = defaultdict(list),defaultdict(list)                   
-   for h,frags in BCfrags:
-      if h < nbc1: boundary1[h] += [frags]
-      else: boundary2[h] += [frags] 
-   boundarylist1,boundarylist2 = [],[]
-   for h,facets in boundary1.items():
-      boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
-   for h,facets in boundary2.items():
-      boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
-   boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
-
+   boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
    return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
 
 """ Characteristic matrix transposition """
@@ -376,6 +383,7 @@ def chain2complex(W,CW,chain,boundaryMat,constraints):
    return envelope,boundaryCells
 
 """ Sticking cells together """
+""" Testing the convexity of a single added vertex """
 def pairing(v,w):
    value = PROD([v,w])
    if -0.01 < value < 0.01: return 0
@@ -384,7 +392,8 @@ def pairing(v,w):
 def convexTest(theSigns,vertex,theCone):
    signs = [ pairing( [1]+vertex,covector ) for covector in theCone]
    return all([theSign*sign >= 0 for (theSign,sign) in zip(theSigns,signs)])
-   
+
+""" Testing the convexity when attaching a cell to a chain """
 def testAttachment(cell,usedCells,theFacet,chain,
                W,CW,FW,boundaryMat,boundaryCells,covectors):
    theFacetVerts = set(FW[theFacet])
@@ -396,38 +405,31 @@ def testAttachment(cell,usedCells,theFacet,chain,
    theSigns = [ pairing( [1]+theFacetPivot, covector ) for covector in theCone ]
    if not any([sign==0 for sign in theSigns]):
       testingSet = set(CW[cell]).difference(theFacetVerts)
-      print "testAttachment> testingSet =",testingSet
-      print "testAttachment> theSigns =",theSigns
       flag = all([ convexTest(theSigns,W[vertex],theCone) for vertex in testingSet])
    return flag
 
+""" Elongate a chain while supports a convex set """
 def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
    verts = []
    while True: 
       changed = False
       envelope,boundaryCells = chain2complex(W,CW,chain,boundaryMat,constraints)
-      print "protrudeChain> envelope =",envelope
       for facet in envelope:
-         print "protrudeChain> facet =",facet
          success = False
          chainCoords = csr_matrix((1,len(FW)))
          chainCoords[0,facet] = 1
          cocells = list((chainCoords * boundaryMat).tocoo().col)
-         print "\ncocells,chain =",cocells,chain
          
          if len(cocells)==2:
             if cocells[0] in chain: cell = cocells[1]
             elif cocells[1] in chain: cell = cocells[0]
-            print "protrudeChain> cell,facet =",cell,facet
             if not usedCells[cell]:
                success = testAttachment(cell,usedCells,facet,chain, \
-                                    W,CW,FW,boundaryMat,boundaryCells,covectors)
+                        W,CW,FW,boundaryMat,boundaryCells,covectors)
             if success: 
-               print "protrudeChain> success =",success
                changed = True
                usedCells[cell] = True
                chain += [cell]
-               print "protrudeChain> chain =",chain
       if not changed: break      
          
    chainCoords = csc_matrix((len(CW),1))
@@ -435,12 +437,10 @@ def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
       chainCoords[cell,0] = 1
       usedCells[cell] = True
    boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)
-   print "protrudeChain> boundaryFacets =",boundaryFacets
    verts = [FW[facet] for facet in boundaryFacets]
    verts = sorted(list(set(CAT(verts))))
-   print "protrudeChain> verts =",verts
-   print "protrudeChain> usedCells =",[k for k,val in enumerate(usedCells) if val==True]
    return verts,usedCells
+
 
 """ Gathering and writing a polytopal complex """
 def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
@@ -452,11 +452,10 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
       for k,cell in enumerate(CW):
          if not usedCells[k]:
             chain = [k]
-            print "gatherPolytopes> chain =",chain
             usedCells[k] = True
-            verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints)
+            verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,
+                           covectors,usedCells,constraints)
             CX += [ verts ]
-            print "\ncell,chain,CX[-1] =",cell,chain,CX[-1]
    return W,CX
 
 

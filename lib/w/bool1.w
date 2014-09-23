@@ -408,7 +408,7 @@ def fragment(cell,cellCuts,V,CV,BC):
 		plane = COVECTOR([V[v] for v in facet])
 		for k,fragment in enumerate(cellFragments):
 		
-    		#if not tangentTest(plane,facet,fragment,V):
+			#if not tangentTest(plane,facet,fragment,V):
 			[below,equal,above] = SPLITCELL(plane,fragment,tolerance=1e-4,ntry=4)
 			if below != above:
 				cellFragments[k] = below
@@ -420,7 +420,7 @@ def fragment(cell,cellCuts,V,CV,BC):
 
 \paragraph{SCDC splitting with every boundary facet}
 The function \texttt{makeSCDC} is used  to compute the LAR model \texttt{(W,CW)} of the SCDC.
-It takes as input the LAR model \texttt{(V,CV)} of the CDC, and the LAR model \texttt{(V,BC)} of the input Boolean Complex, and returns also the vertex-cell relation \texttt{VC}, i.e.~the transposed of \texttt{CV}.
+It takes as input the LAR model \texttt{(V,CV)} of the CDC, and the LAR model \texttt{(V,BC)} of the input Boolean Complex, and returns both a new LAR model \texttt{(W,CW)} and the vertex-cell relation \texttt{VC}, i.e.~the transposed of \texttt{CV}.
 
 For every $\texttt{k} \in \texttt{BC}$, a list \texttt{cellsToSplit}
 
@@ -470,26 +470,34 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 							 for h in cellCuts[k]]	
 	
 	BCW = [ [ Wdict[vcode(V[v])] for v in cell ] for cell in BC]
-			
-			
 	W = sorted(zip( Wdict.values(), Wdict.keys() ))
 	W = AA(eval)(TRANS(W)[1])
 	dim = len(W[0])
-	
+	boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
+	return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Boolean argument boundaries embedding in SCDC
+@{""" Boolean argument boundaries embedding in SCDC """
+def boundaryEmbedding(BCfrags,nbc1,dim):
 	boundary1,boundary2 = defaultdict(list),defaultdict(list)						 
 	for h,frags in BCfrags:
 		if h < nbc1: boundary1[h] += [frags]
 		else: boundary2[h] += [frags]	
 	boundarylist1,boundarylist2 = [],[]
 	for h,facets in boundary1.items():
-		boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
+		boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) 
+							for f in facets if len(set(f)) >= dim])) )]
 	for h,facets in boundary2.items():
-		boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) for f in facets if len(set(f)) >= dim])) )]
+		boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) 
+							for f in facets if len(set(f)) >= dim])) )]
 	boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
-
-	return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
+	return boundary1,boundary2
 @}
 %-------------------------------------------------------------------------------
+
 
 \paragraph{Computation of boundary facets covering with CDC cells}
 
@@ -502,14 +510,16 @@ def boundaryCover(V,CV,BC,VC):
 	for k,facet in enumerate(BC):
 		covector = COVECTOR([V[v] for v in facet])
 		seedsOnFacet = VC[facet[0]]
-		cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) for cell in seedsOnFacet ]
+		cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) 
+							for cell in seedsOnFacet ]
 		cellsToSplit = set(CAT(cellsToSplit))
 		while True:
-			newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) for cell in cellsToSplit ]
+			newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) 
+							for cell in cellsToSplit ]
 			if newCells != []: newCells = CAT(newCells)
 			covering = cellsToSplit.union(newCells)
 			if covering == cellsToSplit: 
-    			break
+				break
 			cellsToSplit = covering
 		boundaryCellCovering += [list(covering)]
 	return boundaryCellCovering
@@ -540,8 +550,10 @@ def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
 	boundaryFacet = (transformMat * (mat(boundaryFacet).T)).T.tolist()
 	
 	# projection in E^{d-1} space and Boolean test
-	newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
-	boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
+	newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), 
+							[range(1,len(newFacet)+1)], None ])
+	boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), 
+							[range(1,len(boundaryFacet)+1)], None ])
 	verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
 	
 	if verts == []: return False
@@ -731,7 +743,7 @@ In case of failure of the test, the facets of the current chain boundary are che
 Actually, during the stage of boundary checking for finding a new cocell to glue, only a subchain is checked, obtained by subtraction from the boundary of the cutting facets, where attachments are not possible, without
 violating the topology of Boolean results. 
 
-Two main algorithm components are needed here. The first one concerns the extraction of the current $d$-chain boundary, the subtraction from it of the splitting facets, and the selection of the facet where to glue another $d$-cell; the second one deals with the convexity test of the candidate (chain $+$ cocell) pair.
+Two main algorithm components are needed here. The first one concerns the extraction of the current $d$-chain boundary, the subtraction from it of the splitting facets, and the selection of the facet where to glue another $d$-cell; the second one deals with the convexity test of the candidate (chain $+$ boundary cocell) pair.
 
 The local convexity test will extract, using the (co)boundary matrix of the current chain, the coboundary of the boundary of the candidate facet, and, selected the matrix of hyperplanes associated to it, will compute the centroid of the facet and the vector of signs exposed by the point transformed by right product with this matrix. The local test of convexity is satisfied if and only if all new vertices expose the same signs (or zero), when transformed by this matrix. In other words, the test is satisfied  if all new vertices remain internal (or non external) to the cone generated by such set of boundary hyperplanes.
 
@@ -740,6 +752,10 @@ Every time that a new cell has been selected to join the current chain, the cell
 
 \subsection{Implementation}
 %-------------------------------------------------------------------------------
+A synthetic view of the simplification process is given by the script below.
+The first tool provides a mapping from $(d-1)$-facets of SCDC to their embedding hyperplanes, i.e. to their affine hulls of codimension 1. The second one compute the boundary $(d-1)$-complex of the SCDC $d$-chain currently transformed into a single convex cell. The algorithmic bulk of the simplification process is contained in the script entitled \texttt{Sticking cells together}. The last script provides the high-level interface to transform the generated SCDC into a strongly simplified polytopal complex.
+
+\paragraph{High-level description}
 
 %-------------------------------------------------------------------------------
 @D Simplification of the output polytopal complex
@@ -783,11 +799,21 @@ def chain2complex(W,CW,chain,boundaryMat,constraints):
 %-------------------------------------------------------------------------------
 
 \paragraph{Sticking cells together}
-A single cell is possibly attached to the boundary envelope of the current \texttt{chain}. In case of success
-the function \texttt{protrudeChain} returns \texttt{True}; otherwise returns \texttt{False}. 
 %-------------------------------------------------------------------------------
 @D Sticking cells together
 @{""" Sticking cells together """
+@< Testing the convexity of a single added vertex @>
+@< Testing the convexity when attaching a cell to a chain @>
+@< Elongate a chain while supports a convex set @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Testing the convexity of a single added vertex}
+A single cell is possibly attached to the boundary envelope of the current \texttt{chain}. In case of success
+the function \texttt{protrudeChain} returns \texttt{True}; otherwise returns \texttt{False}. 
+%-------------------------------------------------------------------------------
+@D Testing the convexity of a single added vertex
+@{""" Testing the convexity of a single added vertex """
 def pairing(v,w):
 	value = PROD([v,w])
 	if -0.01 < value < 0.01: return 0
@@ -796,7 +822,13 @@ def pairing(v,w):
 def convexTest(theSigns,vertex,theCone):
 	signs = [ pairing( [1]+vertex,covector ) for covector in theCone]
 	return all([theSign*sign >= 0 for (theSign,sign) in zip(theSigns,signs)])
-	
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Testing the convexity of current chain}
+%-------------------------------------------------------------------------------
+@D Testing the convexity when attaching a cell to a chain
+@{""" Testing the convexity when attaching a cell to a chain """
 def testAttachment(cell,usedCells,theFacet,chain,
 					W,CW,FW,boundaryMat,boundaryCells,covectors):
 	theFacetVerts = set(FW[theFacet])
@@ -807,51 +839,47 @@ def testAttachment(cell,usedCells,theFacet,chain,
 	theFacetPivot = CCOMB([W[v] for v in FW[theFacet]])
 	theSigns = [ pairing( [1]+theFacetPivot, covector ) for covector in theCone ]
 	if not any([sign==0 for sign in theSigns]):
-    	testingSet = set(CW[cell]).difference(theFacetVerts)
-    	print "testAttachment> testingSet =",testingSet
-    	print "testAttachment> theSigns =",theSigns
-    	flag = all([ convexTest(theSigns,W[vertex],theCone) for vertex in testingSet])
+		testingSet = set(CW[cell]).difference(theFacetVerts)
+		flag = all([ convexTest(theSigns,W[vertex],theCone) for vertex in testingSet])
 	return flag
+@}
+%-------------------------------------------------------------------------------
 
+\paragraph{Chain elongation while is convex}
+
+%-------------------------------------------------------------------------------
+@D Elongate a chain while supports a convex set
+@{""" Elongate a chain while supports a convex set """
 def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
 	verts = []
 	while True:	
 		changed = False
-    	envelope,boundaryCells = chain2complex(W,CW,chain,boundaryMat,constraints)
-    	print "protrudeChain> envelope =",envelope
-    	for facet in envelope:
-    		print "protrudeChain> facet =",facet
-    		success = False
-    		chainCoords = csr_matrix((1,len(FW)))
-    		chainCoords[0,facet] = 1
-    		cocells = list((chainCoords * boundaryMat).tocoo().col)
-    		print "\ncocells,chain =",cocells,chain
-    		
-    		if len(cocells)==2:
-    			if cocells[0] in chain: cell = cocells[1]
-    			elif cocells[1] in chain: cell = cocells[0]
-				print "protrudeChain> cell,facet =",cell,facet
+		envelope,boundaryCells = chain2complex(W,CW,chain,boundaryMat,constraints)
+		for facet in envelope:
+			success = False
+			chainCoords = csr_matrix((1,len(FW)))
+			chainCoords[0,facet] = 1
+			cocells = list((chainCoords * boundaryMat).tocoo().col)
+			
+			if len(cocells)==2:
+				if cocells[0] in chain: cell = cocells[1]
+				elif cocells[1] in chain: cell = cocells[0]
 				if not usedCells[cell]:
-        			success = testAttachment(cell,usedCells,facet,chain, \
-        										W,CW,FW,boundaryMat,boundaryCells,covectors)
-        		if success: 
-					print "protrudeChain> success =",success
+					success = testAttachment(cell,usedCells,facet,chain, \
+								W,CW,FW,boundaryMat,boundaryCells,covectors)
+				if success: 
 					changed = True
-        			usedCells[cell] = True
-    				chain += [cell]
-					print "protrudeChain> chain =",chain
-    	if not changed: break		
+					usedCells[cell] = True
+					chain += [cell]
+		if not changed: break		
 			
 	chainCoords = csc_matrix((len(CW),1))
 	for cell in chain: 
 		chainCoords[cell,0] = 1
 		usedCells[cell] = True
 	boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)
-	print "protrudeChain> boundaryFacets =",boundaryFacets
 	verts = [FW[facet] for facet in boundaryFacets]
 	verts = sorted(list(set(CAT(verts))))
-	print "protrudeChain> verts =",verts
-	print "protrudeChain> usedCells =",[k for k,val in enumerate(usedCells) if val==True]
 	return verts,usedCells
 @}
 %-------------------------------------------------------------------------------
@@ -871,11 +899,10 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
 		for k,cell in enumerate(CW):
 			if not usedCells[k]:
 				chain = [k]
-				print "gatherPolytopes> chain =",chain
 				usedCells[k] = True
-				verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints)
+				verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,
+									covectors,usedCells,constraints)
 				CX += [ verts ]
-				print "\ncell,chain,CX[-1] =",cell,chain,CX[-1]
 	return W,CX
 @}
 %-------------------------------------------------------------------------------
@@ -900,6 +927,7 @@ DEBUG = False
 @< Computing the adjacent cells of a given cell @>
 @< Computation of boundary facets covering with CDC cells @>
 @< CDC cell splitting with one or more cutting facets @>
+@< Boolean argument boundaries embedding in SCDC @>
 @< SCDC splitting with every boundary facet @>
 @< Characteristic matrix transposition @>
 @< Computation of embedded boundary cells @>
