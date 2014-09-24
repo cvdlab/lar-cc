@@ -4,15 +4,15 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
-n = 6
-V1 = [[5*cos(angle*2*PI/n), 5*sin(angle*2*PI/n)] for angle in range(n)]
-FV1 = [range(n)]
-EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
+V1 = [[0,0],[15,0],[15,14],[0,14]]
+FV1 = [range(4)]
+EV1 = [[0,1],[1,2],[2,3],[0,3]]
 VV1 = AA(LIST)(range(len(V1)))
 
-V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]
-FV2 = [range(n)]
-EV2 = EV1
+V2 = [[1,1],[7,1],[7,6],[1,6], [8,1],[14,1],[14,7],[8,7], [1,7],[7,7],[7,13],
+      [1,13], [8,8],[14,8],[14,13],[8,13]]
+FV2 = [range(4),range(4,8),range(8,12),range(12,16)]
+EV2 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11], [12,13],[13,14],[14,15],[12,15]]
 VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)

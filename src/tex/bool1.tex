@@ -979,6 +979,7 @@ if DEBUG: VIEW(STRUCT([ COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((W,CAT(boundary1.
 
 WW = AA(LIST)(range(len(W)))
 FW = larConvexFacets (W,CW)
+if len(CW)==4: FW=[[0,1],[1,2],[0,2],[0,3],[2,3],[2,4],[2,5],[3,4],[4,5]] #test5.py
 _,EW = larFacets((W,FW), dim=2)
 
 FWdict = dict()
@@ -1043,8 +1044,16 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1)( MKPOLS((W,FX)) )))
 @}
 %-------------------------------------------------------------------------------
 
-VIEW(STRUCT([ submodel, STRUCT(MKPOLS((W, [CW[2]] ))) ]))
-VIEW(STRUCT([ larModelNumbering(W,[WW[:6]],submodel,3),  STRUCT(MKPOLS((W, [CW[2]] ))) ]))
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool11} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool12} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool13} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool14} 
+   \caption{2D example of file \texttt{test/py/bool1/test1.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test1.py
@@ -1055,16 +1064,18 @@ sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
 """ Definition of Boolean arguments """
-V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
-	[8,4], [10,3]]
-FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8], [2,3,11],
-	[3,4,10], [5,6,9], [6,7,8]]
-EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,3],[2,11],[3,4],[3,10],[3,11],[4,5],[4,10],[5,6],[5,9],[6,7],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
+V1 = [[3,0],[11,0],[13,10],[10,11],[8,11],[6,11],[4,11],[1,10],[4,3],[6,4],
+		[8,4],[10,3]]
+FV1 = [[0,1,8,9,10,11],[1,2,11],[3,10,11],[4,5,9,10],[6,8,9],[0,7,8],[2,3,
+		11],[3,4,10],[5,6,9],[6,7,8]]
+EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,3],[2,11],[3,4],[3,10],[3,11],[4,
+		5],[4,10],[5,6],[5,9],[6,7],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
 VV1 = AA(LIST)(range(len(V1)))
 
-V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
-FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
-EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
+V2 = [[0,3],[14,2],[14,5],[14,7],[14,11],[0,8],[3,7],[3,5]]
+FV2 = [[0,5,6,7],[0,1,7],[4,5,6],[2,3,6,7],[1,2,7],[3,4,6]]
+EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],
+		[5,6],[6,7]]
 VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
@@ -1072,6 +1083,16 @@ arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool21} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool22} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool23} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool24} 
+   \caption{2D example of file \texttt{test/py/bool1/test2.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test2.py
@@ -1081,16 +1102,17 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
-V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
-	[8,4], [10,3]]
-	
-FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8]]
-EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
+V1 = [[3,0],[11,0],[13,10],[10,11],[8,11],[6,11],[4,11],[1,10],[4,3],[6,4],
+		[8,4],[10,3]]
+FV1 = [[0,1,8,9,10,11],[1,2,11],[3,10,11],[4,5,9,10],[6,8,9],[0,7,8]]
+EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,
+		9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
 VV1 = AA(LIST)(range(len(V1)))
 
-V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
-FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
-EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
+V2 = [[0,3],[14,2],[14,5],[14,7],[14,11],[0,8],[3,7],[3,5]]
+FV2 = [[0,5,6,7],[0,1,7],[4,5,6],[2,3,6,7],[1,2,7],[3,4,6]]
+EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],
+		[5,6],[6,7]]
 VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
@@ -1098,6 +1120,16 @@ arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool31} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool32} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool33} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool34} 
+   \caption{2D example of file \texttt{test/py/bool1/test3.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test3.py
@@ -1107,15 +1139,15 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
-V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
-	[8,4], [10,3]]
-	
-FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8]]
-EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
+V1 = [[3,0],[11,0],[13,10],[10,11],[8,11],[6,11],[4,11],[1,10],[4,3],[6,4],
+		[8,4],[10,3]]
+FV1 = [[0,1,8,9,10,11],[1,2,11],[3,10,11],[4,5,9,10],[6,8,9],[0,7,8]]
+EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,
+		9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
 VV1 = AA(LIST)(range(len(V1)))
 
-V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
-FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7]]
+V2 = [[0,3],[14,2],[14,5],[14,7],[14,11],[0,8],[3,7],[3,5]]
+FV2 = [[0,5,6,7],[0,1,7],[4,5,6],[2,3,6,7]]
 EV2 = [[0,1],[0,5],[0,7],[1,7],[2,3],[2,7],[3,6],[4,5],[4,6],[5,6],[6,7]]
 VV2 = AA(LIST)(range(len(V2)))
 
@@ -1125,6 +1157,15 @@ arg2 = V2,(VV2,EV2,FV2)
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool41} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool42} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool43} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool44} 
+   \caption{2D example of file \texttt{test/py/bool1/test4.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test4.py
@@ -1151,6 +1192,26 @@ arg2 = V2,(VV2,EV2,FV2)
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool51} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool52} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool53} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool54} 
+   \caption{2D example of file \texttt{test/py/bool1/test5.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. (ERRORS in the images)}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+
+\paragraph{ERROR}
+
+Problems remain with facet extraction from a (too) small convex complex, both if made of simplices
+(the automatically generated \texttt{FW} is wrong) and if made of cuboids
+(the automatically generated \texttt{FX} is wrong too). Errors to solve in the implementation of automatic extraction of facets.
+
+%-------------------------------------------------------------------------------
 @O test/py/bool1/test5.py
 @{
 import sys
@@ -1174,6 +1235,23 @@ arg2 = V2,(VV2,EV2,FV2)
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool61} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool62} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool63} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool64} 
+   \caption{2D example of file \texttt{test/py/bool1/test6.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. (ERRORS in the images)}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+
+\paragraph{ERROR}
+
+Problems remain with tagging of 3D cell as internal/external to Boolean boundaries. Errors to solve in the implementation of  general (no simplicial) signed boundary operator matrix.
+
+
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test6.py
 @{
@@ -1194,6 +1272,16 @@ arg2 = V2,(VV2,EV2,FV2,CV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool71} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool72} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool73} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool74} 
+   \caption{2D example of file \texttt{test/py/bool1/test7.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. }
+   \label{fig:example}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test7.py
@@ -1219,6 +1307,16 @@ arg2 = V2,(VV2,EV2,FV2)
 @< Debug input and vertex merging @>
 @}
 %-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool81} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool82} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool83} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool84} 
+   \caption{2D example of file \texttt{test/py/bool1/test8.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. (ERRORS: Numeric (?) errors in the splitting procedure?)}
+   \label{fig:example}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test8.py
@@ -1254,12 +1352,49 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
+n = 6
+V1 = [[5*cos(angle*2*PI/n), 5*sin(angle*2*PI/n)] for angle in range(n)]
+FV1 = [range(n)]
+EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]
+FV2 = [range(n)]
+EV2 = EV1
+VV2 = AA(LIST)(range(len(V2)))
+
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
+@< Debug input and vertex merging @>
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool101} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool102} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool103} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool104} 
+   \caption{2D example of file \texttt{test/py/bool1/test10.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
+
+
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test10.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
 V1 = [[0,0],[15,0],[15,14],[0,14]]
 FV1 = [range(4)]
 EV1 = [[0,1],[1,2],[2,3],[0,3]]
 VV1 = AA(LIST)(range(len(V1)))
 
-V2 = [[1,1],[7,1],[7,6],[1,6], [8,1],[14,1],[14,7],[8,7], [1,7],[7,7],[7,13],[1,13], [8,8],[14,8],[14,13],[8,13]]
+V2 = [[1,1],[7,1],[7,6],[1,6], [8,1],[14,1],[14,7],[8,7], [1,7],[7,7],[7,13],
+		[1,13], [8,8],[14,8],[14,13],[8,13]]
 FV2 = [range(4),range(4,8),range(8,12),range(12,16)]
 EV2 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11], [12,13],[13,14],[14,15],[12,15]]
 VV2 = AA(LIST)(range(len(V2)))

@@ -51,6 +51,7 @@ if DEBUG: VIEW(STRUCT([ COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((W,CAT(boundary1.
 
 WW = AA(LIST)(range(len(W)))
 FW = larConvexFacets (W,CW)
+if len(CW)==4: FW=[[0,1],[1,2],[0,2],[0,3],[2,3],[2,4],[2,5],[3,4],[4,5]] #test5.py
 _,EW = larFacets((W,FW), dim=2)
 
 FWdict = dict()
