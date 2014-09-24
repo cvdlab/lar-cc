@@ -937,6 +937,7 @@ DEBUG = False
 @< Recursive diffusion of labels on SCDC @>
 @< Mapping from facets to hyperplanes @>
 @< Simplification of the output polytopal complex @>
+@< Boolean Algorithm @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1016,8 +1017,8 @@ def larBool4(W):
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-@D Debug input and vertex merging
-@{
+@D Boolean Algorithm
+@{""" Boolean Algorithm """
 def makeFacetDicts(FW,boundary1,boundary2):
 	FWdict = dict()
 	for k,facet in enumerate (FW): FWdict[str(facet)] = k
@@ -1058,7 +1059,13 @@ def larBool(arg1,arg2):
 		else: print "Error: non implemented op"
 		return W,CW,chain,CX,FX
 	return larBool0
+@}
+%-------------------------------------------------------------------------------
+
 	
+%-------------------------------------------------------------------------------
+@D Debug via visualization
+@{""" Debug via visualization """
 boolean = larBool(arg1,arg2)	
 
 W,CW,chain,CX,FX = boolean("xor")
@@ -1111,7 +1118,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1148,7 +1156,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1184,7 +1193,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1218,7 +1228,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1262,7 +1273,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1300,7 +1312,8 @@ V2 = [SUM([v,[2.5,2.5,2.5]]) for v in V1]
 
 arg1 = V1,(VV1,EV1,FV1,CV1)
 arg2 = V2,(VV2,EV2,FV2,CV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1335,7 +1348,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1371,7 +1385,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1396,7 +1411,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1432,7 +1448,8 @@ VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
-@< Debug input and vertex merging @>
+
+@< Debug via visualization @>
 @}
 %-------------------------------------------------------------------------------
 
