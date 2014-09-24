@@ -940,6 +940,77 @@ DEBUG = False
 @}
 %-------------------------------------------------------------------------------
 
+
+%-------------------------------------------------------------------------------
+@D First Boolean step
+@{""" First Boolean step """
+def larBool1():
+	V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
+	VV = AA(LIST)(range(len(V)))
+	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
+	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
+	assert len(VC) == len(V) 
+	assert len(BCellCovering) == len(BC)
+	return W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW 
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Second Boolean step
+@{""" Second Boolean step """
+def larBool2(boundary1,boundary2):
+	dim = len(W[0])
+	WW = AA(LIST)(range(len(W)))
+	FW = larConvexFacets (W,CW)
+	if len(CW)==4: FW=[[0,1],[1,2],[0,2],[0,3],[2,3],[2,4],[2,5],
+						[3,4],[4,5]] #test5.py
+	_,EW = larFacets((W,FW), dim=2)
+	boundary1,boundary2,FWdict = makeFacetDicts(FW,boundary1,boundary2)
+	if dim == 3: 
+		_,EW = larFacets((W,FW), dim=2)
+		bases = [WW,EW,FW,CW]
+	elif dim == 2: bases = [WW,FW,CW]
+	else: print "\nerror: not implemented\n"
+	return W,CW,dim,bases,boundary1,boundary2,FW,BCW
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Third Boolean step
+@{""" Third Boolean step """
+def larBool3():
+	coBoundaryMat = signedCellularBoundary(W,bases).T
+	boundaryMat = coBoundaryMat.T
+	CWbits = [[-1,-1] for k in range(len(CW))]
+	CWbits = cellTagging(boundary1,boundaryMat,CW,FW,W,BCW,CWbits,0)
+	CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
+	for cell in range(len(CW)):
+		if CWbits[cell][0] == 1:
+			CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,1)		
+		if CWbits[cell][0] == 0:
+			CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,0)
+		if CWbits[cell][1] == 1:
+			CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,1)
+		if CWbits[cell][1] == 0:
+			CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
+	chain1,chain2 = TRANS(CWbits)
+	return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2	
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Fourth Boolean step
+@{""" Fourth Boolean step """
+def larBool4(W):
+	W,CX = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2)
+	FX = larConvexFacets (W,CX)		
+	return W,CX,FX
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
 %-------------------------------------------------------------------------------
 \section{Tests and examples}
 %-------------------------------------------------------------------------------
@@ -947,100 +1018,60 @@ DEBUG = False
 %-------------------------------------------------------------------------------
 @D Debug input and vertex merging
 @{
-V1,basis1 = arg1
-V2,basis2 = arg2
-cells1 = basis1[-1]
-cells2 = basis2[-1]
+def makeFacetDicts(FW,boundary1,boundary2):
+	FWdict = dict()
+	for k,facet in enumerate (FW): FWdict[str(facet)] = k
+	for key,value in boundary1.items():
+		value = [FWdict[str(facet)] for facet in value]
+		boundary1[key] = value
+	for key,value in boundary2.items():
+		value = [FWdict[str(facet)] for facet in value]
+		boundary2[key] = value
+	return boundary1,boundary2,FWdict
 
-if DEBUG: VIEW(STRUCT(MKPOLS((V1,basis1[1])) + MKPOLS((V2,basis2[1]))))
+def larBool(arg1,arg2):
+	V1,basis1 = arg1
+	V2,basis2 = arg2
+	cells1 = basis1[-1]
+	cells2 = basis2[-1]
+	model1,model2 = (V1,cells1),(V2,cells2)
+	
+	@< First Boolean step @>
+	@< Second Boolean step @>
+	@< Third Boolean step @>
+	@< Fourth Boolean step @>
+		
+	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
+	W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
+	W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2 = larBool3()
+	W,CX,FX = larBool4(W)
 
-model1,model2 = (V1,cells1),(V2,cells2)
-V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)	#<<<<<<<<<<<<<<<<
+	def larBool0(op):	
+		if op == "union":
+			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2>=1]
+		elif op == "intersection":
+			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1*c2==1]
+		elif op == "xor":
+			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2==1]
+		elif op == "difference":
+			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1==1 and c2==0 ]
+		else: print "Error: non implemented op"
+		return W,CW,chain,CX,FX
+	return larBool0
+	
+boolean = larBool(arg1,arg2)	
 
-submodel = SKEL_1(STRUCT(MKPOLS((V,CV1+CV2)))) 
-VV = AA(LIST)(range(len(V)))
-if DEBUG: VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,_,CV1+CV2],submodel,3)]))
+W,CW,chain,CX,FX = boolean("xor")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+W,CW,chain,CX,FX = boolean("union")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+W,CW,chain,CX,FX = boolean("intersection")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+W,CW,chain,CX,FX = boolean("difference")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
 
-V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)		#<<<<<<<<<<<<<<<<
-
-W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
-assert len(VC) == len(V) 
-assert len(BCellCovering) == len(BC)
-
-submodel = STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC)))) ])
-dim = len(V[0])
-if DEBUG: VIEW(STRUCT([ submodel,larModelNumbering(V,[VV,BC,CV],submodel,3)]))
-if DEBUG: VIEW(EXPLODE(2,2,2)(MKPOLS((W,CW))))
-
-
-if DEBUG: VIEW(STRUCT([ COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((W,CAT(boundary1.values()))))), 
-				COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((W,CAT(boundary2.values()))))) ]))
-
-
-WW = AA(LIST)(range(len(W)))
-FW = larConvexFacets (W,CW)
-if len(CW)==4: FW=[[0,1],[1,2],[0,2],[0,3],[2,3],[2,4],[2,5],[3,4],[4,5]] #test5.py
-_,EW = larFacets((W,FW), dim=2)
-
-FWdict = dict()
-for k,facet in enumerate (FW): FWdict[str(facet)] = k
-for key,value in boundary1.items():
-	value = [FWdict[str(facet)] for facet in value]
-	boundary1[key] = value
-for key,value in boundary2.items():
-	value = [FWdict[str(facet)] for facet in value]
-	boundary2[key] = value
-
-glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
-submodel = glass(STRUCT(MKPOLS((W,BCW))))
-if DEBUG: VIEW(STRUCT([ submodel, larModelNumbering(W,[WW,FW,CW],submodel,1.5) ]))
-
-if dim == 3: 
-	_,EW = larFacets((W,FW), dim=2)
-	bases = [WW,EW,FW,CW]
-elif dim == 2: bases = [WW,FW,CW]
-else: print "\nerror: not implemented\n"
-
-coBoundaryMat = signedCellularBoundary(W,bases).T
-boundaryMat = coBoundaryMat.T
-
-CWbits = [[-1,-1] for k in range(len(CW))]
-CWbits = cellTagging(boundary1,boundaryMat,CW,FW,W,BCW,CWbits,0)
-CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
-
-if DEBUG: VIEW(STRUCT(MKPOLS((W,BCW))))
-
-"""
-for k in range(1,len(CW)+1):
-	VIEW(STRUCT([ STRUCT(MKPOLS((W,CW[:k]))), submodel,larModelNumbering(W,[BCW],submodel,3) ]))
-"""
-
-for cell in range(len(CW)):
-	if CWbits[cell][0] == 1:
-		CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,1)		
-	if CWbits[cell][0] == 0:
-		CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,0)
-	if CWbits[cell][1] == 1:
-		CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,1)
-	if CWbits[cell][1] == 0:
-		CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
-
-chain1,chain2 = TRANS(CWbits)
-#VIEW(STRUCT([ submodel, STRUCT(MKPOLS((W,[cell for cell,c in zip(CW,chain1) if c==0] ))) ]) )
-#VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((W,[cell for cell,c in zip(CW,chain2) if c==1] ))))
-
-#VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1*c2==1] ))))
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2==1] ))))
-#VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,[cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2>=1] ))))
-
-submodel = STRUCT(MKPOLS((W,FW)))
-VIEW(STRUCT([ submodel,larModelNumbering(W,[WW,FW,CW],submodel,2) ]))
-
-W,CX = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2)
-print "\n CX =",CX
-FX = larConvexFacets (W,CX)
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1)( MKPOLS((W,CX)) )))
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1)( MKPOLS((W,FX)) )))								
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,CX))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1)(MKPOLS((W,FX)))))
 @}
 %-------------------------------------------------------------------------------
 
