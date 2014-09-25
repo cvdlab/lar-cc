@@ -91,8 +91,14 @@ def makeCDC(arg1,arg2):
    vertDict = defaultdict(list)
    for k,v in enumerate(V): vertDict[vcode(v)] += [k]
    
-   BC1 = signedCellularBoundaryCells(V1,basis1)
-   BC2 = signedCellularBoundaryCells(V2,basis2)
+   signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
+   
+   BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
+   BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
+
+   BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
+   BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
+
    BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
          [ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
    
@@ -138,7 +144,8 @@ def testingSubspace(V,covector):
 def cuttingTest(covector,polytope,V):
    signs = [INNERPROD([covector, [1.]+V[v]]) for v in polytope]
    signs = eval(vcode(signs))
-   return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
+   return any([value<-0.001 for value in signs]) and \
+         any([value>0.001 for value in signs])
    
 def tangentTest(covector,facet,adjCell,V):
    common = list(set(facet).intersection(adjCell))
@@ -227,6 +234,18 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
                      for f in facets if len(set(f)) >= dim])) )]
    boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
    return boundary1,boundary2
+
+""" Make facets dictionaries """
+def makeFacetDicts(FW,boundary1,boundary2):
+   FWdict = dict()
+   for k,facet in enumerate (FW): FWdict[str(facet)] = k
+   for key,value in boundary1.items():
+      value = [FWdict[str(facet)] for facet in value]
+      boundary1[key] = value
+   for key,value in boundary2.items():
+      value = [FWdict[str(facet)] for facet in value]
+      boundary2[key] = value
+   return boundary1,boundary2,FWdict
 
 """ SCDC splitting with every boundary facet """
 def makeSCDC(V,CV,BC,nbc1,nbc2):
@@ -443,11 +462,11 @@ def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
 
 
 """ Gathering and writing a polytopal complex """
-def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
+def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
    usedCells = [False for cell in CW]
    covectors = facet2covectors(W,FW)
    constraints = boundaries(bounds1,bounds2)
-   Xdict,index,CX,defaultValue = dict(),0,[],-1
+   Xdict,index,CX,defaultValue,CXbits = dict(),0,[],-1,[]
    while not all(usedCells):
       for k,cell in enumerate(CW):
          if not usedCells[k]:
@@ -456,21 +475,11 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
             verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,
                            covectors,usedCells,constraints)
             CX += [ verts ]
-   return W,CX
+            CXbits += [ CWbits[k] ]
+   return W,CX,CXbits
 
 
 """ Boolean Algorithm """
-def makeFacetDicts(FW,boundary1,boundary2):
-   FWdict = dict()
-   for k,facet in enumerate (FW): FWdict[str(facet)] = k
-   for key,value in boundary1.items():
-      value = [FWdict[str(facet)] for facet in value]
-      boundary1[key] = value
-   for key,value in boundary2.items():
-      value = [FWdict[str(facet)] for facet in value]
-      boundary2[key] = value
-   return boundary1,boundary2,FWdict
-
 def larBool(arg1,arg2):
    V1,basis1 = arg1
    V2,basis2 = arg2
@@ -521,30 +530,32 @@ def larBool(arg1,arg2):
          if CWbits[cell][1] == 0:
             CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
       chain1,chain2 = TRANS(CWbits)
-      return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2   
+      return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits
    
    """ Fourth Boolean step """
-   def larBool4(W):
-      W,CX = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2)
+   def larBool4(W,CWbits):
+      W,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
       FX = larConvexFacets (W,CX)      
-      return W,CX,FX
+      return W,CX,FX,CXbits
    
       
    W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
    W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
-   W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2 = larBool3()
-   W,CX,FX = larBool4(W)
+   W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
+   W,CX,FX,CXbits = larBool4(W,CWbits)
+   chain1,chain2 = TRANS(CXbits)
 
    def larBool0(op): 
       if op == "union":
-         chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2>=1]
+         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2>=1]
       elif op == "intersection":
-         chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1*c2==1]
+         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1*c2==1]
       elif op == "xor":
-         chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2==1]
+         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2==1]
       elif op == "difference":
-         chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1==1 and c2==0 ]
+         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1==1 and c2==0 ]
       else: print "Error: non implemented op"
       return W,CW,chain,CX,FX
+      
    return larBool0
 

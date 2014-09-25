@@ -164,6 +164,25 @@ the numbers \texttt{n1}, \texttt{n12}, \texttt{n2} of the elements of \texttt{V1
 %-------------------------------------------------------------------------------
 
 
+\subsubsection{Summary}
+
+%-------------------------------------------------------------------------------
+@D First Boolean step
+@{""" First Boolean step """
+def larBool1():
+	V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
+	VV = AA(LIST)(range(len(V)))
+	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
+	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
+	assert len(VC) == len(V) 
+	assert len(BCellCovering) == len(BC)
+	return W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW 
+@}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Detail functions}
+
+
 %-------------------------------------------------------------------------------
 @D Compute model boundaries of complex of convex cells
 @{""" Compute model boundaries of complex of convex cells """
@@ -245,8 +264,14 @@ def makeCDC(arg1,arg2):
 	vertDict = defaultdict(list)
 	for k,v in enumerate(V): vertDict[vcode(v)] += [k]
 	
-	BC1 = signedCellularBoundaryCells(V1,basis1)
-	BC2 = signedCellularBoundaryCells(V2,basis2)
+	signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
+	
+	BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
+	BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
+
+	BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
+	BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
+
 	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
 			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
 	
@@ -283,6 +308,30 @@ This software module returns also
 
 \subsection{Implementation}
 %-------------------------------------------------------------------------------
+
+\subsubsection{Summary}
+
+%-------------------------------------------------------------------------------
+@D Second Boolean step
+@{""" Second Boolean step """
+def larBool2(boundary1,boundary2):
+	dim = len(W[0])
+	WW = AA(LIST)(range(len(W)))
+	FW = larConvexFacets (W,CW)
+	if len(CW)==4: FW=[[0,1],[1,2],[0,2],[0,3],[2,3],[2,4],[2,5],
+						[3,4],[4,5]] #test5.py
+	_,EW = larFacets((W,FW), dim=2)
+	boundary1,boundary2,FWdict = makeFacetDicts(FW,boundary1,boundary2)
+	if dim == 3: 
+		_,EW = larFacets((W,FW), dim=2)
+		bases = [WW,EW,FW,CW]
+	elif dim == 2: bases = [WW,FW,CW]
+	else: print "\nerror: not implemented\n"
+	return W,CW,dim,bases,boundary1,boundary2,FW,BCW
+@}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Detail functions}
 
 
 \paragraph{Computing the adjacent cells of a given cell}
@@ -345,7 +394,8 @@ def testingSubspace(V,covector):
 def cuttingTest(covector,polytope,V):
 	signs = [INNERPROD([covector, [1.]+V[v]]) for v in polytope]
 	signs = eval(vcode(signs))
-	return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
+	return any([value<-0.001 for value in signs]) and \
+			any([value>0.001 for value in signs])
 	
 def tangentTest(covector,facet,adjCell,V):
 	common = list(set(facet).intersection(adjCell))
@@ -499,6 +549,23 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 %-------------------------------------------------------------------------------
 
 
+%-------------------------------------------------------------------------------
+@D Make facets dictionaries
+@{""" Make facets dictionaries """
+def makeFacetDicts(FW,boundary1,boundary2):
+	FWdict = dict()
+	for k,facet in enumerate (FW): FWdict[str(facet)] = k
+	for key,value in boundary1.items():
+		value = [FWdict[str(facet)] for facet in value]
+		boundary1[key] = value
+	for key,value in boundary2.items():
+		value = [FWdict[str(facet)] for facet in value]
+		boundary2[key] = value
+	return boundary1,boundary2,FWdict
+@}
+%-------------------------------------------------------------------------------
+
+
 \paragraph{Computation of boundary facets covering with CDC cells}
 
 %-------------------------------------------------------------------------------
@@ -592,6 +659,34 @@ The labelling of LAR of the SCDC may be decomposed in five consecutive steps. Th
 The third step operates upon the previous two pieces of information, in order to compute the coboundary chain of the boundary chain of both input Boolean arguments.
 The fourth step attaches a \textsc{in/out} label to each $d$-cell of the previously computed $d$-chain.
 Finally, the fifth step spreads around the labels to cover all the $d$-cells of SCDC. This knowledge allows for the computation of every interesting Boolean expressions between the input complexes.
+
+\subsubsection{Summary}
+
+%-------------------------------------------------------------------------------
+@D Third Boolean step
+@{""" Third Boolean step """
+def larBool3():
+	coBoundaryMat = signedCellularBoundary(W,bases).T
+	boundaryMat = coBoundaryMat.T
+	CWbits = [[-1,-1] for k in range(len(CW))]
+	CWbits = cellTagging(boundary1,boundaryMat,CW,FW,W,BCW,CWbits,0)
+	CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
+	for cell in range(len(CW)):
+		if CWbits[cell][0] == 1:
+			CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,1)		
+		if CWbits[cell][0] == 0:
+			CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,0)
+		if CWbits[cell][1] == 1:
+			CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,1)
+		if CWbits[cell][1] == 0:
+			CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
+	chain1,chain2 = TRANS(CWbits)
+	return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits
+@}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Detail functions}
+
 
 
 \paragraph{Computation of boundary cells embedded in SCDC}
@@ -766,6 +861,22 @@ The first tool provides a mapping from $(d-1)$-facets of SCDC to their embedding
 @}
 %-------------------------------------------------------------------------------
 
+\subsubsection{Summary}
+
+
+%-------------------------------------------------------------------------------
+@D Fourth Boolean step
+@{""" Fourth Boolean step """
+def larBool4(W,CWbits):
+	W,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
+	FX = larConvexFacets (W,CX)		
+	return W,CX,FX,CXbits
+@}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Detail functions}
+
+
 
 
 \paragraph{Mapping from facets to hyperplanes}
@@ -890,11 +1001,11 @@ The task of the \texttt{gatherPolytopes} function, given below, is to return the
 %-------------------------------------------------------------------------------
 @D Gathering and writing a polytopal complex
 @{""" Gathering and writing a polytopal complex """
-def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
+def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
 	usedCells = [False for cell in CW]
 	covectors = facet2covectors(W,FW)
 	constraints = boundaries(bounds1,bounds2)
-	Xdict,index,CX,defaultValue = dict(),0,[],-1
+	Xdict,index,CX,defaultValue,CXbits = dict(),0,[],-1,[]
 	while not all(usedCells):
 		for k,cell in enumerate(CW):
 			if not usedCells[k]:
@@ -903,7 +1014,56 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2):
 				verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,
 									covectors,usedCells,constraints)
 				CX += [ verts ]
-	return W,CX
+				CXbits += [ CWbits[k] ]
+	return W,CX,CXbits
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\section{The main Boolean procedure}
+%-------------------------------------------------------------------------------
+
+\subsection{Goal: generating the Boolean complex}
+
+
+\subsection{Implementation}
+
+
+%-------------------------------------------------------------------------------
+@D Boolean Algorithm
+@{""" Boolean Algorithm """
+def larBool(arg1,arg2):
+	V1,basis1 = arg1
+	V2,basis2 = arg2
+	cells1 = basis1[-1]
+	cells2 = basis2[-1]
+	model1,model2 = (V1,cells1),(V2,cells2)
+	
+	@< First Boolean step @>
+	@< Second Boolean step @>
+	@< Third Boolean step @>
+	@< Fourth Boolean step @>
+		
+	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
+	W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
+	W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
+	W,CX,FX,CXbits = larBool4(W,CWbits)
+	chain1,chain2 = TRANS(CXbits)
+
+	def larBool0(op):	
+		if op == "union":
+			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2>=1]
+		elif op == "intersection":
+			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1*c2==1]
+		elif op == "xor":
+			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2==1]
+		elif op == "difference":
+			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1==1 and c2==0 ]
+		else: print "Error: non implemented op"
+		return W,CW,chain,CX,FX
+		
+	return larBool0
 @}
 %-------------------------------------------------------------------------------
 
@@ -928,6 +1088,7 @@ DEBUG = False
 @< Computation of boundary facets covering with CDC cells @>
 @< CDC cell splitting with one or more cutting facets @>
 @< Boolean argument boundaries embedding in SCDC @>
+@< Make facets dictionaries @>
 @< SCDC splitting with every boundary facet @>
 @< Characteristic matrix transposition @>
 @< Computation of embedded boundary cells @>
@@ -942,125 +1103,12 @@ DEBUG = False
 %-------------------------------------------------------------------------------
 
 
-%-------------------------------------------------------------------------------
-@D First Boolean step
-@{""" First Boolean step """
-def larBool1():
-	V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
-	VV = AA(LIST)(range(len(V)))
-	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
-	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
-	assert len(VC) == len(V) 
-	assert len(BCellCovering) == len(BC)
-	return W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW 
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Second Boolean step
-@{""" Second Boolean step """
-def larBool2(boundary1,boundary2):
-	dim = len(W[0])
-	WW = AA(LIST)(range(len(W)))
-	FW = larConvexFacets (W,CW)
-	if len(CW)==4: FW=[[0,1],[1,2],[0,2],[0,3],[2,3],[2,4],[2,5],
-						[3,4],[4,5]] #test5.py
-	_,EW = larFacets((W,FW), dim=2)
-	boundary1,boundary2,FWdict = makeFacetDicts(FW,boundary1,boundary2)
-	if dim == 3: 
-		_,EW = larFacets((W,FW), dim=2)
-		bases = [WW,EW,FW,CW]
-	elif dim == 2: bases = [WW,FW,CW]
-	else: print "\nerror: not implemented\n"
-	return W,CW,dim,bases,boundary1,boundary2,FW,BCW
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Third Boolean step
-@{""" Third Boolean step """
-def larBool3():
-	coBoundaryMat = signedCellularBoundary(W,bases).T
-	boundaryMat = coBoundaryMat.T
-	CWbits = [[-1,-1] for k in range(len(CW))]
-	CWbits = cellTagging(boundary1,boundaryMat,CW,FW,W,BCW,CWbits,0)
-	CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
-	for cell in range(len(CW)):
-		if CWbits[cell][0] == 1:
-			CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,1)		
-		if CWbits[cell][0] == 0:
-			CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,0)
-		if CWbits[cell][1] == 1:
-			CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,1)
-		if CWbits[cell][1] == 0:
-			CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
-	chain1,chain2 = TRANS(CWbits)
-	return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2	
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Fourth Boolean step
-@{""" Fourth Boolean step """
-def larBool4(W):
-	W,CX = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2)
-	FX = larConvexFacets (W,CX)		
-	return W,CX,FX
-@}
-%-------------------------------------------------------------------------------
-
-
 
 
 %-------------------------------------------------------------------------------
 \section{Tests and examples}
 %-------------------------------------------------------------------------------
 
-%-------------------------------------------------------------------------------
-@D Boolean Algorithm
-@{""" Boolean Algorithm """
-def makeFacetDicts(FW,boundary1,boundary2):
-	FWdict = dict()
-	for k,facet in enumerate (FW): FWdict[str(facet)] = k
-	for key,value in boundary1.items():
-		value = [FWdict[str(facet)] for facet in value]
-		boundary1[key] = value
-	for key,value in boundary2.items():
-		value = [FWdict[str(facet)] for facet in value]
-		boundary2[key] = value
-	return boundary1,boundary2,FWdict
-
-def larBool(arg1,arg2):
-	V1,basis1 = arg1
-	V2,basis2 = arg2
-	cells1 = basis1[-1]
-	cells2 = basis2[-1]
-	model1,model2 = (V1,cells1),(V2,cells2)
-	
-	@< First Boolean step @>
-	@< Second Boolean step @>
-	@< Third Boolean step @>
-	@< Fourth Boolean step @>
-		
-	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
-	W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
-	W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2 = larBool3()
-	W,CX,FX = larBool4(W)
-
-	def larBool0(op):	
-		if op == "union":
-			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2>=1]
-		elif op == "intersection":
-			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1*c2==1]
-		elif op == "xor":
-			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1+c2==1]
-		elif op == "difference":
-			chain = [cell for cell,c1,c2 in zip(CW,chain1,chain2) if c1==1 and c2==0 ]
-		else: print "Error: non implemented op"
-		return W,CW,chain,CX,FX
-	return larBool0
-@}
-%-------------------------------------------------------------------------------
 
 	
 %-------------------------------------------------------------------------------
@@ -1069,7 +1117,9 @@ def larBool(arg1,arg2):
 boolean = larBool(arg1,arg2)	
 
 W,CW,chain,CX,FX = boolean("xor")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
+VIEW(glass(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain)))))
+"""
 W,CW,chain,CX,FX = boolean("union")
 VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
 W,CW,chain,CX,FX = boolean("intersection")
@@ -1079,6 +1129,7 @@ VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
 
 VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,CX))))
 VIEW(SKEL_1(EXPLODE(1.1,1.1,1)(MKPOLS((W,FX)))))
+"""
 @}
 %-------------------------------------------------------------------------------
 
@@ -1456,6 +1507,97 @@ arg2 = V2,(VV2,EV2,FV2)
 
 
 
+\subsection{Random data input} 
+
+%------------------------------------------------------------------
+@D Random data input 
+@{@< Generation of $n$ random points in the unit $d$-disk @>
+@< Generation of $n$ random points in the standard $d$-cuboid @>
+@< Triangulation of random points @>
+@}
+%------------------------------------------------------------------
+
+\paragraph{Random points in unit disk} 
+First we generate a  set of $n$ random points in the unit $D^d$ disk centred on the origin, to be subsequently used to generate a random Delaunay complex of variable granularity.
+
+%------------------------------------------------------------------
+@D Generation of $n$ random points in the unit $d$-disk 
+@{def randomPointsInUnitCircle(n=200,d=2, r=1):
+	points = random.random((n,d)) * ([2*math.pi]+[1]*(d-1))
+	return [[SQRT(p[1])*COS(p[0]),SQRT(p[1])*SIN(p[0])] for p in points]
+	## TODO: correct for $d$-sphere
+
+if __name__=="__main__":
+	VIEW(STRUCT(AA(MK)(randomPointsInUnitCircle()))) 
+@}
+%------------------------------------------------------------------
+
+\paragraph{Random points in the standard $d$-cuboid} 
+A set of $n$ random $d$-points is then generated within the standard $d$-cuboid, i.e.~withing the $d$-dimensional interval with a vertex on the origin.
+
+%------------------------------------------------------------------
+@D Generation of $n$ random points in the standard $d$-cuboid 
+@{def randomPointsInUnitCuboid(n=200,d=2):
+	return random.random((n,d)).tolist()
+
+if __name__=="__main__":
+	VIEW(STRUCT(AA(MK)(randomPointsInUnitCuboid()))) 
+@}
+%------------------------------------------------------------------
+
+
+
+\paragraph{Triangulation of random points} The Delaunay triangulation of \texttt{randomPointsInUnitCircle} is generated by the following macro.
+
+
+%------------------------------------------------------------------
+@D Triangulation of random points
+@{from scipy.spatial import Delaunay
+def randomTriangulation(n=200,d=2,out='disk'):
+	if out == 'disk':
+		V = randomPointsInUnitCircle(n,d)
+	elif out == 'cuboid':
+		V = randomPointsInUnitCuboid(n,d)
+	CV = Delaunay(array(V)).vertices
+	model = V,CV
+	return model
+
+if __name__=="__main__":
+	from lar2psm import *
+	VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model)))
+@}
+%------------------------------------------------------------------
+
+
+
+%------------------------------------------------------------------
+@o test/py/bool1/test11.py
+@{""" Union of 2D non-structured grids """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+model1 = randomTriangulation(100,2,'disk')
+V1,CV1 = model1
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
+FV1 = larConvexFacets (V1,CV1)
+VV1 = AA(LIST)(range(len(V1)))
+
+model2 = randomTriangulation(100,2,'cuboid')
+V2,CV2 = model2
+V2 = larScale( [2,2])(V2)
+model2 = V2,CV2 
+VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
+FV2 = larConvexFacets (V2,CV2)
+VV2 = AA(LIST)(range(len(V2)))
+
+arg1 = V1,(VV1,FV1,CV1)
+arg2 = V2,(VV2,FV2,CV2)
+
+@< Debug via visualization @>
+@}
+%------------------------------------------------------------------
 
 
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1511,3 +1653,43 @@ def vcode (vect):
 \bibliography{bool1}
 
 \end{document}
+%------------------------------------------------------------------
+
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+
+from larcc import *
+from scipy.sparse import *
+
+V,[VV,EV,FV,CV] = larCuboids((1,2,3),True)
+print FV
+boundaryMat = signedCellularBoundary(*larCuboids((1,1,1),True))
+print boundaryMat.todense()
+glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
+submodel = glass(STRUCT(MKPOLS((V,FV))))
+
+def signedCellularBoundaryCells(V,(VV,EV,FV,CV)):
+	boundaryMat = signedCellularBoundary(V,[VV,EV,FV,CV])
+	chainCoords = csc_matrix((len(CV), 1))
+	for cell in range(len(CV)): chainCoords[cell,0] = 1
+	boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+	orientations = list((boundaryMat * chainCoords).tocoo().data)
+	return orientations,boundaryCells
+	
+def normalVector(V,facet):
+	v0,v1,v2 = facet[:3]
+	return VECTPROD([ DIFF([V[v1],V[v0]]), DIFF([V[v2],V[v0]]) ])
+
+
+BCpairs = zip(*signedCellularBoundaryCells(V,[VV,EV,FV,CV]))
+orientedBoundary = [FV[face] if sign>0 else swap(FV[face]) for (sign,face) in BCpairs]
+normals = [ normalVector(V,facet)  for facet in orientedBoundary ]
+facetCentroids = [CCOMB([V[v] for v in facet]) for facet in orientedBoundary]
+appliedNormals = [[centroid,SUM([centroid,normal])] for (centroid,normal) in zip(facetCentroids,normals)]
+normalVectors = AA(POLYLINE)(appliedNormals)
+
+VIEW(STRUCT(MKPOLS((V,orientedBoundary))+normalVectors))
+
+
+

@@ -654,6 +654,9 @@ The following \texttt{larFacets} function returns the LAR model \texttt{V,cellFa
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
+
+
+
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap19}
 \protect\makebox[0ex][r]{\NWtarget{nuweb10b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize 10b}$\,\rangle\equiv$
@@ -1412,19 +1415,15 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed boundary cells for polytopal complexes """@\\
+\mbox{}\verb@from scipy.sparse import *@\\
 \mbox{}\verb@def signedCellularBoundaryCells(verts,bases):@\\
-\mbox{}\verb@   cells,facets = bases[-1],bases[-2]@\\
-\mbox{}\verb@   csrSignedBoundaryMat = signedCellularBoundary(verts,bases)@\\
-\mbox{}\verb@   csrChain = totalChain(cells)@\\
-\mbox{}\verb@   csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrChain)@\\
-\mbox{}\verb@   cooCells = csrBoundaryChain.tocoo()@\\
-\mbox{}\verb@   @\\
-\mbox{}\verb@   boundaryCells = []@\\
-\mbox{}\verb@   for k in range(len(facets)):@\\
-\mbox{}\verb@      val = csrBoundaryChain[k,0]@\\
-\mbox{}\verb@      if val==1.0: boundaryCells += [facets[k]]@\\
-\mbox{}\verb@      elif val==-1.0: boundaryCells += [REVERSE(facets[k])]@\\
-\mbox{}\verb@   return boundaryCells@\\
+\mbox{}\verb@   CV = bases[-1]@\\
+\mbox{}\verb@   boundaryMat = signedCellularBoundary(verts,bases)@\\
+\mbox{}\verb@   chainCoords = csc_matrix((len(CV), 1))@\\
+\mbox{}\verb@   for cell in range(len(CV)): chainCoords[cell,0] = 1@\\
+\mbox{}\verb@   boundaryCells = list((boundaryMat * chainCoords).tocoo().row)@\\
+\mbox{}\verb@   orientations = list((boundaryMat * chainCoords).tocoo().data)@\\
+\mbox{}\verb@   return orientations,boundaryCells@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
@@ -1590,11 +1589,11 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \mbox{}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize \NWlink{nuweb28a}{28a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize \NWlink{nuweb28b}{28b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize \NWlink{nuweb29c}{29c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb29d}{29d}}$\,\rangle$}\verb@   @\\
-\mbox{}\verb@@\hbox{$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize \NWlink{nuweb28c}{28c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb29c}{29c}}$\,\rangle$}\verb@   @\\
+\mbox{}\verb@@\hbox{$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb29d}{29d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1651,7 +1650,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Fraction of triangles randomly discarded}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap48}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb28c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize 28c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Fraction of triangles randomly discarded """@\\
@@ -1672,7 +1671,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Coherent orientation of input LAR model (V,FV)}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap49}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Coherently orient the input LAR model (V,FV) """@\\
@@ -1699,7 +1698,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Compute the 1-cell and 0-cell bases EV and VV}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap50}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize 29c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Compute the 1-cell and 0-cell bases EV and VV """@\\
@@ -1719,7 +1718,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Signed boundary matrix [$\partial_2$] and signed boundary 1-chain}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap51}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize 29d}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb29c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize 29c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed 2-boundary matrix  and signed boundary 1-chain """@\\
@@ -1737,7 +1736,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Display the boundary 1-chain}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap52}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb29d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize 29d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Display the boundary 1-chain """@\\
@@ -1778,7 +1777,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap53}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb30}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 30}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def pivotSimplices(V,CV,d=3):@\\
@@ -1938,7 +1937,7 @@ The variables in the following script have the meaning specified below:
 \mbox{}\verb@@\hbox{$\langle\,$Incidence chain computation\nobreak\ {\footnotesize \NWlink{nuweb18a}{18a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb23}{23}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb24a}{24a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb30}{30}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@if __name__ == "__main__": @\\
 \mbox{}\verb@   @\hbox{$\langle\,$Test examples\nobreak\ {\footnotesize \NWlink{nuweb33b}{33b}}$\,\rangle$}\verb@@\\

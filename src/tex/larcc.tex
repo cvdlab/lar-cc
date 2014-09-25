@@ -1003,19 +1003,15 @@ def signedCellularBoundary(V,bases):
 %-------------------------------------------------------------------------------
 @D Signed boundary cells for polytopal complexes
 @{""" Signed boundary cells for polytopal complexes """
+from scipy.sparse import *
 def signedCellularBoundaryCells(verts,bases):
-	cells,facets = bases[-1],bases[-2]
-	csrSignedBoundaryMat = signedCellularBoundary(verts,bases)
-	csrChain = totalChain(cells)
-	csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrChain)
-	cooCells = csrBoundaryChain.tocoo()
-	
-	boundaryCells = []
-	for k in range(len(facets)):
-		val = csrBoundaryChain[k,0]
-		if val==1.0: boundaryCells += [facets[k]]
-		elif val==-1.0: boundaryCells += [REVERSE(facets[k])]
-	return boundaryCells
+	CV = bases[-1]
+	boundaryMat = signedCellularBoundary(verts,bases)
+	chainCoords = csc_matrix((len(CV), 1))
+	for cell in range(len(CV)): chainCoords[cell,0] = 1
+	boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+	orientations = list((boundaryMat * chainCoords).tocoo().data)
+	return orientations,boundaryCells
 @}
 %-------------------------------------------------------------------------------
 

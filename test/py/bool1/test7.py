@@ -22,7 +22,9 @@ arg2 = V2,(VV2,EV2,FV2)
 boolean = larBool(arg1,arg2)  
 
 W,CW,chain,CX,FX = boolean("xor")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
+VIEW(glass(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain)))))
+"""
 W,CW,chain,CX,FX = boolean("union")
 VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
 W,CW,chain,CX,FX = boolean("intersection")
@@ -32,4 +34,5 @@ VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
 
 VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,CX))))
 VIEW(SKEL_1(EXPLODE(1.1,1.1,1)(MKPOLS((W,FX)))))
+"""
 
