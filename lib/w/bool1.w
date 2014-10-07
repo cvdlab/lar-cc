@@ -172,7 +172,7 @@ the numbers \texttt{n1}, \texttt{n12}, \texttt{n2} of the elements of \texttt{V1
 def larBool1():
 	V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
 	VV = AA(LIST)(range(len(V)))
-	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
+	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2, brep)
 	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
 	assert len(VC) == len(V) 
 	assert len(BCellCovering) == len(BC)
@@ -249,7 +249,7 @@ def mergeVertices(model1, model2):
 %-------------------------------------------------------------------------------
 @D Make Common Delaunay Complex
 @{""" Make Common Delaunay Complex """
-def makeCDC(arg1,arg2):
+def makeCDC(arg1,arg2, brep):
 
 	(V1,basis1), (V2,basis2) = arg1,arg2
 	(facets1,cells1),(facets2,cells2) = basis1[-2:],basis2[-2:]
@@ -264,16 +264,21 @@ def makeCDC(arg1,arg2):
 	vertDict = defaultdict(list)
 	for k,v in enumerate(V): vertDict[vcode(v)] += [k]
 	
-	signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
-	
-	BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
-	BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
+	if brep == False:
+    	signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
+    	
+    	BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
+    	BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
+    
+    	BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
+    	BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
 
-	BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
-	BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
-
+	else:
+		BC1,BC2 = basis1[-1],basis2[-1]
+    
 	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
 			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
+		
 	
 	return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)
 @}
@@ -343,10 +348,10 @@ The computation of the adjacent $d$-cells of a single $d$-cell is given here by 
 @{""" Computing the adjacent cells of a given cell """
 def adjacencyQuery (V,CV):
 	dim = len(V[0])
+	csrCV =  csrCreate(CV)
+	csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
 	def adjacencyQuery0 (cell):
 		nverts = len(CV[cell])
-		csrCV =  csrCreate(CV)
-		csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
 		cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
 		return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
 	return adjacencyQuery0
@@ -880,7 +885,7 @@ def larBool4(W,CWbits):
 
 
 \paragraph{Mapping from facets to hyperplanes}
-The function \texttt{facet2covectors} return the list of hyperplane convectors, with first term homogeneous, i.e.~the row vector $(c,a,b)$ for the line equation $ax+by+c=0$, or the row vector $(d,a,b,c)$ for the plane equation $ax+by+cz+d=0$.
+The function \texttt{facet2covectors} return the list of hyperplane covectors, with first term homogeneous, i.e.~the row vector $(c,a,b)$ for the line equation $ax+by+c=0$, or the row vector $(d,a,b,c)$ for the plane equation $ax+by+cz+d=0$.
 %-------------------------------------------------------------------------------
 @D Mapping from facets to hyperplanes
 @{""" Mapping from hyperplanes to lists of facets """
@@ -1033,7 +1038,7 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
 %-------------------------------------------------------------------------------
 @D Boolean Algorithm
 @{""" Boolean Algorithm """
-def larBool(arg1,arg2):
+def larBool(arg1,arg2, brep=False):
 	V1,basis1 = arg1
 	V2,basis2 = arg2
 	cells1 = basis1[-1]
@@ -1050,23 +1055,48 @@ def larBool(arg1,arg2):
 	W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
 	W,CX,FX,CXbits = larBool4(W,CWbits)
 	chain1,chain2 = TRANS(CXbits)
+	
+	print "\n>>>> W =",W
+	print "\n>>>> CX =",CX
+	print "\n>>>> FX =",FX
+	boundaryMat = boundary(CX,FX)
+
+	def theBoundary(boundaryMat,CX,coords):
+		print "\n>>>> boundaryMat =",boundaryMat
+		print "\n>>>> coords =",coords
+		chainCoords = csc_matrix((len(CX), 1))
+		for cell in coords: chainCoords[cell,0] = 1
+		boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+		orientations = list((boundaryMat * chainCoords).tocoo().data)
+		orientedBoundary = [ FX[face] for (sign,face) in zip(orientations,boundaryCells)  if sign == 1 ]
+		return orientedBoundary
+
 
 	def larBool0(op):	
-		if op == "union":
-			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2>=1]
-		elif op == "intersection":
-			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1*c2==1]
-		elif op == "xor":
-			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2==1]
-		elif op == "difference":
-			chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1==1 and c2==0 ]
+		if op == "union": 
+			ucoords,uchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2>=1])
+			return W,CW,uchain,CX,FX,theBoundary(boundaryMat,CX,ucoords)
+		elif op == "intersection": 
+			icoords,ichain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])
+			return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+		elif op == "xor": 
+			xcoords,xchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2==1])
+			return W,CW,xchain,CX,FX,theBoundary(boundaryMat,CX,xcoords)
+		elif op == "difference": 
+			dcoords,dchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0 ])
+			return W,CW,dchain,CX,FX,theBoundary(boundaryMat,CX,dcoords)
 		else: print "Error: non implemented op"
-		return W,CW,chain,CX,FX
-		
+
 	return larBool0
 @}
 %-------------------------------------------------------------------------------
 
+
+%-------------------------------------------------------------------------------
+\section{LAR simplification}
+%-------------------------------------------------------------------------------
+
+Occasionally, we may need to simplify 
 
 %-------------------------------------------------------------------------------
 \section{Exporting the library}
@@ -1116,20 +1146,25 @@ DEBUG = False
 @{""" Debug via visualization """
 boolean = larBool(arg1,arg2)	
 
-W,CW,chain,CX,FX = boolean("xor")
+W,CW,chain,CX,FX,orientedBoundary = boolean("xor")
 glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
 VIEW(glass(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain)))))
-"""
-W,CW,chain,CX,FX = boolean("union")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-W,CW,chain,CX,FX = boolean("intersection")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-W,CW,chain,CX,FX = boolean("difference")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,CX))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1)(MKPOLS((W,FX)))))
-"""
+W,CW,chain,CX,FX,orientedBoundary = boolean("union")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+
+W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+
+W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+
+VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,FX)))))
 @}
 %-------------------------------------------------------------------------------
 

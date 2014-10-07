@@ -149,7 +149,7 @@ First we test \texttt{CCOMB} with some special data, then with some random vecto
 \mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb3b}{3b}\label{scrap6}
  }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@from lar2psm import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize \NWlink{nuweb7b}{7b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize \NWlink{nuweb8a}{8a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -188,7 +188,7 @@ Some very simple examples of 0D, 1D, and 2D models follows. They are displayed i
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb7a}{7a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7c}{7c}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -255,7 +255,7 @@ Some simple 3D, 2D, 1D and 0D models are generated and visualised exploded by th
 \begin{list}{}{} \item
 \mbox{}\verb@@\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb4d}{4d}\label{scrap11}
  }\mbox{}\verb@lar2psm@ ) {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$View model examples\nobreak\ {\footnotesize \NWlink{nuweb7a}{7a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$View model examples\nobreak\ {\footnotesize \NWlink{nuweb7c}{7c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -361,15 +361,20 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@"""Module with functions needed to interface LAR with pyplasm"""@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from mapper import *@\\
 \mbox{}\verb@@\hbox{$\langle\,$Function to import a generic module\nobreak\ {\footnotesize \NWlink{nuweb6a}{6a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Compute the convex combination of a list of vectors\nobreak\ {\footnotesize \NWlink{nuweb2d}{2d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@import simplexn@\\
 \mbox{}\verb@from simplexn import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$types Mat and Verts\nobreak\ {\footnotesize \NWlink{nuweb8a}{8a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Model class\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Struct class\nobreak\ {\footnotesize \NWlink{nuweb8c}{8c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$types Mat and Verts\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Model class\nobreak\ {\footnotesize \NWlink{nuweb8c}{8c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Struct class\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Explode the scene using \texttt{sx,sy,sz} scaling parameters\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Structure to pair (Vertices,Cells) conversion\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -406,10 +411,10 @@ A possible unit test strategy is to create a directory for unit tests associated
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap18}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6e}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm/test01.py"@\nobreak\ {\footnotesize 6e }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/lar2psm/test01.py"@\nobreak\ {\footnotesize 7a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$create directory and echo of creation:\nobreak\ ({\footnotesize \NWtarget{nuweb6f}{6f}\label{scrap19}
+\mbox{}\verb@@\hbox{$\langle\,$create directory and echo of creation:\nobreak\ ({\footnotesize \NWtarget{nuweb7b}{7b}\label{scrap19}
  }\mbox{}\verb@test/py/lar2psm/@ ) {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -425,7 +430,7 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap20}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$View model examples\nobreak\ {\footnotesize 7a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb7c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$View model examples\nobreak\ {\footnotesize 7c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from lar2psm import *@\\
@@ -462,7 +467,7 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 %------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap21}
-\protect\makebox[0ex][r]{\NWtarget{nuweb7b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize 7b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$\texttt{CCOMB} unit tests\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@assert( CCOMB([]) == [] )@\\
@@ -485,9 +490,6 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 \end{flushleft}
 %------------------------------------------------------------------
 
-\bibliographystyle{amsalpha}
-\bibliography{lar2psm}
-
 
 %-------------------------------------------------------------------------------
 \subsection{Structure types handling}
@@ -498,7 +500,7 @@ In order to implement a structure as a list of models and transformations, we ne
 \paragraph{\texttt{Mat} and \texttt{Verts} classes}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap22}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$types Mat and Verts\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$types Mat and Verts\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" class definitions for LAR """@\\
@@ -518,7 +520,7 @@ In order to implement a structure as a list of models and transformations, we ne
 \paragraph{\texttt{Model} class}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap23}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Model class\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Model class\nobreak\ {\footnotesize 8c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@class Model:@\\
@@ -541,7 +543,7 @@ In order to implement a structure as a list of models and transformations, we ne
 \paragraph{\texttt{Struct} iterable class}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Struct class\nobreak\ {\footnotesize 8c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Struct class\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@class Struct:@\\
@@ -564,6 +566,57 @@ In order to implement a structure as a list of models and transformations, we ne
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
+
+%-------------------------------------------------------------------------------
+\subsection{Structure to LAR conversion}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Structure to pair (Vertices,Cells) conversion}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap25}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Structure to pair (Vertices,Cells) conversion\nobreak\ {\footnotesize 9b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Structure to pair (Vertices,Cells) conversion """@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@from mapper import evalStruct@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def struct2lar(structure):@\\
+\mbox{}\verb@   listOfModels = evalStruct(structure)@\\
+\mbox{}\verb@   vertDict = dict()@\\
+\mbox{}\verb@   index,defaultValue,CW,W = -1,-1,[],[]@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@   for model in listOfModels:@\\
+\mbox{}\verb@      V,FV = larModelBreak(model)@\\
+\mbox{}\verb@      for k,incell in enumerate(FV):@\\
+\mbox{}\verb@         outcell = []@\\
+\mbox{}\verb@         for v in incell:@\\
+\mbox{}\verb@            key = vcode(V[v])@\\
+\mbox{}\verb@            if vertDict.get(key,defaultValue) == defaultValue:@\\
+\mbox{}\verb@               index += 1@\\
+\mbox{}\verb@               vertDict[key] = index@\\
+\mbox{}\verb@               outcell += [index]@\\
+\mbox{}\verb@               W += [eval(key)]@\\
+\mbox{}\verb@            else: @\\
+\mbox{}\verb@               outcell += [vertDict[key]]@\\
+\mbox{}\verb@         CW += [outcell]@\\
+\mbox{}\verb@         @\\
+\mbox{}\verb@   return W,CW@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb6c}{6c}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+\bibliographystyle{amsalpha}
+\bibliography{lar2psm}
 
 
 \end{document}

@@ -76,7 +76,7 @@ def mergeVertices(model1, model2):
    return V,CV1,CV2, n1+n2,n2,n2+n3
 
 """ Make Common Delaunay Complex """
-def makeCDC(arg1,arg2):
+def makeCDC(arg1,arg2, brep):
 
    (V1,basis1), (V2,basis2) = arg1,arg2
    (facets1,cells1),(facets2,cells2) = basis1[-2:],basis2[-2:]
@@ -91,16 +91,21 @@ def makeCDC(arg1,arg2):
    vertDict = defaultdict(list)
    for k,v in enumerate(V): vertDict[vcode(v)] += [k]
    
-   signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
-   
-   BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
-   BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
+   if brep == False:
+      signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
+      
+      BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
+      BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
+    
+      BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
+      BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
 
-   BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
-   BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
-
+   else:
+      BC1,BC2 = basis1[-1],basis2[-1]
+    
    BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
          [ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
+      
    
    return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)
 
@@ -172,10 +177,10 @@ def dividenda(V,CV, cell,facet,covector,unchosen):
 """ Computing the adjacent cells of a given cell """
 def adjacencyQuery (V,CV):
    dim = len(V[0])
+   csrCV =  csrCreate(CV)
+   csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
    def adjacencyQuery0 (cell):
       nverts = len(CV[cell])
-      csrCV =  csrCreate(CV)
-      csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
       cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
       return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
    return adjacencyQuery0
@@ -480,7 +485,7 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
 
 
 """ Boolean Algorithm """
-def larBool(arg1,arg2):
+def larBool(arg1,arg2, brep=False):
    V1,basis1 = arg1
    V2,basis2 = arg2
    cells1 = basis1[-1]
@@ -491,7 +496,7 @@ def larBool(arg1,arg2):
    def larBool1():
       V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
       VV = AA(LIST)(range(len(V)))
-      V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
+      V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2, brep)
       W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
       assert len(VC) == len(V) 
       assert len(BCellCovering) == len(BC)
@@ -544,18 +549,37 @@ def larBool(arg1,arg2):
    W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
    W,CX,FX,CXbits = larBool4(W,CWbits)
    chain1,chain2 = TRANS(CXbits)
+   
+   print "\n>>>> W =",W
+   print "\n>>>> CX =",CX
+   print "\n>>>> FX =",FX
+   boundaryMat = boundary(CX,FX)
+
+   def theBoundary(boundaryMat,CX,coords):
+      print "\n>>>> boundaryMat =",boundaryMat
+      print "\n>>>> coords =",coords
+      chainCoords = csc_matrix((len(CX), 1))
+      for cell in coords: chainCoords[cell,0] = 1
+      boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+      orientations = list((boundaryMat * chainCoords).tocoo().data)
+      orientedBoundary = [ FX[face] for (sign,face) in zip(orientations,boundaryCells)  if sign == 1 ]
+      return orientedBoundary
+
 
    def larBool0(op): 
-      if op == "union":
-         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2>=1]
-      elif op == "intersection":
-         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1*c2==1]
-      elif op == "xor":
-         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1+c2==1]
-      elif op == "difference":
-         chain = [cell for cell,c1,c2 in zip(CX,chain1,chain2) if c1==1 and c2==0 ]
+      if op == "union": 
+         ucoords,uchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2>=1])
+         return W,CW,uchain,CX,FX,theBoundary(boundaryMat,CX,ucoords)
+      elif op == "intersection": 
+         icoords,ichain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])
+         return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+      elif op == "xor": 
+         xcoords,xchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2==1])
+         return W,CW,xchain,CX,FX,theBoundary(boundaryMat,CX,xcoords)
+      elif op == "difference": 
+         dcoords,dchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0 ])
+         return W,CW,dchain,CX,FX,theBoundary(boundaryMat,CX,dcoords)
       else: print "Error: non implemented op"
-      return W,CW,chain,CX,FX
-      
+
    return larBool0
 

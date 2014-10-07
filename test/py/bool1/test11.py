@@ -24,18 +24,23 @@ arg2 = V2,(VV2,FV2,CV2)
 """ Debug via visualization """
 boolean = larBool(arg1,arg2)  
 
-W,CW,chain,CX,FX = boolean("xor")
+W,CW,chain,CX,FX,orientedBoundary = boolean("xor")
 glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
 VIEW(glass(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain)))))
-"""
-W,CW,chain,CX,FX = boolean("union")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-W,CW,chain,CX,FX = boolean("intersection")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-W,CW,chain,CX,FX = boolean("difference")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,CX))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1)(MKPOLS((W,FX)))))
-"""
+W,CW,chain,CX,FX,orientedBoundary = boolean("union")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+
+W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+
+W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
+VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+
+VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
+VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,FX)))))
 

@@ -512,7 +512,8 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 	mat = scipy.identity(d+1)
 	for k in range(d): 
 		mat[k,d] = args[k]
-	return mat.view(Mat)
+	#return mat.view(Mat)
+	return mat
 @}
 %-------------------------------------------------------------------------------
 \paragraph{Scaling}
@@ -523,7 +524,8 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 	mat = scipy.identity(d+1)
 	for k in range(d): 
 		mat[k,k] = args[k]
-	return mat.view(Mat)
+	#return mat.view(Mat)
+	return mat
 @}
 %-------------------------------------------------------------------------------
 \paragraph{Rotation}
@@ -534,7 +536,8 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 	n = len(args)
 	@< plane rotation (in 2D) @>
 	@< space rotation (in 3D) @>
-	return mat.view(Mat)
+	#return mat.view(Mat)
+	return mat
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -1153,34 +1156,20 @@ A small set of utilityy functions is used to transform a point representation as
 
 %------------------------------------------------------------------
 @D Symbolic utility to represent points as strings
-@{""" TODO: 
-use Decimal (http://docs.python.org/2/library/decimal.html) 
-"""
-ROUND_ZERO = 1E-07
-def round_or_zero (x,prec=7):
-	"""
-	Decision procedure to approximate a small number to zero.
-	Return either the input number or zero.
-	"""
-	def myround(x):
-		return eval(('%.'+str(prec)+'f') % round(x,prec))
-	xx = myround(x)
-	if abs(xx) < ROUND_ZERO: return 0.0
-	else: return xx
+@{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
+PRECISION = 4 
 
 def prepKey (args): return "["+", ".join(args)+"]"
 
 def fixedPrec(value):
-	if abs(value - int(value))<ROUND_ZERO: value = int(value)
-	out = ('%0.7f'% value).rstrip('0')
-	if out == '-0.': out = '0.'
-	return out
+	out = round(value*10**PRECISION)/10**PRECISION
+	if out == -0.0: out = 0.0
+	return str(out)
 	
 def vcode (vect): 
 	"""
 	To generate a string representation of a number array.
-	Used to generate the vertex keys in PointSet dictionary, and other 
-	similar operations.
+	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
 	"""
 	return prepKey(AA(fixedPrec)(vect))
 @}

@@ -202,6 +202,10 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 %------------------------------------------------------------------
 @O lib/py/lar2psm.py
 @{"""Module with functions needed to interface LAR with pyplasm"""
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from mapper import *
 @< Function to import a generic module @>
 @< Compute the convex combination of a list of vectors @>
 import simplexn
@@ -211,6 +215,7 @@ from simplexn import *
 @< Struct class @>
 @< MaKe a list of HPC objects from a LAR model @>
 @< Explode the scene using \texttt{sx,sy,sz} scaling parameters @>
+@< Structure to pair (Vertices,Cells) conversion @>
 @}
 %------------------------------------------------------------------
 
@@ -279,9 +284,6 @@ assert( CCOMB([VECTSUM(vects)]) == \
 @}
 %------------------------------------------------------------------
 
-\bibliographystyle{amsalpha}
-\bibliography{lar2psm}
-
 
 %-------------------------------------------------------------------------------
 \subsection{Structure types handling}
@@ -328,6 +330,47 @@ class Verts(scipy.ndarray): pass
 @}
 %-------------------------------------------------------------------------------
 
+
+%-------------------------------------------------------------------------------
+\subsection{Structure to LAR conversion}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Structure to pair (Vertices,Cells) conversion}
+%-------------------------------------------------------------------------------
+@D Structure to pair (Vertices,Cells) conversion
+@{""" Structure to pair (Vertices,Cells) conversion """
+
+from mapper import evalStruct
+
+def struct2lar(structure):
+	listOfModels = evalStruct(structure)
+	vertDict = dict()
+	index,defaultValue,CW,W = -1,-1,[],[]
+		
+	for model in listOfModels:
+		V,FV = larModelBreak(model)
+		for k,incell in enumerate(FV):
+			outcell = []
+			for v in incell:
+				key = vcode(V[v])
+				if vertDict.get(key,defaultValue) == defaultValue:
+					index += 1
+					vertDict[key] = index
+					outcell += [index]
+					W += [eval(key)]
+				else: 
+					outcell += [vertDict[key]]
+			CW += [outcell]
+			
+	return W,CW
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\bibliographystyle{amsalpha}
+\bibliography{lar2psm}
 
 
 \end{document}

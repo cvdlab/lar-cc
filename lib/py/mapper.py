@@ -272,14 +272,16 @@ def t(*args):
    mat = scipy.identity(d+1)
    for k in range(d): 
       mat[k,d] = args[k]
-   return mat.view(Mat)
+   #return mat.view(Mat)
+   return mat
 
 def s(*args): 
    d = len(args)
    mat = scipy.identity(d+1)
    for k in range(d): 
       mat[k,k] = args[k]
-   return mat.view(Mat)
+   #return mat.view(Mat)
+   return mat
 
 def r(*args): 
    args = list(args)
@@ -317,7 +319,8 @@ def r(*args):
          mat[:3,:3] = cos*I + sin*Ux + (1.0-cos)*UU
       
    
-   return mat.view(Mat)
+   #return mat.view(Mat)
+   return mat
 
 def larEmbed(k):
    def larEmbed0(model):
@@ -411,34 +414,20 @@ def evalStruct(struct):
    scene = traversal(CTM, stack, struct) 
    return scene
 
-""" TODO: 
-use Decimal (http://docs.python.org/2/library/decimal.html) 
-"""
-ROUND_ZERO = 1E-07
-def round_or_zero (x,prec=7):
-   """
-   Decision procedure to approximate a small number to zero.
-   Return either the input number or zero.
-   """
-   def myround(x):
-      return eval(('%.'+str(prec)+'f') % round(x,prec))
-   xx = myround(x)
-   if abs(xx) < ROUND_ZERO: return 0.0
-   else: return xx
+""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
+PRECISION = 4 
 
 def prepKey (args): return "["+", ".join(args)+"]"
 
 def fixedPrec(value):
-   if abs(value - int(value))<ROUND_ZERO: value = int(value)
-   out = ('%0.7f'% value).rstrip('0')
-   if out == '-0.': out = '0.'
-   return out
+   out = round(value*10**PRECISION)/10**PRECISION
+   if out == -0.0: out = 0.0
+   return str(out)
    
 def vcode (vect): 
    """
    To generate a string representation of a number array.
-   Used to generate the vertex keys in PointSet dictionary, and other 
-   similar operations.
+   Used to generate the vertex keys in PointSet dictionary, and other similar operations.
    """
    return prepKey(AA(fixedPrec)(vect))
 
