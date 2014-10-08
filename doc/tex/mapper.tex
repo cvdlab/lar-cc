@@ -1357,7 +1357,7 @@ The actual generation of the structure and its transformation to a LAR model pai
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Generation of Struct object and transform to LAR model pair """@\\
-\mbox{}\verb@cubes = larCuboids([3,3,3],True)@\\
+\mbox{}\verb@cubes = larCuboids([10,10,10],True)@\\
 \mbox{}\verb@V = cubes[0]@\\
 \mbox{}\verb@FV = cubes[1][-2]@\\
 \mbox{}\verb@CV = cubes[1][-1]@\\
@@ -1366,7 +1366,9 @@ The actual generation of the structure and its transformation to a LAR model pai
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BV))))@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@block = Model((V,BV))@\\
-\mbox{}\verb@struct = Struct(30*[block, t(3,0,0)])@\\
+\mbox{}\verb@struct = Struct(10*[block, t(10,0,0)])@\\
+\mbox{}\verb@struct = Struct(10*[struct, t(0,10,0)])@\\
+\mbox{}\verb@struct = Struct(3*[struct, t(0,0,10)])@\\
 \mbox{}\verb@W,FW = struct2lar(struct)@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))@\\
