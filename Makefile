@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = mapper
+NAME = lar2psm
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 

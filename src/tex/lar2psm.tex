@@ -1,4 +1,3 @@
-
 \documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
 \usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
 \geometry{letterpaper}		%...ora4paperora5paperor...
@@ -202,20 +201,17 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 %------------------------------------------------------------------
 @O lib/py/lar2psm.py
 @{"""Module with functions needed to interface LAR with pyplasm"""
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from mapper import *
 @< Function to import a generic module @>
 @< Compute the convex combination of a list of vectors @>
 import simplexn
 from simplexn import *
+@< Symbolic utility to represent points as strings @>
 @< types Mat and Verts @>
 @< Model class @>
 @< Struct class @>
+@< Structure to pair (Vertices,Cells) conversion @>
 @< MaKe a list of HPC objects from a LAR model @>
 @< Explode the scene using \texttt{sx,sy,sz} scaling parameters @>
-@< Structure to pair (Vertices,Cells) conversion @>
 @}
 %------------------------------------------------------------------
 
@@ -284,6 +280,9 @@ assert( CCOMB([VECTSUM(vects)]) == \
 @}
 %------------------------------------------------------------------
 
+\bibliographystyle{amsalpha}
+\bibliography{lar2psm}
+
 
 %-------------------------------------------------------------------------------
 \subsection{Structure types handling}
@@ -331,6 +330,7 @@ class Verts(scipy.ndarray): pass
 %-------------------------------------------------------------------------------
 
 
+
 %-------------------------------------------------------------------------------
 \subsection{Structure to LAR conversion}
 %-------------------------------------------------------------------------------
@@ -367,10 +367,33 @@ def struct2lar(structure):
 @}
 %-------------------------------------------------------------------------------
 
+\subsection{Numeric utilities}
 
+A small set of utility functions is used to transform a \emph{point} representation, given as array of coordinates, into a string of fixed format to be used as point key into python dictionaries.
 
-\bibliographystyle{amsalpha}
-\bibliography{lar2psm}
+%------------------------------------------------------------------
+@D Symbolic utility to represent points as strings
+@{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
+global PRECISION
+PRECISION = 4.
+
+def verySmall(number): return abs(number) < 10**-(PRECISION)
+
+def prepKey (args): return "["+", ".join(args)+"]"
+
+def fixedPrec(value):
+	out = round(value*10**(PRECISION))/10**(PRECISION)
+	if out == -0.0: out = 0.0
+	return str(out)
+	
+def vcode (vect): 
+	"""
+	To generate a string representation of a number array.
+	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
+	"""
+	return prepKey(AA(fixedPrec)(vect))
+@}
+%------------------------------------------------------------------
 
 
 \end{document}

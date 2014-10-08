@@ -272,16 +272,14 @@ def t(*args):
    mat = scipy.identity(d+1)
    for k in range(d): 
       mat[k,d] = args[k]
-   #return mat.view(Mat)
-   return mat
+   return mat.view(Mat)
 
 def s(*args): 
    d = len(args)
    mat = scipy.identity(d+1)
    for k in range(d): 
       mat[k,k] = args[k]
-   #return mat.view(Mat)
-   return mat
+   return mat.view(Mat)
 
 def r(*args): 
    args = list(args)
@@ -319,8 +317,7 @@ def r(*args):
          mat[:3,:3] = cos*I + sin*Ux + (1.0-cos)*UU
       
    
-   #return mat.view(Mat)
-   return mat
+   return mat.view(Mat)
 
 def larEmbed(k):
    def larEmbed0(model):

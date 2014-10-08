@@ -512,8 +512,7 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 	mat = scipy.identity(d+1)
 	for k in range(d): 
 		mat[k,d] = args[k]
-	#return mat.view(Mat)
-	return mat
+	return mat.view(Mat)
 @}
 %-------------------------------------------------------------------------------
 \paragraph{Scaling}
@@ -524,8 +523,7 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 	mat = scipy.identity(d+1)
 	for k in range(d): 
 		mat[k,k] = args[k]
-	#return mat.view(Mat)
-	return mat
+	return mat.view(Mat)
 @}
 %-------------------------------------------------------------------------------
 \paragraph{Rotation}
@@ -536,8 +534,7 @@ Elementary matrices for affine transformation of vectors in any dimensional vect
 	n = len(args)
 	@< plane rotation (in 2D) @>
 	@< space rotation (in 3D) @>
-	#return mat.view(Mat)
-	return mat
+	return mat.view(Mat)
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
