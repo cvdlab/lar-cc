@@ -629,18 +629,18 @@ In order to better understand the behaviour of the traversal algorithm, where ev
 @D Emulation of scene multigraph traversal
 @{from pyplasm import *
 def __traverse(CTM, stack, o):
-    for i in range(len(o)):
-        if ISNUM(o[i]): print o[i], REVERSE(CTM)
-        elif ISSTRING(o[i]): 
-            CTM.append(o[i])
-        elif ISSEQ(o[i]):
-            stack.append(o[i])				# push the stack
-            __traverse(CTM, stack, o[i])
-            CTM = CTM[:-len(stack)] 		# pop the stack
+	for i in range(len(o)):
+		if ISNUM(o[i]): print o[i], REVERSE(CTM)
+		elif ISSTRING(o[i]): 
+			CTM.append(o[i])
+		elif ISSEQ(o[i]):
+			stack.append(o[i])				# push the stack
+			__traverse(CTM, stack, o[i])
+			CTM = CTM[:-len(stack)] 		# pop the stack
 
 def algorithm(data):
-    CTM,stack = ["I"],[]
-    __traverse(CTM, stack, data)  
+	CTM,stack = ["I"],[]
+	__traverse(CTM, stack, data)  
 @}
 %-------------------------------------------------------------------------------
 
@@ -900,6 +900,114 @@ FV = [
 
 
 
+\paragraph{Transformation of Struct object to LAR model pair}
+
+The following test application first generates a grid $3\times 3$ of LAR cubes, extracts
+its boundary cells as \texttt{BV}, then produces a \texttt{struct} object with 30 translated instances of it,
+and finally transforms the \texttt{struct} object into a LAR pair \texttt{W,FW}.
+Let us notice that due to the assembly process, some 2-cells in \texttt{FW} are doubled.
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test09.py
+@{""" Transformation of Struct object to LAR model pair """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from larcc import *
+from mapper import evalStruct
+
+@< Transform Struct object to LAR model pair @>
+@}
+%-------------------------------------------------------------------------------
+
+The actual generation of the structure and its transformation to a LAR model pair is actually performed in the following macro.
+
+%-------------------------------------------------------------------------------
+@D Transform Struct object to LAR model pair
+@{""" Generation of Struct object and transform to LAR model pair """
+cubes = larCuboids([3,3,3],True)
+V = cubes[0]
+FV = cubes[1][-2]
+CV = cubes[1][-1]
+bcells = boundaryCells(CV,FV)
+BV = [FV[f] for f in bcells]
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BV))))
+
+block = Model((V,BV))
+struct = Struct(30*[block, t(3,0,0)])
+W,FW = struct2lar(struct)
+
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Remove double instances of cells}
+
+%-------------------------------------------------------------------------------
+@O test/py/mapper/test10.py
+@{""" Remove double instances of cells (and the unused vertices) """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from larcc import *
+from mapper import evalStruct
+
+@< Transform Struct object to LAR model pair @>
+@< Remove the double instances of cells @>
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))
+
+@< Remove the unused vertices @>
+@}
+%-------------------------------------------------------------------------------
+
+The actual removal of double cells (useful in several applications, and in particular in the extraction of boundary models from 3D medical images) is performed by first generating a dictionary of cells, using as key the tuple given by the cells themselves, and then removing those discovered having a double instance.
+The algorithm is extremely simple, and its implementation, given below, is straightforward.
+
+%-------------------------------------------------------------------------------
+@D Remove the double instances of cells
+@{""" Remove the double instances of cells """
+cellDict = defaultdict(list)
+for k,cell in enumerate(FW):
+	cellDict[tuple(cell)] += [k]
+FW = [list(key) for key in cellDict.keys() if len(cellDict[key])==1]
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Remove the unused vertices
+@{""" Remove the unused vertices """
+print "len(W) =",len(W)
+V,FV = larRemoveVertices(W,FW)
+print "len(V) =",len(V)
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Remove the unused vertices from a LAR model pair
+@{""" Remove the unused vertices """
+def larRemoveVertices(V,FV):
+	vertDict = dict()
+	index,defaultValue,FW,W = -1,-1,[],[]
+		
+	for k,incell in enumerate(FV):
+		outcell = []
+		for v in incell:
+			key = vcode(V[v])
+			if vertDict.get(key,defaultValue) == defaultValue:
+				index += 1
+				vertDict[key] = index
+				outcell += [index]
+				W += [eval(key)]
+			else: 
+				outcell += [vertDict[key]]
+		FW += [outcell]
+	return W,FW
+@}
+%-------------------------------------------------------------------------------
+
+
 %===============================================================================
 \section{Computational framework}
 %===============================================================================
@@ -939,6 +1047,7 @@ FV = [
 @< Check for dimension of a structure element (Verts or V) @>
 @< Traversal of a scene multigraph @>
 @< Symbolic utility to represent points as strings @>
+@< Remove the unused vertices from a LAR model pair @>
 @}
 %-------------------------------------------------------------------------------
 %===============================================================================

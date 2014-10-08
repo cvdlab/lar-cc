@@ -428,3 +428,22 @@ def vcode (vect):
    """
    return prepKey(AA(fixedPrec)(vect))
 
+""" Remove the unused vertices """
+def larRemoveVertices(V,FV):
+   vertDict = dict()
+   index,defaultValue,FW,W = -1,-1,[],[]
+      
+   for k,incell in enumerate(FV):
+      outcell = []
+      for v in incell:
+         key = vcode(V[v])
+         if vertDict.get(key,defaultValue) == defaultValue:
+            index += 1
+            vertDict[key] = index
+            outcell += [index]
+            W += [eval(key)]
+         else: 
+            outcell += [vertDict[key]]
+      FW += [outcell]
+   return W,FW
+
