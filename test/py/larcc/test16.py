@@ -46,10 +46,11 @@ VIEW(mkSignedEdges((V,EV)))
 
 """ Signed 2-boundary matrix  and signed boundary 1-chain """
 orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])
+cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
    
 """ Display the boundary 1-chain """
 VIEW(STRUCT(MKPOLS((V,FV))))
 VIEW(STRUCT(
    MKPOLS((V,FV)) +
-   [COLOR(RED)(mkSignedEdges((V,orientedBoundary)))]  ))
+   [COLOR(RED)(mkSignedEdges((V,cells)))]  ))
 

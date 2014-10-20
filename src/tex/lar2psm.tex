@@ -203,6 +203,7 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 @{"""Module with functions needed to interface LAR with pyplasm"""
 @< Function to import a generic module @>
 @< Compute the convex combination of a list of vectors @>
+from pyplasm import *
 import simplexn
 from simplexn import *
 @< Symbolic utility to represent points as strings @>

@@ -15,4 +15,4 @@ for k in range(3):
 print "\n\n"
 
 submodel = SKEL_1(STRUCT(MKPOLS((V,EV))))
-VIEW(larModelNumbering(V,[VV,EV,FV,CV],submodel,1))
+VIEW(larModelNumbering(scalx=1,scaly=1,scalz=1)(V,[VV,EV,FV,CV],submodel,1))

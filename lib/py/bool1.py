@@ -330,12 +330,54 @@ def qhullBoundary(V):
    return sorted(out)
 
 """ Extracting a $(d-1)$-basis of SCDC """
+"""
+def convexBoundary(V):
+   covectors = defaultdict(list)
+   tri = Delaunay(V)
+   FV = tri.convex_hull.tolist()
+   
+
 def larConvexFacets (V,CV):
    dim = len(V[0])
    model = V,CV
    V,FV = larFacets(model,dim)
    FV = AA(eval)(list(set(AA(str)(FV + convexBoundary(V,CV)))))
-   return sorted(AA(sorted)(FV))
+   FV = sorted(AA(sorted)(FV))
+   return FV
+"""
+def larConvexFacets(Y,CY):
+   FY = set()
+   for cell in CY:
+      cellVerts = array([[Y[v],v] for v in cell])     # v globale
+      cellVerts,cellVertsInd = TRANS(cellVerts)
+      covectors = defaultdict(list) 
+      tri = Delaunay(cellVerts)   # struttura dati
+      FV = tri.convex_hull.tolist()   # facce con indici vertici LOCALI
+      for k,facet in enumerate(FV):
+         covect = list(COVECTOR([cellVerts[v] for v in facet]))
+         normalizedCovect = [ h*SIGN(covect[0])  for h in covect]
+         for h,comp in enumerate(UNITVECT(normalizedCovect)): 
+            if not isclose(0.0, comp): 
+               theSign = SIGN(comp)
+               break
+         normalizedCovect = [x*theSign  if x!=abs(0.0) else x for x in normalizedCovect]
+         covectors[vcode(normalizedCovect)] += [k]
+      for covector,facets in covectors.items():
+         localFacets = [list(set(CAT([FV[facet] for facet in facets])))]
+         for facet in localFacets:
+            FY = FY.union([tuple([ cellVertsInd[v] for v in facet ])])  
+   #for facet in convexBoundary(Y,CY):       
+   #  FY = FY.union(facet) 
+   FY = sorted(list(AA(sorted)(AA(list)(FY))))
+   return FY   
+
+if __name__ == "__main__":
+    V,CV = larCuboids((2,2,2))
+    FV = larConvexFacets(V,CV)
+    # EV = larConvexFacets(V,FV)
+    submodel = SKEL_1(STRUCT(MKPOLS((V,FV))))
+    VV = AA(LIST)(range(len(V)))
+    VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1.5))
 
 """ Computation of boundary operator of a convex LAR model"""
 def convexBoundary(W,CW):
@@ -507,8 +549,6 @@ def larBool(arg1,arg2, brep=False):
       dim = len(W[0])
       WW = AA(LIST)(range(len(W)))
       FW = larConvexFacets (W,CW)
-      if len(CW)==4: FW=[[0,1],[1,2],[0,2],[0,3],[2,3],[2,4],[2,5],
-                     [3,4],[4,5]] #test5.py
       _,EW = larFacets((W,FW), dim=2)
       boundary1,boundary2,FWdict = makeFacetDicts(FW,boundary1,boundary2)
       if dim == 3: 

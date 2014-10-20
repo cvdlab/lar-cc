@@ -1,3 +1,4 @@
+
 """ Remove double instances of cells (and the unused vertices) """
 import sys
 """ import modules from larcc/lib """
@@ -15,9 +16,9 @@ BV = [FV[f] for f in bcells]
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BV))))
 
 block = Model((V,BV))
-struct = Struct(10*[block, t(10,0,0)])
-struct = Struct(10*[struct, t(0,10,0)])
-struct = Struct(3*[struct, t(0,0,10)])
+struct = Struct(2*[block, t(10,0,0)])
+struct = Struct(2*[struct, t(0,10,0)])
+struct = Struct(1*[struct, t(0,0,10)])
 W,FW = struct2lar(struct)
 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))

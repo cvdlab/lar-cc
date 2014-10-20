@@ -9,6 +9,7 @@ from pyplasm import *
 def CCOMB(vectors):
     return (sp.array(VECTSUM(vectors)) / float(len(vectors))).tolist()  
 
+from pyplasm import *
 import simplexn
 from simplexn import *
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """

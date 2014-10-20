@@ -4,7 +4,7 @@
 """
 The MIT License
 ===============
-    
+   
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
 'Software'), to deal in the Software without restriction, including
@@ -36,66 +36,66 @@ from lar2psm import *
 from sysml import *
 
 def triples2mat(triples,shape="csr"):
-    n = len(triples)
-    data = arange(n)
-    ij = arange(2*n).reshape(2,n)
-    for k,item in enumerate(triples):
-        ij[0][k],ij[1][k],data[k] = item
-    return scipy.sparse.coo_matrix((data, ij)).asformat(shape)
+   n = len(triples)
+   data = arange(n)
+   ij = arange(2*n).reshape(2,n)
+   for k,item in enumerate(triples):
+      ij[0][k],ij[1][k],data[k] = item
+   return scipy.sparse.coo_matrix((data, ij)).asformat(shape)
 
 def brc2Coo(ListOfListOfInt):
-    COOm = [[k,col,1] for k,row in enumerate(ListOfListOfInt)
-            for col in row ]
-    return COOm
+   COOm = [[k,col,1] for k,row in enumerate(ListOfListOfInt)
+         for col in row ]
+   return COOm
 
 def coo2Csr(COOm):
-    CSRm = triples2mat(COOm,"csr")
-    return CSRm
+   CSRm = triples2mat(COOm,"csr")
+   return CSRm
 
 def csrCreate(BRCmatrix,lenV=0,shape=(0,0)):
-    triples = brc2Coo(BRCmatrix)
-    if shape == (0,0):
-        CSRmatrix = coo2Csr(triples)
-    else:
-        CSRmatrix = scipy.sparse.csr_matrix(shape)
-        for i,j,v in triples: CSRmatrix[i,j] = v
-    return CSRmatrix
+   triples = brc2Coo(BRCmatrix)
+   if shape == (0,0):
+      CSRmatrix = coo2Csr(triples)
+   else:
+      CSRmatrix = scipy.sparse.csr_matrix(shape)
+      for i,j,v in triples: CSRmatrix[i,j] = v
+   return CSRmatrix
 
 def csrGetNumberOfRows(CSRmatrix):
-    Int = CSRmatrix.shape[0]
-    return Int
-    
+   Int = CSRmatrix.shape[0]
+   return Int
+   
 def csrGetNumberOfColumns(CSRmatrix):
-    Int = CSRmatrix.shape[1]
-    return Int
+   Int = CSRmatrix.shape[1]
+   return Int
 
 def csr2DenseMatrix(CSRm):
-    nrows = csrGetNumberOfRows(CSRm)
-    ncolumns = csrGetNumberOfColumns(CSRm)
-    ScipyMat = zeros((nrows,ncolumns),int)
-    C = CSRm.tocoo()
-    for triple in zip(C.row,C.col,C.data):
-        ScipyMat[triple[0],triple[1]] = triple[2]
-    return ScipyMat
+   nrows = csrGetNumberOfRows(CSRm)
+   ncolumns = csrGetNumberOfColumns(CSRm)
+   ScipyMat = zeros((nrows,ncolumns),int)
+   C = CSRm.tocoo()
+   for triple in zip(C.row,C.col,C.data):
+      ScipyMat[triple[0],triple[1]] = triple[2]
+   return ScipyMat
 
 def matrixProduct(CSRm1,CSRm2):
-    CSRm = CSRm1 * CSRm2
-    return CSRm
+   CSRm = CSRm1 * CSRm2
+   return CSRm
 
 def csrTranspose(CSRm):
-    CSRm = CSRm.T
-    return CSRm
+   CSRm = CSRm.T
+   return CSRm
 
 def csrBoundaryFilter(CSRm, facetLengths):
-    maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
-    inputShape = CSRm.shape
-    coo = CSRm.tocoo()
-    for k in range(len(coo.data)):
-        if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
-        else: coo.data[k] = 0
-    mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
-    out = mtx.tocsr()
-    return out
+   maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
+   inputShape = CSRm.shape
+   coo = CSRm.tocoo()
+   for k in range(len(coo.data)):
+      if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
+      else: coo.data[k] = 0
+   mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
+   out = mtx.tocsr()
+   return out
 
 def csrPredFilter(CSRm, pred):
    # can be done in parallel (by rows)
@@ -107,16 +107,16 @@ def csrPredFilter(CSRm, pred):
    return CSRm
 
 def boundary(cells,facets):
-    lenV = max(max(cells),max(facets))
-    csrCV = csrCreate(cells,lenV)
-    csrFV = csrCreate(facets,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-    return csrBoundaryFilter(csrFC,facetLengths)
+   lenV = max(max(cells),max(facets))
+   csrCV = csrCreate(cells,lenV)
+   csrFV = csrCreate(facets,lenV)
+   csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+   facetLengths = [csrCell.getnnz() for csrCell in csrCV]
+   return csrBoundaryFilter(csrFC,facetLengths)
 
 def coboundary(cells,facets):
-    Boundary = boundary(cells,facets)
-    return csrTranspose(Boundary)
+   Boundary = boundary(cells,facets)
+   return csrTranspose(Boundary)
 
 def totalChain(cells):
    return csrCreate([[0] for cell in cells])  # ????  zero ??
@@ -174,36 +174,36 @@ def signedBoundaryCells(verts,cells,facets):
    return orientedBoundaryCells
 
 def larCellAdjacencies(CSRm):
-    CSRm = matrixProduct(CSRm,csrTranspose(CSRm))
-    return CSRm
+   CSRm = matrixProduct(CSRm,csrTranspose(CSRm))
+   return CSRm
 
 def setup(model,dim):
-    V, cells = model
-    csr = csrCreate(cells)
-    csrAdjSquareMat = larCellAdjacencies(csr)
-    csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
-    return V,cells,csr,csrAdjSquareMat
+   V, cells = model
+   csr = csrCreate(cells)
+   csrAdjSquareMat = larCellAdjacencies(csr)
+   csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
+   return V,cells,csr,csrAdjSquareMat
 
 def larFacets(model, dim=3, emptyCellNumber=0):
-    """ Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
-        Return (V, (d-1)-cellFacets)
+   """ Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
+      Return (V, (d-1)-cellFacets)
       """
-    V,cells,csr,csrAdjSquareMat = setup(model,dim)
-    solidCellNumber = len(cells) - emptyCellNumber
-    cellFacets = []
-    # for each input cell i
-    for i in range(len(cells)):
-        adjCells = csrAdjSquareMat[i].tocoo()
-        cell1 = csr[i].tocoo().col
-        pairs = zip(adjCells.col,adjCells.data)
-        for j,v in pairs:
-            if (i<j) and (i<solidCellNumber):
-                cell2 = csr[j].tocoo().col
-                cell = list(set(cell1).intersection(cell2))
-                cellFacets.append(sorted(cell))
-    # sort and remove duplicates
-    cellFacets = sorted(AA(list)(set(AA(tuple)(cellFacets))))
-    return V,cellFacets
+   V,cells,csr,csrAdjSquareMat = setup(model,dim)
+   solidCellNumber = len(cells) - emptyCellNumber
+   cellFacets = []
+   # for each input cell i
+   for i in range(len(cells)):
+      adjCells = csrAdjSquareMat[i].tocoo()
+      cell1 = csr[i].tocoo().col
+      pairs = zip(adjCells.col,adjCells.data)
+      for j,v in pairs:
+         if (i<j) and (i<solidCellNumber):
+            cell2 = csr[j].tocoo().col
+            cell = list(set(cell1).intersection(cell2))
+            cellFacets.append(sorted(cell))
+   # sort and remove duplicates
+   cellFacets = sorted(AA(list)(set(AA(tuple)(cellFacets))))
+   return V,cellFacets
 
 """ Some incidence operators """
 def larIncidence(cells,facets):
@@ -249,14 +249,16 @@ def modelIndexing(shape):
       hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
    return STRUCT(hpcs)
 """ Numbered visualization of a LAR model """
-def larModelNumbering(V,bases,submodel,numberScaling=1):
-   color = [ORANGE,CYAN,GREEN,WHITE]
-   nums = AA(range)(AA(len)(bases))
-   hpcs = [submodel]
-   for k in range(len(bases)):
-      hpcs += [cellNumbering((V,bases[k]),submodel)
-               (nums[k],color[k],(0.5+0.1*k)*numberScaling)]
-   return STRUCT(hpcs)
+def larModelNumbering(scalx=1,scaly=1,scalz=1):
+   def  larModelNumbering0(V,bases,submodel,numberScaling=1):
+      color = [ORANGE,CYAN,GREEN,WHITE]
+      nums = AA(range)(AA(len)(bases))
+      hpcs = [submodel]
+      for k in range(len(bases)):
+         hpcs += [cellNumbering((V,bases[k]),submodel)
+                  (nums[k],color[k],(0.5+0.1*k)*numberScaling)]
+      return EXPLODE(scalx,scaly,scalz)(hpcs)
+   return larModelNumbering0
 
 
 """ Drawing of oriented edges (2D) """
@@ -425,7 +427,7 @@ if __name__ == "__main__":
    FV = [[0,1,2],[0,1,4],[0,2,4],[1,2,3],[1,2,4],[1,2,5],[1,3,5],[1,4,5],[2,3,5],
         [2,3,6],[2,4,5],[2,4,6],[2,5,6],[3,5,6],[3,5,7],[3,6,7],[4,5,6],[5,6,7]]
    EV = [[0,1],[0,2],[0,4],[1,2],[1,3],[1,4],[1,5],[2,3],[2,4],[2,5],
-         [2,6],[3,5],[3,6],[3,7],[4,5],[4,6],[5,6],[5,7],[6,7]]
+        [2,6],[3,5],[3,6],[3,7],[4,5],[4,6],[5,6],[5,7],[6,7]]
    VV = AA(LIST)(range(len(V)))
    
    print "\ncoboundary_2 =\n", csr2DenseMatrix(coboundary(CV,FV))
@@ -450,7 +452,7 @@ if __name__ == "__main__":
    
    submodel = mkSignedEdges((V,EV))
    VIEW(submodel)
-   VIEW(larModelNumbering(V,[VV,EV,FV],submodel,2))
+   VIEW(larModelNumbering(scalx=1,scaly=1,scalz=1)(V,[VV,EV,FV],submodel,2))
    
    """ A first (simplicial) example """
    V = [[0.,0.],[3.,0.],[0.,3.],[3.,3.],[1.,2.],[2.,2.],[1.,1.],[2.,1.]]
