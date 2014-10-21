@@ -719,6 +719,7 @@ In our case we have already generated the $(d-1)$-chains $\partial A$ and $\part
 @D Coboundary operator on the convex decomposition of common space
 @{""" Coboundary operator on the convex decomposition of common space """
 from scipy.spatial import ConvexHull
+
 def qhullBoundary(V):
 	points = array(V)
 	hull = ConvexHull(points)
@@ -726,18 +727,28 @@ def qhullBoundary(V):
 	return sorted(out)
 
 """ Extracting a $(d-1)$-basis of SCDC """
-"""
 def convexBoundary(V):
 	covectors = defaultdict(list)
 	tri = Delaunay(V)
 	FV = tri.convex_hull.tolist()
 	
+def convexBoundary(W,CW):
+	points = array(W)
+	hull = ConvexHull(points,qhull_options="Qc")
+	coplanarVerts = hull.coplanar.tolist()
+	if coplanarVerts != []:  coplanarVerts = CAT(coplanarVerts)
+	BWchain = set( CAT(qhullBoundary(W)) + coplanarVerts )
+	dim = len(W[0])
+	bfacets = [list(BWchain.intersection(cell)) 
+					for cell in CW if len(BWchain.intersection(cell)) >= dim]
+	return bfacets
 
 def larConvexFacets (V,CV):
 	dim = len(V[0])
 	model = V,CV
 	V,FV = larFacets(model,dim)
-	FV = AA(eval)(list(set(AA(str)(FV + convexBoundary(V,CV)))))
+	FV = AA(eval)(list(set(AA(str)(FV + convexBoundary(V,CV)
+			))))
 	FV = sorted(AA(sorted)(FV))
 	return FV
 """
@@ -774,8 +785,13 @@ if __name__ == "__main__":
     submodel = SKEL_1(STRUCT(MKPOLS((V,FV))))
     VV = AA(LIST)(range(len(V)))
     VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1.5))
+"""
 @}
 %-------------------------------------------------------------------------------
+
+%submodel = SKEL_1(STRUCT(MKPOLS((W,CX))))
+%VV = AA(LIST)(range(len(W)))
+%VIEW(larModelNumbering(1,1,1)(W,[VV,coplanarVerts],submodel,1.5))
 
 
 \paragraph{Computation of boundary operator}
@@ -1102,9 +1118,9 @@ def larBool(arg1,arg2, brep=False):
 	W,CX,FX,CXbits = larBool4(W,CWbits)
 	chain1,chain2 = TRANS(CXbits)
 	
-	print "\n>>>> W =",W
-	print "\n>>>> CX =",CX
-	print "\n>>>> FX =",FX
+	print "\nW =",W
+	print "\nCX =",CX
+	print "\nFX =",FX
 	boundaryMat = boundary(CX,FX)
 
 	def theBoundary(boundaryMat,CX,coords):

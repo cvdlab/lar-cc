@@ -548,7 +548,8 @@ def larModelNumbering(scalx=1,scaly=1,scalz=1):
 		for k in range(len(bases)):
 			hpcs += [cellNumbering((V,bases[k]),submodel)
 						(nums[k],color[k],(0.5+0.1*k)*numberScaling)]
-		return EXPLODE(scalx,scaly,scalz)(hpcs)
+		return STRUCT(hpcs)
+		#return EXPLODE(scalx,scaly,scalz)(hpcs)
 	return larModelNumbering0
 @}
 %-------------------------------------------------------------------------------

@@ -1,0 +1,2278 @@
+% -------------------------------------------------------------------------
+% ------ nuweb macros (redefine as desired, or omit with "nuweb -p") ------
+% -------------------------------------------------------------------------
+\providecommand{\NWtxtMacroDefBy}{Macro defined by}
+\providecommand{\NWtxtMacroRefIn}{Macro referenced in}
+\providecommand{\NWtxtMacroNoRef}{Macro never referenced}
+\providecommand{\NWtxtDefBy}{Defined by}
+\providecommand{\NWtxtRefIn}{Referenced in}
+\providecommand{\NWtxtNoRef}{Not referenced}
+\providecommand{\NWtxtFileDefBy}{File defined by}
+\providecommand{\NWsep}{${\diamond}$}
+\providecommand{\NWlink}[2]{\hyperlink{#1}{#2}}
+\providecommand{\NWtarget}[2]{% move baseline up by \baselineskip 
+  \raisebox{\baselineskip}[1.5ex][0ex]{%
+    \mbox{%
+      \hypertarget{#1}{%
+        \raisebox{-1\baselineskip}[0ex][0ex]{%
+          \mbox{#2}%
+}}}}}
+% -------------------------------------------------------------------------
+
+\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}		%...ora4paperora5paperor...
+%\geometry{landscape}		%Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[colorlinks]{hyperref}
+
+%----macros begin---------------------------------------------------------------
+\usepackage{color}
+\usepackage{amsthm}
+\usepackage{amsmath}
+
+\def\conv{\mbox{\textrm{conv}\,}}
+\def\aff{\mbox{\textrm{aff}\,}}
+\def\E{\mathbb{E}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\tex{\TeX}
+\def\latex{\LaTeX}
+\def\v#1{{\bf #1}}
+\def\p#1{{\bf #1}}
+\def\T#1{{\bf #1}}
+
+\def\vet#1{{\left(\begin{array}{cccccccccccccccccccc}#1\end{array}\right)}}
+\def\mat#1{{\left(\begin{array}{cccccccccccccccccccc}#1\end{array}\right)}}
+
+\def\lin{\mbox{\rm lin}\,}
+\def\aff{\mbox{\rm aff}\,}
+\def\pos{\mbox{\rm pos}\,}
+\def\cone{\mbox{\rm cone}\,}
+\def\conv{\mbox{\rm conv}\,}
+\newcommand{\homog}[0]{\mbox{\rm homog}\,}
+\newcommand{\relint}[0]{\mbox{\rm relint}\,}
+
+%----macros end-----------------------------------------------------------------
+
+\title{Boolean combinations of cellular complexes as chain operations
+\footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
+}
+\author{Alberto Paoluzzi}
+%\date{}							%Activatetodisplayagivendateornodate
+
+\begin{document}
+\maketitle
+\tableofcontents
+\nonstopmode
+
+%-------------------------------------------------------------------------------
+\section{Introduction}
+%-------------------------------------------------------------------------------
+
+In this module a novel approach to Boolean operations of cellular complexes is defined and implemented. The novel algorithm may be summarised as follows. 
+
+First we compute the CDC (Common Delaunay Complex) of the input LAR complexes $A$ and $B$, to get a LAR of the \emph{simplicial} CDC.
+
+Then, we split the cells intersecting the boundary faces of the input complexes, getting the final \emph{polytopal} SCDC  
+(Split Common Delaunay Complex), whose cells  provide the  basis for the linear coordinate representation of both input 
+complexes, upon the same space decomposition.
+
+Afterwards, every Boolean result is computed by bitwise operations, between the coordinate representations of the transformed $A$ and $B$ input.
+
+Finally a greedy assembly of SCDC cells is executed, in order to return a polytopal complex with a reduced number of cells.
+
+
+
+\subsection{Preview of the Boolean algorithm}
+%-------------------------------------------------------------------------------
+
+The goal is the computation of $A \diamond B$, with $\diamond\in \{\cup, \cap, -\}$, where a LAR representation of both $A$ and $B$ is given. The Boolean algorithm works as follows.
+
+\begin{enumerate}
+\item 
+Embed both cellular complexes $A$ and $B$ in the same space (say, identify their common vertices) by $V_{ab} = V_a \cup V_b$.
+\item 
+Build their CDC  (Common Delaunay Complex) as the LAR of \emph{Delaunay triangulation} of the vertex set $V_{ab}$, and embedded $\partial A$ and $\partial B$ in it.
+\item 
+Split the (highest-dimensional) cells of CDC crossed by $\partial A$ or $\partial B$. Their lower dimensional faces remain partitioned accordingly. We name the resulting complex SCDC (Split Common Delaunay Complex).
+\item 
+With respect to the SCDC basis of $d$-cells $C_d$, compute two coordinate chains $\alpha,\beta: C_d \to \{0,1\}$, such that: 
+\begin{align}
+	\alpha(cell) &= 1  \quad\mbox{if\ } |cell| \subset A;  \quad\mbox{else\ } \alpha(cell) = 0, \nonumber\\
+	\beta(cell) &= 1  \quad\mbox{if\ } |cell| \subset B;  \quad\mbox{else\ } \beta(cell) = 0. \nonumber
+\end{align}
+\item 
+Extract accordingly the SCDC chain corresponding to $A \diamond B$, with $\diamond\in \{\cup, \cap, -\}$.
+\end{enumerate}
+
+
+\subsection{Remarks}
+%-------------------------------------------------------------------------------
+
+You may  make an analogy between the SCDC (\emph{Split} CDC) and a CDT (Constrained Delaunay Triangulation).  In part they coincide, but in general, the SCDC is a polytopal complex, and is not a simplicial complex as the CDC.
+
+The more complex algorithmic step is the cell splitting.  
+Every time, a single $d$-cell  $c$  is split by a single hyperplane (cutting its interior)  giving either two splitted cells $c_1$ and $c_2$, or just one output cell (if the hyperplane is the affine hull of the CDC facet)
+whatever the input cell dimension $d$.  After every splitting of the cell interior, the row $c$ is substituted (within the \texttt{CV} matrix) by $c_1$, and $c_2$ is 
+added to the end of the \texttt{CV} matrix, as a new row.
+
+The splitting process is started by ``splitting seeds" generated by $(d-1)$-faces of both operand boundaries.
+In fact, every such face, say $f$, has vertices on CDC and \emph{may} split some incident CDC $d$-cell.  In particular, starting from its vertices,
+$f$ must split the CDC cells in whose interior it passes though.
+
+So, a dynamic data structure is set-up, storing for each boundary face $f$ the list of cells it must cut, and, for every CDC $d$-cell with interior traversed
+by some such $f$, the list of cutting faces.  This data structure is continuously updated during the splitting process, using the 
+adjacent cells of the split ones, who are to be split in turn.  Every split cell may add some adjacent cell to be split, and after the split,
+the used pair (\texttt{cell,face}) is removed.  The splitting process continues until the data structure becomes empty.
+
+Every time a cell is split, it is characterized as either internal (1) or external (0) to the used (oriented) boundary facet f, so that the two 
+resulting subcells $c_1$ and $c_2$  receive two opposite characterization (with respect to the considered boundary).
+
+At the very end, every (polytopal) SCDC $d$-cell has two bits of information (one for argument $A$ and one for argument $B$), telling whether it is internal  (1) or external (0) or unknown (-1) with respect to every Boolean argument.
+
+A final recursive traversal of the SCDC, based on cell adjacencies, transforms every $-1$ into either 0 or 1, providing the two final chains to be bitwise operated, depending on the Boolean operation to execute.
+
+
+%-------------------------------------------------------------------------------
+\section{Step 1: merging discrete spaces}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Requirements}
+%-------------------------------------------------------------------------------
+
+The \emph{join} of two sets $P, Q \subset \E^d$ is the set $PQ = \{\alpha \v{x} + \beta \v{y}\,| \v{x} \in P,\  \v{y} \in Q\}$,
+where $\alpha, \beta \in \R$, $\alpha, \beta \geq 0$, and $\alpha + \beta = 1$. The join operation is associative and commutative.
+
+
+\paragraph{Input} 
+Two LAR models of two non-empty ``solid'' $d$-spaces $A$ and $B$, denoted as \texttt{(V1,CV1)} and \texttt{(V2,CV2)}. 
+
+
+\paragraph{Output} 
+The LAR representation \texttt{(V,CV)} of Delaunay triangulation (simplicial $d$-complex) of the set $\conv AB \subset \E^d$, convex hull of the join of $A$ and $B$, named Common Delaunay Complex (CDC) in the following.
+
+\paragraph{Auxiliary data structures} 
+This software module returns also:
+
+\begin{enumerate}
+\item 
+a dictionary \texttt{vertDict} of \texttt{V} vertices, with \emph{key} the symbolic representation of vertices \texttt{v} returned by expressions \texttt{vcode(v)}, $\texttt{v}\in \texttt{V}$, and with values the finite ordinal numbers of the vertices;
+
+\item 
+the numbers \texttt{n1}, \texttt{n12}, \texttt{n2} of the elements of \texttt{V1}, $\texttt{V1}\cap\texttt{V2}$, and \texttt{V2}, respectively. Notice that the following assertions must hold (see Figure~\ref{fig:bounds}):
+\begin{align}
+\texttt{n1} - \texttt{n12} + \texttt{n2} &= \texttt{n} \\
+0 < \texttt{n} - \texttt{n2}  &\leq  \texttt{n1}  <  \texttt{n} 
+\end{align}
+
+\item the input boundary complex \texttt{(V,BC)}, with $\texttt{BC} = \texttt{BC1+BC2}$, i.e.~the union of the  two boundary $(d-1)$-complexes \texttt{(V,BC1)} and \texttt{(V,BC2)}, defined on the common vertices.
+\end{enumerate}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/bounds} 
+   \caption{Relationships inside the orderings of CDC vertices}
+   \label{fig:bounds}
+\end{figure}
+
+\subsection{Implementation}
+%-------------------------------------------------------------------------------
+
+
+\subsubsection{Summary}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap1}
+\protect\makebox[0ex][r]{\NWtarget{nuweb5a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$First Boolean step\nobreak\ {\footnotesize 5a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" First Boolean step """@\\
+\mbox{}\verb@def larBool1():@\\
+\mbox{}\verb@   V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)@\\
+\mbox{}\verb@   VV = AA(LIST)(range(len(V)))@\\
+\mbox{}\verb@   V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2, brep)@\\
+\mbox{}\verb@   W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)@\\
+\mbox{}\verb@   assert len(VC) == len(V) @\\
+\mbox{}\verb@   assert len(BCellCovering) == len(BC)@\\
+\mbox{}\verb@   return W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW @\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25}{25}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Detail functions}
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap2}
+\protect\makebox[0ex][r]{\NWtarget{nuweb5b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute model boundaries of complex of convex cells\nobreak\ {\footnotesize 5b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Compute model boundaries of complex of convex cells """@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def larFacetsOfPolytopalComplex(vertDict,cells,facets):@\\
+\mbox{}\verb@   (V1,CV1),(V2,CV2) = model1,model2@\\
+\mbox{}\verb@   for cell in CV1:@\\
+\mbox{}\verb@      Vcell = [V1[v] for v in cell]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap3}
+\protect\makebox[0ex][r]{\NWtarget{nuweb5c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Merge two dictionaries with keys the point locations\nobreak\ {\footnotesize 5c}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Merge two dictionaries with keys the point locations """@\\
+\mbox{}\verb@def mergeVertices(model1, model2):@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   (V1,CV1),(V2,CV2) = model1, model2@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   n = len(V1); m = len(V2)@\\
+\mbox{}\verb@   def shift(CV, n): @\\
+\mbox{}\verb@      return [[v+n for v in cell] for cell in CV]@\\
+\mbox{}\verb@   CV2 = shift(CV2,n)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   vdict1 = defaultdict(list)@\\
+\mbox{}\verb@   for k,v in enumerate(V1): vdict1[vcode(v)].append(k) @\\
+\mbox{}\verb@   vdict2 = defaultdict(list)@\\
+\mbox{}\verb@   for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) @\\
+\mbox{}\verb@   vertDict = defaultdict(list)@\\
+\mbox{}\verb@   for point in vdict1.keys(): vertDict[point] += vdict1[point]@\\
+\mbox{}\verb@   for point in vdict2.keys(): vertDict[point] += vdict2[point]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   case1, case12, case2 = [],[],[]@\\
+\mbox{}\verb@   for item in vertDict.items():@\\
+\mbox{}\verb@      key,val = item@\\
+\mbox{}\verb@      if len(val)==2:  case12 += [item]@\\
+\mbox{}\verb@      elif val[0] < n: case1 += [item]@\\
+\mbox{}\verb@      else: case2 += [item]@\\
+\mbox{}\verb@   n1 = len(case1); n2 = len(case12); n3 = len(case2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   invertedindex = list(0 for k in range(n+m))@\\
+\mbox{}\verb@   for k,item in enumerate(case1):@\\
+\mbox{}\verb@      invertedindex[item[1][0]] = k@\\
+\mbox{}\verb@   for k,item in enumerate(case12):@\\
+\mbox{}\verb@      invertedindex[item[1][0]] = k+n1@\\
+\mbox{}\verb@      invertedindex[item[1][1]] = k+n1@\\
+\mbox{}\verb@   for k,item in enumerate(case2):@\\
+\mbox{}\verb@      invertedindex[item[1][0]] = k+n1+n2@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   V = [eval(p[0]) for p in case1] + [eval(p[0]) for p in case12] + [eval(@\\
+\mbox{}\verb@            p[0]) for p in case2]@\\
+\mbox{}\verb@   CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]@\\
+\mbox{}\verb@   CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   return V,CV1,CV2, n1+n2,n2,n2+n3@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+
+	
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap4}
+\protect\makebox[0ex][r]{\NWtarget{nuweb6}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Make Common Delaunay Complex\nobreak\ {\footnotesize 6}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Make Common Delaunay Complex """@\\
+\mbox{}\verb@def makeCDC(arg1,arg2, brep):@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   (V1,basis1), (V2,basis2) = arg1,arg2@\\
+\mbox{}\verb@   (facets1,cells1),(facets2,cells2) = basis1[-2:],basis2[-2:]@\\
+\mbox{}\verb@   model1, model2 = (V1,cells1),(V2,cells2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   V, _,_, n1,n12,n2 = mergeVertices(model1, model2)@\\
+\mbox{}\verb@   n = len(V)@\\
+\mbox{}\verb@   assert n == n1 - n12 + n2@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   CV = sorted(AA(sorted)(Delaunay(array(V)).simplices))@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   vertDict = defaultdict(list)@\\
+\mbox{}\verb@   for k,v in enumerate(V): vertDict[vcode(v)] += [k]@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   if brep == False:@\\
+\mbox{}\verb@      signs1,BC1 = signedCellularBoundaryCells(V1,basis1)@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@      BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))@\\
+\mbox{}\verb@      BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]@\\
+\mbox{}\verb@    @\\
+\mbox{}\verb@      BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))@\\
+\mbox{}\verb@      BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] @\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   else:@\\
+\mbox{}\verb@      BC1,BC2 = basis1[-1],basis2[-1]@\\
+\mbox{}\verb@    @\\
+\mbox{}\verb@   BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ @\\
+\mbox{}\verb@         [ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+
+%-------------------------------------------------------------------------------
+\section{Step 2: splitting cells}
+%-------------------------------------------------------------------------------
+
+The goal of this section is to transform the CDC simplicial complex, into the polytopal Split Common Delaunay Complex (SCDC), by splitting the $d$-cells of CDC crossed in their interior by some cell of the input boundary complex.
+
+\subsection{Requirements}
+%-------------------------------------------------------------------------------
+We call here for a sequential implementation, following every $(d-1)$-facet \texttt{lambda} in \texttt{BC} (for \emph{Boundary Cells}). We start the splitting with \texttt{COVECTOR(lambda)} from \texttt{cell}, one of the CDC $d$-cells  incident on a vertex of \texttt{lambda}, and continue the splitting on the $d$-cells $(d-1)$-adjacent  to \texttt{cell}, where (a) \texttt{COVECTOR(lambda)} either crosses the \texttt{cell}'s interior or contains one of \texttt{cell}'s $(d-1)$-facets \and{and} (b) such that the intersection with \texttt{lambda} is not empty, until the queue (or stack) of $d$-cells to intersect with \texttt{covector} is not empty.
+
+\paragraph{Best computational strategy}
+First associate to each cutting facet the list of cells it may cut; then execute all the cuts. In this way we can compute the adjacency matrix just one time at the beginning of the procedure, and do not need to update it after every split.
+
+\paragraph{Input}
+The output of previous algorithm stage.
+
+\paragraph{Output}
+The LAR representation \texttt{(W,PW)} of the SCDC,
+
+\paragraph{Auxiliary data structures} 
+This software module returns also
+ a dictionary \texttt{splitFacets}, with keys the  input boundary faces and values the list of pairs\texttt{(covector,fragmentedFaces)}.   
+
+
+\subsection{Implementation}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Summary}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap5}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Second Boolean step\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Second Boolean step """@\\
+\mbox{}\verb@def larBool2(boundary1,boundary2):@\\
+\mbox{}\verb@   dim = len(W[0])@\\
+\mbox{}\verb@   WW = AA(LIST)(range(len(W)))@\\
+\mbox{}\verb@   FW = larConvexFacets (W,CW)@\\
+\mbox{}\verb@   _,EW = larFacets((W,FW), dim=2)@\\
+\mbox{}\verb@   boundary1,boundary2,FWdict = makeFacetDicts(FW,boundary1,boundary2)@\\
+\mbox{}\verb@   if dim == 3: @\\
+\mbox{}\verb@      _,EW = larFacets((W,FW), dim=2)@\\
+\mbox{}\verb@      bases = [WW,EW,FW,CW]@\\
+\mbox{}\verb@   elif dim == 2: bases = [WW,FW,CW]@\\
+\mbox{}\verb@   else: print "\nerror: not implemented\n"@\\
+\mbox{}\verb@   return W,CW,dim,bases,boundary1,boundary2,FW,BCW@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25}{25}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Detail functions}
+
+
+\paragraph{Computing the adjacent cells of a given cell}
+To perform this task we make only use of the \texttt{CV} list. In a more efficient implementation we should make direct use of the sparse adjacency matrix, to be dynamically updated together with the \texttt{CV} list.
+The computation of the adjacent $d$-cells of a single $d$-cell is given here by extracting a column of the $\texttt{CSR}(M_d\, M_d^t)$. This can be done by multiplying $\texttt{CSR}(M_d)$ by its transposed row corresponding to the query $d$-cell. 
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap6}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing the adjacent cells of a given cell\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Computing the adjacent cells of a given cell """@\\
+\mbox{}\verb@def adjacencyQuery (V,CV):@\\
+\mbox{}\verb@   dim = len(V[0])@\\
+\mbox{}\verb@   csrCV =  csrCreate(CV)@\\
+\mbox{}\verb@   csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))@\\
+\mbox{}\verb@   def adjacencyQuery0 (cell):@\\
+\mbox{}\verb@      nverts = len(CV[cell])@\\
+\mbox{}\verb@      cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]@\\
+\mbox{}\verb@      return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]@\\
+\mbox{}\verb@   return adjacencyQuery0@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Relational inversion (characteristic matrix transposition)}
+
+The operation could be executed by simple matrix transposition of the CSR (Compressed Sparse Row) representation of the sparse characteristic matrix $M_d \equiv \texttt{CV}$.
+A simple relational inversion using Python lists is given here. The \texttt{invertRelation} function 
+is given here, linear in the size of the \texttt{CV} list, where the complexity of each cell is constant and 
+small in most cases.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap7}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Characteristic matrix transposition\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Characteristic matrix transposition """@\\
+\mbox{}\verb@def invertRelation(CV):@\\
+\mbox{}\verb@   def myMax(List):@\\
+\mbox{}\verb@      if List==[]: return -1@\\
+\mbox{}\verb@      else: return max(List)@\\
+\mbox{}\verb@   columnNumber = max(AA(myMax)(CV))+1@\\
+\mbox{}\verb@   VC = [[] for k in range(columnNumber)]@\\
+\mbox{}\verb@   for k,cell in enumerate(CV):@\\
+\mbox{}\verb@      for v in cell:@\\
+\mbox{}\verb@         VC[v] += [k]@\\
+\mbox{}\verb@   return VC@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Computation of splitting tests}
+
+In order to compute, in the simplest and more general way, whether each of the two split $d$-cells is internal or external to the splitting boundary $d-1$-facet, it is necessary to consider the oriented covector $\phi$ (or one-form) canonically associated to the facet $f$ by the covector representation theorem, i.e.~the corresponding oriented hyperplane. In this case, the internal/external attribute of the split cell will be computed by evaluating the pairing $<v,\phi>$.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap8}
+\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Splitting tests\nobreak\ {\footnotesize 9b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Splitting tests """@\\
+\mbox{}\verb@def testingSubspace(V,covector):@\\
+\mbox{}\verb@   def testingSubspace0(vcell):@\\
+\mbox{}\verb@      inout = SIGN(sum([INNERPROD([[1.]+V[v],covector]) for v in vcell]))@\\
+\mbox{}\verb@      return inout@\\
+\mbox{}\verb@   return testingSubspace0@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@def cuttingTest(covector,polytope,V):@\\
+\mbox{}\verb@   signs = [INNERPROD([covector, [1.]+V[v]]) for v in polytope]@\\
+\mbox{}\verb@   signs = eval(vcode(signs))@\\
+\mbox{}\verb@   return any([value<-0.001 for value in signs]) and \@\\
+\mbox{}\verb@         any([value>0.001 for value in signs])@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@def tangentTest(covector,facet,adjCell,V):@\\
+\mbox{}\verb@   common = list(set(facet).intersection(adjCell))@\\
+\mbox{}\verb@   signs = [INNERPROD([covector, [1.]+V[v]]) for v in common]@\\
+\mbox{}\verb@   count = 0@\\
+\mbox{}\verb@   for value in signs:@\\
+\mbox{}\verb@      if -0.0001<value<0.0001: count +=1@\\
+\mbox{}\verb@   if count >= len(V[0]): @\\
+\mbox{}\verb@      return True@\\
+\mbox{}\verb@   else: @\\
+\mbox{}\verb@      return False   @\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb10}{10}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+
+\paragraph{Elementary splitting test}
+
+Let us remember that the adjacency matrix between $d$-cells is computed via SpMSpM multiplication by the double application 
+\[
+\texttt{adjacencyQuery(V,CV)(cell)}, 
+\] 
+where the first application \texttt{adjacencyQuery(V,CV)}
+returns a partial function with bufferisation of the adjacency matrix, and the second application to \texttt{cell} returns the list of adjacent $d$-cells sharing with it a $(d-1)$-dimensional facet.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap9}
+\protect\makebox[0ex][r]{\NWtarget{nuweb10}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Elementary splitting test\nobreak\ {\footnotesize 10}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Splitting tests\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@""" Elementary splitting test """@\\
+\mbox{}\verb@def dividenda(V,CV, cell,facet,covector,unchosen):@\\
+\mbox{}\verb@   out = []@\\
+\mbox{}\verb@   adjCells = adjacencyQuery(V,CV)(cell)@\\
+\mbox{}\verb@   for adjCell in set(adjCells).difference(unchosen):@\\
+\mbox{}\verb@      if (cuttingTest(covector,CV[adjCell],V) and \@\\
+\mbox{}\verb@         cellFacetIntersecting(facet,adjCell,covector,V,CV)) or \@\\
+\mbox{}\verb@         tangentTest(covector,facet,CV[adjCell],V): out += [adjCell]@\\
+\mbox{}\verb@   return out@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{CDC cell splitting with one or more facets}
+
+When splitting a $d$-cell with some hyperplanes, we need to return not only either the two cut parts or the cell itself when the hyperplane is tangent to a $(d-1)$-face, but also the facet lying on the hyperplane. 
+In the first cade it is directly computed by the \texttt{SPLITCELL} function, and returned as the \texttt{equal} set of points. In the second case, the cell is transformed by the map that sends the hyperplane in the $x_d=0$ subspace ($z=0$ in 3D), and the searched facet is returned as the (back-transformed) set of cell vertices on this subspace. 
+
+Actually, the process is strongly complicated by the fact that the input cell (and its facets) may be cut by several hyperplanes. By now, we resort to the simplex computation, even if more time-expensive:  to compare each vertex of each cell fragment, against every hyperplanes. This approach will adapt well to the writing of a computational kernel on the GPU.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap10}
+\protect\makebox[0ex][r]{\NWtarget{nuweb11a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$CDC cell splitting with one or more cutting facets\nobreak\ {\footnotesize 11a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" CDC cell splitting with one or more cutting facets """@\\
+\mbox{}\verb@def fragment(cell,cellCuts,V,CV,BC):@\\
+\mbox{}\verb@   vcell = CV[cell]@\\
+\mbox{}\verb@   cellFragments = [[V[v] for v in vcell]]@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   for f in cellCuts[cell]:@\\
+\mbox{}\verb@      facet = BC[f]@\\
+\mbox{}\verb@      plane = COVECTOR([V[v] for v in facet])@\\
+\mbox{}\verb@      for k,fragment in enumerate(cellFragments):@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@         #if not tangentTest(plane,facet,fragment,V):@\\
+\mbox{}\verb@         [below,equal,above] = SPLITCELL(plane,fragment,tolerance=1e-4,ntry=4)@\\
+\mbox{}\verb@         if below != above:@\\
+\mbox{}\verb@            cellFragments[k] = below@\\
+\mbox{}\verb@            cellFragments += [above]@\\
+\mbox{}\verb@      facets = facetsOnCuts(cellFragments,cellCuts,V,BC)@\\
+\mbox{}\verb@   return cellFragments@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{SCDC splitting with every boundary facet}
+The function \texttt{makeSCDC} is used  to compute the LAR model \texttt{(W,CW)} of the SCDC.
+It takes as input the LAR model \texttt{(V,CV)} of the CDC, and the LAR model \texttt{(V,BC)} of the input Boolean Complex, and returns both a new LAR model \texttt{(W,CW)} and the vertex-cell relation \texttt{VC}, i.e.~the transposed of \texttt{CV}.
+
+For every $\texttt{k} \in \texttt{BC}$, a list \texttt{cellsToSplit}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap11}
+\protect\makebox[0ex][r]{\NWtarget{nuweb11b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$SCDC splitting with every boundary facet\nobreak\ {\footnotesize 11b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" SCDC splitting with every boundary facet """@\\
+\mbox{}\verb@def makeSCDC(V,CV,BC,nbc1,nbc2):@\\
+\mbox{}\verb@   index,defaultValue = -1,-1@\\
+\mbox{}\verb@   VC = invertRelation(CV)@\\
+\mbox{}\verb@   CW,BCfrags = [],[]@\\
+\mbox{}\verb@   Wdict = dict()@\\
+\mbox{}\verb@   BCellcovering = boundaryCover(V,CV,BC,VC)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   cellCuts = invertRelation(BCellcovering)@\\
+\mbox{}\verb@   for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   def verySmall(number): return abs(number) < 10**-5.5@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   for k,frags in enumerate(cellCuts):@\\
+\mbox{}\verb@      if cellCuts[k] == []:@\\
+\mbox{}\verb@         cell = []@\\
+\mbox{}\verb@         for v in CV[k]:@\\
+\mbox{}\verb@            key = vcode(V[v])@\\
+\mbox{}\verb@            if Wdict.get(key,defaultValue) == defaultValue:@\\
+\mbox{}\verb@               index += 1@\\
+\mbox{}\verb@               Wdict[key] = index@\\
+\mbox{}\verb@               cell += [index]@\\
+\mbox{}\verb@            else: @\\
+\mbox{}\verb@               cell += [Wdict[key]]@\\
+\mbox{}\verb@         CW += [cell]@\\
+\mbox{}\verb@      else:@\\
+\mbox{}\verb@         cellFragments = fragment(k,cellCuts,V,CV,BC)@\\
+\mbox{}\verb@         for cellFragment in cellFragments:@\\
+\mbox{}\verb@            cellFrag = []@\\
+\mbox{}\verb@            for v in cellFragment:@\\
+\mbox{}\verb@               key = vcode(v)@\\
+\mbox{}\verb@               if Wdict.get(key,defaultValue) == defaultValue:@\\
+\mbox{}\verb@                  index += 1@\\
+\mbox{}\verb@                  Wdict[key] = index@\\
+\mbox{}\verb@                  cellFrag += [index]@\\
+\mbox{}\verb@               else: @\\
+\mbox{}\verb@                  cellFrag += [Wdict[key]]@\\
+\mbox{}\verb@            CW += [cellFrag]  @\\
+\mbox{}\verb@            @\\
+\mbox{}\verb@            BCfrags += [ (h, [Wdict[vcode(w)] for w in cellFragment if verySmall( @\\
+\mbox{}\verb@                        PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ] )@\\
+\mbox{}\verb@                      for h in cellCuts[k]]  @\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   BCW = [ [ Wdict[vcode(V[v])] for v in cell ] for cell in BC]@\\
+\mbox{}\verb@   W = sorted(zip( Wdict.values(), Wdict.keys() ))@\\
+\mbox{}\verb@   W = AA(eval)(TRANS(W)[1])@\\
+\mbox{}\verb@   dim = len(W[0])@\\
+\mbox{}\verb@   boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)@\\
+\mbox{}\verb@   return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap12}
+\protect\makebox[0ex][r]{\NWtarget{nuweb12}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boolean argument boundaries embedding in SCDC\nobreak\ {\footnotesize 12}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Boolean argument boundaries embedding in SCDC """@\\
+\mbox{}\verb@def boundaryEmbedding(BCfrags,nbc1,dim):@\\
+\mbox{}\verb@   boundary1,boundary2 = defaultdict(list),defaultdict(list)                   @\\
+\mbox{}\verb@   for h,frags in BCfrags:@\\
+\mbox{}\verb@      if h < nbc1: boundary1[h] += [frags]@\\
+\mbox{}\verb@      else: boundary2[h] += [frags] @\\
+\mbox{}\verb@   boundarylist1,boundarylist2 = [],[]@\\
+\mbox{}\verb@   for h,facets in boundary1.items():@\\
+\mbox{}\verb@      boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) @\\
+\mbox{}\verb@                     for f in facets if len(set(f)) >= dim])) )]@\\
+\mbox{}\verb@   for h,facets in boundary2.items():@\\
+\mbox{}\verb@      boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) @\\
+\mbox{}\verb@                     for f in facets if len(set(f)) >= dim])) )]@\\
+\mbox{}\verb@   boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)@\\
+\mbox{}\verb@   return boundary1,boundary2@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap13}
+\protect\makebox[0ex][r]{\NWtarget{nuweb13a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Make facets dictionaries\nobreak\ {\footnotesize 13a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Make facets dictionaries """@\\
+\mbox{}\verb@def makeFacetDicts(FW,boundary1,boundary2):@\\
+\mbox{}\verb@   FWdict = dict()@\\
+\mbox{}\verb@   for k,facet in enumerate (FW): FWdict[str(facet)] = k@\\
+\mbox{}\verb@   for key,value in boundary1.items():@\\
+\mbox{}\verb@      value = [FWdict[str(facet)] for facet in value]@\\
+\mbox{}\verb@      boundary1[key] = value@\\
+\mbox{}\verb@   for key,value in boundary2.items():@\\
+\mbox{}\verb@      value = [FWdict[str(facet)] for facet in value]@\\
+\mbox{}\verb@      boundary2[key] = value@\\
+\mbox{}\verb@   return boundary1,boundary2,FWdict@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Computation of boundary facets covering with CDC cells}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap14}
+\protect\makebox[0ex][r]{\NWtarget{nuweb13b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of boundary facets covering with CDC cells\nobreak\ {\footnotesize 13b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Computation of boundary facets covering with CDC cells """@\\
+\mbox{}\verb@def boundaryCover(V,CV,BC,VC):@\\
+\mbox{}\verb@   cellsToSplit = list()@\\
+\mbox{}\verb@   boundaryCellCovering = []@\\
+\mbox{}\verb@   for k,facet in enumerate(BC):@\\
+\mbox{}\verb@      covector = COVECTOR([V[v] for v in facet])@\\
+\mbox{}\verb@      seedsOnFacet = VC[facet[0]]@\\
+\mbox{}\verb@      cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) @\\
+\mbox{}\verb@                     for cell in seedsOnFacet ]@\\
+\mbox{}\verb@      cellsToSplit = set(CAT(cellsToSplit))@\\
+\mbox{}\verb@      while True:@\\
+\mbox{}\verb@         newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) @\\
+\mbox{}\verb@                     for cell in cellsToSplit ]@\\
+\mbox{}\verb@         if newCells != []: newCells = CAT(newCells)@\\
+\mbox{}\verb@         covering = cellsToSplit.union(newCells)@\\
+\mbox{}\verb@         if covering == cellsToSplit: @\\
+\mbox{}\verb@            break@\\
+\mbox{}\verb@         cellsToSplit = covering@\\
+\mbox{}\verb@      boundaryCellCovering += [list(covering)]@\\
+\mbox{}\verb@   return boundaryCellCovering@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Cell-facet intersection test}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap15}
+\protect\makebox[0ex][r]{\NWtarget{nuweb14}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cell-facet intersection test\nobreak\ {\footnotesize 14}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Cell-facet intersection test """@\\
+\mbox{}\verb@def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):@\\
+\mbox{}\verb@   points = [V[v] for v in CV[cell]]@\\
+\mbox{}\verb@   vcell1,newFacet,vcell2 = SPLITCELL(covector,points,tolerance=1e-4,ntry=4)@\\
+\mbox{}\verb@   boundaryFacet = [V[v] for v in boundaryFacet]@\\
+\mbox{}\verb@   translVector = boundaryFacet[0]@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   # translation @\\
+\mbox{}\verb@   newFacet = [ VECTDIFF([v,translVector]) for v in newFacet ]@\\
+\mbox{}\verb@   boundaryFacet = [ VECTDIFF([v,translVector]) for v in boundaryFacet ]@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   # linear transformation: boundaryFacet -> standard (d-1)-simplex@\\
+\mbox{}\verb@   d = len(V[0])@\\
+\mbox{}\verb@   transformMat = mat( boundaryFacet[1:d] + [covector[1:]] ).T.I@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   # transformation in the subspace x_d = 0@\\
+\mbox{}\verb@   newFacet = (transformMat * (mat(newFacet).T)).T.tolist()@\\
+\mbox{}\verb@   boundaryFacet = (transformMat * (mat(boundaryFacet).T)).T.tolist()@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   # projection in E^{d-1} space and Boolean test@\\
+\mbox{}\verb@   newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), @\\
+\mbox{}\verb@                     [range(1,len(newFacet)+1)], None ])@\\
+\mbox{}\verb@   boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), @\\
+\mbox{}\verb@                     [range(1,len(boundaryFacet)+1)], None ])@\\
+\mbox{}\verb@   verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   if verts == []: return False@\\
+\mbox{}\verb@   else: return True@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+%-------------------------------------------------------------------------------
+\section{Step 3: cell labeling}
+%-------------------------------------------------------------------------------
+
+The goal of this stage is to label every cell of the SCDC with two bits, corresponding to the input spaces $A$ and $B$, and telling whether the cell is either internal (1) or external (0) to either spaces.
+
+\subsection{Requirements}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Input}
+The output of previous algorithm stage.
+
+\paragraph{Output}
+The array \texttt{cellLabels} with \emph{shape} $\texttt{len(PW)}\times 2$, and values in $\{0,1\}$.
+
+
+\subsection{Implementation}
+%-------------------------------------------------------------------------------
+
+The labelling of LAR of the SCDC may be decomposed in five consecutive steps. The first step was actually executed during the splitting stage, by accumulating a single facet of every split cells embedded on the affine hull (the covector hyperplane) of the splitting boundary \texttt{facet}. The second  step provides the computation of the sparse matrix of the linear coboundary operator $\delta_{d-1}: C_{d-1} \to C_d$.
+The third step operates upon the previous two pieces of information, in order to compute the coboundary chain of the boundary chain of both input Boolean arguments.
+The fourth step attaches a \textsc{in/out} label to each $d$-cell of the previously computed $d$-chain.
+Finally, the fifth step spreads around the labels to cover all the $d$-cells of SCDC. This knowledge allows for the computation of every interesting Boolean expressions between the input complexes.
+
+\subsubsection{Summary}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap16}
+\protect\makebox[0ex][r]{\NWtarget{nuweb15}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Third Boolean step\nobreak\ {\footnotesize 15}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Third Boolean step """@\\
+\mbox{}\verb@def larBool3():@\\
+\mbox{}\verb@   coBoundaryMat = signedCellularBoundary(W,bases).T@\\
+\mbox{}\verb@   boundaryMat = coBoundaryMat.T@\\
+\mbox{}\verb@   CWbits = [[-1,-1] for k in range(len(CW))]@\\
+\mbox{}\verb@   CWbits = cellTagging(boundary1,boundaryMat,CW,FW,W,BCW,CWbits,0)@\\
+\mbox{}\verb@   CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)@\\
+\mbox{}\verb@   for cell in range(len(CW)):@\\
+\mbox{}\verb@      if CWbits[cell][0] == 1:@\\
+\mbox{}\verb@         CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,1)      @\\
+\mbox{}\verb@      if CWbits[cell][0] == 0:@\\
+\mbox{}\verb@         CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,0)@\\
+\mbox{}\verb@      if CWbits[cell][1] == 1:@\\
+\mbox{}\verb@         CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,1)@\\
+\mbox{}\verb@      if CWbits[cell][1] == 0:@\\
+\mbox{}\verb@         CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)@\\
+\mbox{}\verb@   chain1,chain2 = TRANS(CWbits)@\\
+\mbox{}\verb@   return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25}{25}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Detail functions}
+
+
+
+\paragraph{Computation of boundary cells embedded in SCDC}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap17}
+\protect\makebox[0ex][r]{\NWtarget{nuweb16a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of embedded boundary cells\nobreak\ {\footnotesize 16a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Computation of embedded boundary cells """@\\
+\mbox{}\verb@def facetsOnCuts(cellFragments,cellCuts,V,BC):@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   pass@\\
+\mbox{}\verb@   return #facets@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Coboundary operator on SCDC space decomposition}
+
+In this section we develop a stronger characterisation of the boundaries, by fully tagging in SCDC the internal coboundary of boundaries of $A$ and $B$ Boolean arguments. This novel strategy should allow the recursive tagging extension to work correctly in all cases.
+
+As we know, the  coboundary operators $\delta_{k-1}: C_{k-1} \to C_k$ are the transpose of the boundary operators $\partial_k: C_k \to C_{k-1}$ ($1\leq k\leq d$). We therefore proceed to the construction of the operator $\delta_{d-1}$, according to the procedure illustrated in~\cite{}. For this purpose we need to use both the $C_d$ and the $C_{d-1}$ bases of SCDC. The first basis is generated as \texttt{CV} array during the splitting. The second basis will be built from $C_d$ using the proper $d$-adjacency algorithm from~\cite{}. 
+
+Let us remember that a (co)boundary operator may be applied to \emph{any} chain from the linear space of chains defined upon a cellular complex. 
+In our case we have already generated the $(d-1)$-chains $\partial A$ and $\partial B$ while building the SCDC, by accumulating, in the course of the splitting phase, the $(d-1)$-facets discovered while tracking the boundaries of $A$ and $B$. We just need now to tag (a subset of) $\delta_{d-1}\partial_d A$ and $\delta_{d-1}\partial_d B$.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap18}
+\protect\makebox[0ex][r]{\NWtarget{nuweb16b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coboundary operator on the convex decomposition of common space\nobreak\ {\footnotesize 16b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Coboundary operator on the convex decomposition of common space """@\\
+\mbox{}\verb@from scipy.spatial import ConvexHull@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def qhullBoundary(V):@\\
+\mbox{}\verb@   points = array(V)@\\
+\mbox{}\verb@   hull = ConvexHull(points)@\\
+\mbox{}\verb@   out = hull.simplices.tolist()@\\
+\mbox{}\verb@   return sorted(out)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@""" Extracting a $(d-1)$-basis of SCDC """@\\
+\mbox{}\verb@def convexBoundary(V):@\\
+\mbox{}\verb@   covectors = defaultdict(list)@\\
+\mbox{}\verb@   tri = Delaunay(V)@\\
+\mbox{}\verb@   FV = tri.convex_hull.tolist()@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@def convexBoundary(W,CW):@\\
+\mbox{}\verb@   points = array(W)@\\
+\mbox{}\verb@   hull = ConvexHull(points,qhull_options="Qc")@\\
+\mbox{}\verb@   coplanarVerts = hull.coplanar.tolist()@\\
+\mbox{}\verb@   if coplanarVerts != []:  coplanarVerts = CAT(coplanarVerts)@\\
+\mbox{}\verb@   BWchain = set( CAT(qhullBoundary(W)) + coplanarVerts )@\\
+\mbox{}\verb@   dim = len(W[0])@\\
+\mbox{}\verb@   bfacets = [list(BWchain.intersection(cell)) @\\
+\mbox{}\verb@               for cell in CW if len(BWchain.intersection(cell)) >= dim]@\\
+\mbox{}\verb@   return bfacets@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def larConvexFacets (V,CV):@\\
+\mbox{}\verb@   dim = len(V[0])@\\
+\mbox{}\verb@   model = V,CV@\\
+\mbox{}\verb@   V,FV = larFacets(model,dim)@\\
+\mbox{}\verb@   FV = AA(eval)(list(set(AA(str)(FV + convexBoundary(V,CV)@\\
+\mbox{}\verb@         ))))@\\
+\mbox{}\verb@   FV = sorted(AA(sorted)(FV))@\\
+\mbox{}\verb@   return FV@\\
+\mbox{}\verb@"""@\\
+\mbox{}\verb@def larConvexFacets(Y,CY):@\\
+\mbox{}\verb@   FY = set()@\\
+\mbox{}\verb@   for cell in CY:@\\
+\mbox{}\verb@      cellVerts = array([[Y[v],v] for v in cell])     # v globale@\\
+\mbox{}\verb@      cellVerts,cellVertsInd = TRANS(cellVerts)@\\
+\mbox{}\verb@      covectors = defaultdict(list) @\\
+\mbox{}\verb@      tri = Delaunay(cellVerts)   # struttura dati@\\
+\mbox{}\verb@      FV = tri.convex_hull.tolist()   # facce con indici vertici LOCALI@\\
+\mbox{}\verb@      for k,facet in enumerate(FV):@\\
+\mbox{}\verb@         covect = list(COVECTOR([cellVerts[v] for v in facet]))@\\
+\mbox{}\verb@         normalizedCovect = [ h*SIGN(covect[0])  for h in covect]@\\
+\mbox{}\verb@         for h,comp in enumerate(UNITVECT(normalizedCovect)): @\\
+\mbox{}\verb@            if not isclose(0.0, comp): @\\
+\mbox{}\verb@               theSign = SIGN(comp)@\\
+\mbox{}\verb@               break@\\
+\mbox{}\verb@         normalizedCovect = [x*theSign  if x!=abs(0.0) else x for x in normalizedCovect]@\\
+\mbox{}\verb@         covectors[vcode(normalizedCovect)] += [k]@\\
+\mbox{}\verb@      for covector,facets in covectors.items():@\\
+\mbox{}\verb@         localFacets = [list(set(CAT([FV[facet] for facet in facets])))]@\\
+\mbox{}\verb@         for facet in localFacets:@\\
+\mbox{}\verb@            FY = FY.union([tuple([ cellVertsInd[v] for v in facet ])])  @\\
+\mbox{}\verb@   #for facet in convexBoundary(Y,CY):       @\\
+\mbox{}\verb@   #  FY = FY.union(facet) @\\
+\mbox{}\verb@   FY = sorted(list(AA(sorted)(AA(list)(FY))))@\\
+\mbox{}\verb@   return FY   @\\
+\mbox{}\verb@@\\
+\mbox{}\verb@if __name__ == "__main__":@\\
+\mbox{}\verb@    V,CV = larCuboids((2,2,2))@\\
+\mbox{}\verb@    FV = larConvexFacets(V,CV)@\\
+\mbox{}\verb@    # EV = larConvexFacets(V,FV)@\\
+\mbox{}\verb@    submodel = SKEL_1(STRUCT(MKPOLS((V,FV))))@\\
+\mbox{}\verb@    VV = AA(LIST)(range(len(V)))@\\
+\mbox{}\verb@    VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1.5))@\\
+\mbox{}\verb@"""@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+submodel = SKEL_1(STRUCT(MKPOLS((W,CX))))
+VV = AA(LIST)(range(len(W)))
+VIEW(larModelNumbering(1,1,1)(W,[VV],submodel,4))
+
+
+\paragraph{Computation of boundary operator}
+
+The computation of the boundary operator $\partial_d$ on the SCDC $d$-basis \texttt{(W,CW)} requires the knowledge of the $(d-1)$-basis \texttt{(W,FW)}. The goal of this section is hence the---partially incremental---computation of \texttt{FW}. This set can be partitioned into \emph{internal} cells, that have 2 cofaces, and \emph{boundary} cells, that have only 1 coface. The first subset is easily computed by the \texttt{larFacets} function; the computation of the second subset requires some more work, specified in the following.
+
+First, we compute the 0-chain of boundary vertices of the SCDC, using \emph{qHull}, and take advantage of the \texttt{CV} matrix to extract the chain of $d$-cells sharing with the boundary a $(d-1)$facet. Second, using the \emph{partial} boundary operator generated by using only the interior $(d-1)$-facets, and the associated $(d-2)$-boundary operator, we select the sub-chain made by the non-closed $d$-cells of this subset. Third, the boundary facet of each of them is finally selected, added to the $(d-1)$-basis of SCDC, and the corresponding row is added at the bottom line of the matrix of $\partial_{d-1}$.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap19}
+\protect\makebox[0ex][r]{\NWtarget{nuweb18}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of boundary operator of a convex LAR model\nobreak\ {\footnotesize 18}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Computation of boundary operator of a convex LAR model"""@\\
+\mbox{}\verb@def convexBoundary(W,CW):@\\
+\mbox{}\verb@   points = array(W)@\\
+\mbox{}\verb@   hull = ConvexHull(points,qhull_options="Qc")@\\
+\mbox{}\verb@   coplanarVerts = hull.coplanar.tolist()@\\
+\mbox{}\verb@   if coplanarVerts != []:  coplanarVerts = CAT(coplanarVerts)@\\
+\mbox{}\verb@   BWchain = set( CAT(qhullBoundary(W)) + coplanarVerts )@\\
+\mbox{}\verb@   dim = len(W[0])@\\
+\mbox{}\verb@   bfacets = [list(BWchain.intersection(cell)) @\\
+\mbox{}\verb@               for cell in CW if len(BWchain.intersection(cell)) >= dim]@\\
+\mbox{}\verb@   return bfacets@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Coboundary of boundary chains}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap20}
+\protect\makebox[0ex][r]{\NWtarget{nuweb19a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coboundary of boundary chain\nobreak\ {\footnotesize 19a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Coboundary of boundary chain """@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Labeling seeds}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap21}
+\protect\makebox[0ex][r]{\NWtarget{nuweb19b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Writing labelling seeds on SCDC\nobreak\ {\footnotesize 19b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Writing labelling seeds on SCDC """@\\
+\mbox{}\verb@def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):@\\
+\mbox{}\verb@   dim = len(W[0])@\\
+\mbox{}\verb@   for face in boundaryDict:@\\
+\mbox{}\verb@      for facet in boundaryDict[face]:@\\
+\mbox{}\verb@         cofaces = list(boundaryMat[facet].tocoo().col)@\\
+\mbox{}\verb@         if len(cofaces) == 1: @\\
+\mbox{}\verb@            CWbits[cofaces[0]][arg] = 1@\\
+\mbox{}\verb@         elif len(cofaces) == 2:@\\
+\mbox{}\verb@            v0 = list(set(CW[cofaces[0]]).difference(FW[facet]))[0]@\\
+\mbox{}\verb@            v1 = list(set(CW[cofaces[1]]).difference(FW[facet]))[0]@\\
+\mbox{}\verb@            # take d affinely independent vertices in face (TODO: use pivotSimplices() @\\
+\mbox{}\verb@            simplex0 = BC[face][:dim] + [v0]@\\
+\mbox{}\verb@            simplex1 = BC[face][:dim] + [v1]@\\
+\mbox{}\verb@            sign0 = sign(det([W[v]+[1] for v in simplex0]))@\\
+\mbox{}\verb@            sign1 = sign(det([W[v]+[1] for v in simplex1]))@\\
+\mbox{}\verb@            @\\
+\mbox{}\verb@            if sign0 == 1: CWbits[cofaces[0]][arg] = 1@\\
+\mbox{}\verb@            elif sign0 == -1: CWbits[cofaces[0]][arg] = 0@\\
+\mbox{}\verb@            if sign1 == 1: CWbits[cofaces[1]][arg] = 1@\\
+\mbox{}\verb@            elif sign1 == -1: CWbits[cofaces[1]][arg] = 0@\\
+\mbox{}\verb@         else: @\\
+\mbox{}\verb@            print "error: too many cofaces of boundary facets"@\\
+\mbox{}\verb@   return CWbits@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Recursive diffusion of labels}
+A recursive function \texttt{booleanChainTraverse} is given in the script below, where 
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap22}
+\protect\makebox[0ex][r]{\NWtarget{nuweb20}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Recursive diffusion of labels on SCDC\nobreak\ {\footnotesize 20}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Recursive diffusion of labels on SCDC """@\\
+\mbox{}\verb@def booleanChainTraverse(h,cell,V,CV,CWbits,value):@\\
+\mbox{}\verb@   adjCells = adjacencyQuery(V,CV)(cell)@\\
+\mbox{}\verb@   for adjCell in adjCells: @\\
+\mbox{}\verb@      if CWbits[adjCell][h] == -1:@\\
+\mbox{}\verb@         CWbits[adjCell][h] = value@\\
+\mbox{}\verb@         CWbits = booleanChainTraverse(h,adjCell,V,CV,CWbits,value)@\\
+\mbox{}\verb@   return CWbits@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+%-------------------------------------------------------------------------------
+\section{Step 4: greedy cell gathering}
+%-------------------------------------------------------------------------------
+
+The goal of this stage is to make as lower as possible the number of cells in the  output LAR of the space $AB$, partitioned into convex cells.
+
+\paragraph{Input}
+The LAR model \texttt{(W,PW)} of the SCDC and the array \texttt{cellLabels}.
+
+\paragraph{Output}
+The LAR representation \texttt{(W,RW)} of the final fragmented and labeled space $AB$.
+
+
+\subsection{Requirements}
+%-------------------------------------------------------------------------------
+
+The algorithm proposed here for $d$-cell gathering into bigger polytopes is local and greedy. Starting from an initial random $d$-cell, a $(d-1)$-connected $d$-chain is built, by attaching, one at a time, single cells to the boundary of the chain, after (local) verification that the support of the new chain will remain a convex set. 
+
+In case of failure of the test, the facets of the current chain boundary are checked for the gluing of their adjacent and external $d$-coface, until either a new convex is built, or no single cell can be attached convexly, so that the attachment process relative to that chain stops, and its boundary vertices are written in the LAR of a new complex, to gather a single new polytope generated by them. 
+
+Actually, during the stage of boundary checking for finding a new cocell to glue, only a subchain is checked, obtained by subtraction from the boundary of the cutting facets, where attachments are not possible, without
+violating the topology of Boolean results. 
+
+Two main algorithm components are needed here. The first one concerns the extraction of the current $d$-chain boundary, the subtraction from it of the splitting facets, and the selection of the facet where to glue another $d$-cell; the second one deals with the convexity test of the candidate (chain $+$ boundary cocell) pair.
+
+The local convexity test will extract, using the (co)boundary matrix of the current chain, the coboundary of the boundary of the candidate facet, and, selected the matrix of hyperplanes associated to it, will compute the centroid of the facet and the vector of signs exposed by the point transformed by right product with this matrix. The local test of convexity is satisfied if and only if all new vertices expose the same signs (or zero), when transformed by this matrix. In other words, the test is satisfied  if all new vertices remain internal (or non external) to the cone generated by such set of boundary hyperplanes.
+
+Every time that a new cell has been selected to join the current chain, the cell is also signed as already used, and hence as no more available for other choices. Of course, the algorithm terminates when all the input  $d$-cells have been selected and signed.
+
+
+\subsection{Implementation}
+%-------------------------------------------------------------------------------
+A synthetic view of the simplification process is given by the script below.
+The first tool provides a mapping from $(d-1)$-facets of SCDC to their embedding hyperplanes, i.e. to their affine hulls of codimension 1. The second one compute the boundary $(d-1)$-complex of the SCDC $d$-chain currently transformed into a single convex cell. The algorithmic bulk of the simplification process is contained in the script entitled \texttt{Sticking cells together}. The last script provides the high-level interface to transform the generated SCDC into a strongly simplified polytopal complex.
+
+\paragraph{High-level description}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap23}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Simplification of the output polytopal complex\nobreak\ {\footnotesize 21a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\hbox{$\langle\,$Mapping from facets to hyperplanes\nobreak\ {\footnotesize \NWlink{nuweb22a}{22a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Building the boundary complex of the current chain\nobreak\ {\footnotesize \NWlink{nuweb22b}{22b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Sticking cells together\nobreak\ {\footnotesize \NWlink{nuweb22c}{22c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Gathering and writing a polytopal complex\nobreak\ {\footnotesize \NWlink{nuweb24}{24}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\subsubsection{Summary}
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap24}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Fourth Boolean step\nobreak\ {\footnotesize 21b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Fourth Boolean step """@\\
+\mbox{}\verb@def larBool4(W,CWbits):@\\
+\mbox{}\verb@   W,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)@\\
+\mbox{}\verb@   FX = larConvexFacets (W,CX)      @\\
+\mbox{}\verb@   return W,CX,FX,CXbits@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb25}{25}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%submodel = SKEL_1(STRUCT(MKPOLS((W,CX))))
+%WW = AA(LIST)(range(len(W)))
+%VIEW(STRUCT([ submodel, larModelNumbering(1,1,1)(W,[WW,[],CX],submodel,3) ]))
+%VIEW(EXPLODE(1.2,1.2,1)([ submodel, larModelNumbering(1.2,1.2,1)(W,[WW,FX],submodel,3) ]))
+
+
+\subsubsection{Detail functions}
+
+
+
+
+\paragraph{Mapping from facets to hyperplanes}
+The function \texttt{facet2covectors} return the list of hyperplane covectors, with first term homogeneous, i.e.~the row vector $(c,a,b)$ for the line equation $ax+by+c=0$, or the row vector $(d,a,b,c)$ for the plane equation $ax+by+cz+d=0$.
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap25}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Mapping from facets to hyperplanes\nobreak\ {\footnotesize 22a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Mapping from hyperplanes to lists of facets """@\\
+\mbox{}\verb@def facet2covectors(W,FW):@\\
+\mbox{}\verb@   return [COVECTOR([W[v] for v in facet]) for facet in FW]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def boundaries(boundary1,boundary2):@\\
+\mbox{}\verb@   return set(CAT(boundary1.values() + boundary2.values()))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21a}{21a}\NWlink{nuweb26}{, 26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Building the complex of the current chain}
+The function \texttt{chain2complex} returns the boundary complex of the current \texttt{chain}, minus the facet in \texttt{constraints}, where non $d$-cell may be attached to the current \texttt{chain}.
+It is computed via multiplication between the matrix of boundary operator and the coordinate representation \texttt{chainCoords} of \texttt{chain}. The \texttt{constraint} set is finally subtracted to the result.  
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap26}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Building the boundary complex of the current chain\nobreak\ {\footnotesize 22b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@from scipy.sparse import csc_matrix@\\
+\mbox{}\verb@""" Building the boundary complex of the current chain """@\\
+\mbox{}\verb@def chain2complex(W,CW,chain,boundaryMat,constraints):@\\
+\mbox{}\verb@   chainCoords = csc_matrix((len(CW), 1))@\\
+\mbox{}\verb@   for cell in chain: chainCoords[cell] = 1@\\
+\mbox{}\verb@   boundaryCells = set((boundaryMat * chainCoords).tocoo().row)@\\
+\mbox{}\verb@   envelope = boundaryCells.difference(constraints)@\\
+\mbox{}\verb@   return envelope,boundaryCells@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21a}{21a}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Sticking cells together}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap27}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Sticking cells together\nobreak\ {\footnotesize 22c}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Sticking cells together """@\\
+\mbox{}\verb@@\hbox{$\langle\,$Testing the convexity of a single added vertex\nobreak\ {\footnotesize \NWlink{nuweb23a}{23a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Testing the convexity when attaching a cell to a chain\nobreak\ {\footnotesize \NWlink{nuweb23b}{23b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Elongate a chain while supports a convex set\nobreak\ {\footnotesize \NWlink{nuweb23c}{23c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21a}{21a}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Testing the convexity of a single added vertex}
+A single cell is possibly attached to the boundary envelope of the current \texttt{chain}. In case of success
+the function \texttt{protrudeChain} returns \texttt{True}; otherwise returns \texttt{False}. 
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap28}
+\protect\makebox[0ex][r]{\NWtarget{nuweb23a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Testing the convexity of a single added vertex\nobreak\ {\footnotesize 23a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Testing the convexity of a single added vertex """@\\
+\mbox{}\verb@def pairing(v,w):@\\
+\mbox{}\verb@   value = PROD([v,w])@\\
+\mbox{}\verb@   if -0.01 < value < 0.01: return 0@\\
+\mbox{}\verb@   else: return SIGN(value)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def convexTest(theSigns,vertex,theCone):@\\
+\mbox{}\verb@   signs = [ pairing( [1]+vertex,covector ) for covector in theCone]@\\
+\mbox{}\verb@   return all([theSign*sign >= 0 for (theSign,sign) in zip(theSigns,signs)])@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb22c}{22c}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Testing the convexity of current chain}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap29}
+\protect\makebox[0ex][r]{\NWtarget{nuweb23b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Testing the convexity when attaching a cell to a chain\nobreak\ {\footnotesize 23b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Testing the convexity when attaching a cell to a chain """@\\
+\mbox{}\verb@def testAttachment(cell,usedCells,theFacet,chain,@\\
+\mbox{}\verb@               W,CW,FW,boundaryMat,boundaryCells,covectors):@\\
+\mbox{}\verb@   theFacetVerts = set(FW[theFacet])@\\
+\mbox{}\verb@   flag = False@\\
+\mbox{}\verb@   facetRing = [facet for facet in boundaryCells if facet!=theFacet and \@\\
+\mbox{}\verb@             len(theFacetVerts.intersection(FW[facet])) >= len(W[0])-1]@\\
+\mbox{}\verb@   theCone = [covectors[f] for f in facetRing]@\\
+\mbox{}\verb@   theFacetPivot = CCOMB([W[v] for v in FW[theFacet]])@\\
+\mbox{}\verb@   theSigns = [ pairing( [1]+theFacetPivot, covector ) for covector in theCone ]@\\
+\mbox{}\verb@   if not any([sign==0 for sign in theSigns]):@\\
+\mbox{}\verb@      testingSet = set(CW[cell]).difference(theFacetVerts)@\\
+\mbox{}\verb@      flag = all([ convexTest(theSigns,W[vertex],theCone) for vertex in testingSet])@\\
+\mbox{}\verb@   return flag@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb22c}{22c}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Chain elongation while is convex}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap30}
+\protect\makebox[0ex][r]{\NWtarget{nuweb23c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Elongate a chain while supports a convex set\nobreak\ {\footnotesize 23c}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Elongate a chain while supports a convex set """@\\
+\mbox{}\verb@def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):@\\
+\mbox{}\verb@   verts = []@\\
+\mbox{}\verb@   while True: @\\
+\mbox{}\verb@      changed = False@\\
+\mbox{}\verb@      envelope,boundaryCells = chain2complex(W,CW,chain,boundaryMat,constraints)@\\
+\mbox{}\verb@      for facet in envelope:@\\
+\mbox{}\verb@         success = False@\\
+\mbox{}\verb@         chainCoords = csr_matrix((1,len(FW)))@\\
+\mbox{}\verb@         chainCoords[0,facet] = 1@\\
+\mbox{}\verb@         cocells = list((chainCoords * boundaryMat).tocoo().col)@\\
+\mbox{}\verb@         @\\
+\mbox{}\verb@         if len(cocells)==2:@\\
+\mbox{}\verb@            if cocells[0] in chain: cell = cocells[1]@\\
+\mbox{}\verb@            elif cocells[1] in chain: cell = cocells[0]@\\
+\mbox{}\verb@            if not usedCells[cell]:@\\
+\mbox{}\verb@               success = testAttachment(cell,usedCells,facet,chain, \@\\
+\mbox{}\verb@                        W,CW,FW,boundaryMat,boundaryCells,covectors)@\\
+\mbox{}\verb@            if success: @\\
+\mbox{}\verb@               changed = True@\\
+\mbox{}\verb@               usedCells[cell] = True@\\
+\mbox{}\verb@               chain += [cell]@\\
+\mbox{}\verb@      if not changed: break      @\\
+\mbox{}\verb@         @\\
+\mbox{}\verb@   chainCoords = csc_matrix((len(CW),1))@\\
+\mbox{}\verb@   for cell in chain: @\\
+\mbox{}\verb@      chainCoords[cell,0] = 1@\\
+\mbox{}\verb@      usedCells[cell] = True@\\
+\mbox{}\verb@   boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)@\\
+\mbox{}\verb@   verts = [FW[facet] for facet in boundaryFacets]@\\
+\mbox{}\verb@   verts = sorted(list(set(CAT(verts))))@\\
+\mbox{}\verb@   return verts,usedCells@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb22c}{22c}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\paragraph{Gathering and writing a polytopal complex}
+The task of the \texttt{gatherPolytopes} function, given below, is to return the LAR \texttt{(X,CX)} of the SCDC \texttt{(W,CW)} generated by the previous phases of the Boolean algorithm, after reducing its representation to a much smaller size, (a) by gathering subsets of cells into single bigger polytopal cells within the characteristic matrix \texttt{CX}, and (b) by assembling their boundary vertices into the (reduced) vertex set \texttt{X}. Of course, while reducing the number of polytopal cells, the procedure should not change the Boolean structure of the input complex, i.e. the support spaces $|C_A|, |C_B|$ of proper chains $C_A$ and $C_B$ and of their Boolean combinations.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap31}
+\protect\makebox[0ex][r]{\NWtarget{nuweb24}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Gathering and writing a polytopal complex\nobreak\ {\footnotesize 24}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Gathering and writing a polytopal complex """@\\
+\mbox{}\verb@def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):@\\
+\mbox{}\verb@   usedCells = [False for cell in CW]@\\
+\mbox{}\verb@   covectors = facet2covectors(W,FW)@\\
+\mbox{}\verb@   constraints = boundaries(bounds1,bounds2)@\\
+\mbox{}\verb@   Xdict,index,CX,defaultValue,CXbits = dict(),0,[],-1,[]@\\
+\mbox{}\verb@   while not all(usedCells):@\\
+\mbox{}\verb@      for k,cell in enumerate(CW):@\\
+\mbox{}\verb@         if not usedCells[k]:@\\
+\mbox{}\verb@            chain = [k]@\\
+\mbox{}\verb@            usedCells[k] = True@\\
+\mbox{}\verb@            verts,usedCells = protrudeChain(W,CW,FW,chain,boundaryMat,@\\
+\mbox{}\verb@                           covectors,usedCells,constraints)@\\
+\mbox{}\verb@            CX += [ verts ]@\\
+\mbox{}\verb@            CXbits += [ CWbits[k] ]@\\
+\mbox{}\verb@   return W,CX,CXbits@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb21a}{21a}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\section{The main Boolean procedure}
+%-------------------------------------------------------------------------------
+
+\subsection{Goal: generating the Boolean complex}
+
+
+\subsection{Implementation}
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap32}
+\protect\makebox[0ex][r]{\NWtarget{nuweb25}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boolean Algorithm\nobreak\ {\footnotesize 25}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Boolean Algorithm """@\\
+\mbox{}\verb@def larBool(arg1,arg2, brep=False):@\\
+\mbox{}\verb@   V1,basis1 = arg1@\\
+\mbox{}\verb@   V2,basis2 = arg2@\\
+\mbox{}\verb@   cells1 = basis1[-1]@\\
+\mbox{}\verb@   cells2 = basis2[-1]@\\
+\mbox{}\verb@   model1,model2 = (V1,cells1),(V2,cells2)@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   @\hbox{$\langle\,$First Boolean step\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$Second Boolean step\nobreak\ {\footnotesize \NWlink{nuweb8a}{8a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$Third Boolean step\nobreak\ {\footnotesize \NWlink{nuweb15}{15}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@   @\hbox{$\langle\,$Fourth Boolean step\nobreak\ {\footnotesize \NWlink{nuweb21b}{21b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@      @\\
+\mbox{}\verb@   W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()@\\
+\mbox{}\verb@   W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)@\\
+\mbox{}\verb@   W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()@\\
+\mbox{}\verb@   W,CX,FX,CXbits = larBool4(W,CWbits)@\\
+\mbox{}\verb@   chain1,chain2 = TRANS(CXbits)@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@   print "\nW =",W@\\
+\mbox{}\verb@   print "\nCX =",CX@\\
+\mbox{}\verb@   print "\nFX =",FX@\\
+\mbox{}\verb@   boundaryMat = boundary(CX,FX)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   def theBoundary(boundaryMat,CX,coords):@\\
+\mbox{}\verb@      print "\n>>>> boundaryMat =",boundaryMat@\\
+\mbox{}\verb@      print "\n>>>> coords =",coords@\\
+\mbox{}\verb@      chainCoords = csc_matrix((len(CX), 1))@\\
+\mbox{}\verb@      for cell in coords: chainCoords[cell,0] = 1@\\
+\mbox{}\verb@      boundaryCells = list((boundaryMat * chainCoords).tocoo().row)@\\
+\mbox{}\verb@      orientations = list((boundaryMat * chainCoords).tocoo().data)@\\
+\mbox{}\verb@      orientedBoundary = [ FX[face] for (sign,face) in zip(orientations,boundaryCells)  if sign == 1 ]@\\
+\mbox{}\verb@      return orientedBoundary@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   def larBool0(op): @\\
+\mbox{}\verb@      if op == "union": @\\
+\mbox{}\verb@         ucoords,uchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2>=1])@\\
+\mbox{}\verb@         return W,CW,uchain,CX,FX,theBoundary(boundaryMat,CX,ucoords)@\\
+\mbox{}\verb@      elif op == "intersection": @\\
+\mbox{}\verb@         icoords,ichain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])@\\
+\mbox{}\verb@         return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)@\\
+\mbox{}\verb@      elif op == "xor": @\\
+\mbox{}\verb@         xcoords,xchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2==1])@\\
+\mbox{}\verb@         return W,CW,xchain,CX,FX,theBoundary(boundaryMat,CX,xcoords)@\\
+\mbox{}\verb@      elif op == "difference": @\\
+\mbox{}\verb@         dcoords,dchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0 ])@\\
+\mbox{}\verb@         return W,CW,dchain,CX,FX,theBoundary(boundaryMat,CX,dcoords)@\\
+\mbox{}\verb@      else: print "Error: non implemented op"@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@   return larBool0@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\section{LAR simplification}
+%-------------------------------------------------------------------------------
+
+Occasionally, we may need to simplify 
+
+%-------------------------------------------------------------------------------
+\section{Exporting the library}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap33}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/bool1.py"@\nobreak\ {\footnotesize 26 }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Module for Boolean ops with LAR """@\\
+\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb38b}{38b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@from splitcell import *@\\
+\mbox{}\verb@DEBUG = False@\\
+\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb39}{39}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Merge two dictionaries with keys the point locations\nobreak\ {\footnotesize \NWlink{nuweb5c}{5c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Make Common Delaunay Complex\nobreak\ {\footnotesize \NWlink{nuweb6}{6}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Cell-facet intersection test\nobreak\ {\footnotesize \NWlink{nuweb14}{14}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Elementary splitting test\nobreak\ {\footnotesize \NWlink{nuweb10}{10}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing the adjacent cells of a given cell\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computation of boundary facets covering with CDC cells\nobreak\ {\footnotesize \NWlink{nuweb13b}{13b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$CDC cell splitting with one or more cutting facets\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Boolean argument boundaries embedding in SCDC\nobreak\ {\footnotesize \NWlink{nuweb12}{12}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Make facets dictionaries\nobreak\ {\footnotesize \NWlink{nuweb13a}{13a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$SCDC splitting with every boundary facet\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Characteristic matrix transposition\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computation of embedded boundary cells\nobreak\ {\footnotesize \NWlink{nuweb16a}{16a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Coboundary operator on the convex decomposition of common space\nobreak\ {\footnotesize \NWlink{nuweb16b}{16b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computation of boundary operator of a convex LAR model\nobreak\ {\footnotesize \NWlink{nuweb18}{18}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Writing labelling seeds on SCDC\nobreak\ {\footnotesize \NWlink{nuweb19b}{19b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Recursive diffusion of labels on SCDC\nobreak\ {\footnotesize \NWlink{nuweb20}{20}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Mapping from facets to hyperplanes\nobreak\ {\footnotesize \NWlink{nuweb22a}{22a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Simplification of the output polytopal complex\nobreak\ {\footnotesize \NWlink{nuweb21a}{21a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Boolean Algorithm\nobreak\ {\footnotesize \NWlink{nuweb25}{25}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+
+%-------------------------------------------------------------------------------
+\section{Tests and examples}
+%-------------------------------------------------------------------------------
+
+
+	
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap34}
+\protect\makebox[0ex][r]{\NWtarget{nuweb27}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Debug via visualization\nobreak\ {\footnotesize 27}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Debug via visualization """@\\
+\mbox{}\verb@boolean = larBool(arg1,arg2)  @\\
+\mbox{}\verb@@\\
+\mbox{}\verb@W,CW,chain,CX,FX,orientedBoundary = boolean("xor")@\\
+\mbox{}\verb@glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])@\\
+\mbox{}\verb@VIEW(glass(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain)))))@\\
+\mbox{}\verb@VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@W,CW,chain,CX,FX,orientedBoundary = boolean("union")@\\
+\mbox{}\verb@VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))@\\
+\mbox{}\verb@VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")@\\
+\mbox{}\verb@VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))@\\
+\mbox{}\verb@VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@W,CW,chain,CX,FX,orientedBoundary = boolean("difference")@\\
+\mbox{}\verb@VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))@\\
+\mbox{}\verb@VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))@\\
+\mbox{}\verb@VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,FX)))))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28}{28}\NWlink{nuweb29a}{, 29a}\NWlink{nuweb29b}{b}\NWlink{nuweb30}{, 30}\NWlink{nuweb32}{, 32}\NWlink{nuweb33a}{, 33a}\NWlink{nuweb33b}{b}\NWlink{nuweb34}{, 34}\NWlink{nuweb35a}{, 35a}\NWlink{nuweb35b}{b}\NWlink{nuweb38a}{, 38a}.
+\end{list}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool11} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool12} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool13} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool14} 
+   \caption{2D example of file \texttt{test/py/bool1/test1.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap35}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test1.py"@\nobreak\ {\footnotesize 28 }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@""" Definition of Boolean arguments """@\\
+\mbox{}\verb@V1 = [[3,0],[11,0],[13,10],[10,11],[8,11],[6,11],[4,11],[1,10],[4,3],[6,4],@\\
+\mbox{}\verb@      [8,4],[10,3]]@\\
+\mbox{}\verb@FV1 = [[0,1,8,9,10,11],[1,2,11],[3,10,11],[4,5,9,10],[6,8,9],[0,7,8],[2,3,@\\
+\mbox{}\verb@      11],[3,4,10],[5,6,9],[6,7,8]]@\\
+\mbox{}\verb@EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,3],[2,11],[3,4],[3,10],[3,11],[4,@\\
+\mbox{}\verb@      5],[4,10],[5,6],[5,9],[6,7],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[0,3],[14,2],[14,5],[14,7],[14,11],[0,8],[3,7],[3,5]]@\\
+\mbox{}\verb@FV2 = [[0,5,6,7],[0,1,7],[4,5,6],[2,3,6,7],[1,2,7],[3,4,6]]@\\
+\mbox{}\verb@EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],@\\
+\mbox{}\verb@      [5,6],[6,7]]@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool21} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool22} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool23} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool24} 
+   \caption{2D example of file \texttt{test/py/bool1/test2.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap36}
+\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test2.py"@\nobreak\ {\footnotesize 29a }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V1 = [[3,0],[11,0],[13,10],[10,11],[8,11],[6,11],[4,11],[1,10],[4,3],[6,4],@\\
+\mbox{}\verb@      [8,4],[10,3]]@\\
+\mbox{}\verb@FV1 = [[0,1,8,9,10,11],[1,2,11],[3,10,11],[4,5,9,10],[6,8,9],[0,7,8]]@\\
+\mbox{}\verb@EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,@\\
+\mbox{}\verb@      9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[0,3],[14,2],[14,5],[14,7],[14,11],[0,8],[3,7],[3,5]]@\\
+\mbox{}\verb@FV2 = [[0,5,6,7],[0,1,7],[4,5,6],[2,3,6,7],[1,2,7],[3,4,6]]@\\
+\mbox{}\verb@EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],@\\
+\mbox{}\verb@      [5,6],[6,7]]@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool31} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool32} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool33} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool34} 
+   \caption{2D example of file \texttt{test/py/bool1/test3.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap37}
+\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test3.py"@\nobreak\ {\footnotesize 29b }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V1 = [[3,0],[11,0],[13,10],[10,11],[8,11],[6,11],[4,11],[1,10],[4,3],[6,4],@\\
+\mbox{}\verb@      [8,4],[10,3]]@\\
+\mbox{}\verb@FV1 = [[0,1,8,9,10,11],[1,2,11],[3,10,11],[4,5,9,10],[6,8,9],[0,7,8]]@\\
+\mbox{}\verb@EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,@\\
+\mbox{}\verb@      9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[0,3],[14,2],[14,5],[14,7],[14,11],[0,8],[3,7],[3,5]]@\\
+\mbox{}\verb@FV2 = [[0,5,6,7],[0,1,7],[4,5,6],[2,3,6,7]]@\\
+\mbox{}\verb@EV2 = [[0,1],[0,5],[0,7],[1,7],[2,3],[2,7],[3,6],[4,5],[4,6],[5,6],[6,7]]@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool41} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool42} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool43} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool44} 
+   \caption{2D example of file \texttt{test/py/bool1/test4.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap38}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test4.py"@\nobreak\ {\footnotesize 30 }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V1 = [[0,0],[10,0],[10,10],[0,10]]@\\
+\mbox{}\verb@FV1 = [range(4)]@\\
+\mbox{}\verb@EV1 = [[0,1],[1,2],[2,3],[0,3]]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[2.5,2.5],[12.5,2.5],[12.5,12.5],[2.5,12.5]]@\\
+\mbox{}\verb@FV2 = [range(4)]@\\
+\mbox{}\verb@EV2 = [[0,1],[1,2],[2,3],[0,3]]@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool51} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool52} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool53} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool54} 
+   \caption{2D example of file \texttt{test/py/bool1/test5.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. (ERRORS in the images)}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+
+\paragraph{ERROR}
+
+Problems remain with facet extraction from a (too) small convex complex, both if made of simplices
+(the automatically generated \texttt{FW} is wrong) and if made of cuboids
+(the automatically generated \texttt{FX} is wrong too). Errors to solve in the implementation of automatic extraction of facets.
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap39}
+\protect\makebox[0ex][r]{\NWtarget{nuweb32}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test5.py"@\nobreak\ {\footnotesize 32 }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V1 = [[0,0],[5,0],[5,5],[0,5]]@\\
+\mbox{}\verb@FV1 = [range(4)]@\\
+\mbox{}\verb@EV1 = [[0,1],[1,2],[2,3],[0,3]]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[5,0],[10,0],[10,5],[5,5]]@\\
+\mbox{}\verb@FV2 = [range(4)]@\\
+\mbox{}\verb@EV2 = [[0,1],[1,2],[2,3],[0,3]]@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool61} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool62} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool63} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool64} 
+   \caption{2D example of file \texttt{test/py/bool1/test6.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. (ERRORS in the images)}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+
+\paragraph{ERROR}
+
+Problems remain with tagging of 3D cell as internal/external to Boolean boundaries. Errors to solve in the implementation of  general (no simplicial) signed boundary operator matrix.
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap40}
+\protect\makebox[0ex][r]{\NWtarget{nuweb33a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test6.py"@\nobreak\ {\footnotesize 33a }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V1 = [[0,0,0],[10,0,0],[10,10,0],[0,10,0],[0,0,10],[10,0,10],[10,10,10],[0,10,10]]@\\
+\mbox{}\verb@V1,[VV1,EV1,FV1,CV1] = larCuboids((1,1,1),True)@\\
+\mbox{}\verb@V1 = [SCALARVECTPROD([5,v]) for v in V1]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [SUM([v,[2.5,2.5,2.5]]) for v in V1]@\\
+\mbox{}\verb@[VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1,CV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2,CV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool71} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool72} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool73} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool74} 
+   \caption{2D example of file \texttt{test/py/bool1/test7.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. }
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap41}
+\protect\makebox[0ex][r]{\NWtarget{nuweb33b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test7.py"@\nobreak\ {\footnotesize 33b }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V1 = [[0,0],[10,0],[10,10],[0,10]]@\\
+\mbox{}\verb@FV1 = [range(4)]@\\
+\mbox{}\verb@EV1 = [[0,1],[1,2],[2,3],[0,3]]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]@\\
+\mbox{}\verb@FV2 = [range(4)]@\\
+\mbox{}\verb@EV2 = [[0,1],[1,2],[2,3],[0,3]]@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool81} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool82} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool83} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool84} 
+   \caption{2D example of file \texttt{test/py/bool1/test8.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC. (ERRORS: Numeric (?) errors in the splitting procedure?)}
+   \label{fig:example}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap42}
+\protect\makebox[0ex][r]{\NWtarget{nuweb34}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test8.py"@\nobreak\ {\footnotesize 34 }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@n = 48@\\
+\mbox{}\verb@V1 = [[5*cos(angle*2*PI/n)+2.5, 5*sin(angle*2*PI/n)+2.5] for angle in range(n)]@\\
+\mbox{}\verb@FV1 = [range(n)]@\\
+\mbox{}\verb@EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]@\\
+\mbox{}\verb@FV2 = [range(n)]@\\
+\mbox{}\verb@EV2 = EV1@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap43}
+\protect\makebox[0ex][r]{\NWtarget{nuweb35a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test9.py"@\nobreak\ {\footnotesize 35a }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@n = 6@\\
+\mbox{}\verb@V1 = [[5*cos(angle*2*PI/n), 5*sin(angle*2*PI/n)] for angle in range(n)]@\\
+\mbox{}\verb@FV1 = [range(n)]@\\
+\mbox{}\verb@EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]@\\
+\mbox{}\verb@FV2 = [range(n)]@\\
+\mbox{}\verb@EV2 = EV1@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool101} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool102} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool103} 
+   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/bool104} 
+   \caption{2D example of file \texttt{test/py/bool1/test10.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
+   \label{fig:example}
+\end{figure}
+
+
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap44}
+\protect\makebox[0ex][r]{\NWtarget{nuweb35b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test10.py"@\nobreak\ {\footnotesize 35b }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V1 = [[0,0],[15,0],[15,14],[0,14]]@\\
+\mbox{}\verb@FV1 = [range(4)]@\\
+\mbox{}\verb@EV1 = [[0,1],[1,2],[2,3],[0,3]]@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@V2 = [[1,1],[7,1],[7,6],[1,6], [8,1],[14,1],[14,7],[8,7], [1,7],[7,7],[7,13],@\\
+\mbox{}\verb@      [1,13], [8,8],[14,8],[14,13],[8,13]]@\\
+\mbox{}\verb@FV2 = [range(4),range(4,8),range(8,12),range(12,16)]@\\
+\mbox{}\verb@EV2 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11], [12,13],[13,14],[14,15],[12,15]]@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,EV1,FV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,EV2,FV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+
+\subsection{Random data input} 
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap45}
+\protect\makebox[0ex][r]{\NWtarget{nuweb36a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Random data input\nobreak\ {\footnotesize 36a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@@\hbox{$\langle\,$Generation of $n$ random points in the unit $d$-disk\nobreak\ {\footnotesize \NWlink{nuweb36b}{36b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generation of $n$ random points in the standard $d$-cuboid\nobreak\ {\footnotesize \NWlink{nuweb37a}{37a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Triangulation of random points\nobreak\ {\footnotesize \NWlink{nuweb37b}{37b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item {\NWtxtMacroNoRef}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
+\paragraph{Random points in unit disk} 
+First we generate a  set of $n$ random points in the unit $D^d$ disk centred on the origin, to be subsequently used to generate a random Delaunay complex of variable granularity.
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap46}
+\protect\makebox[0ex][r]{\NWtarget{nuweb36b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation of $n$ random points in the unit $d$-disk\nobreak\ {\footnotesize 36b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def randomPointsInUnitCircle(n=200,d=2, r=1):@\\
+\mbox{}\verb@   points = random.random((n,d)) * ([2*math.pi]+[1]*(d-1))@\\
+\mbox{}\verb@   return [[SQRT(p[1])*COS(p[0]),SQRT(p[1])*SIN(p[0])] for p in points]@\\
+\mbox{}\verb@   ## TODO: correct for $d$-sphere@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@if __name__=="__main__":@\\
+\mbox{}\verb@   VIEW(STRUCT(AA(MK)(randomPointsInUnitCircle()))) @\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb36a}{36a}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
+\paragraph{Random points in the standard $d$-cuboid} 
+A set of $n$ random $d$-points is then generated within the standard $d$-cuboid, i.e.~withing the $d$-dimensional interval with a vertex on the origin.
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap47}
+\protect\makebox[0ex][r]{\NWtarget{nuweb37a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation of $n$ random points in the standard $d$-cuboid\nobreak\ {\footnotesize 37a}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@def randomPointsInUnitCuboid(n=200,d=2):@\\
+\mbox{}\verb@   return random.random((n,d)).tolist()@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@if __name__=="__main__":@\\
+\mbox{}\verb@   VIEW(STRUCT(AA(MK)(randomPointsInUnitCuboid()))) @\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb36a}{36a}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
+
+
+\paragraph{Triangulation of random points} The Delaunay triangulation of \texttt{randomPointsInUnitCircle} is generated by the following macro.
+
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap48}
+\protect\makebox[0ex][r]{\NWtarget{nuweb37b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Triangulation of random points\nobreak\ {\footnotesize 37b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@from scipy.spatial import Delaunay@\\
+\mbox{}\verb@def randomTriangulation(n=200,d=2,out='disk'):@\\
+\mbox{}\verb@   if out == 'disk':@\\
+\mbox{}\verb@      V = randomPointsInUnitCircle(n,d)@\\
+\mbox{}\verb@   elif out == 'cuboid':@\\
+\mbox{}\verb@      V = randomPointsInUnitCuboid(n,d)@\\
+\mbox{}\verb@   CV = Delaunay(array(V)).vertices@\\
+\mbox{}\verb@   model = V,CV@\\
+\mbox{}\verb@   return model@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@if __name__=="__main__":@\\
+\mbox{}\verb@   from lar2psm import *@\\
+\mbox{}\verb@   VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model)))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb36a}{36a}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
+
+
+%------------------------------------------------------------------
+\begin{flushleft} \small
+\begin{minipage}{\linewidth} \label{scrap49}
+\protect\makebox[0ex][r]{\NWtarget{nuweb38a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/bool1/test11.py"@\nobreak\ {\footnotesize 38a }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Union of 2D non-structured grids """@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from bool1 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@model1 = randomTriangulation(100,2,'disk')@\\
+\mbox{}\verb@V1,CV1 = model1@\\
+\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))@\\
+\mbox{}\verb@FV1 = larConvexFacets (V1,CV1)@\\
+\mbox{}\verb@VV1 = AA(LIST)(range(len(V1)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@model2 = randomTriangulation(100,2,'cuboid')@\\
+\mbox{}\verb@V2,CV2 = model2@\\
+\mbox{}\verb@V2 = larScale( [2,2])(V2)@\\
+\mbox{}\verb@model2 = V2,CV2 @\\
+\mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)+cellNames(model2,CV2,RED)))@\\
+\mbox{}\verb@FV2 = larConvexFacets (V2,CV2)@\\
+\mbox{}\verb@VV2 = AA(LIST)(range(len(V2)))@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@arg1 = V1,(VV1,FV1,CV1)@\\
+\mbox{}\verb@arg2 = V2,(VV2,FV2,CV2)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Debug via visualization\nobreak\ {\footnotesize \NWlink{nuweb27}{27}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{minipage}\\[4ex]
+\end{flushleft}
+%------------------------------------------------------------------
+
+
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+\appendix
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+%-------------------------------------------------------------------------------
+\section{Appendix: utility functions}
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap50}
+\protect\makebox[0ex][r]{\NWtarget{nuweb38b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 38b}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@from pyplasm import *@\\
+\mbox{}\verb@from scipy import *@\\
+\mbox{}\verb@import sys@\\
+\mbox{}\verb@""" import modules from larcc/lib """@\\
+\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from lar2psm import *@\\
+\mbox{}\verb@from simplexn import *@\\
+\mbox{}\verb@from larcc import *@\\
+\mbox{}\verb@from largrid import *@\\
+\mbox{}\verb@from myfont import *@\\
+\mbox{}\verb@from mapper import *@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+\subsection{Numeric utilities}
+
+A small set of utility functions is used to transform a \emph{point} representation, given as array of coordinates, into a string of fixed format to be used as point key into python dictionaries.
+
+%------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap51}
+\protect\makebox[0ex][r]{\NWtarget{nuweb39}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 39}$\,\rangle\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\
+\mbox{}\verb@global PRECISION@\\
+\mbox{}\verb@PRECISION = 4.@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def verySmall(number): return abs(number) < 10**-(PRECISION)@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def prepKey (args): return "["+", ".join(args)+"]"@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def fixedPrec(value):@\\
+\mbox{}\verb@   out = round(value*10**(PRECISION))/10**(PRECISION)@\\
+\mbox{}\verb@   if out == -0.0: out = 0.0@\\
+\mbox{}\verb@   return str(out)@\\
+\mbox{}\verb@   @\\
+\mbox{}\verb@def vcode (vect): @\\
+\mbox{}\verb@   """@\\
+\mbox{}\verb@   To generate a string representation of a number array.@\\
+\mbox{}\verb@   Used to generate the vertex keys in PointSet dictionary, and other similar operations.@\\
+\mbox{}\verb@   """@\\
+\mbox{}\verb@   return prepKey(AA(fixedPrec)(vect))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-1ex}
+\footnotesize\addtolength{\baselineskip}{-1ex}
+\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
+\item \NWtxtMacroRefIn\ \NWlink{nuweb26}{26}.
+\end{list}
+\end{flushleft}
+%------------------------------------------------------------------
+
+
+\bibliographystyle{amsalpha}
+\bibliography{bool1}
+
+\end{document}
+%------------------------------------------------------------------
+
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+
+from larcc import *
+from scipy.sparse import *
+
+V,[VV,EV,FV,CV] = larCuboids((1,2,3),True)
+print FV
+boundaryMat = signedCellularBoundary(*larCuboids((1,1,1),True))
+print boundaryMat.todense()
+glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
+submodel = glass(STRUCT(MKPOLS((V,FV))))
+
+def signedCellularBoundaryCells(V,(VV,EV,FV,CV)):
+	boundaryMat = signedCellularBoundary(V,[VV,EV,FV,CV])
+	chainCoords = csc_matrix((len(CV), 1))
+	for cell in range(len(CV)): chainCoords[cell,0] = 1
+	boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+	orientations = list((boundaryMat * chainCoords).tocoo().data)
+	return orientations,boundaryCells
+	
+def normalVector(V,facet):
+	v0,v1,v2 = facet[:3]
+	return VECTPROD([ DIFF([V[v1],V[v0]]), DIFF([V[v2],V[v0]]) ])
+
+
+BCpairs = zip(*signedCellularBoundaryCells(V,[VV,EV,FV,CV]))
+orientedBoundary = [FV[face] if sign>0 else swap(FV[face]) for (sign,face) in BCpairs]
+normals = [ normalVector(V,facet)  for facet in orientedBoundary ]
+facetCentroids = [CCOMB([V[v] for v in facet]) for facet in orientedBoundary]
+appliedNormals = [[centroid,SUM([centroid,normal])] for (centroid,normal) in zip(facetCentroids,normals)]
+normalVectors = AA(POLYLINE)(appliedNormals)
+
+VIEW(STRUCT(MKPOLS((V,orientedBoundary))+normalVectors))
+
+
+
+
