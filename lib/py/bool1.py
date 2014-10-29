@@ -330,78 +330,51 @@ def qhullBoundary(V):
    out = hull.simplices.tolist()
    return sorted(out)
 
-""" Extracting a $(d-1)$-basis of SCDC """
-def convexBoundary(V):
-   covectors = defaultdict(list)
-   tri = Delaunay(V)
-   FV = tri.convex_hull.tolist()
-   
-def convexBoundary(W,CW):
-   points = array(W)
-   hull = ConvexHull(points,qhull_options="Qc")
-   coplanarVerts = hull.coplanar.tolist()
-   if coplanarVerts != []:  coplanarVerts = CAT(coplanarVerts)
-   BWchain = set( CAT(qhullBoundary(W)) + coplanarVerts )
-   dim = len(W[0])
-   bfacets = [list(BWchain.intersection(cell)) 
-               for cell in CW if len(BWchain.intersection(cell)) >= dim]
-   return bfacets
+def facetDimensionTest(V,facet,covector):
+   covector = eval(covector)
+   return all([ -0.01 < INNERPROD([[1.]+W[v],covector]) < 0.01 for v in facet ])
 
-def larConvexFacets (V,CV):
+def convexFacets (V,CV):
    dim = len(V[0])
    model = V,CV
-   V,FV = larFacets(model,dim)
-   FV = AA(eval)(list(set(AA(str)(FV + convexBoundary(V,CV)
-         ))))
-   FV = sorted(AA(sorted)(FV))
+   V,FV = larFacets(model,dim)   
+   FV = AA(eval)(list(set(AA(str)(AA(sorted)(FV + convexBoundary(V,CV))) )))
    return FV
-"""
-def larConvexFacets(Y,CY):
-   FY = set()
-   for cell in CY:
-      cellVerts = array([[Y[v],v] for v in cell])     # v globale
-      cellVerts,cellVertsInd = TRANS(cellVerts)
-      covectors = defaultdict(list) 
-      tri = Delaunay(cellVerts)   # struttura dati
-      FV = tri.convex_hull.tolist()   # facce con indici vertici LOCALI
-      for k,facet in enumerate(FV):
-         covect = list(COVECTOR([cellVerts[v] for v in facet]))
-         normalizedCovect = [ h*SIGN(covect[0])  for h in covect]
-         for h,comp in enumerate(UNITVECT(normalizedCovect)): 
-            if not isclose(0.0, comp): 
-               theSign = SIGN(comp)
-               break
-         normalizedCovect = [x*theSign  if x!=abs(0.0) else x for x in normalizedCovect]
-         covectors[vcode(normalizedCovect)] += [k]
-      for covector,facets in covectors.items():
-         localFacets = [list(set(CAT([FV[facet] for facet in facets])))]
-         for facet in localFacets:
-            FY = FY.union([tuple([ cellVertsInd[v] for v in facet ])])  
-   #for facet in convexBoundary(Y,CY):       
-   #  FY = FY.union(facet) 
-   FY = sorted(list(AA(sorted)(AA(list)(FY))))
-   return FY   
-
+   
 if __name__ == "__main__":
     V,CV = larCuboids((2,2,2))
-    FV = larConvexFacets(V,CV)
-    # EV = larConvexFacets(V,FV)
+    FV = convexFacets(V,CV)
+    # EV = convexFacets(V,FV)
     submodel = SKEL_1(STRUCT(MKPOLS((V,FV))))
     VV = AA(LIST)(range(len(V)))
     VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1.5))
-"""
 
 """ Computation of boundary operator of a convex LAR model"""
-def convexBoundary(W,CW):
-   points = array(W)
-   hull = ConvexHull(points,qhull_options="Qc")
+def convexBoundary(V,CV): 
+   hull = ConvexHull(array(V), qhull_options="Qc")
+   boundaryEquations = list(set(AA(tuple)(hull.equations.tolist())))
+   
    coplanarVerts = hull.coplanar.tolist()
    if coplanarVerts != []:  coplanarVerts = CAT(coplanarVerts)
-   BWchain = set( CAT(qhullBoundary(W)) + coplanarVerts )
-   dim = len(W[0])
-   bfacets = [list(BWchain.intersection(cell)) 
-               for cell in CW if len(BWchain.intersection(cell)) >= dim]
-   return bfacets
+   boundaryVerts = set( CAT(qhullBoundary(V)) + coplanarVerts )
+   
+   dim, boundaryFacets = len(V[0]), []
+   splitFacets = [[] for k in range(len(boundaryEquations))]
+   for cell in CV:
+      facet = list(boundaryVerts.intersection(cell))
+      if len(facet) >= dim:
+         covector = COVECTOR([V[v] for v in facet])
+         if all([ -0.01 < INNERPROD([ [1.]+V[v], covector ]) < 0.01 for v in facet ]):
+            boundaryFacets += [ facet ]
+         else:
+            splitFacets = [[] for k in range(len(boundaryEquations))]
+            for v in facet:
+               for k,equation in enumerate(boundaryEquations):
+                  if -0.01 < INNERPROD([ V[v]+[1.], equation ]) < 0.01:
+                     splitFacets[k] += [v]
+         boundaryFacets += [f for f in splitFacets if f != [] ]
+         print "cell,boundaryFacets =",cell,boundaryFacets
+   return boundaryFacets
 
 """ Writing labelling seeds on SCDC """
 def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):
@@ -535,8 +508,45 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
                            covectors,usedCells,constraints)
             CX += [ verts ]
             CXbits += [ CWbits[k] ]
-   return W,CX,CXbits
+            
+   X,CX = larRemoveVertices(W,CX)
+   return X,CX,CXbits
+   #return W,CX,CXbits
 
+
+""" Removal of redundant vertices from simplified LAR model """
+def facetCovectors(X,FX):
+   covectors = defaultdict(list) 
+   for k,facet in enumerate(FX):
+      covect = list(COVECTOR([X[v] for v in facet]))
+      normalizedCovect = UNITVECT([ h*SIGN(covect[0])  for h in covect])
+      for h,comp in enumerate(normalizedCovect): 
+         if not isclose(0.0, comp): 
+            theSign = SIGN(comp)
+            break
+      normalizedCovect = [x*theSign  if x!=abs(0.0) else x for x in normalizedCovect]
+      covectors[vcode(normalizedCovect)] += [k]
+   return covectors
+
+def larVertexRemoval(X,CX,FX):
+   dim = len(X[0])
+   covectors = facetCovectors(X,FX)
+   CovectF = covectors.values()
+   FCovect = invertRelation(CovectF)
+   XF = invertRelation(FX)
+   affineHullNumber = [len([FCovect[face] for face in vertFaces]) for vertFaces in XF]
+   Y = [X[k] if val>=dim else [] for k,val in enumerate(affineHullNumber)]
+   newIndex, Z = 0, dict()
+   for oldIndex, vertex in enumerate(Y):
+      if vertex != []:
+         Z[oldIndex] = newIndex  # (old,new) vertex indices
+         newIndex += 1
+   V = [None for k in range(len(Z))]
+   for old,new in Z.items():
+      V[new] = X[old]
+   FV = [[Z[v] for v in facet if v in Z] for facet in FX]
+   CV = [[Z[v] for v in cell if v in Z] for cell in CX]
+   return V,CV,FV
 
 """ Boolean Algorithm """
 def larBool(arg1,arg2, brep=False):
@@ -545,7 +555,7 @@ def larBool(arg1,arg2, brep=False):
    cells1 = basis1[-1]
    cells2 = basis2[-1]
    model1,model2 = (V1,cells1),(V2,cells2)
-   
+      
    """ First Boolean step """
    def larBool1():
       V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
@@ -556,11 +566,13 @@ def larBool(arg1,arg2, brep=False):
       assert len(BCellCovering) == len(BC)
       return W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW 
    
+   W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
+   
    """ Second Boolean step """
    def larBool2(boundary1,boundary2):
       dim = len(W[0])
       WW = AA(LIST)(range(len(W)))
-      FW = larConvexFacets (W,CW)
+      FW = convexFacets (W,CW)
       _,EW = larFacets((W,FW), dim=2)
       boundary1,boundary2,FWdict = makeFacetDicts(FW,boundary1,boundary2)
       if dim == 3: 
@@ -570,6 +582,8 @@ def larBool(arg1,arg2, brep=False):
       else: print "\nerror: not implemented\n"
       return W,CW,dim,bases,boundary1,boundary2,FW,BCW
    
+   W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
+
    """ Third Boolean step """
    def larBool3():
       coBoundaryMat = signedCellularBoundary(W,bases).T
@@ -589,22 +603,25 @@ def larBool(arg1,arg2, brep=False):
       chain1,chain2 = TRANS(CWbits)
       return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits
    
+   V,CV,FV,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
+
    """ Fourth Boolean step """
-   def larBool4(W,CWbits):
-      W,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
-      FX = larConvexFacets (W,CX)      
-      return W,CX,FX,CXbits
+   def larBool4(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits):
+      X,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
+      FX = convexFacets (X,CX)
+      return X,CX,FX,CXbits
    
-      
-   W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
-   W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
-   W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
-   W,CX,FX,CXbits = larBool4(W,CWbits)
-   chain1,chain2 = TRANS(CXbits)
-   
+   W,CX,FX,CXbits = larBool4(V,CV,FV,boundaryMat,boundary1,boundary2,CWbits)
+         
+   print "\n"
    print "\nW =",W
    print "\nCX =",CX
    print "\nFX =",FX
+   print "\n"
+   
+   W,CX,FX = larVertexRemoval(W,CX,FX)
+   chain1,chain2 = TRANS(CXbits)
+   
    boundaryMat = boundary(CX,FX)
 
    def theBoundary(boundaryMat,CX,coords):

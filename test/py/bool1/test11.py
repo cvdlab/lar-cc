@@ -7,7 +7,7 @@ from bool1 import *
 model1 = randomTriangulation(100,2,'disk')
 V1,CV1 = model1
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model1)+cellNames(model1,CV1,MAGENTA)))
-FV1 = larConvexFacets (V1,CV1)
+FV1 = convexFacets (V1,CV1)
 VV1 = AA(LIST)(range(len(V1)))
 
 model2 = randomTriangulation(100,2,'cuboid')
@@ -15,7 +15,7 @@ V2,CV2 = model2
 V2 = larScale( [2,2])(V2)
 model2 = V2,CV2 
 VIEW(EXPLODE(1.5,1.5,1)(MKPOLS(model2)+cellNames(model2,CV2,RED)))
-FV2 = larConvexFacets (V2,CV2)
+FV2 = convexFacets (V2,CV2)
 VV2 = AA(LIST)(range(len(V2)))
 
 arg1 = V1,(VV1,FV1,CV1)
