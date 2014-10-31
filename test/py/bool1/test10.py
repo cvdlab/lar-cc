@@ -22,8 +22,9 @@ arg2 = V2,(VV2,EV2,FV2)
 boolean = larBool(arg1,arg2)  
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("xor")
-glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
-VIEW(glass(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain)))))
+glass = MATERIAL([1,0,0,0.6,  0,1,0,0.6,  0,0,1,0.6, 0,0,0,0.6, 100])
+VIEW(glass(STRUCT(MKPOLS((W,chain)))))
+"""
 VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("union")
@@ -31,13 +32,18 @@ VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
 VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+if chain != []:
+   VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+   VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+if chain != []:
+    VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+    VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
-VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,FX)))))
+    VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
+"""
+submodel = SKEL_1(STRUCT(MKPOLS((W,FX))))
+VV = AA(LIST)(range(len(W)))
+VIEW(larModelNumbering(1,1,1)(W,[VV,FX,CX],submodel,1))
 

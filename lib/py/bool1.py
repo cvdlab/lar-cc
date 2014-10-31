@@ -195,6 +195,7 @@ def boundaryCover(V,CV,BC,VC):
       cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) 
                      for cell in seedsOnFacet ]
       cellsToSplit = set(CAT(cellsToSplit))
+      if cellsToSplit == set(): cellsToSplit=set(seedsOnFacet) ## NB !!!
       while True:
          newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) 
                      for cell in cellsToSplit ]
@@ -334,20 +335,31 @@ def facetDimensionTest(V,facet,covector):
    covector = eval(covector)
    return all([ -0.01 < INNERPROD([[1.]+W[v],covector]) < 0.01 for v in facet ])
 
-def convexFacets (V,CV):
+def convexFacets (V,CV,dim=2):
    dim = len(V[0])
    model = V,CV
    V,FV = larFacets(model,dim)   
    FV = AA(eval)(list(set(AA(str)(AA(sorted)(FV + convexBoundary(V,CV))) )))
    return FV
+
+def larConvexFacets (V,CV):
+   vdict = defaultdict(list)
+   for k,v in enumerate(V): vdict[vcode(v)] += [k]
+   FV = []
+   for cell in CV: 
+      fv = convexFacets([V[v] for v in cell],[range(len(cell))])
+      FV += [tuple([cell[v] for v in facet]) for facet in fv]
+   return sorted(AA(list)(set(FV)))
    
 if __name__ == "__main__":
-    V,CV = larCuboids((2,2,2))
+    V = [[0,0],[1,0],[1,1],[0.5,1],[0,1]]
+    CV = [[0,1,2,3,4]]
     FV = convexFacets(V,CV)
-    # EV = convexFacets(V,FV)
-    submodel = SKEL_1(STRUCT(MKPOLS((V,FV))))
-    VV = AA(LIST)(range(len(V)))
-    VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1.5))
+   
+if __name__ == "__main__":
+    V,CV = larCuboids((10,10,10))
+    FV = convexFacets(V,CV,2)
+    #EV = convexFacets(V,FV,1)
 
 """ Computation of boundary operator of a convex LAR model"""
 def convexBoundary(V,CV): 
@@ -372,8 +384,7 @@ def convexBoundary(V,CV):
                for k,equation in enumerate(boundaryEquations):
                   if -0.01 < INNERPROD([ V[v]+[1.], equation ]) < 0.01:
                      splitFacets[k] += [v]
-         boundaryFacets += [f for f in splitFacets if f != [] ]
-         print "cell,boundaryFacets =",cell,boundaryFacets
+         boundaryFacets += [f for f in splitFacets if f != [] and len(f)>=dim ]
    return boundaryFacets
 
 """ Writing labelling seeds on SCDC """
@@ -415,18 +426,20 @@ def facet2covectors(W,FW):
    return [COVECTOR([W[v] for v in facet]) for facet in FW]
 
 def boundaries(boundary1,boundary2):
-   return set(CAT(boundary1.values() + boundary2.values()))
+   #return set(CAT(boundary1.values() + boundary2.values()))
+   return boundary1.union(boundary2)
 
 """ Mapping from hyperplanes to lists of facets """
 def facet2covectors(W,FW):
    return [COVECTOR([W[v] for v in facet]) for facet in FW]
 
 def boundaries(boundary1,boundary2):
-   return set(CAT(boundary1.values() + boundary2.values()))
+   #return set(CAT(boundary1.values() + boundary2.values()))
+   return boundary1.union(boundary2)
 
 from scipy.sparse import csc_matrix
 """ Building the boundary complex of the current chain """
-def chain2complex(W,CW,chain,boundaryMat,constraints):
+def chain2complex(W,CW,chain,boundaryMat,constraints=[]):
    chainCoords = csc_matrix((len(CW), 1))
    for cell in chain: chainCoords[cell] = 1
    boundaryCells = set((boundaryMat * chainCoords).tocoo().row)
@@ -601,32 +614,31 @@ def larBool(arg1,arg2, brep=False):
          if CWbits[cell][1] == 0:
             CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
       chain1,chain2 = TRANS(CWbits)
-      return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits
+      
+      chain = [k for k,cell in enumerate(chain1) if cell==1]
+      _,bound1 = chain2complex(W,CW,chain,boundaryMat)
+      
+      chain = [k for k,cell in enumerate(chain2) if cell==1]
+      _,bound2 = chain2complex(W,CW,chain,boundaryMat)
+      
+      return W,CW,FW,boundaryMat,bound1,bound2,chain1,chain2,CWbits
    
    V,CV,FV,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
 
    """ Fourth Boolean step """
    def larBool4(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits):
       X,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
-      FX = convexFacets (X,CX)
+      FX = larConvexFacets (X,CX)
       return X,CX,FX,CXbits
    
    W,CX,FX,CXbits = larBool4(V,CV,FV,boundaryMat,boundary1,boundary2,CWbits)
-         
-   print "\n"
-   print "\nW =",W
-   print "\nCX =",CX
-   print "\nFX =",FX
-   print "\n"
-   
+
    W,CX,FX = larVertexRemoval(W,CX,FX)
    chain1,chain2 = TRANS(CXbits)
    
    boundaryMat = boundary(CX,FX)
 
    def theBoundary(boundaryMat,CX,coords):
-      print "\n>>>> boundaryMat =",boundaryMat
-      print "\n>>>> coords =",coords
       chainCoords = csc_matrix((len(CX), 1))
       for cell in coords: chainCoords[cell,0] = 1
       boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
@@ -640,14 +652,24 @@ def larBool(arg1,arg2, brep=False):
          ucoords,uchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2>=1])
          return W,CW,uchain,CX,FX,theBoundary(boundaryMat,CX,ucoords)
       elif op == "intersection": 
-         icoords,ichain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])
-         return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+         data = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])
+         if data != []: 
+            icoords,ichain = data
+            return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+         else: 
+            icoords,ichain = [],[]
+            return W,CW,[],[],[],[]
       elif op == "xor": 
          xcoords,xchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2==1])
          return W,CW,xchain,CX,FX,theBoundary(boundaryMat,CX,xcoords)
       elif op == "difference": 
-         dcoords,dchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0 ])
-         return W,CW,dchain,CX,FX,theBoundary(boundaryMat,CX,dcoords)
+         data = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0])
+         if data != []: 
+            icoords,ichain = data
+            return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+         else: 
+            icoords,ichain = [],[]
+            return W,CW,[],[],[],[]
       else: print "Error: non implemented op"
 
    return larBool0

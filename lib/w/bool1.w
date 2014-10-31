@@ -447,7 +447,7 @@ def dividenda(V,CV, cell,facet,covector,unchosen):
 When splitting a $d$-cell with some hyperplanes, we need to return not only either the two cut parts or the cell itself when the hyperplane is tangent to a $(d-1)$-face, but also the facet lying on the hyperplane. 
 In the first cade it is directly computed by the \texttt{SPLITCELL} function, and returned as the \texttt{equal} set of points. In the second case, the cell is transformed by the map that sends the hyperplane in the $x_d=0$ subspace ($z=0$ in 3D), and the searched facet is returned as the (back-transformed) set of cell vertices on this subspace. 
 
-Actually, the process is strongly complicated by the fact that the input cell (and its facets) may be cut by several hyperplanes. By now, we resort to the simplex computation, even if more time-expensive:  to compare each vertex of each cell fragment, against every hyperplanes. This approach will adapt well to the writing of a computational kernel on the GPU.
+Actually, the process is strongly complicated by the fact that the input cell (and its facets) may be cut by several hyperplanes. By now, we resort to the simplest computation, even if more time-expensive:  to compare each vertex of each cell fragment, against every hyperplanes. This approach will adapt well to the writing of a computational kernel on the GPU.
 
 %-------------------------------------------------------------------------------
 @D CDC cell splitting with one or more cutting facets
@@ -583,6 +583,7 @@ def boundaryCover(V,CV,BC,VC):
 		cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) 
 							for cell in seedsOnFacet ]
 		cellsToSplit = set(CAT(cellsToSplit))
+		if cellsToSplit == set(): cellsToSplit=set(seedsOnFacet) ## NB !!!
 		while True:
 			newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) 
 							for cell in cellsToSplit ]
@@ -649,7 +650,7 @@ The goal of this stage is to label every cell of the SCDC with two bits, corresp
 
 
 \paragraph{Input}
-The output of previous algorithm stage.
+The output of previous algorithmic stage.
 
 \paragraph{Output}
 The array \texttt{cellLabels} with \emph{shape} $\texttt{len(PW)}\times 2$, and values in $\{0,1\}$.
@@ -684,7 +685,14 @@ def larBool3():
 		if CWbits[cell][1] == 0:
 			CWbits = booleanChainTraverse(1,cell,W,CW,CWbits,0)
 	chain1,chain2 = TRANS(CWbits)
-	return W,CW,FW,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits
+	
+	chain = [k for k,cell in enumerate(chain1) if cell==1]
+	_,bound1 = chain2complex(W,CW,chain,boundaryMat)
+	
+	chain = [k for k,cell in enumerate(chain2) if cell==1]
+	_,bound2 = chain2complex(W,CW,chain,boundaryMat)
+	
+	return W,CW,FW,boundaryMat,bound1,bound2,chain1,chain2,CWbits
 @}
 %-------------------------------------------------------------------------------
 
@@ -715,6 +723,13 @@ As we know, the  coboundary operators $\delta_{k-1}: C_{k-1} \to C_k$ are the tr
 Let us remember that a (co)boundary operator may be applied to \emph{any} chain from the linear space of chains defined upon a cellular complex. 
 In our case we have already generated the $(d-1)$-chains $\partial A$ and $\partial B$ while building the SCDC, by accumulating, in the course of the splitting phase, the $(d-1)$-facets discovered while tracking the boundaries of $A$ and $B$. We just need now to tag (a subset of) $\delta_{d-1}\partial_d A$ and $\delta_{d-1}\partial_d B$.
 
+
+\paragraph{Computation of facets of a connected polytopal LAR model}
+
+The $(d-1)$-facets of a $d$-dimensional \emph{polytopal and convex} LAR model are computed by the below \texttt{convexFacets} function by using both the algorithm codified by the function \texttt{larFacets} for the facets \emph{internal} to the complex, \emph{and} the \texttt{convexBoundary} algorithm for the facets on the convex boundary of the complex.
+
+Conversely, the \texttt{larConvexFacets} function can be used to compute the $(d-1)$-facets of a possibly \emph{non-connected and/or non-convex} polytopal complex.
+
 %-------------------------------------------------------------------------------
 @D Coboundary operator on the convex decomposition of common space
 @{""" Coboundary operator on the convex decomposition of common space """
@@ -730,26 +745,33 @@ def facetDimensionTest(V,facet,covector):
 	covector = eval(covector)
 	return all([ -0.01 < INNERPROD([[1.]+W[v],covector]) < 0.01 for v in facet ])
 
-def convexFacets (V,CV):
+def convexFacets (V,CV,dim=2):
 	dim = len(V[0])
 	model = V,CV
 	V,FV = larFacets(model,dim)	
 	FV = AA(eval)(list(set(AA(str)(AA(sorted)(FV + convexBoundary(V,CV))) )))
 	return FV
+
+def larConvexFacets (V,CV):
+	vdict = defaultdict(list)
+	for k,v in enumerate(V): vdict[vcode(v)] += [k]
+	FV = []
+	for cell in CV: 
+		fv = convexFacets([V[v] for v in cell],[range(len(cell))])
+		FV += [tuple([cell[v] for v in facet]) for facet in fv]
+	return sorted(AA(list)(set(FV)))
 	
 if __name__ == "__main__":
-    V,CV = larCuboids((2,2,2))
+    V = [[0,0],[1,0],[1,1],[0.5,1],[0,1]]
+    CV = [[0,1,2,3,4]]
     FV = convexFacets(V,CV)
-    # EV = convexFacets(V,FV)
-    submodel = SKEL_1(STRUCT(MKPOLS((V,FV))))
-    VV = AA(LIST)(range(len(V)))
-    VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1.5))
+	
+if __name__ == "__main__":
+    V,CV = larCuboids((10,10,10))
+    FV = convexFacets(V,CV,2)
+    #EV = convexFacets(V,FV,1)
 @}
 %-------------------------------------------------------------------------------
-
-%submodel = SKEL_1(STRUCT(MKPOLS((X,FX))))
-%VV = AA(LIST)(range(len(X)))
-%VIEW(larModelNumbering(1,1,1)(X,[VV,FX,CX],submodel,3))
 
 
 \paragraph{Computation of boundary operator}
@@ -783,8 +805,7 @@ def convexBoundary(V,CV):
 					for k,equation in enumerate(boundaryEquations):
 						if -0.01 < INNERPROD([ V[v]+[1.], equation ]) < 0.01:
 							splitFacets[k] += [v]
-			boundaryFacets += [f for f in splitFacets if f != [] ]
-			print "cell,boundaryFacets =",cell,boundaryFacets
+			boundaryFacets += [f for f in splitFacets if f != [] and len(f)>=dim ]
 	return boundaryFacets
 @}
 %-------------------------------------------------------------------------------
@@ -903,15 +924,10 @@ The first tool provides a mapping from $(d-1)$-facets of SCDC to their embedding
 @{""" Fourth Boolean step """
 def larBool4(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits):
 	X,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
-	FX = convexFacets (X,CX)
+	FX = larConvexFacets (X,CX)
 	return X,CX,FX,CXbits
 @}
 %-------------------------------------------------------------------------------
-
-%submodel = SKEL_1(STRUCT(MKPOLS((X,CX))))
-%WW = AA(LIST)(range(len(X)))
-%VIEW(STRUCT([ submodel, larModelNumbering(1,1,1)(X,[WW,[],CX],submodel,3) ]))
-%VIEW(EXPLODE(1.2,1.2,1)([ submodel, larModelNumbering(1.2,1.2,1)(X,[WW,FX],submodel,3) ]))
 
 
 \subsubsection{Detail functions}
@@ -928,7 +944,8 @@ def facet2covectors(W,FW):
 	return [COVECTOR([W[v] for v in facet]) for facet in FW]
 
 def boundaries(boundary1,boundary2):
-	return set(CAT(boundary1.values() + boundary2.values()))
+	#return set(CAT(boundary1.values() + boundary2.values()))
+	return boundary1.union(boundary2)
 @}
 %-------------------------------------------------------------------------------
 
@@ -940,7 +957,7 @@ It is computed via multiplication between the matrix of boundary operator and th
 @D Building the boundary complex of the current chain
 @{from scipy.sparse import csc_matrix
 """ Building the boundary complex of the current chain """
-def chain2complex(W,CW,chain,boundaryMat,constraints):
+def chain2complex(W,CW,chain,boundaryMat,constraints=[]):
 	chainCoords = csc_matrix((len(CW), 1))
 	for cell in chain: chainCoords[cell] = 1
 	boundaryCells = set((boundaryMat * chainCoords).tocoo().row)
@@ -948,6 +965,8 @@ def chain2complex(W,CW,chain,boundaryMat,constraints):
 	return envelope,boundaryCells
 @}
 %-------------------------------------------------------------------------------
+
+
 
 \paragraph{Sticking cells together}
 %-------------------------------------------------------------------------------
@@ -1145,21 +1164,13 @@ def larBool(arg1,arg2, brep=False):
 
 	@< Fourth Boolean step @>
 	W,CX,FX,CXbits = larBool4(V,CV,FV,boundaryMat,boundary1,boundary2,CWbits)
-			
-	print "\n"
-	print "\nW =",W
-	print "\nCX =",CX
-	print "\nFX =",FX
-	print "\n"
-	
+
 	W,CX,FX = larVertexRemoval(W,CX,FX)
 	chain1,chain2 = TRANS(CXbits)
 	
 	boundaryMat = boundary(CX,FX)
 
 	def theBoundary(boundaryMat,CX,coords):
-		print "\n>>>> boundaryMat =",boundaryMat
-		print "\n>>>> coords =",coords
 		chainCoords = csc_matrix((len(CX), 1))
 		for cell in coords: chainCoords[cell,0] = 1
 		boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
@@ -1173,14 +1184,24 @@ def larBool(arg1,arg2, brep=False):
 			ucoords,uchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2>=1])
 			return W,CW,uchain,CX,FX,theBoundary(boundaryMat,CX,ucoords)
 		elif op == "intersection": 
-			icoords,ichain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])
-			return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+			data = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])
+			if data != []: 
+				icoords,ichain = data
+				return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+			else: 
+				icoords,ichain = [],[]
+				return W,CW,[],[],[],[]
 		elif op == "xor": 
 			xcoords,xchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2==1])
 			return W,CW,xchain,CX,FX,theBoundary(boundaryMat,CX,xcoords)
 		elif op == "difference": 
-			dcoords,dchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0 ])
-			return W,CW,dchain,CX,FX,theBoundary(boundaryMat,CX,dcoords)
+			data = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0])
+			if data != []: 
+				icoords,ichain = data
+				return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
+			else: 
+				icoords,ichain = [],[]
+				return W,CW,[],[],[],[]
 		else: print "Error: non implemented op"
 
 	return larBool0
@@ -1244,8 +1265,9 @@ DEBUG = False
 boolean = larBool(arg1,arg2)	
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("xor")
-glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
-VIEW(glass(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain)))))
+glass = MATERIAL([1,0,0,0.6,  0,1,0,0.6,  0,0,1,0.6, 0,0,0,0.6, 100])
+VIEW(glass(STRUCT(MKPOLS((W,chain)))))
+"""
 VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("union")
@@ -1253,15 +1275,20 @@ VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
 VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+if chain != []:
+	VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+if chain != []:
+    VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+    VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
 
-VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,FX)))))
+    VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
+"""
+submodel = SKEL_1(STRUCT(MKPOLS((W,FX))))
+VV = AA(LIST)(range(len(W)))
+VIEW(larModelNumbering(1,1,1)(W,[VV,FX,CX],submodel,1))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1275,6 +1302,39 @@ VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,FX)))))
    \caption{2D example of file \texttt{test/py/bool1/test1.py}. (a) The cell numbering of SCDC; (b) the \textsc{xor} of Boolean arguments; (c) the boundaries of exploded 2-cells of \emph{reduced} SCDC; (d) exploded 1-cells of \emph{reduced} SCDC.}
    \label{fig:example}
 \end{figure}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test0.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+""" Definition of Boolean arguments """
+n = 16
+mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
+squares1 = larModelProduct([mod_1,mod_1])
+VIEW(STRUCT(MKPOLS(squares1)))
+mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
+squares2 = larModelProduct([mod_2,mod_2])
+VIEW(STRUCT(MKPOLS(squares1)+MKPOLS(squares2)))
+
+V1 = squares1[0]
+V2 = squares2[0]
+VV1 = AA(LIST)(range(len(V1)))
+VV2 = AA(LIST)(range(len(V2)))
+EV1 = larConvexFacets (*squares1)
+EV2 = larConvexFacets (*squares2)
+FV1 = squares1[1]
+FV2 = squares2[1]
+
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
+
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool1/test1.py
@@ -1437,7 +1497,7 @@ Problems remain with facet extraction from a (too) small convex complex, both if
 (the automatically generated \texttt{FX} is wrong too). Errors to solve in the implementation of automatic extraction of facets.
 
 %-------------------------------------------------------------------------------
-@O test/py/bool1/test5.py
+@O test/py/bool1/test5a.py
 @{
 import sys
 """ import modules from larcc/lib """
@@ -1450,6 +1510,78 @@ EV1 = [[0,1],[1,2],[2,3],[0,3]]
 VV1 = AA(LIST)(range(len(V1)))
 
 V2 = [[5,0],[10,0],[10,5],[5,5]]
+FV2 = [range(4)]
+EV2 = [[0,1],[1,2],[2,3],[0,3]]
+VV2 = AA(LIST)(range(len(V2)))
+
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
+
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test5b.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+V1 = [[0,0],[5,0],[5,5],[0,5]]
+FV1 = [range(4)]
+EV1 = [[0,1],[1,2],[2,3],[0,3]]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[5,2],[10,2],[10,7],[5,7]]
+FV2 = [range(4)]
+EV2 = [[0,1],[1,2],[2,3],[0,3]]
+VV2 = AA(LIST)(range(len(V2)))
+
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
+
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test5c.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+V1 = [[0,0],[5,0],[5,5],[0,5]]
+FV1 = [range(4)]
+EV1 = [[0,1],[1,2],[2,3],[0,3]]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[5,5],[10,5],[10,10],[5,10]]
+FV2 = [range(4)]
+EV2 = [[0,1],[1,2],[2,3],[0,3]]
+VV2 = AA(LIST)(range(len(V2)))
+
+arg1 = V1,(VV1,EV1,FV1)
+arg2 = V2,(VV2,EV2,FV2)
+
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test5d.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+V1 = [[0,0],[5,0],[5,5],[0,5]]
+FV1 = [range(4)]
+EV1 = [[0,1],[1,2],[2,3],[0,3]]
+VV1 = AA(LIST)(range(len(V1)))
+
+V2 = [[5,6],[10,6],[10,11],[5,11]]
 FV2 = [range(4)]
 EV2 = [[0,1],[1,2],[2,3],[0,3]]
 VV2 = AA(LIST)(range(len(V2)))
