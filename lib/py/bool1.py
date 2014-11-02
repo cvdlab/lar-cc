@@ -96,13 +96,13 @@ def makeCDC(arg1,arg2, brep):
       
       BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
       BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
-    
+   
       BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
       BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
 
    else:
       BC1,BC2 = basis1[-1],basis2[-1]
-    
+   
    BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
          [ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
       
@@ -352,14 +352,14 @@ def larConvexFacets (V,CV):
    return sorted(AA(list)(set(FV)))
    
 if __name__ == "__main__":
-    V = [[0,0],[1,0],[1,1],[0.5,1],[0,1]]
-    CV = [[0,1,2,3,4]]
-    FV = convexFacets(V,CV)
+   V = [[0,0],[1,0],[1,1],[0.5,1],[0,1]]
+   CV = [[0,1,2,3,4]]
+   FV = convexFacets(V,CV)
    
 if __name__ == "__main__":
-    V,CV = larCuboids((10,10,10))
-    FV = convexFacets(V,CV,2)
-    #EV = convexFacets(V,FV,1)
+   V,CV = larCuboids((10,10,10))
+   FV = convexFacets(V,CV,2)
+   #EV = convexFacets(V,FV,1)
 
 """ Computation of boundary operator of a convex LAR model"""
 def convexBoundary(V,CV): 
@@ -477,7 +477,7 @@ def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
    verts = []
    while True: 
       changed = False
-      envelope,boundaryCells = chain2complex(W,CW,chain,boundaryMat,constraints)
+      envelope,boundaryFacets = chain2complex(W,CW,chain,boundaryMat,constraints)
       for facet in envelope:
          success = False
          chainCoords = csr_matrix((1,len(FW)))
@@ -489,18 +489,19 @@ def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
             elif cocells[1] in chain: cell = cocells[0]
             if not usedCells[cell]:
                success = testAttachment(cell,usedCells,facet,chain, \
-                        W,CW,FW,boundaryMat,boundaryCells,covectors)
+                        W,CW,FW,boundaryMat,boundaryFacets,covectors)
             if success: 
                changed = True
                usedCells[cell] = True
                chain += [cell]
+         else: print "error: in protrudeChain (len(cocells) not equal to 2)"
+         chainCoords = csc_matrix((len(CW),1))
+         for cell in chain: 
+            chainCoords[cell,0] = 1
+            usedCells[cell] = True
+         boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)
       if not changed: break      
          
-   chainCoords = csc_matrix((len(CW),1))
-   for cell in chain: 
-      chainCoords[cell,0] = 1
-      usedCells[cell] = True
-   boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)
    verts = [FW[facet] for facet in boundaryFacets]
    verts = sorted(list(set(CAT(verts))))
    return verts,usedCells
@@ -624,7 +625,14 @@ def larBool(arg1,arg2, brep=False):
       return W,CW,FW,boundaryMat,bound1,bound2,chain1,chain2,CWbits
    
    V,CV,FV,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
-
+   
+   submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
+   VV = AA(LIST)(range(len(V)))
+   
+   if DEBUG:
+      VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1))
+      VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for k,cell in enumerate(CV) if sum(CWbits[k])==2]))))
+   
    """ Fourth Boolean step """
    def larBool4(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits):
       X,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)

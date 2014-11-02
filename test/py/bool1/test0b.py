@@ -4,19 +4,24 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
-n = 6
-V1 = [[5*cos(angle*2*PI/n), 5*sin(angle*2*PI/n)] for angle in range(n)]
-FV1 = [range(n)]
-EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
+""" Definition of Boolean arguments """
+n = 8
+mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
+squares1 = INSR(larModelProduct)([mod_1,mod_1,mod_1])
+mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
+squares2 = INSR(larModelProduct)([mod_2,mod_2,mod_2])
+
+V1 = squares1[0]
+V2 = squares2[0]
 VV1 = AA(LIST)(range(len(V1)))
-
-V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]
-FV2 = [range(n)]
-EV2 = EV1
 VV2 = AA(LIST)(range(len(V2)))
+FV1 = larConvexFacets (*squares1)
+FV2 = larConvexFacets (*squares2)
+CV1 = squares1[1]
+CV2 = squares2[1]
 
-arg1 = V1,(VV1,EV1,FV1)
-arg2 = V2,(VV2,EV2,FV2)
+arg1 = V1,(VV1,FV1,CV1)
+arg2 = V2,(VV2,FV2,CV2)
 
 """ Debug via visualization """
 boolean = larBool(arg1,arg2)  

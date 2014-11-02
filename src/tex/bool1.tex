@@ -265,17 +265,17 @@ def makeCDC(arg1,arg2, brep):
 	for k,v in enumerate(V): vertDict[vcode(v)] += [k]
 	
 	if brep == False:
-    	signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
-    	
-    	BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
-    	BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
-    
-    	BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
-    	BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
+		signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
+		
+		BC1pairs = zip(*signedCellularBoundaryCells(V1,basis1))
+		BC1 = [basis1[-2][face] if sign>0 else swap(basis1[-2][face]) for (sign,face) in BC1pairs]
+	
+		BC2pairs = zip(*signedCellularBoundaryCells(V2,basis2))
+		BC2 = [basis2[-2][face] if sign>0 else swap(basis2[-2][face]) for (sign,face) in BC2pairs] 
 
 	else:
 		BC1,BC2 = basis1[-1],basis2[-1]
-    
+	
 	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
 			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
 		
@@ -762,14 +762,14 @@ def larConvexFacets (V,CV):
 	return sorted(AA(list)(set(FV)))
 	
 if __name__ == "__main__":
-    V = [[0,0],[1,0],[1,1],[0.5,1],[0,1]]
-    CV = [[0,1,2,3,4]]
-    FV = convexFacets(V,CV)
+	V = [[0,0],[1,0],[1,1],[0.5,1],[0,1]]
+	CV = [[0,1,2,3,4]]
+	FV = convexFacets(V,CV)
 	
 if __name__ == "__main__":
-    V,CV = larCuboids((10,10,10))
-    FV = convexFacets(V,CV,2)
-    #EV = convexFacets(V,FV,1)
+	V,CV = larCuboids((10,10,10))
+	FV = convexFacets(V,CV,2)
+	#EV = convexFacets(V,FV,1)
 @}
 %-------------------------------------------------------------------------------
 
@@ -1024,7 +1024,7 @@ def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
 	verts = []
 	while True:	
 		changed = False
-		envelope,boundaryCells = chain2complex(W,CW,chain,boundaryMat,constraints)
+		envelope,boundaryFacets = chain2complex(W,CW,chain,boundaryMat,constraints)
 		for facet in envelope:
 			success = False
 			chainCoords = csr_matrix((1,len(FW)))
@@ -1036,18 +1036,19 @@ def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
 				elif cocells[1] in chain: cell = cocells[0]
 				if not usedCells[cell]:
 					success = testAttachment(cell,usedCells,facet,chain, \
-								W,CW,FW,boundaryMat,boundaryCells,covectors)
+								W,CW,FW,boundaryMat,boundaryFacets,covectors)
 				if success: 
 					changed = True
 					usedCells[cell] = True
 					chain += [cell]
+			else: print "error: in protrudeChain (len(cocells) not equal to 2)"
+			chainCoords = csc_matrix((len(CW),1))
+			for cell in chain: 
+				chainCoords[cell,0] = 1
+				usedCells[cell] = True
+			boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)
 		if not changed: break		
 			
-	chainCoords = csc_matrix((len(CW),1))
-	for cell in chain: 
-		chainCoords[cell,0] = 1
-		usedCells[cell] = True
-	boundaryFacets = list((boundaryMat*chainCoords).tocoo().row)
 	verts = [FW[facet] for facet in boundaryFacets]
 	verts = sorted(list(set(CAT(verts))))
 	return verts,usedCells
@@ -1161,7 +1162,14 @@ def larBool(arg1,arg2, brep=False):
 
 	@< Third Boolean step @>
 	V,CV,FV,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
-
+	
+	submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
+	VV = AA(LIST)(range(len(V)))
+	
+	if DEBUG:
+    	VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1))
+    	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for k,cell in enumerate(CV) if sum(CWbits[k])==2]))))
+	
 	@< Fourth Boolean step @>
 	W,CX,FX,CXbits = larBool4(V,CV,FV,boundaryMat,boundary1,boundary2,CWbits)
 
@@ -1266,26 +1274,27 @@ boolean = larBool(arg1,arg2)
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("xor")
 glass = MATERIAL([1,0,0,0.6,  0,1,0,0.6,  0,0,1,0.6, 0,0,0,0.6, 100])
-VIEW(glass(STRUCT(MKPOLS((W,chain)))))
-"""
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+VIEW(glass(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,chain)))))
 
-W,CW,chain,CX,FX,orientedBoundary = boolean("union")
-VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-
-W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
-if chain != []:
-	VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-
-W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
-if chain != []:
+if DEBUG:
+    VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+    
+    W,CW,chain,CX,FX,orientedBoundary = boolean("union")
     VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
     VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+    
+    W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
+    if chain != []:
+    	VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+    	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+    
+    W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
+    if chain != []:
+    	VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+    	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+    
+    	VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
 
-    VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
-"""
 submodel = SKEL_1(STRUCT(MKPOLS((W,FX))))
 VV = AA(LIST)(range(len(W)))
 VIEW(larModelNumbering(1,1,1)(W,[VV,FX,CX],submodel,1))
@@ -1312,13 +1321,11 @@ sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
 """ Definition of Boolean arguments """
-n = 16
+n = 8
 mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
 squares1 = larModelProduct([mod_1,mod_1])
-VIEW(STRUCT(MKPOLS(squares1)))
 mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
 squares2 = larModelProduct([mod_2,mod_2])
-VIEW(STRUCT(MKPOLS(squares1)+MKPOLS(squares2)))
 
 V1 = squares1[0]
 V2 = squares2[0]
@@ -1331,6 +1338,36 @@ FV2 = squares2[1]
 
 arg1 = V1,(VV1,EV1,FV1)
 arg2 = V2,(VV2,EV2,FV2)
+
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test0b.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+""" Definition of Boolean arguments """
+n = 8
+mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
+squares1 = INSR(larModelProduct)([mod_1,mod_1,mod_1])
+mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
+squares2 = INSR(larModelProduct)([mod_2,mod_2,mod_2])
+
+V1 = squares1[0]
+V2 = squares2[0]
+VV1 = AA(LIST)(range(len(V1)))
+VV2 = AA(LIST)(range(len(V2)))
+FV1 = larConvexFacets (*squares1)
+FV2 = larConvexFacets (*squares2)
+CV1 = squares1[1]
+CV2 = squares2[1]
+
+arg1 = V1,(VV1,EV1,FV1,CV1)
+arg2 = V2,(VV2,EV2,FV2,CV2)
 
 @< Debug via visualization @>
 @}
