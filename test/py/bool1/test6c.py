@@ -4,25 +4,15 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
-""" Definition of Boolean arguments """
-n = 8
-mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
-squares1 = larModelProduct([mod_1,mod_1])
+V1 = [[0,0,0],[10,0,0],[10,10,0],[0,10,0],[0,0,10],[10,0,10],[10,10,10],[0,10,10]]
+V1,[VV1,EV1,FV1,CV1] = larCuboids((1,1,1),True)
+V1 = [SCALARVECTPROD([5,v]) for v in V1]
 
-mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
-squares2 = larModelProduct([mod_2,mod_2])
+V2 = [SUM([v,[2.5,0.0,0.0]]) for v in V1]
+[VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]
 
-V1 = squares1[0]
-V2 = squares2[0]
-VV1 = AA(LIST)(range(len(V1)))
-VV2 = AA(LIST)(range(len(V2)))
-EV1 = larConvexFacets (*squares1)
-EV2 = larConvexFacets (*squares2)
-FV1 = squares1[1]
-FV2 = squares2[1]
-
-arg1 = V1,(VV1,EV1,FV1)
-arg2 = V2,(VV2,EV2,FV2)
+arg1 = V1,(VV1,EV1,FV1,CV1)
+arg2 = V2,(VV2,EV2,FV2,CV2)
 
 """ Debug via visualization """
 boolean = larBool(arg1,arg2)  

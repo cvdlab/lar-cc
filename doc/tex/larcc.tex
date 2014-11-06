@@ -1075,7 +1075,7 @@ The function \texttt{incidenceChain}, given below, returns the full stack of \te
 \begin{list}{}{} \item
 \mbox{}\verb@""" Incidence chain computation """@\\
 \mbox{}\verb@def incidenceChain(bases):@\\
-\mbox{}\verb@   print "\n len(bases) = ",len(bases),"\n"@\\
+\mbox{}\verb@   #print "\n len(bases) = ",len(bases),"\n"@\\
 \mbox{}\verb@   pairsOfBases = zip(bases[1:],bases[:-1])@\\
 \mbox{}\verb@   relations = [larIncidence(cells,facets) @\\
 \mbox{}\verb@               for cells,facets in pairsOfBases]@\\
@@ -1387,7 +1387,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@   @\\
 \mbox{}\verb@   for pair in pairs:      # for each facet/coface pair@\\
 \mbox{}\verb@      flag = REVERSE(pair) #  [c,f]@\\
-\mbox{}\verb@      print "flag 1 =",flag@\\
+\mbox{}\verb@      #print "flag 1 =",flag@\\
 \mbox{}\verb@      for k in range(dim-1):@\\
 \mbox{}\verb@         cell = flag[-1]@\\
 \mbox{}\verb@         flag += [chain[k+1][cell][1]]@\\
@@ -1399,7 +1399,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@   @\\
 \mbox{}\verb@   csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )@\\
 \mbox{}\verb@   # numpy.set_printoptions(threshold=numpy.nan)@\\
-\mbox{}\verb@   print csrSignedBoundaryMat.todense()@\\
+\mbox{}\verb@   # print csrSignedBoundaryMat.todense()@\\
 \mbox{}\verb@   return csrSignedBoundaryMat@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}

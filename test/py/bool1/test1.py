@@ -30,22 +30,22 @@ glass = MATERIAL([1,0,0,0.6,  0,1,0,0.6,  0,0,1,0.6, 0,0,0,0.6, 100])
 VIEW(glass(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,chain)))))
 
 if DEBUG:
-    VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
-    W,CW,chain,CX,FX,orientedBoundary = boolean("union")
-    VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-    VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
-    W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
-    if chain != []:
+   VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+   
+   W,CW,chain,CX,FX,orientedBoundary = boolean("union")
+   VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+   VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+   
+   W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
+   if chain != []:
       VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
       VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
-    W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
-    if chain != []:
+   
+   W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
+   if chain != []:
       VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
       VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
+   
       VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
 
 submodel = SKEL_1(STRUCT(MKPOLS((W,FX))))

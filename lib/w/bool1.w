@@ -246,7 +246,7 @@ def mergeVertices(model1, model2):
 
 
 	
-%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------of
 @D Make Common Delaunay Complex
 @{""" Make Common Delaunay Complex """
 def makeCDC(arg1,arg2, brep):
@@ -259,7 +259,8 @@ def makeCDC(arg1,arg2, brep):
 	n = len(V)
 	assert n == n1 - n12 + n2
 	
-	CV = sorted(AA(sorted)(Delaunay(array(V)).simplices))
+	CV = sorted(AA(sorted)([simplex for simplex in Delaunay(array(V)).simplices.tolist() 
+		if not (-0.0001 < scipy.linalg.det([V[v]+[1] for v in simplex]) < 0.0001) ]))
 	
 	vertDict = defaultdict(list)
 	for k,v in enumerate(V): vertDict[vcode(v)] += [k]
@@ -279,7 +280,6 @@ def makeCDC(arg1,arg2, brep):
 	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
 			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
 		
-	
 	return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)
 @}
 %-------------------------------------------------------------------------------
@@ -400,7 +400,10 @@ def cuttingTest(covector,polytope,V):
 	return any([value<-0.001 for value in signs]) and \
 			any([value>0.001 for value in signs])
 	
-def tangentTest(covector,facet,adjCell,V):
+def tangentTest(covector,facet,adjCell,V,f):
+	print "\ntangentTest >>"
+	print "facet =",facet
+	print "adjCell =",f,adjCell,"\n"
 	common = list(set(facet).intersection(adjCell))
 	signs = [INNERPROD([covector, [1.]+V[v]]) for v in common]
 	count = 0
@@ -432,15 +435,29 @@ returns a partial function with bufferisation of the adjacency matrix, and the s
 
 """ Elementary splitting test """
 def dividenda(V,CV, cell,facet,covector,unchosen):
+
+	if facet==[13, 14, 8, 15] and (cell==1 or cell==5): 
+		print "\ndividenda >>"
+		print "cell =",cell
+		print "facet =",facet
+		print "covector =",covector
+		print "unchosen =",unchosen
+		
+
 	out = []
 	adjCells = adjacencyQuery(V,CV)(cell)
 	for adjCell in set(adjCells).difference(unchosen):
 		if (cuttingTest(covector,CV[adjCell],V) and \
 			cellFacetIntersecting(facet,adjCell,covector,V,CV)) or \
-			tangentTest(covector,facet,CV[adjCell],V): out += [adjCell]
+			tangentTest(covector,facet,CV[adjCell],V,adjCell): 
+			out += [adjCell]
+			
+	if facet==[13, 14, 8, 15] and (cell==1 or cell==5): 
+		print "out =",out
 	return out
 @}
 %-------------------------------------------------------------------------------
+(True and True) or False
 
 \paragraph{CDC cell splitting with one or more facets}
 
@@ -452,20 +469,37 @@ Actually, the process is strongly complicated by the fact that the input cell (a
 %-------------------------------------------------------------------------------
 @D CDC cell splitting with one or more cutting facets
 @{""" CDC cell splitting with one or more cutting facets """
+# new implementation
 def fragment(cell,cellCuts,V,CV,BC):
 	vcell = CV[cell]
 	cellFragments = [[V[v] for v in vcell]]
 	
+	if cell==7 or cell==8: 
+		print "\nfragment >>"
+		print "cell,cellCuts =",cell,cellCuts
+		#stop()
+	
+	
 	for f in cellCuts[cell]:
 		facet = BC[f]
 		plane = COVECTOR([V[v] for v in facet])
-		for k,fragment in enumerate(cellFragments):
+		k = 0
+		while True:
+			fragment = cellFragments[k]
 		
-			#if not tangentTest(plane,facet,fragment,V):
-			[below,equal,above] = SPLITCELL(plane,fragment,tolerance=1e-4,ntry=4)
+			#if not tangentTest(plane,facet,fragment,V,f):
+			[below,equal,above] = SPLITCELL(plane,fragment,tolerance=1e-3,ntry=4)
+			print "\n"
+			print "fragment =",fragment
+			print "below =",below
+			print "equal =",equal
+			print "above =",above
 			if below != above:
 				cellFragments[k] = below
 				cellFragments += [above]
+			k += 1
+			if k >= len(cellFragments): break
+				
 		facets = facetsOnCuts(cellFragments,cellCuts,V,BC)
 	return cellFragments
 @}
@@ -477,23 +511,34 @@ It takes as input the LAR model \texttt{(V,CV)} of the CDC, and the LAR model \t
 
 For every $\texttt{k} \in \texttt{BC}$, a list \texttt{cellsToSplit}
 
+The array \texttt{cellCuts}  stores, for each cell in \texttt{CV}, the list of original boundary cells that will cut it, possibly by adjusting the \texttt{cellCuts} array length with empty lists.
+Therefore, the main loop in the \texttt{makeSCDC} function generates one or more cells in \texttt{CW}, starting from the $k$-th cell in \texttt{CV} and the $k$-th list \texttt{frags} in \texttt{cellCuts}.
+
+
 %-------------------------------------------------------------------------------
 @D SCDC splitting with every boundary facet
 @{""" SCDC splitting with every boundary facet """
 def makeSCDC(V,CV,BC,nbc1,nbc2):
+	print "\nmakeSCDC >>"
+	print "V,CV,BC,nbc1,nbc2 =",V,CV,BC,nbc1,nbc2
+		
 	index,defaultValue = -1,-1
 	VC = invertRelation(CV)
 	CW,BCfrags = [],[]
 	Wdict = dict()
 	BCellcovering = boundaryCover(V,CV,BC,VC)
+	
+	print "\nmakeSCDC >>"
+	print "BCellcovering =",BCellcovering,"\n"
 
 	cellCuts = invertRelation(BCellcovering)
+	print "cellCuts =",cellCuts,"\n"
 	for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
 	
 	def verySmall(number): return abs(number) < 10**-5.5
 	
-	for k,frags in enumerate(cellCuts):
-		if cellCuts[k] == []:
+	for k,cuts in enumerate(cellCuts):
+		if cuts == []:
 			cell = []
 			for v in CV[k]:
 				key = vcode(V[v])
@@ -503,7 +548,8 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 					cell += [index]
 				else: 
 					cell += [Wdict[key]]
-			CW += [cell]
+			# uncut cells of CDC
+			CW += [cell]  # OK !
 		else:
 			cellFragments = fragment(k,cellCuts,V,CV,BC)
 			for cellFragment in cellFragments:
@@ -516,20 +562,41 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 						cellFrag += [index]
 					else: 
 						cellFrag += [Wdict[key]]
-				CW += [cellFrag]	
-				
+				# split cells of CDC
+				CW += [cellFrag]	  # OK
+
+				"""
 				BCfrags += [ (h, [Wdict[vcode(w)] for w in cellFragment if verySmall( 
-								PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) ] )
-							 for h in cellCuts[k]]	
-	
+								PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) 
+								] ) for h in cuts]	
+				"""
+				
+				for f in cuts:
+					thefacet = []
+					for w in cellFragment:
+						if verySmall( PROD([ COVECTOR( [V[v] for v in BC[f]] ) , [1.]+w ]) ):
+							thefacet += [ Wdict[vcode(w)] ]
+					BCfrags += [(f, thefacet)]		
+				
+	print "\nmakeSCDC >>"
+	print "end loop"
+	CW = sorted(AA(sorted)(CW))
+	print "\nBCfrags =",BCfrags
 	BCW = [ [ Wdict[vcode(V[v])] for v in cell ] for cell in BC]
 	W = sorted(zip( Wdict.values(), Wdict.keys() ))
 	W = AA(eval)(TRANS(W)[1])
 	dim = len(W[0])
+	print "\nCW =",CW,"\n"
+	print "W =",W,"\n"
 	boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
 	return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
 @}
 %-------------------------------------------------------------------------------
+
+for h in cuts:
+	for w in cellFragment:
+		if verySmall( PROD([ COVECTOR( [V[v] for v in BC[h]] ) , [1.]+w ]) ):
+			BCfrags += (h, Wdict[vcode(w)] )
 
 %-------------------------------------------------------------------------------
 @D Boolean argument boundaries embedding in SCDC
@@ -556,7 +623,10 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 @D Make facets dictionaries
 @{""" Make facets dictionaries """
 def makeFacetDicts(FW,boundary1,boundary2):
-	FWdict = dict()
+	print "\nmakeFacetDicts >>"
+	print "boundary1 =",boundary1
+	print "boundary2 =",boundary2,"\n"
+	FWdict = defaultdict()
 	for k,facet in enumerate (FW): FWdict[str(facet)] = k
 	for key,value in boundary1.items():
 		value = [FWdict[str(facet)] for facet in value]
@@ -571,19 +641,50 @@ def makeFacetDicts(FW,boundary1,boundary2):
 
 \paragraph{Computation of boundary facets covering with CDC cells}
 
+In the following script's input, \texttt{V} and  \texttt{CV} are the vertices of CDC, respectively, \texttt{VC} is the \texttt{CV} inverse relation, and \texttt{BC} are the boundary cells of the Boolean input parameters.
+
+
+
 %-------------------------------------------------------------------------------
 @D Computation of boundary facets covering with CDC cells
 @{""" Computation of boundary facets covering with CDC cells """
+
+import pycallgraph
+
 def boundaryCover(V,CV,BC,VC):
+
+	print "\nboundaryCover >>"
+	print "V =",V
+	print "CV =",CV
+	print "BC =",BC
+	print "VC =",VC,"\n"
+
+	pycallgraph.start_trace()
+
 	cellsToSplit = list()
 	boundaryCellCovering = []
+	glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 	for k,facet in enumerate(BC):
+		print "\nk,facet =",k,facet
 		covector = COVECTOR([V[v] for v in facet])
 		seedsOnFacet = VC[facet[0]]
-		cellsToSplit = [dividenda(V,CV, cell,facet,covector,[]) 
-							for cell in seedsOnFacet ]
-		cellsToSplit = set(CAT(cellsToSplit))
-		if cellsToSplit == set(): cellsToSplit=set(seedsOnFacet) ## NB !!!
+		cellsToSplit = []
+		for cell in seedsOnFacet:
+			cellsToSplit += [dividenda(V,CV, cell,facet,covector,[])]
+			
+			if facet==[13, 14, 8, 15] and k in [4,6,7,8]:
+				print "\nboundaryCover >>"
+				
+				print "seedsOnFacet =",seedsOnFacet
+				print "cellsToSplit =",cellsToSplit
+				VIEW(STRUCT([
+					glass(STRUCT(MKPOLS((V,[[13, 14, 8, 15]] )))),
+					glass(STRUCT(MKPOLS((V,[CV[cell]])))),
+					SKEL_1(STRUCT(MKPOLS((V,CV))))
+				]))
+				
+		cellsToSplit = set(CAT(cellsToSplit))		
+		if cellsToSplit == set(): cellsToSplit=set(seedsOnFacet) ## NB !!!  BUG !!!!
 		while True:
 			newCells = [dividenda(V,CV, cell,facet,covector,cellsToSplit) 
 							for cell in cellsToSplit ]
@@ -593,6 +694,10 @@ def boundaryCover(V,CV,BC,VC):
 				break
 			cellsToSplit = covering
 		boundaryCellCovering += [list(covering)]
+		
+	pycallgraph.stop_trace()
+	pycallgraph.make_dot_graph('cleaner_graph.png')
+	
 	return boundaryCellCovering
 @}
 %-------------------------------------------------------------------------------
@@ -604,7 +709,7 @@ def boundaryCover(V,CV,BC,VC):
 @{""" Cell-facet intersection test """
 def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
 	points = [V[v] for v in CV[cell]]
-	vcell1,newFacet,vcell2 = SPLITCELL(covector,points,tolerance=1e-4,ntry=4)
+	vcell1,newFacet,vcell2 = SPLITCELL(covector,points,tolerance=1e-3,ntry=4)
 	boundaryFacet = [V[v] for v in boundaryFacet]
 	translVector = boundaryFacet[0]
 	
@@ -752,12 +857,10 @@ def convexFacets (V,CV,dim=2):
 	FV = AA(eval)(list(set(AA(str)(AA(sorted)(FV + convexBoundary(V,CV))) )))
 	return FV
 
-def larConvexFacets (V,CV):
-	vdict = defaultdict(list)
-	for k,v in enumerate(V): vdict[vcode(v)] += [k]
+def larConvexFacets (V,CV,dim=2):
 	FV = []
 	for cell in CV: 
-		fv = convexFacets([V[v] for v in cell],[range(len(cell))])
+		fv = convexFacets([V[v] for v in cell],[range(len(cell))],dim)
 		FV += [tuple([cell[v] for v in facet]) for facet in fv]
 	return sorted(AA(list)(set(FV)))
 	
@@ -1156,6 +1259,9 @@ def larBool(arg1,arg2, brep=False):
 		
 	@< First Boolean step @>
 	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
+	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CW))))
+	print "\n larBool >>"
+	print "BCellCovering =",BCellCovering,"\n"
 	
 	@< Second Boolean step @>
 	W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
@@ -1167,8 +1273,8 @@ def larBool(arg1,arg2, brep=False):
 	VV = AA(LIST)(range(len(V)))
 	
 	if DEBUG:
-    	VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1))
-    	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for k,cell in enumerate(CV) if sum(CWbits[k])==2]))))
+		VIEW(larModelNumbering(1,1,1)(V,[VV,FV,CV],submodel,1))
+		VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for k,cell in enumerate(CV) if sum(CWbits[k])==2]))))
 	
 	@< Fourth Boolean step @>
 	W,CX,FX,CXbits = larBool4(V,CV,FV,boundaryMat,boundary1,boundary2,CWbits)
@@ -1277,23 +1383,23 @@ glass = MATERIAL([1,0,0,0.6,  0,1,0,0.6,  0,0,1,0.6, 0,0,0,0.6, 100])
 VIEW(glass(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,chain)))))
 
 if DEBUG:
-    VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
-    W,CW,chain,CX,FX,orientedBoundary = boolean("union")
-    VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-    VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
-    W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
-    if chain != []:
-    	VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-    	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
-    W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
-    if chain != []:
-    	VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
-    	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
-    
-    	VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
+	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+	
+	W,CW,chain,CX,FX,orientedBoundary = boolean("union")
+	VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+	VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+	
+	W,CW,chain,CX,FX,orientedBoundary = boolean("intersection")
+	if chain != []:
+		VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+		VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+	
+	W,CW,chain,CX,FX,orientedBoundary = boolean("difference")
+	if chain != []:
+		VIEW(EXPLODE(1.1,1.1,1)(MKPOLS((W,chain))))
+		VIEW(SKEL_1(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,orientedBoundary)))))
+	
+		VIEW(EXPLODE(1.1,1.1,1.1)(MKPOLS((W,CX))))
 
 submodel = SKEL_1(STRUCT(MKPOLS((W,FX))))
 VV = AA(LIST)(range(len(W)))
@@ -1324,6 +1430,7 @@ from bool1 import *
 n = 8
 mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
 squares1 = larModelProduct([mod_1,mod_1])
+
 mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
 squares2 = larModelProduct([mod_2,mod_2])
 
@@ -1351,23 +1458,58 @@ sys.path.insert(0, 'lib/py/')
 from bool1 import *
 
 """ Definition of Boolean arguments """
-n = 8
+n = 4
+
 mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
 squares1 = INSR(larModelProduct)([mod_1,mod_1,mod_1])
+V1 = squares1[0]
+VV1 = AA(LIST)(range(len(V1)))
+FV1 = larConvexFacets (squares1[0],squares1[1])
+_,EV1 = larFacets((V1,FV1),1)
+CV1 = squares1[1]
+arg1 = V1,(VV1,EV1,FV1,CV1)
+
 mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
 squares2 = INSR(larModelProduct)([mod_2,mod_2,mod_2])
-
-V1 = squares1[0]
 V2 = squares2[0]
-VV1 = AA(LIST)(range(len(V1)))
 VV2 = AA(LIST)(range(len(V2)))
-FV1 = larConvexFacets (*squares1)
-FV2 = larConvexFacets (*squares2)
-CV1 = squares1[1]
+FV2 = larConvexFacets (squares2[0],squares2[1])
+_,EV2 = larFacets((V2,FV2),1)
 CV2 = squares2[1]
+arg2 = V2,(VV2,EV2,FV2,CV2)
 
-arg1 = V1,(VV1,FV1,CV1)
-arg2 = V2,(VV2,FV2,CV2)
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test0c.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+""" Definition of Boolean arguments """
+n = 2
+
+mod_1 = AA(LIST)(range(n)), [[2*k,2*k+1] for k in range(n/2)]
+squares1 = INSR(larModelProduct)([mod_1,mod_1,mod_1])
+V1 = squares1[0]
+VV1 = AA(LIST)(range(len(V1)))
+FV1 = larConvexFacets (squares1[0],squares1[1])
+_,EV1 = larFacets((V1,FV1),1)
+CV1 = squares1[1]
+arg1 = V1,(VV1,EV1,FV1,CV1)
+
+n = 4
+mod_2 = AA(LIST)([0.5+k*2 for k in range(n/2)]),[[2*k,2*k+1] for k in range(n/4)]
+squares2 = INSR(larModelProduct)([mod_2,mod_2,mod_2])
+V2 = squares2[0]
+VV2 = AA(LIST)(range(len(V2)))
+FV2 = larConvexFacets (squares2[0],squares2[1])
+_,EV2 = larFacets((V2,FV2),1)
+CV2 = squares2[1]
+arg2 = V2,(VV2,EV2,FV2,CV2)
 
 @< Debug via visualization @>
 @}
@@ -1660,6 +1802,48 @@ V1,[VV1,EV1,FV1,CV1] = larCuboids((1,1,1),True)
 V1 = [SCALARVECTPROD([5,v]) for v in V1]
 
 V2 = [SUM([v,[2.5,2.5,2.5]]) for v in V1]
+[VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]
+
+arg1 = V1,(VV1,EV1,FV1,CV1)
+arg2 = V2,(VV2,EV2,FV2,CV2)
+
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test6b.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+V1 = [[0,0,0],[10,0,0],[10,10,0],[0,10,0],[0,0,10],[10,0,10],[10,10,10],[0,10,10]]
+V1,[VV1,EV1,FV1,CV1] = larCuboids((1,1,1),True)
+V1 = [SCALARVECTPROD([5,v]) for v in V1]
+
+V2 = [SUM([v,[2.5,2.5,0.0]]) for v in V1]
+[VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]
+
+arg1 = V1,(VV1,EV1,FV1,CV1)
+arg2 = V2,(VV2,EV2,FV2,CV2)
+
+@< Debug via visualization @>
+@}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/bool1/test6c.py
+@{
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from bool1 import *
+
+V1 = [[0,0,0],[10,0,0],[10,10,0],[0,10,0],[0,0,10],[10,0,10],[10,10,10],[0,10,10]]
+V1,[VV1,EV1,FV1,CV1] = larCuboids((1,1,1),True)
+V1 = [SCALARVECTPROD([5,v]) for v in V1]
+
+V2 = [SUM([v,[2.5,0.0,0.0]]) for v in V1]
 [VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]
 
 arg1 = V1,(VV1,EV1,FV1,CV1)
