@@ -2,6 +2,7 @@
 import sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+TRACE,tracing = True,-1
 from bool1 import *
 
 """ Definition of Boolean arguments """

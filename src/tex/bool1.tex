@@ -63,6 +63,8 @@ complexes, upon the same space decomposition.
 
 Afterwards, every Boolean result is computed by bitwise operations, between the coordinate representations of the transformed $A$ and $B$ input.
 
+
+Finally a greedy assembly of SCDC cells is executed, in order to if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 Finally a greedy assembly of SCDC cells is executed, in order to return a polytopal complex with a reduced number of cells.
 
 
@@ -137,10 +139,14 @@ Two LAR models of two non-empty ``solid'' $d$-spaces $A$ and $B$, denoted as \te
 The LAR representation \texttt{(V,CV)} of Delaunay triangulation (simplicial $d$-complex) of the set $\conv AB \subset \E^d$, convex hull of the join of $A$ and $B$, named Common Delaunay Complex (CDC) in the following.
 
 \paragraph{Auxiliary data structures} 
+
+This software module if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 This software module returns also:
 
 \begin{enumerate}
 \item 
+
+a dictionary \texttt{vertDict} of \texttt{V} vertices, with \emph{key} the symbolic representation of vertices \texttt{v} if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 a dictionary \texttt{vertDict} of \texttt{V} vertices, with \emph{key} the symbolic representation of vertices \texttt{v} returned by expressions \texttt{vcode(v)}, $\texttt{v}\in \texttt{V}$, and with values the finite ordinal numbers of the vertices;
 
 \item 
@@ -170,12 +176,16 @@ the numbers \texttt{n1}, \texttt{n12}, \texttt{n2} of the elements of \texttt{V1
 @D First Boolean step
 @{""" First Boolean step """
 def larBool1():
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool1")
+
 	V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
 	VV = AA(LIST)(range(len(V)))
 	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2, brep)
 	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
 	assert len(VC) == len(V) 
 	assert len(BCellCovering) == len(BC)
+
+	if TRACE: tracing = mytrace(tracing,"<larBool1")-1
 	return W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW 
 @}
 %-------------------------------------------------------------------------------
@@ -188,6 +198,8 @@ def larBool1():
 @{""" Compute model boundaries of complex of convex cells """
 
 def larFacetsOfPolytopalComplex(vertDict,cells,facets):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larFacetsOfPolytopalComplex")
+
 	(V1,CV1),(V2,CV2) = model1,model2
 	for cell in CV1:
 		Vcell = [V1[v] for v in cell]
@@ -200,11 +212,14 @@ def larFacetsOfPolytopalComplex(vertDict,cells,facets):
 @D Merge two dictionaries with keys the point locations
 @{""" Merge two dictionaries with keys the point locations """
 def mergeVertices(model1, model2):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">mergeVertices")
 
 	(V1,CV1),(V2,CV2) = model1, model2
 
 	n = len(V1); m = len(V2)
 	def shift(CV, n): 
+		if TRACE: global tracing;tracing = mytrace(tracing+1,">shift")
+		if TRACE: tracing = mytrace(tracing,"<shift")-1
 		return [[v+n for v in cell] for cell in CV]
 	CV2 = shift(CV2,n)
 
@@ -238,6 +253,8 @@ def mergeVertices(model1, model2):
 	CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]
 	CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]
 
+
+	if TRACE: tracing = mytrace(tracing,"<mergeVertices")-1
 	return V,CV1,CV2, n1+n2,n2,n2+n3
 @}
 %-------------------------------------------------------------------------------
@@ -250,6 +267,8 @@ def mergeVertices(model1, model2):
 @D Make Common Delaunay Complex
 @{""" Make Common Delaunay Complex """
 def makeCDC(arg1,arg2, brep):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">makeCDC")
+
 
 	(V1,basis1), (V2,basis2) = arg1,arg2
 	(facets1,cells1),(facets2,cells2) = basis1[-2:],basis2[-2:]
@@ -280,6 +299,8 @@ def makeCDC(arg1,arg2, brep):
 	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
 			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
 		
+
+	if TRACE: tracing = mytrace(tracing,"<makeCDC")-1
 	return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)
 @}
 %-------------------------------------------------------------------------------
@@ -307,6 +328,8 @@ The output of previous algorithm stage.
 The LAR representation \texttt{(W,PW)} of the SCDC,
 
 \paragraph{Auxiliary data structures} 
+
+This software module if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 This software module returns also
  a dictionary \texttt{splitFacets}, with keys the  input boundary faces and values the list of pairs\texttt{(covector,fragmentedFaces)}.   
 
@@ -320,6 +343,8 @@ This software module returns also
 @D Second Boolean step
 @{""" Second Boolean step """
 def larBool2(boundary1,boundary2):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool2")
+
 	dim = len(W[0])
 	WW = AA(LIST)(range(len(W)))
 	FW = convexFacets (W,CW)
@@ -330,6 +355,8 @@ def larBool2(boundary1,boundary2):
 		bases = [WW,EW,FW,CW]
 	elif dim == 2: bases = [WW,FW,CW]
 	else: print "\nerror: not implemented\n"
+
+	if TRACE: tracing = mytrace(tracing,"<larBool2")-1
 	return W,CW,dim,bases,boundary1,boundary2,FW,BCW
 @}
 %-------------------------------------------------------------------------------
@@ -345,13 +372,21 @@ The computation of the adjacent $d$-cells of a single $d$-cell is given here by 
 @D Computing the adjacent cells of a given cell
 @{""" Computing the adjacent cells of a given cell """
 def adjacencyQuery (V,CV):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">adjacencyQuery")
+
 	dim = len(V[0])
 	csrCV =  csrCreate(CV)
 	csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
 	def adjacencyQuery0 (cell):
+		if TRACE: global tracing;tracing = mytrace(tracing+1,">adjacencyQuery0")
+
 		nverts = len(CV[cell])
 		cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
+
+		if TRACE: tracing = mytrace(tracing,"<adjacencyQuery0")-1
 		return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
+
+	if TRACE: tracing = mytrace(tracing,"<adjacencyQuery")-1
 	return adjacencyQuery0
 @}
 %-------------------------------------------------------------------------------
@@ -368,14 +403,25 @@ small in most cases.
 @D Characteristic matrix transposition
 @{""" Characteristic matrix transposition """
 def invertRelation(CV):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">invertRelation")
+
 	def myMax(List):
-		if List==[]: return -1
-		else: return max(List)
+		if TRACE: global tracing;tracing = mytrace(tracing+1,">myMax")
+
+		if List==[]: 
+			if TRACE: tracing = mytrace(tracing,"<myMax")-1
+			return -1
+		else: 
+			if TRACE: tracing = mytrace(tracing,"<myMax")-1
+			return max(List)
+			
 	columnNumber = max(AA(myMax)(CV))+1
 	VC = [[] for k in range(columnNumber)]
 	for k,cell in enumerate(CV):
 		for v in cell:
 			VC[v] += [k]
+
+	if TRACE: tracing = mytrace(tracing,"<invertRelation")-1
 	return VC
 @}
 %-------------------------------------------------------------------------------
@@ -389,29 +435,44 @@ In order to compute, in the simplest and more general way, whether each of the t
 @D Splitting tests
 @{""" Splitting tests """
 def testingSubspace(V,covector):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">testingSubspace")
+
 	def testingSubspace0(vcell):
+		if TRACE: global tracing;tracing = mytrace(tracing+1,">testingSubspace0")
+
 		inout = SIGN(sum([INNERPROD([[1.]+V[v],covector]) for v in vcell]))
+
+		if TRACE: tracing = mytrace(tracing,"<testingSubspace0")-1
 		return inout
+
+	if TRACE: tracing = mytrace(tracing,"<testingSubspace")-1
 	return testingSubspace0
 	
 def cuttingTest(covector,polytope,V):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">testingSubspace0")
+
 	signs = [INNERPROD([covector, [1.]+V[v]]) for v in polytope]
 	signs = eval(vcode(signs))
+
+	if TRACE: tracing = mytrace(tracing,"<testingSubspace0")-1
 	return any([value<-0.001 for value in signs]) and \
 			any([value>0.001 for value in signs])
 	
 def tangentTest(covector,facet,adjCell,V,f):
-	print "\ntangentTest >>"
-	print "facet =",facet
-	print "adjCell =",f,adjCell,"\n"
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">tangentTest")
+
 	common = list(set(facet).intersection(adjCell))
 	signs = [INNERPROD([covector, [1.]+V[v]]) for v in common]
 	count = 0
 	for value in signs:
 		if -0.0001<value<0.0001: count +=1
 	if count >= len(V[0]): 
+
+		if TRACE: tracing = mytrace(tracing,"<tangentTest")-1
 		return True
 	else: 
+
+		if TRACE: tracing = mytrace(tracing,"<tangentTest")-1
 		return False	
 @}
 %-------------------------------------------------------------------------------
@@ -426,7 +487,11 @@ Let us remember that the adjacency matrix between $d$-cells is computed via SpMS
 \texttt{adjacencyQuery(V,CV)(cell)}, 
 \] 
 where the first application \texttt{adjacencyQuery(V,CV)}
-returns a partial function with bufferisation of the adjacency matrix, and the second application to \texttt{cell} returns the list of adjacent $d$-cells sharing with it a $(d-1)$-dimensional facet.
+
+if TRACE: tracing = mytrace(tracing,"<aaaa")-1
+return
+s a partial function with bufferisation of the adjacency matrix, and the second application to \texttt{cell} if TRACE: tracing = mytrace(tracing,"<aaaa")-1
+s a partial function with bufferisation of the adjacency matrix, and the second application to \texttt{cell} returns the list of adjacent $d$-cells sharing with it a $(d-1)$-dimensional facet.
 
 %-------------------------------------------------------------------------------
 @D Elementary splitting test
@@ -435,14 +500,7 @@ returns a partial function with bufferisation of the adjacency matrix, and the s
 
 """ Elementary splitting test """
 def dividenda(V,CV, cell,facet,covector,unchosen):
-
-	if facet==[13, 14, 8, 15] and (cell==1 or cell==5): 
-		print "\ndividenda >>"
-		print "cell =",cell
-		print "facet =",facet
-		print "covector =",covector
-		print "unchosen =",unchosen
-		
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">dividenda")
 
 	out = []
 	adjCells = adjacencyQuery(V,CV)(cell)
@@ -451,9 +509,8 @@ def dividenda(V,CV, cell,facet,covector,unchosen):
 			cellFacetIntersecting(facet,adjCell,covector,V,CV)) or \
 			tangentTest(covector,facet,CV[adjCell],V,adjCell): 
 			out += [adjCell]
-			
-	if facet==[13, 14, 8, 15] and (cell==1 or cell==5): 
-		print "out =",out
+
+	if TRACE: tracing = mytrace(tracing,"<dividenda")-1
 	return out
 @}
 %-------------------------------------------------------------------------------
@@ -461,8 +518,14 @@ def dividenda(V,CV, cell,facet,covector,unchosen):
 
 \paragraph{CDC cell splitting with one or more facets}
 
+
+When splitting a $d$-cell with some hyperplanes, we need to if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 When splitting a $d$-cell with some hyperplanes, we need to return not only either the two cut parts or the cell itself when the hyperplane is tangent to a $(d-1)$-face, but also the facet lying on the hyperplane. 
-In the first cade it is directly computed by the \texttt{SPLITCELL} function, and returned as the \texttt{equal} set of points. In the second case, the cell is transformed by the map that sends the hyperplane in the $x_d=0$ subspace ($z=0$ in 3D), and the searched facet is returned as the (back-transformed) set of cell vertices on this subspace. 
+
+In the first cade it is directly computed by the \texttt{SPLITCELL} function, and if TRACE: tracing = mytrace(tracing,"<aaaa")-1
+In the first cade it is directly computed by the \texttt{SPLITCELL} function, and return
+ed as the \texttt{equal} set of points. In the second case, the cell is transformed by the map that sends the hyperplane in the $x_d=0$ subspace ($z=0$ in 3D), and the searched facet is if TRACE: tracing = mytrace(tracing,"<aaaa")-1
+ed as the \texttt{equal} set of points. In the second case, the cell is transformed by the map that sends the hyperplane in the $x_d=0$ subspace ($z=0$ in 3D), and the searched facet is returned as the (back-transformed) set of cell vertices on this subspace. 
 
 Actually, the process is strongly complicated by the fact that the input cell (and its facets) may be cut by several hyperplanes. By now, we resort to the simplest computation, even if more time-expensive:  to compare each vertex of each cell fragment, against every hyperplanes. This approach will adapt well to the writing of a computational kernel on the GPU.
 
@@ -471,14 +534,10 @@ Actually, the process is strongly complicated by the fact that the input cell (a
 @{""" CDC cell splitting with one or more cutting facets """
 # new implementation
 def fragment(cell,cellCuts,V,CV,BC):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">fragment")
+
 	vcell = CV[cell]
 	cellFragments = [[V[v] for v in vcell]]
-	
-	if cell==7 or cell==8: 
-		print "\nfragment >>"
-		print "cell,cellCuts =",cell,cellCuts
-		#stop()
-	
 	
 	for f in cellCuts[cell]:
 		facet = BC[f]
@@ -489,11 +548,7 @@ def fragment(cell,cellCuts,V,CV,BC):
 		
 			#if not tangentTest(plane,facet,fragment,V,f):
 			[below,equal,above] = SPLITCELL(plane,fragment,tolerance=1e-3,ntry=4)
-			print "\n"
-			print "fragment =",fragment
-			print "below =",below
-			print "equal =",equal
-			print "above =",above
+
 			if below != above:
 				cellFragments[k] = below
 				cellFragments += [above]
@@ -501,12 +556,16 @@ def fragment(cell,cellCuts,V,CV,BC):
 			if k >= len(cellFragments): break
 				
 		facets = facetsOnCuts(cellFragments,cellCuts,V,BC)
+
+	if TRACE: tracing = mytrace(tracing,"<fragment")-1
 	return cellFragments
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{SCDC splitting with every boundary facet}
 The function \texttt{makeSCDC} is used  to compute the LAR model \texttt{(W,CW)} of the SCDC.
+
+It takes as input the LAR model \texttt{(V,CV)} of the CDC, and the LAR model \texttt{(V,BC)} of the input Boolean Complex, and if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 It takes as input the LAR model \texttt{(V,CV)} of the CDC, and the LAR model \texttt{(V,BC)} of the input Boolean Complex, and returns both a new LAR model \texttt{(W,CW)} and the vertex-cell relation \texttt{VC}, i.e.~the transposed of \texttt{CV}.
 
 For every $\texttt{k} \in \texttt{BC}$, a list \texttt{cellsToSplit}
@@ -519,7 +578,8 @@ Therefore, the main loop in the \texttt{makeSCDC} function generates one or more
 @D SCDC splitting with every boundary facet
 @{""" SCDC splitting with every boundary facet """
 def makeSCDC(V,CV,BC,nbc1,nbc2):
-	print "\nmakeSCDC >>"
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">makeSCDC")
+
 	print "V,CV,BC,nbc1,nbc2 =",V,CV,BC,nbc1,nbc2
 		
 	index,defaultValue = -1,-1
@@ -528,14 +588,16 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 	Wdict = dict()
 	BCellcovering = boundaryCover(V,CV,BC,VC)
 	
-	print "\nmakeSCDC >>"
 	print "BCellcovering =",BCellcovering,"\n"
 
 	cellCuts = invertRelation(BCellcovering)
 	print "cellCuts =",cellCuts,"\n"
 	for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
-	
-	def verySmall(number): return abs(number) < 10**-5.5
+
+	def verySmall(number): 
+		if TRACE: global tracing;tracing = mytrace(tracing+1,">verySmall")		
+		if TRACE: tracing = mytrace(tracing,"<verySmall")-1
+		return abs(number) < 10**-5.5
 	
 	for k,cuts in enumerate(cellCuts):
 		if cuts == []:
@@ -589,6 +651,8 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 	print "\nCW =",CW,"\n"
 	print "W =",W,"\n"
 	boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
+
+	if TRACE: tracing = mytrace(tracing,"<makeSCDC")-1
 	return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
 @}
 %-------------------------------------------------------------------------------
@@ -602,6 +666,8 @@ for h in cuts:
 @D Boolean argument boundaries embedding in SCDC
 @{""" Boolean argument boundaries embedding in SCDC """
 def boundaryEmbedding(BCfrags,nbc1,dim):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaryEmbedding")
+
 	boundary1,boundary2 = defaultdict(list),defaultdict(list)						 
 	for h,frags in BCfrags:
 		if h < nbc1: boundary1[h] += [frags]
@@ -614,6 +680,8 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 		boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) 
 							for f in facets if len(set(f)) >= dim])) )]
 	boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
+
+	if TRACE: tracing = mytrace(tracing,"<boundaryEmbedding")-1
 	return boundary1,boundary2
 @}
 %-------------------------------------------------------------------------------
@@ -623,9 +691,10 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 @D Make facets dictionaries
 @{""" Make facets dictionaries """
 def makeFacetDicts(FW,boundary1,boundary2):
-	print "\nmakeFacetDicts >>"
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">makeFacetDicts")
+
 	print "boundary1 =",boundary1
-	print "boundary2 =",boundary2,"\n"
+	print "boundary2 =",boundary2
 	FWdict = defaultdict()
 	for k,facet in enumerate (FW): FWdict[str(facet)] = k
 	for key,value in boundary1.items():
@@ -634,6 +703,8 @@ def makeFacetDicts(FW,boundary1,boundary2):
 	for key,value in boundary2.items():
 		value = [FWdict[str(facet)] for facet in value]
 		boundary2[key] = value
+
+	if TRACE: tracing = mytrace(tracing,"<makeFacetDicts")-1
 	return boundary1,boundary2,FWdict
 @}
 %-------------------------------------------------------------------------------
@@ -648,18 +719,14 @@ In the following script's input, \texttt{V} and  \texttt{CV} are the vertices of
 %-------------------------------------------------------------------------------
 @D Computation of boundary facets covering with CDC cells
 @{""" Computation of boundary facets covering with CDC cells """
-
-import pycallgraph
-
 def boundaryCover(V,CV,BC,VC):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaryCover")
 
 	print "\nboundaryCover >>"
 	print "V =",V
 	print "CV =",CV
 	print "BC =",BC
 	print "VC =",VC,"\n"
-
-	pycallgraph.start_trace()
 
 	cellsToSplit = list()
 	boundaryCellCovering = []
@@ -671,17 +738,6 @@ def boundaryCover(V,CV,BC,VC):
 		cellsToSplit = []
 		for cell in seedsOnFacet:
 			cellsToSplit += [dividenda(V,CV, cell,facet,covector,[])]
-			
-			if facet==[13, 14, 8, 15] and k in [4,6,7,8]:
-				print "\nboundaryCover >>"
-				
-				print "seedsOnFacet =",seedsOnFacet
-				print "cellsToSplit =",cellsToSplit
-				VIEW(STRUCT([
-					glass(STRUCT(MKPOLS((V,[[13, 14, 8, 15]] )))),
-					glass(STRUCT(MKPOLS((V,[CV[cell]])))),
-					SKEL_1(STRUCT(MKPOLS((V,CV))))
-				]))
 				
 		cellsToSplit = set(CAT(cellsToSplit))		
 		if cellsToSplit == set(): cellsToSplit=set(seedsOnFacet) ## NB !!!  BUG !!!!
@@ -693,11 +749,9 @@ def boundaryCover(V,CV,BC,VC):
 			if covering == cellsToSplit: 
 				break
 			cellsToSplit = covering
-		boundaryCellCovering += [list(covering)]
-		
-	pycallgraph.stop_trace()
-	pycallgraph.make_dot_graph('cleaner_graph.png')
-	
+		boundaryCellCovering += [list(covering)]	
+
+	if TRACE: tracing = mytrace(tracing,"<boundaryCover")-1
 	return boundaryCellCovering
 @}
 %-------------------------------------------------------------------------------
@@ -708,6 +762,8 @@ def boundaryCover(V,CV,BC,VC):
 @D Cell-facet intersection test
 @{""" Cell-facet intersection test """
 def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">cellFacetIntersecting")
+
 	points = [V[v] for v in CV[cell]]
 	vcell1,newFacet,vcell2 = SPLITCELL(covector,points,tolerance=1e-3,ntry=4)
 	boundaryFacet = [V[v] for v in boundaryFacet]
@@ -732,8 +788,13 @@ def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
 							[range(1,len(boundaryFacet)+1)], None ])
 	verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
 	
-	if verts == []: return False
-	else: return True
+
+	if verts == []: 
+		if TRACE: tracing = mytrace(tracing,"<cellFacetIntersecting")-1
+		return False
+	else: 
+		if TRACE: tracing = mytrace(tracing,"<cellFacetIntersecting")-1
+		return True
 @}
 %-------------------------------------------------------------------------------
 
@@ -775,6 +836,8 @@ Finally, the fifth step spreads around the labels to cover all the $d$-cells of 
 @D Third Boolean step
 @{""" Third Boolean step """
 def larBool3():
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool3")
+
 	coBoundaryMat = signedCellularBoundary(W,bases).T
 	boundaryMat = coBoundaryMat.T
 	CWbits = [[-1,-1] for k in range(len(CW))]
@@ -797,6 +860,8 @@ def larBool3():
 	chain = [k for k,cell in enumerate(chain2) if cell==1]
 	_,bound2 = chain2complex(W,CW,chain,boundaryMat)
 	
+
+	if TRACE: tracing = mytrace(tracing,"<larBool3")-1
 	return W,CW,FW,boundaryMat,bound1,bound2,chain1,chain2,CWbits
 @}
 %-------------------------------------------------------------------------------
@@ -811,9 +876,13 @@ def larBool3():
 @D Computation of embedded boundary cells
 @{""" Computation of embedded boundary cells """
 def facetsOnCuts(cellFragments,cellCuts,V,BC):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">facetsOnCuts")
+
 
 
 	pass
+
+	if TRACE: tracing = mytrace(tracing,"<facetsOnCuts")-1
 	return #facets
 @}
 %-------------------------------------------------------------------------------
@@ -841,27 +910,43 @@ Conversely, the \texttt{larConvexFacets} function can be used to compute the $(d
 from scipy.spatial import ConvexHull
 
 def qhullBoundary(V):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">qhullBoundary")
+
 	points = array(V)
 	hull = ConvexHull(points)
 	out = hull.simplices.tolist()
+
+	if TRACE: tracing = mytrace(tracing,"<qhullBoundary")-1
 	return sorted(out)
 
 def facetDimensionTest(V,facet,covector):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">facetDimensionTest")
+
 	covector = eval(covector)
+
+	if TRACE: tracing = mytrace(tracing,"<facetDimensionTest")-1
 	return all([ -0.01 < INNERPROD([[1.]+W[v],covector]) < 0.01 for v in facet ])
 
 def convexFacets (V,CV,dim=2):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">convexFacets")
+
 	dim = len(V[0])
 	model = V,CV
 	V,FV = larFacets(model,dim)	
 	FV = AA(eval)(list(set(AA(str)(AA(sorted)(FV + convexBoundary(V,CV))) )))
+
+	if TRACE: tracing = mytrace(tracing,"<convexFacets")-1
 	return FV
 
 def larConvexFacets (V,CV,dim=2):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larConvexFacets")
+
 	FV = []
 	for cell in CV: 
 		fv = convexFacets([V[v] for v in cell],[range(len(cell))],dim)
 		FV += [tuple([cell[v] for v in facet]) for facet in fv]
+
+	if TRACE: tracing = mytrace(tracing,"<larConvexFacets")-1
 	return sorted(AA(list)(set(FV)))
 	
 if __name__ == "__main__":
@@ -887,6 +972,7 @@ First, we compute the 0-chain of boundary vertices of the SCDC, using \emph{qHul
 @D Computation of boundary operator of a convex LAR model
 @{""" Computation of boundary operator of a convex LAR model"""
 def convexBoundary(V,CV): 
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">convexBoundary")
 	hull = ConvexHull(array(V), qhull_options="Qc")
 	boundaryEquations = list(set(AA(tuple)(hull.equations.tolist())))
 	
@@ -909,6 +995,8 @@ def convexBoundary(V,CV):
 						if -0.01 < INNERPROD([ V[v]+[1.], equation ]) < 0.01:
 							splitFacets[k] += [v]
 			boundaryFacets += [f for f in splitFacets if f != [] and len(f)>=dim ]
+
+	if TRACE: tracing = mytrace(tracing,"<convexBoundary")-1
 	return boundaryFacets
 @}
 %-------------------------------------------------------------------------------
@@ -929,6 +1017,8 @@ def convexBoundary(V,CV):
 @D Writing labelling seeds on SCDC
 @{""" Writing labelling seeds on SCDC """
 def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">cellTagging")
+
 	dim = len(W[0])
 	for face in boundaryDict:
 		for facet in boundaryDict[face]:
@@ -950,6 +1040,8 @@ def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):
 				elif sign1 == -1: CWbits[cofaces[1]][arg] = 0
 			else: 
 				print "error: too many cofaces of boundary facets"
+
+	if TRACE: tracing = mytrace(tracing,"<cellTagging")-1
 	return CWbits
 @}
 %-------------------------------------------------------------------------------
@@ -962,11 +1054,15 @@ A recursive function \texttt{booleanChainTraverse} is given in the script below,
 @D Recursive diffusion of labels on SCDC
 @{""" Recursive diffusion of labels on SCDC """
 def booleanChainTraverse(h,cell,V,CV,CWbits,value):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">booleanChainTraverse")
+
 	adjCells = adjacencyQuery(V,CV)(cell)
 	for adjCell in adjCells: 
 		if CWbits[adjCell][h] == -1:
 			CWbits[adjCell][h] = value
 			CWbits = booleanChainTraverse(h,adjCell,V,CV,CWbits,value)
+
+	if TRACE: tracing = mytrace(tracing,"<booleanChainTraverse")-1
 	return CWbits
 @}
 %-------------------------------------------------------------------------------
@@ -1026,8 +1122,12 @@ The first tool provides a mapping from $(d-1)$-facets of SCDC to their embedding
 @D Fourth Boolean step
 @{""" Fourth Boolean step """
 def larBool4(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool4")
+
 	X,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
 	FX = larConvexFacets (X,CX)
+
+	if TRACE: tracing = mytrace(tracing,"<larBool4")-1
 	return X,CX,FX,CXbits
 @}
 %-------------------------------------------------------------------------------
@@ -1039,20 +1139,31 @@ def larBool4(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits):
 
 
 \paragraph{Mapping from facets to hyperplanes}
+
+The function \texttt{facet2covectors} if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 The function \texttt{facet2covectors} return the list of hyperplane covectors, with first term homogeneous, i.e.~the row vector $(c,a,b)$ for the line equation $ax+by+c=0$, or the row vector $(d,a,b,c)$ for the plane equation $ax+by+cz+d=0$.
 %-------------------------------------------------------------------------------
 @D Mapping from facets to hyperplanes
 @{""" Mapping from hyperplanes to lists of facets """
 def facet2covectors(W,FW):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">facet2covectors")
+	if TRACE: tracing = mytrace(tracing,"<facet2covectors")-1
 	return [COVECTOR([W[v] for v in facet]) for facet in FW]
 
 def boundaries(boundary1,boundary2):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaries")
+
+	#if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 	#return set(CAT(boundary1.values() + boundary2.values()))
+
+	if TRACE: tracing = mytrace(tracing,"<boundaries")-1
 	return boundary1.union(boundary2)
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{Building the complex of the current chain}
+
+The function \texttt{chain2complex} if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 The function \texttt{chain2complex} returns the boundary complex of the current \texttt{chain}, minus the facet in \texttt{constraints}, where non $d$-cell may be attached to the current \texttt{chain}.
 It is computed via multiplication between the matrix of boundary operator and the coordinate representation \texttt{chainCoords} of \texttt{chain}. The \texttt{constraint} set is finally subtracted to the result.  
 
@@ -1061,10 +1172,14 @@ It is computed via multiplication between the matrix of boundary operator and th
 @{from scipy.sparse import csc_matrix
 """ Building the boundary complex of the current chain """
 def chain2complex(W,CW,chain,boundaryMat,constraints=[]):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">chain2complex")
+
 	chainCoords = csc_matrix((len(CW), 1))
 	for cell in chain: chainCoords[cell] = 1
 	boundaryCells = set((boundaryMat * chainCoords).tocoo().row)
 	envelope = boundaryCells.difference(constraints)
+
+	if TRACE: tracing = mytrace(tracing,"<chain2complex")-1
 	return envelope,boundaryCells
 @}
 %-------------------------------------------------------------------------------
@@ -1083,17 +1198,32 @@ def chain2complex(W,CW,chain,boundaryMat,constraints=[]):
 
 \paragraph{Testing the convexity of a single added vertex}
 A single cell is possibly attached to the boundary envelope of the current \texttt{chain}. In case of success
-the function \texttt{protrudeChain} returns \texttt{True}; otherwise returns \texttt{False}. 
+
+the function \texttt{protrudeChain} if TRACE: tracing = mytrace(tracing,"<aaaa")-1
+the function \texttt{protrudeChain} return
+s \texttt{True}; otherwise if TRACE: tracing = mytrace(tracing,"<aaaa")-1
+s \texttt{True}; otherwise returns \texttt{False}. 
 %-------------------------------------------------------------------------------
 @D Testing the convexity of a single added vertex
 @{""" Testing the convexity of a single added vertex """
 def pairing(v,w):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">pairing")
+
 	value = PROD([v,w])
-	if -0.01 < value < 0.01: return 0
-	else: return SIGN(value)
+
+	if -0.01 < value < 0.01: 
+		if TRACE: tracing = mytrace(tracing,"<aaaa")-1
+		return 0
+	else: 
+		if TRACE: tracing = mytrace(tracing,"<pairing")-1
+		return SIGN(value)
 
 def convexTest(theSigns,vertex,theCone):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">convexTest")
+
 	signs = [ pairing( [1]+vertex,covector ) for covector in theCone]
+
+	if TRACE: tracing = mytrace(tracing,"<convexTest")-1
 	return all([theSign*sign >= 0 for (theSign,sign) in zip(theSigns,signs)])
 @}
 %-------------------------------------------------------------------------------
@@ -1104,6 +1234,8 @@ def convexTest(theSigns,vertex,theCone):
 @{""" Testing the convexity when attaching a cell to a chain """
 def testAttachment(cell,usedCells,theFacet,chain,
 					W,CW,FW,boundaryMat,boundaryCells,covectors):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">testAttachment")
+	
 	theFacetVerts = set(FW[theFacet])
 	flag = False
 	facetRing = [facet for facet in boundaryCells if facet!=theFacet and \
@@ -1114,6 +1246,8 @@ def testAttachment(cell,usedCells,theFacet,chain,
 	if not any([sign==0 for sign in theSigns]):
 		testingSet = set(CW[cell]).difference(theFacetVerts)
 		flag = all([ convexTest(theSigns,W[vertex],theCone) for vertex in testingSet])
+
+	if TRACE: tracing = mytrace(tracing,"<testAttachment")-1
 	return flag
 @}
 %-------------------------------------------------------------------------------
@@ -1124,6 +1258,8 @@ def testAttachment(cell,usedCells,theFacet,chain,
 @D Elongate a chain while supports a convex set
 @{""" Elongate a chain while supports a convex set """
 def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">protrudeChain")
+
 	verts = []
 	while True:	
 		changed = False
@@ -1154,17 +1290,23 @@ def protrudeChain (W,CW,FW,chain,boundaryMat,covectors,usedCells,constraints):
 			
 	verts = [FW[facet] for facet in boundaryFacets]
 	verts = sorted(list(set(CAT(verts))))
+
+	if TRACE: tracing = mytrace(tracing,"<protrudeChain")-1
 	return verts,usedCells
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{Gathering and writing a polytopal complex}
+
+The task of the \texttt{gatherPolytopes} function, given below, is to if TRACE: tracing = mytrace(tracing,"<aaaa")-1
 The task of the \texttt{gatherPolytopes} function, given below, is to return the LAR \texttt{(X,CX)} of the SCDC \texttt{(W,CW)} generated by the previous phases of the Boolean algorithm, after reducing its representation to a much smaller size, (a) by gathering subsets of cells into single bigger polytopal cells within the characteristic matrix \texttt{CX}, and (b) by assembling their boundary vertices into the (reduced) vertex set \texttt{X}. Of course, while reducing the number of polytopal cells, the procedure should not change the Boolean structure of the input complex, i.e. the support spaces $|C_A|, |C_B|$ of proper chains $C_A$ and $C_B$ and of their Boolean combinations.
 
 %-------------------------------------------------------------------------------
 @D Gathering and writing a polytopal complex
 @{""" Gathering and writing a polytopal complex """
 def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">gatherPolytopes")
+
 	usedCells = [False for cell in CW]
 	covectors = facet2covectors(W,FW)
 	constraints = boundaries(bounds1,bounds2)
@@ -1180,8 +1322,9 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
 				CXbits += [ CWbits[k] ]
 				
 	X,CX = larRemoveVertices(W,CX)
+
+	if TRACE: tracing = mytrace(tracing,"<gatherPolytopes")-1
 	return X,CX,CXbits
-	#return W,CX,CXbits
 @}
 %-------------------------------------------------------------------------------
 
@@ -1202,6 +1345,8 @@ Let us notice that the array \texttt{affineHullNumber} represents, for each vert
 @D Removal of redundant vertices from simplified LAR model
 @{""" Removal of redundant vertices from simplified LAR model """
 def facetCovectors(X,FX):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">facetCovectors")
+
 	covectors = defaultdict(list) 
 	for k,facet in enumerate(FX):
 		covect = list(COVECTOR([X[v] for v in facet]))
@@ -1212,9 +1357,13 @@ def facetCovectors(X,FX):
 				break
 		normalizedCovect = [x*theSign  if x!=abs(0.0) else x for x in normalizedCovect]
 		covectors[vcode(normalizedCovect)] += [k]
+
+	if TRACE: tracing = mytrace(tracing,"<facetCovectors")-1
 	return covectors
 
 def larVertexRemoval(X,CX,FX):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larVertexRemoval")
+
 	dim = len(X[0])
 	covectors = facetCovectors(X,FX)
 	CovectF = covectors.values()
@@ -1232,6 +1381,8 @@ def larVertexRemoval(X,CX,FX):
 		V[new] = X[old]
 	FV = [[Z[v] for v in facet if v in Z] for facet in FX]
 	CV = [[Z[v] for v in cell if v in Z] for cell in CX]
+
+	if TRACE: tracing = mytrace(tracing,"<larVertexRemoval")-1
 	return V,CV,FV
 @}
 %-------------------------------------------------------------------------------
@@ -1251,6 +1402,8 @@ def larVertexRemoval(X,CX,FX):
 @D Boolean Algorithm
 @{""" Boolean Algorithm """
 def larBool(arg1,arg2, brep=False):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool")
+
 	V1,basis1 = arg1
 	V2,basis2 = arg2
 	cells1 = basis1[-1]
@@ -1260,8 +1413,6 @@ def larBool(arg1,arg2, brep=False):
 	@< First Boolean step @>
 	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
 	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CW))))
-	print "\n larBool >>"
-	print "BCellCovering =",BCellCovering,"\n"
 	
 	@< Second Boolean step @>
 	W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
@@ -1285,39 +1436,58 @@ def larBool(arg1,arg2, brep=False):
 	boundaryMat = boundary(CX,FX)
 
 	def theBoundary(boundaryMat,CX,coords):
+		if TRACE: global tracing;tracing = mytrace(tracing+1,">theBoundary")
+
 		chainCoords = csc_matrix((len(CX), 1))
 		for cell in coords: chainCoords[cell,0] = 1
 		boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
 		orientations = list((boundaryMat * chainCoords).tocoo().data)
 		orientedBoundary = [ FX[face] for (sign,face) in zip(orientations,boundaryCells)  if sign == 1 ]
+
+		if TRACE: tracing = mytrace(tracing,"<theBoundary")-1
 		return orientedBoundary
 
 
-	def larBool0(op):	
+	def larBool0(op):
+		if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool0")
 		if op == "union": 
 			ucoords,uchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2>=1])
+
+			if TRACE: tracing = mytrace(tracing,"<theBoundary")-1
 			return W,CW,uchain,CX,FX,theBoundary(boundaryMat,CX,ucoords)
 		elif op == "intersection": 
 			data = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1*c2==1])
 			if data != []: 
 				icoords,ichain = data
+
+				if TRACE: tracing = mytrace(tracing,"<larBool0")-1
 				return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
 			else: 
 				icoords,ichain = [],[]
+
+				if TRACE: tracing = mytrace(tracing,"<larBool0")-1
 				return W,CW,[],[],[],[]
 		elif op == "xor": 
 			xcoords,xchain = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1+c2==1])
+
+			if TRACE: tracing = mytrace(tracing,"<larBool0")-1
 			return W,CW,xchain,CX,FX,theBoundary(boundaryMat,CX,xcoords)
 		elif op == "difference": 
 			data = TRANS([(k,cell) for k,(cell,c1,c2) in enumerate(zip(CX,chain1,chain2)) if c1==1 and c2==0])
 			if data != []: 
 				icoords,ichain = data
+
+				if TRACE: tracing = mytrace(tracing,"<larBool0")-1
 				return W,CW,ichain,CX,FX,theBoundary(boundaryMat,CX,icoords)
 			else: 
 				icoords,ichain = [],[]
+
+				if TRACE: tracing = mytrace(tracing,"<larBool0")-1
 				return W,CW,[],[],[],[]
 		else: print "Error: non implemented op"
 
+
+	if TRACE: tracing = mytrace(tracing,"<larBool")-1
 	return larBool0
 @}
 %-------------------------------------------------------------------------------
@@ -1340,6 +1510,7 @@ Occasionally, we may need to simplify
 @< Initial import of modules @>
 from splitcell import *
 DEBUG = False
+TRACE,tracing = True,-1
 @< Symbolic utility to represent points as strings @>
 @< Merge two dictionaries with keys the point locations @>
 @< Make Common Delaunay Complex @>
@@ -1487,6 +1658,7 @@ arg2 = V2,(VV2,EV2,FV2,CV2)
 import sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+TRACE,tracing = True,-1
 from bool1 import *
 
 """ Definition of Boolean arguments """
@@ -2008,7 +2180,11 @@ First we generate a  set of $n$ random points in the unit $D^d$ disk centred on 
 %------------------------------------------------------------------
 @D Generation of $n$ random points in the unit $d$-disk 
 @{def randomPointsInUnitCircle(n=200,d=2, r=1):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">randomPointsInUnitCircle")
+
 	points = random.random((n,d)) * ([2*math.pi]+[1]*(d-1))
+
+	if TRACE: tracing = mytrace(tracing,"<randomPointsInUnitCircle")-1
 	return [[SQRT(p[1])*COS(p[0]),SQRT(p[1])*SIN(p[0])] for p in points]
 	## TODO: correct for $d$-sphere
 
@@ -2023,6 +2199,8 @@ A set of $n$ random $d$-points is then generated within the standard $d$-cuboid,
 %------------------------------------------------------------------
 @D Generation of $n$ random points in the standard $d$-cuboid 
 @{def randomPointsInUnitCuboid(n=200,d=2):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">randomPointsInUnitCircle")
+	if TRACE: tracing = mytrace(tracing,"<randomPointsInUnitCircle")-1
 	return random.random((n,d)).tolist()
 
 if __name__=="__main__":
@@ -2039,12 +2217,16 @@ if __name__=="__main__":
 @D Triangulation of random points
 @{from scipy.spatial import Delaunay
 def randomTriangulation(n=200,d=2,out='disk'):
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">randomTriangulation")
+
 	if out == 'disk':
 		V = randomPointsInUnitCircle(n,d)
 	elif out == 'cuboid':
 		V = randomPointsInUnitCuboid(n,d)
 	CV = Delaunay(array(V)).vertices
 	model = V,CV
+
+	if TRACE: tracing = mytrace(tracing,"<randomTriangulation")-1
 	return model
 
 if __name__=="__main__":
@@ -2115,9 +2297,18 @@ A small set of utility functions is used to transform a \emph{point} representat
 global PRECISION
 PRECISION = 4.
 
-def verySmall(number): return abs(number) < 10**-(PRECISION)
+def mytrace(tracing,name):
+	string = tracing*"  " + name
+	print string
+	return(tracing)
 
-def prepKey (args): return "["+", ".join(args)+"]"
+def verySmall(number): 
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">verySmall")
+	if TRACE: tracing = mytrace(tracing,"<verySmall")-1
+	return abs(number) < 10**-(PRECISION)
+
+def prepKey (args): 
+	return "["+", ".join(args)+"]"
 
 def fixedPrec(value):
 	out = round(value*10**(PRECISION))/10**(PRECISION)
@@ -2125,10 +2316,13 @@ def fixedPrec(value):
 	return str(out)
 	
 def vcode (vect): 
+	if TRACE: global tracing;tracing = mytrace(tracing+1,">vcode")
 	"""
 	To generate a string representation of a number array.
 	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
 	"""
+
+	if TRACE: tracing = mytrace(tracing,"<vcode")-1
 	return prepKey(AA(fixedPrec)(vect))
 @}
 %------------------------------------------------------------------
@@ -2139,43 +2333,6 @@ def vcode (vect):
 
 \end{document}
 %------------------------------------------------------------------
-
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-
-from larcc import *
-from scipy.sparse import *
-
-V,[VV,EV,FV,CV] = larCuboids((1,2,3),True)
-print FV
-boundaryMat = signedCellularBoundary(*larCuboids((1,1,1),True))
-print boundaryMat.todense()
-glass = MATERIAL([1,0,0,0.2,  0,1,0,0.2,  0,0,1,0.1, 0,0,0,0.1, 100])
-submodel = glass(STRUCT(MKPOLS((V,FV))))
-
-def signedCellularBoundaryCells(V,(VV,EV,FV,CV)):
-	boundaryMat = signedCellularBoundary(V,[VV,EV,FV,CV])
-	chainCoords = csc_matrix((len(CV), 1))
-	for cell in range(len(CV)): chainCoords[cell,0] = 1
-	boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
-	orientations = list((boundaryMat * chainCoords).tocoo().data)
-	return orientations,boundaryCells
-	
-def normalVector(V,facet):
-	v0,v1,v2 = facet[:3]
-	return VECTPROD([ DIFF([V[v1],V[v0]]), DIFF([V[v2],V[v0]]) ])
-
-
-BCpairs = zip(*signedCellularBoundaryCells(V,[VV,EV,FV,CV]))
-orientedBoundary = [FV[face] if sign>0 else swap(FV[face]) for (sign,face) in BCpairs]
-normals = [ normalVector(V,facet)  for facet in orientedBoundary ]
-facetCentroids = [CCOMB([V[v] for v in facet]) for facet in orientedBoundary]
-appliedNormals = [[centroid,SUM([centroid,normal])] for (centroid,normal) in zip(facetCentroids,normals)]
-normalVectors = AA(POLYLINE)(appliedNormals)
-
-VIEW(STRUCT(MKPOLS((V,orientedBoundary))+normalVectors))
-
 
 
 
