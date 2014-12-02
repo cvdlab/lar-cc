@@ -19,13 +19,13 @@
 }}}}}
 % -------------------------------------------------------------------------
 
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb,amsmath,amsthm}
 \newtheorem{definition}{Definition}
 \usepackage[colorlinks]{hyperref}
@@ -36,7 +36,7 @@
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{Alberto Paoluzzi}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
@@ -204,11 +204,10 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 \protect\makebox[0ex][r]{\NWtarget{nuweb4a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize 4a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$LAR model decomposition\nobreak\ {\footnotesize \NWlink{nuweb4b}{4b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@def MKPOLS (model):@\\
-\mbox{}\verb@   V,FV = larModelBreak(model)@\\
-\mbox{}\verb@   pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]@\\
-\mbox{}\verb@   return pols  @\\
+\mbox{}\verb@    V,FV = model@\\
+\mbox{}\verb@    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]@\\
+\mbox{}\verb@    return pols  @\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
@@ -238,7 +237,7 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb4a}{4a}.
+\item {\NWtxtMacroNoRef}.
 \end{list}
 \end{minipage}\\[4ex]
 \end{flushleft}
@@ -335,7 +334,7 @@ First we define a parametric macro to allow the importing of \texttt{larcc} modu
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def importModule(moduleName):@\\
-\mbox{}\verb@   @\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb6b}{6b}\label{scrap15}
+\mbox{}\verb@    @\hbox{$\langle\,$Import the module\nobreak\ ({\footnotesize \NWtarget{nuweb6b}{6b}\label{scrap15}
  }\mbox{}\verb@moduleName@ ) {\footnotesize \NWlink{nuweb5b}{5b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -365,11 +364,7 @@ Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the fu
 \mbox{}\verb@from pyplasm import *@\\
 \mbox{}\verb@import simplexn@\\
 \mbox{}\verb@from simplexn import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$types Mat and Verts\nobreak\ {\footnotesize \NWlink{nuweb8a}{8a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Model class\nobreak\ {\footnotesize \NWlink{nuweb8b}{8b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Struct class\nobreak\ {\footnotesize \NWlink{nuweb8c}{8c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Structure to pair (Vertices,Cells) conversion\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb8}{8}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Explode the scene using \texttt{sx,sy,sz} scaling parameters\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
@@ -491,136 +486,14 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 \bibliography{lar2psm}
 
 
-%-------------------------------------------------------------------------------
-\subsection{Structure types handling}
-%-------------------------------------------------------------------------------
-
-In order to implement a structure as a list of models and transformations, we need to be able to distinguish between two different types of scipy arrays. The first type is the one of arrays of vertices, the second one is the matrix array used to represent the fine transformations.
-
-\paragraph{\texttt{Mat} and \texttt{Verts} classes}
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap22}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$types Mat and Verts\nobreak\ {\footnotesize 8a}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@""" class definitions for LAR """@\\
-\mbox{}\verb@import scipy@\\
-\mbox{}\verb@class Mat(scipy.ndarray): pass@\\
-\mbox{}\verb@class Verts(scipy.ndarray): pass@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6c}{6c}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
-
-\paragraph{\texttt{Model} class}
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap23}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Model class\nobreak\ {\footnotesize 8b}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@class Model:@\\
-\mbox{}\verb@   """ A pair (geometry, topology) of the LAR package """@\\
-\mbox{}\verb@   def __init__(self,(verts,cells)):@\\
-\mbox{}\verb@      self.n = len(verts[0])@\\
-\mbox{}\verb@      # self.verts = scipy.array(verts).view(Verts)@\\
-\mbox{}\verb@      self.verts = verts@\\
-\mbox{}\verb@      self.cells = cells@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6c}{6c}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
-
-\paragraph{\texttt{Struct} iterable class}
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Struct class\nobreak\ {\footnotesize 8c}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@class Struct:@\\
-\mbox{}\verb@    """ The assembly type of the LAR package """@\\
-\mbox{}\verb@    def __init__(self,data):@\\
-\mbox{}\verb@        self.body = data@\\
-\mbox{}\verb@    def __iter__(self):@\\
-\mbox{}\verb@        return iter(self.body)@\\
-\mbox{}\verb@    def __len__(self):@\\
-\mbox{}\verb@        return len(list(self.body))@\\
-\mbox{}\verb@    def __getitem__(self,i):@\\
-\mbox{}\verb@        return list(self.body)[i]@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6c}{6c}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
-
-
-
-%-------------------------------------------------------------------------------
-\subsection{Structure to LAR conversion}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Structure to pair (Vertices,Cells) conversion}
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap25}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Structure to pair (Vertices,Cells) conversion\nobreak\ {\footnotesize 9a}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@""" Structure to pair (Vertices,Cells) conversion """@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@from mapper import evalStruct@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@def struct2lar(structure):@\\
-\mbox{}\verb@   listOfModels = evalStruct(structure)@\\
-\mbox{}\verb@   vertDict = dict()@\\
-\mbox{}\verb@   index,defaultValue,CW,W = -1,-1,[],[]@\\
-\mbox{}\verb@      @\\
-\mbox{}\verb@   for model in listOfModels:@\\
-\mbox{}\verb@      V,FV = larModelBreak(model)@\\
-\mbox{}\verb@      for k,incell in enumerate(FV):@\\
-\mbox{}\verb@         outcell = []@\\
-\mbox{}\verb@         for v in incell:@\\
-\mbox{}\verb@            key = vcode(V[v])@\\
-\mbox{}\verb@            if vertDict.get(key,defaultValue) == defaultValue:@\\
-\mbox{}\verb@               index += 1@\\
-\mbox{}\verb@               vertDict[key] = index@\\
-\mbox{}\verb@               outcell += [index]@\\
-\mbox{}\verb@               W += [eval(key)]@\\
-\mbox{}\verb@            else: @\\
-\mbox{}\verb@               outcell += [vertDict[key]]@\\
-\mbox{}\verb@         CW += [outcell]@\\
-\mbox{}\verb@         @\\
-\mbox{}\verb@   return W,CW@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb6c}{6c}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
 
 \subsection{Numeric utilities}
 
 A small set of utility functions is used to transform a \emph{point} representation, given as array of coordinates, into a string of fixed format to be used as point key into python dictionaries.
 
 %------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap26}
-\protect\makebox[0ex][r]{\NWtarget{nuweb9b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 9b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap22}
+\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 8}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\
@@ -632,16 +505,16 @@ A small set of utility functions is used to transform a \emph{point} representat
 \mbox{}\verb@def prepKey (args): return "["+", ".join(args)+"]"@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def fixedPrec(value):@\\
-\mbox{}\verb@   out = round(value*10**(PRECISION))/10**(PRECISION)@\\
-\mbox{}\verb@   if out == -0.0: out = 0.0@\\
-\mbox{}\verb@   return str(out)@\\
-\mbox{}\verb@   @\\
+\mbox{}\verb@    out = round(value*10**(PRECISION))/10**(PRECISION)@\\
+\mbox{}\verb@    if out == -0.0: out = 0.0@\\
+\mbox{}\verb@    return str(out)@\\
+\mbox{}\verb@    @\\
 \mbox{}\verb@def vcode (vect): @\\
-\mbox{}\verb@   """@\\
-\mbox{}\verb@   To generate a string representation of a number array.@\\
-\mbox{}\verb@   Used to generate the vertex keys in PointSet dictionary, and other similar operations.@\\
-\mbox{}\verb@   """@\\
-\mbox{}\verb@   return prepKey(AA(fixedPrec)(vect))@\\
+\mbox{}\verb@    """@\\
+\mbox{}\verb@    To generate a string representation of a number array.@\\
+\mbox{}\verb@    Used to generate the vertex keys in PointSet dictionary, and other similar operations.@\\
+\mbox{}\verb@    """@\\
+\mbox{}\verb@    return prepKey(AA(fixedPrec)(vect))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}

@@ -9,4 +9,4 @@ chair2 = larApply( r(PI/2) )(chair1)
 chair3 = larApply( r(PI/2) )(chair2)
 chair4 = larApply( r(PI/2) )(chair3)
 VIEW(SKEL_1(STRUCT(MKPOLS(table)+MKPOLS(chair1)+
-               MKPOLS(chair2)+MKPOLS(chair3)+MKPOLS(chair4))))
+                   MKPOLS(chair2)+MKPOLS(chair3)+MKPOLS(chair4))))

@@ -1,10 +1,10 @@
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb,amsmath,amsthm}
 \newtheorem{definition}{Definition}
 \usepackage[colorlinks]{hyperref}
@@ -15,7 +15,7 @@
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{Alberto Paoluzzi}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
@@ -114,11 +114,10 @@ The function \texttt{MKPOLS} returns a list of HPC objects, i.e.~the geometric t
 Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} array of the previous example) is mapped into a polyhedral cell by the \texttt{pyplasm} operator \texttt{MKPOL}. The vertex indices are mapped from base 0 (the Python and C standard) to base 1 (the Plasm, Matlab, and FORTRAN standard).
 %------------------------------------------------------------------
 @d MaKe a list of HPC objects from a LAR model
-@{@< LAR model decomposition @>
-def MKPOLS (model):
-	V,FV = larModelBreak(model)
-	pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
-	return pols  
+@{def MKPOLS (model):
+    V,FV = model
+    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
+    return pols  
 @| MKPOLS @}
 %------------------------------------------------------------------
 
@@ -188,7 +187,7 @@ import @1
 %------------------------------------------------------------------
 @d Function to import a generic module
 @{def importModule(moduleName):
-	@< Import the module @(moduleName@) @>
+    @< Import the module @(moduleName@) @>
 @| importModule @}
 %------------------------------------------------------------------
 
@@ -207,10 +206,6 @@ from pyplasm import *
 import simplexn
 from simplexn import *
 @< Symbolic utility to represent points as strings @>
-@< types Mat and Verts @>
-@< Model class @>
-@< Struct class @>
-@< Structure to pair (Vertices,Cells) conversion @>
 @< MaKe a list of HPC objects from a LAR model @>
 @< Explode the scene using \texttt{sx,sy,sz} scaling parameters @>
 @}
@@ -285,88 +280,6 @@ assert( CCOMB([VECTSUM(vects)]) == \
 \bibliography{lar2psm}
 
 
-%-------------------------------------------------------------------------------
-\subsection{Structure types handling}
-%-------------------------------------------------------------------------------
-
-In order to implement a structure as a list of models and transformations, we need to be able to distinguish between two different types of scipy arrays. The first type is the one of arrays of vertices, the second one is the matrix array used to represent the fine transformations.
-
-\paragraph{\texttt{Mat} and \texttt{Verts} classes}
-%-------------------------------------------------------------------------------
-@D types Mat and Verts
-@{""" class definitions for LAR """
-import scipy
-class Mat(scipy.ndarray): pass
-class Verts(scipy.ndarray): pass
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{\texttt{Model} class}
-%-------------------------------------------------------------------------------
-@D Model class
-@{class Model:
-	""" A pair (geometry, topology) of the LAR package """
-	def __init__(self,(verts,cells)):
-		self.n = len(verts[0])
-		# self.verts = scipy.array(verts).view(Verts)
-		self.verts = verts
-		self.cells = cells
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{\texttt{Struct} iterable class}
-%-------------------------------------------------------------------------------
-@D Struct class
-@{class Struct:
-    """ The assembly type of the LAR package """
-    def __init__(self,data):
-        self.body = data
-    def __iter__(self):
-        return iter(self.body)
-    def __len__(self):
-        return len(list(self.body))
-    def __getitem__(self,i):
-        return list(self.body)[i]
-@}
-%-------------------------------------------------------------------------------
-
-
-
-%-------------------------------------------------------------------------------
-\subsection{Structure to LAR conversion}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Structure to pair (Vertices,Cells) conversion}
-%-------------------------------------------------------------------------------
-@D Structure to pair (Vertices,Cells) conversion
-@{""" Structure to pair (Vertices,Cells) conversion """
-
-from mapper import evalStruct
-
-def struct2lar(structure):
-	listOfModels = evalStruct(structure)
-	vertDict = dict()
-	index,defaultValue,CW,W = -1,-1,[],[]
-		
-	for model in listOfModels:
-		V,FV = larModelBreak(model)
-		for k,incell in enumerate(FV):
-			outcell = []
-			for v in incell:
-				key = vcode(V[v])
-				if vertDict.get(key,defaultValue) == defaultValue:
-					index += 1
-					vertDict[key] = index
-					outcell += [index]
-					W += [eval(key)]
-				else: 
-					outcell += [vertDict[key]]
-			CW += [outcell]
-			
-	return W,CW
-@}
-%-------------------------------------------------------------------------------
 
 \subsection{Numeric utilities}
 
@@ -383,16 +296,16 @@ def verySmall(number): return abs(number) < 10**-(PRECISION)
 def prepKey (args): return "["+", ".join(args)+"]"
 
 def fixedPrec(value):
-	out = round(value*10**(PRECISION))/10**(PRECISION)
-	if out == -0.0: out = 0.0
-	return str(out)
-	
+    out = round(value*10**(PRECISION))/10**(PRECISION)
+    if out == -0.0: out = 0.0
+    return str(out)
+    
 def vcode (vect): 
-	"""
-	To generate a string representation of a number array.
-	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
-	"""
-	return prepKey(AA(fixedPrec)(vect))
+    """
+    To generate a string representation of a number array.
+    Used to generate the vertex keys in PointSet dictionary, and other similar operations.
+    """
+    return prepKey(AA(fixedPrec)(vect))
 @}
 %------------------------------------------------------------------
 

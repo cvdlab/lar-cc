@@ -10,9 +10,10 @@ from larcc import *
 from largrid import *
 from myfont import *
 from mapper import *
+from larstruct import *
 
 from splitcell import *
-DEBUG = False
+DEBUG = True
 TRACE,tracing = True,-1
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
@@ -37,13 +38,13 @@ def fixedPrec(value):
    return str(out)
    
 def vcode (vect): 
-   if TRACE: global tracing;tracing = mytrace(tracing+1,">vcode")
+   #if TRACE: global tracing;tracing = mytrace(tracing+1,">vcode")
    """
    To generate a string representation of a number array.
    Used to generate the vertex keys in PointSet dictionary, and other similar operations.
    """
 
-   if TRACE: tracing = mytrace(tracing,"<vcode")-1
+   #if TRACE: tracing = mytrace(tracing,"<vcode")-1
    return prepKey(AA(fixedPrec)(vect))
 
 """ Merge two dictionaries with keys the point locations """
@@ -94,7 +95,8 @@ def mergeVertices(model1, model2):
    return V,CV1,CV2, n1+n2,n2,n2+n3
 
 """ Make Common Delaunay Complex """
-def makeCDC(arg1,arg2, brep):
+from scipy.spatial import Delaunay
+def makeCDC(arg1,arg2, brep=False):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">makeCDC")
 
 
@@ -249,6 +251,8 @@ def adjacencyQuery (V,CV):
 def boundaryCover(V,CV,BC,VC):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaryCover")
 
+   BC = AA(sorted)(BC)
+
    print "\nboundaryCover >>"
    print "V =",V
    print "CV =",CV
@@ -257,11 +261,12 @@ def boundaryCover(V,CV,BC,VC):
 
    cellsToSplit = list()
    boundaryCellCovering = []
-   glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+
    for k,facet in enumerate(BC):
       print "\nk,facet =",k,facet
       covector = COVECTOR([V[v] for v in facet])
-      seedsOnFacet = VC[facet[0]]
+      seedsOnFacet = VC[facet[0]] 
+      # seedsOnFacet = list(set(CAT([VC[h] for h in facet])))
       cellsToSplit = []
       for cell in seedsOnFacet:
          cellsToSplit += [dividenda(V,CV, cell,facet,covector,[])]
@@ -276,6 +281,7 @@ def boundaryCover(V,CV,BC,VC):
          if covering == cellsToSplit: 
             break
          cellsToSplit = covering
+         
       boundaryCellCovering += [list(covering)]  
 
    if TRACE: tracing = mytrace(tracing,"<boundaryCover")-1
@@ -333,17 +339,26 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 """ Make facets dictionaries """
 def makeFacetDicts(FW,boundary1,boundary2):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">makeFacetDicts")
-
+   
    print "boundary1 =",boundary1
    print "boundary2 =",boundary2
-   FWdict = defaultdict()
+   print "FW =",FW
+   
+   FWdict = dict()
    for k,facet in enumerate (FW): FWdict[str(facet)] = k
+   
+   print "FWdict =",FWdict
+
    for key,value in boundary1.items():
       value = [FWdict[str(facet)] for facet in value]
       boundary1[key] = value
+      
    for key,value in boundary2.items():
       value = [FWdict[str(facet)] for facet in value]
       boundary2[key] = value
+
+   print "boundary1 =",boundary1
+   print "boundary2 =",boundary2
 
    if TRACE: tracing = mytrace(tracing,"<makeFacetDicts")-1
    return boundary1,boundary2,FWdict
@@ -359,6 +374,7 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
    CW,BCfrags = [],[]
    Wdict = dict()
    BCellcovering = boundaryCover(V,CV,BC,VC)
+   FW = set()
    
    print "BCellcovering =",BCellcovering,"\n"
 
@@ -367,8 +383,8 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
    for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
 
    def verySmall(number): 
-      if TRACE: global tracing;tracing = mytrace(tracing+1,">verySmall")      
-      if TRACE: tracing = mytrace(tracing,"<verySmall")-1
+      #if TRACE: global tracing;tracing = mytrace(tracing+1,">verySmall")     
+      #if TRACE: tracing = mytrace(tracing,"<verySmall")-1
       return abs(number) < 10**-5.5
    
    for k,cuts in enumerate(cellCuts):
@@ -399,12 +415,6 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
             # split cells of CDC
             CW += [cellFrag]    # OK
 
-            """
-            BCfrags += [ (h, [Wdict[vcode(w)] for w in cellFragment if verySmall( 
-                        PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) 
-                        ] ) for h in cuts]   
-            """
-            
             for f in cuts:
                thefacet = []
                for w in cellFragment:
@@ -422,6 +432,10 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
    dim = len(W[0])
    print "\nCW =",CW,"\n"
    print "W =",W,"\n"
+   
+   FW = larConvexFacets(W,CW)
+   print "\nFW =",FW,"\n"
+   
    boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
 
    if TRACE: tracing = mytrace(tracing,"<makeSCDC")-1
@@ -432,13 +446,13 @@ def invertRelation(CV):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">invertRelation")
 
    def myMax(List):
-      if TRACE: global tracing;tracing = mytrace(tracing+1,">myMax")
+      #if TRACE: global tracing;tracing = mytrace(tracing+1,">myMax")
 
       if List==[]: 
-         if TRACE: tracing = mytrace(tracing,"<myMax")-1
+         #if TRACE: tracing = mytrace(tracing,"<myMax")-1
          return -1
       else: 
-         if TRACE: tracing = mytrace(tracing,"<myMax")-1
+         #if TRACE: tracing = mytrace(tracing,"<myMax")-1
          return max(List)
          
    columnNumber = max(AA(myMax)(CV))+1
@@ -774,6 +788,25 @@ def larVertexRemoval(X,CX,FX):
    if TRACE: tracing = mytrace(tracing,"<larVertexRemoval")-1
    return V,CV,FV
 
+""" Remove the unused vertices """
+def larRemoveVertices(V,FV):
+    vertDict = dict()
+    index,defaultValue,FW,W = -1,-1,[],[]
+        
+    for k,incell in enumerate(FV):
+        outcell = []
+        for v in incell:
+            key = vcode(V[v])
+            if vertDict.get(key,defaultValue) == defaultValue:
+                index += 1
+                vertDict[key] = index
+                outcell += [index]
+                W += [eval(key)]
+            else: 
+                outcell += [vertDict[key]]
+        FW += [outcell]
+    return W,FW
+
 """ Boolean Algorithm """
 def larBool(arg1,arg2, brep=False):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool")
@@ -790,7 +823,7 @@ def larBool(arg1,arg2, brep=False):
    
       V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
       VV = AA(LIST)(range(len(V)))
-      V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2, brep)
+      V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
       W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
       assert len(VC) == len(V) 
       assert len(BCellCovering) == len(BC)

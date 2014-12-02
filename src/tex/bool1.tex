@@ -180,7 +180,7 @@ def larBool1():
 
 	V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
 	VV = AA(LIST)(range(len(V)))
-	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2, brep)
+	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
 	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
 	assert len(VC) == len(V) 
 	assert len(BCellCovering) == len(BC)
@@ -266,7 +266,8 @@ def mergeVertices(model1, model2):
 %-------------------------------------------------------------------------------of
 @D Make Common Delaunay Complex
 @{""" Make Common Delaunay Complex """
-def makeCDC(arg1,arg2, brep):
+from scipy.spatial import Delaunay
+def makeCDC(arg1,arg2, brep=False):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">makeCDC")
 
 
@@ -406,13 +407,13 @@ def invertRelation(CV):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">invertRelation")
 
 	def myMax(List):
-		if TRACE: global tracing;tracing = mytrace(tracing+1,">myMax")
+		#if TRACE: global tracing;tracing = mytrace(tracing+1,">myMax")
 
 		if List==[]: 
-			if TRACE: tracing = mytrace(tracing,"<myMax")-1
+			#if TRACE: tracing = mytrace(tracing,"<myMax")-1
 			return -1
 		else: 
-			if TRACE: tracing = mytrace(tracing,"<myMax")-1
+			#if TRACE: tracing = mytrace(tracing,"<myMax")-1
 			return max(List)
 			
 	columnNumber = max(AA(myMax)(CV))+1
@@ -587,6 +588,7 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 	CW,BCfrags = [],[]
 	Wdict = dict()
 	BCellcovering = boundaryCover(V,CV,BC,VC)
+	FW = set()
 	
 	print "BCellcovering =",BCellcovering,"\n"
 
@@ -595,8 +597,8 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 	for k in range(len(CV) - len(cellCuts)): cellCuts += [[]]
 
 	def verySmall(number): 
-		if TRACE: global tracing;tracing = mytrace(tracing+1,">verySmall")		
-		if TRACE: tracing = mytrace(tracing,"<verySmall")-1
+		#if TRACE: global tracing;tracing = mytrace(tracing+1,">verySmall")		
+		#if TRACE: tracing = mytrace(tracing,"<verySmall")-1
 		return abs(number) < 10**-5.5
 	
 	for k,cuts in enumerate(cellCuts):
@@ -627,12 +629,6 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 				# split cells of CDC
 				CW += [cellFrag]	  # OK
 
-				"""
-				BCfrags += [ (h, [Wdict[vcode(w)] for w in cellFragment if verySmall( 
-								PROD([ COVECTOR( [V[v] for v in BC[h]] ), [1.]+w ])) 
-								] ) for h in cuts]	
-				"""
-				
 				for f in cuts:
 					thefacet = []
 					for w in cellFragment:
@@ -650,6 +646,10 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 	dim = len(W[0])
 	print "\nCW =",CW,"\n"
 	print "W =",W,"\n"
+	
+	FW = larConvexFacets(W,CW)
+	print "\nFW =",FW,"\n"
+	
 	boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
 
 	if TRACE: tracing = mytrace(tracing,"<makeSCDC")-1
@@ -692,17 +692,26 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 @{""" Make facets dictionaries """
 def makeFacetDicts(FW,boundary1,boundary2):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">makeFacetDicts")
-
+	
 	print "boundary1 =",boundary1
 	print "boundary2 =",boundary2
-	FWdict = defaultdict()
+	print "FW =",FW
+	
+	FWdict = dict()
 	for k,facet in enumerate (FW): FWdict[str(facet)] = k
+	
+	print "FWdict =",FWdict
+
 	for key,value in boundary1.items():
 		value = [FWdict[str(facet)] for facet in value]
 		boundary1[key] = value
+		
 	for key,value in boundary2.items():
 		value = [FWdict[str(facet)] for facet in value]
 		boundary2[key] = value
+
+	print "boundary1 =",boundary1
+	print "boundary2 =",boundary2
 
 	if TRACE: tracing = mytrace(tracing,"<makeFacetDicts")-1
 	return boundary1,boundary2,FWdict
@@ -722,6 +731,8 @@ In the following script's input, \texttt{V} and  \texttt{CV} are the vertices of
 def boundaryCover(V,CV,BC,VC):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaryCover")
 
+	BC = AA(sorted)(BC)
+
 	print "\nboundaryCover >>"
 	print "V =",V
 	print "CV =",CV
@@ -730,11 +741,12 @@ def boundaryCover(V,CV,BC,VC):
 
 	cellsToSplit = list()
 	boundaryCellCovering = []
-	glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+
 	for k,facet in enumerate(BC):
 		print "\nk,facet =",k,facet
 		covector = COVECTOR([V[v] for v in facet])
-		seedsOnFacet = VC[facet[0]]
+		seedsOnFacet = VC[facet[0]] 
+		# seedsOnFacet = list(set(CAT([VC[h] for h in facet])))
 		cellsToSplit = []
 		for cell in seedsOnFacet:
 			cellsToSplit += [dividenda(V,CV, cell,facet,covector,[])]
@@ -749,6 +761,7 @@ def boundaryCover(V,CV,BC,VC):
 			if covering == cellsToSplit: 
 				break
 			cellsToSplit = covering
+			
 		boundaryCellCovering += [list(covering)]	
 
 	if TRACE: tracing = mytrace(tracing,"<boundaryCover")-1
@@ -1388,6 +1401,70 @@ def larVertexRemoval(X,CX,FX):
 %-------------------------------------------------------------------------------
 
 
+\paragraph{Remove double instances of cells}
+
+%-------------------------------------------------------------------------------
+@O test/py/larstruct/test10.py
+@{""" Remove double instances of cells (and the unused vertices) """
+import sys
+""" import modules from larcc/lib """
+sys.path.insert(0, 'lib/py/')
+from larcc import *
+from mapper import evalStruct
+
+@< Transform Struct object to LAR model pair @>
+@< Remove the double instances of cells @>
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))
+
+@< Remove the unused vertices @>
+@}
+%-------------------------------------------------------------------------------
+
+The actual removal of double cells (useful in several applications, and in particular in the extraction of boundary models from 3D medical images) is performed by first generating a dictionary of cells, using as key the tuple given by the cells themselves, and then removing those discovered having a double instance.
+The algorithm is extremely simple, and its implementation, given below, is straightforward.
+
+%-------------------------------------------------------------------------------
+@D Remove the double instances of cells
+@{""" Remove the double instances of cells """
+cellDict = defaultdict(list)
+for k,cell in enumerate(FW):
+    cellDict[tuple(cell)] += [k]
+FW = [list(key) for key in cellDict.keys() if len(cellDict[key])==1]
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Remove the unused vertices
+@{""" Remove the unused vertices """
+print "len(W) =",len(W)
+V,FV = larRemoveVertices(W,FW)
+print "len(V) =",len(V)
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Remove the unused vertices from a LAR model pair
+@{""" Remove the unused vertices """
+def larRemoveVertices(V,FV):
+    vertDict = dict()
+    index,defaultValue,FW,W = -1,-1,[],[]
+        
+    for k,incell in enumerate(FV):
+        outcell = []
+        for v in incell:
+            key = vcode(V[v])
+            if vertDict.get(key,defaultValue) == defaultValue:
+                index += 1
+                vertDict[key] = index
+                outcell += [index]
+                W += [eval(key)]
+            else: 
+                outcell += [vertDict[key]]
+        FW += [outcell]
+    return W,FW
+@}
+%-------------------------------------------------------------------------------
+
 %-------------------------------------------------------------------------------
 \section{The main Boolean procedure}
 %-------------------------------------------------------------------------------
@@ -1509,7 +1586,7 @@ Occasionally, we may need to simplify
 @{""" Module for Boolean ops with LAR """
 @< Initial import of modules @>
 from splitcell import *
-DEBUG = False
+DEBUG = True
 TRACE,tracing = True,-1
 @< Symbolic utility to represent points as strings @>
 @< Merge two dictionaries with keys the point locations @>
@@ -1531,6 +1608,7 @@ TRACE,tracing = True,-1
 @< Mapping from facets to hyperplanes @>
 @< Simplification of the output polytopal complex @>
 @< Removal of redundant vertices from simplified LAR model @>
+@< Remove the unused vertices from a LAR model pair @>
 @< Boolean Algorithm @>
 @}
 %-------------------------------------------------------------------------------
@@ -1547,10 +1625,21 @@ TRACE,tracing = True,-1
 %-------------------------------------------------------------------------------
 @D Debug via visualization
 @{""" Debug via visualization """
+
+V1,(VV1,EV1,FV1) = arg1
+V2,(VV2,EV2,FV2) = arg2
+glass = MATERIAL([1,0,0,0.3,  0,1,0,0.3,  0,0,1,0.3, 0,0,0,0.3, 100])
+
+VIEW(STRUCT([
+	glass(EXPLODE(1.1,1.1,1.1)(MKPOLS((V1,FV1)))),
+	glass(EXPLODE(1.1,1.1,1.1)(MKPOLS((V2,FV2))))
+]))
+
+glass = MATERIAL([1,0,0,0.6,  0,1,0,0.6,  0,0,1,0.6, 0,0,0,0.6, 100])
+
 boolean = larBool(arg1,arg2)	
 
 W,CW,chain,CX,FX,orientedBoundary = boolean("xor")
-glass = MATERIAL([1,0,0,0.6,  0,1,0,0.6,  0,0,1,0.6, 0,0,0,0.6, 100])
 VIEW(glass(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,chain)))))
 
 if DEBUG:
@@ -2285,6 +2374,7 @@ from larcc import *
 from largrid import *
 from myfont import *
 from mapper import *
+from larstruct import *
 @}
 %------------------------------------------------------------------
 \subsection{Numeric utilities}
@@ -2316,13 +2406,13 @@ def fixedPrec(value):
 	return str(out)
 	
 def vcode (vect): 
-	if TRACE: global tracing;tracing = mytrace(tracing+1,">vcode")
+	#if TRACE: global tracing;tracing = mytrace(tracing+1,">vcode")
 	"""
 	To generate a string representation of a number array.
 	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
 	"""
 
-	if TRACE: tracing = mytrace(tracing,"<vcode")-1
+	#if TRACE: tracing = mytrace(tracing,"<vcode")-1
 	return prepKey(AA(fixedPrec)(vect))
 @}
 %------------------------------------------------------------------
