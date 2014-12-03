@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = bool1
+NAME = iot3d
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
