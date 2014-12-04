@@ -36,16 +36,39 @@ def absModel2relStruct(larPolylineModel):
    return Struct([ t(*V[0]), (Vnew,E) ])
 
 """ print a lar structure to a geoJson file """
-def printStruct2GeoJson(struct):
-   dim = checkStruct(struct.body)
-   print "\n dim =",dim
-   CTM, stack = scipy.identity(dim+1), []
-   print "\n CTM, stack =",CTM, stack
-   scene = printTraversal(CTM, stack, struct, [], 0) 
-   return scene
+def printStruct2GeoJson(path,struct):
+    if struct.__name__() == None:
+        filename = str(id(struct))
+    else: 
+        filename = struct.__name__()
+    theFile = open(path+filename+".geo", "w")
+    print "filename =", filename
+    dim = checkStruct(struct.body)
+    print >> theFile, "\n dim =",dim
+    CTM, stack = scipy.identity(dim+1), []
+    print >> theFile,"\n CTM, stack =",CTM, stack
+    scene = printTraversal(theFile, CTM, stack, struct, [], 0) 
+    theFile.close()
+    return scene
+
+""" Print a model object in a geoJson file """
+def printModelObject(theFile,tabs, i,name,verts,cells):
+    print >> theFile, tabs, "i =",i
+    print >> theFile, tabs, "name =",name
+    print >> theFile, tabs, "verts =",AA(eval)(AA(vcode)(verts))
+    print >> theFile, tabs, "cells =",cells
+
+""" Print a mat object in a geoJson file """
+def printMatObject(theFile,tabs, theMat):
+    print >> theFile, tabs, "tVector =", theMat.T[-1].tolist()
+
+""" Print a struct object in a geoJson file """
+def printStructObject(theFile,tabs, i,name):
+    print >> theFile, tabs, "i =",i
+    print >> theFile, tabs, "name =",name
 
 """ Traverse a structure to print a geoJson file """
-def printTraversal(CTM, stack, obj, scene=[], level=0):
+def printTraversal(theFile,CTM, stack, obj, scene=[], level=0):
    tabs = (4*level)*" "
    for i in range(len(obj)):
       if isinstance(obj[i],Model): 
@@ -54,33 +77,27 @@ def printTraversal(CTM, stack, obj, scene=[], level=0):
             name = id(obj[i])
          else: 
             name = obj[i].__name__()
-         print tabs, "i =",i
-         print tabs, "name =",name
-         print tabs, "verts =",AA(eval)(AA(vcode)(verts))
-         print tabs, "cells =",cells
+         printModelObject(theFile,tabs, i,name,verts,cells)
          scene += [larApply(CTM)(obj[i])]
       elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
          verts,cells = obj[i]
          name = id(obj[i])
-         print tabs, "i =",i
-         print tabs, "name =",name
-         print tabs, "verts =",AA(eval)(AA(vcode)(verts))
-         print tabs, "cells =",cells
+         printModelObject(theFile,tabs, i,name,verts,cells)
          scene += [larApply(CTM)(obj[i])]
       elif isinstance(obj[i],Mat): 
-         print tabs, "tVector =", obj[i].T[-1].tolist()
+         printMatObject(theFile,tabs, obj[i])
          CTM = scipy.dot(CTM, obj[i])
       elif isinstance(obj[i], Struct):
          if obj[i].__name__() == None:
             name = id(obj[i])
          else: 
             name = obj[i].__name__()
-         print tabs, "i =",i
-         print tabs, "name =",name
+         printStructObject(theFile,tabs, i,name)
          stack.append(CTM) 
          level += 1
-         printTraversal(CTM, stack, obj[i], scene, level)
+         printTraversal(theFile,CTM, stack, obj[i], scene, level)
          level -= 1
          CTM = stack.pop()
    return scene
+
 

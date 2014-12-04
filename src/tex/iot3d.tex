@@ -138,15 +138,61 @@ def absModel2relStruct(larPolylineModel):
 \paragraph{print a lar structure to a geoJson file}
 
 %-------------------------------------------------------------------------------
-@D print a lar structure to a geoJson file
+@D Print a lar structure to a geoJson file
 @{""" print a lar structure to a geoJson file """
-def printStruct2GeoJson(struct):
-   dim = checkStruct(struct.body)
-   print "\n dim =",dim
-   CTM, stack = scipy.identity(dim+1), []
-   print "\n CTM, stack =",CTM, stack
-   scene = printTraversal(CTM, stack, struct, [], 0) 
-   return scene
+def printStruct2GeoJson(path,struct):
+    if struct.__name__() == None:
+        filename = str(id(struct))
+    else: 
+        filename = struct.__name__()
+    theFile = open(path+filename+".geo", "w")
+    print "filename =", filename
+    dim = checkStruct(struct.body)
+    print >> theFile, "\n dim =",dim
+    CTM, stack = scipy.identity(dim+1), []
+    print >> theFile,"\n CTM, stack =",CTM, stack
+    scene = printTraversal(theFile, CTM, stack, struct, [], 0) 
+    theFile.close()
+    return scene
+
+@< Print a Model object in a geoJson file @>
+@< Print a Mat object in a geoJson file @>
+@< Print a Struct object in a geoJson file @>
+@< Traverse a structure to print a geoJson file @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Print a \texttt{Model} object in a \texttt{xGeoJson} file}
+
+%-------------------------------------------------------------------------------
+@D Print a Model object in a geoJson file
+@{""" Print a model object in a geoJson file """
+def printModelObject(theFile,tabs, i,name,verts,cells):
+    print >> theFile, tabs, "i =",i
+    print >> theFile, tabs, "name =",name
+    print >> theFile, tabs, "verts =",AA(eval)(AA(vcode)(verts))
+    print >> theFile, tabs, "cells =",cells
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Print a \texttt{Mat} object in a \texttt{xGeoJson} file}
+
+%-------------------------------------------------------------------------------
+@D Print a Mat object in a geoJson file
+@{""" Print a mat object in a geoJson file """
+def printMatObject(theFile,tabs, theMat):
+    print >> theFile, tabs, "tVector =", theMat.T[-1].tolist()
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Print a \texttt{Struct} object in a \texttt{xGeoJson} file}
+
+%-------------------------------------------------------------------------------
+@D Print a Struct object in a geoJson file
+@{""" Print a struct object in a geoJson file """
+def printStructObject(theFile,tabs, i,name):
+    print >> theFile, tabs, "i =",i
+    print >> theFile, tabs, "name =",name
 @}
 %-------------------------------------------------------------------------------
 
@@ -155,7 +201,7 @@ def printStruct2GeoJson(struct):
 %-------------------------------------------------------------------------------
 @D Traverse a structure to print a geoJson file
 @{""" Traverse a structure to print a geoJson file """
-def printTraversal(CTM, stack, obj, scene=[], level=0):
+def printTraversal(theFile,CTM, stack, obj, scene=[], level=0):
    tabs = (4*level)*" "
    for i in range(len(obj)):
       if isinstance(obj[i],Model): 
@@ -164,32 +210,25 @@ def printTraversal(CTM, stack, obj, scene=[], level=0):
             name = id(obj[i])
          else: 
             name = obj[i].__name__()
-         print tabs, "i =",i
-         print tabs, "name =",name
-         print tabs, "verts =",AA(eval)(AA(vcode)(verts))
-         print tabs, "cells =",cells
+         printModelObject(theFile,tabs, i,name,verts,cells)
          scene += [larApply(CTM)(obj[i])]
       elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
          verts,cells = obj[i]
          name = id(obj[i])
-         print tabs, "i =",i
-         print tabs, "name =",name
-         print tabs, "verts =",AA(eval)(AA(vcode)(verts))
-         print tabs, "cells =",cells
+         printModelObject(theFile,tabs, i,name,verts,cells)
          scene += [larApply(CTM)(obj[i])]
       elif isinstance(obj[i],Mat): 
-         print tabs, "tVector =", obj[i].T[-1].tolist()
+         printMatObject(theFile,tabs, obj[i])
          CTM = scipy.dot(CTM, obj[i])
       elif isinstance(obj[i], Struct):
          if obj[i].__name__() == None:
             name = id(obj[i])
          else: 
             name = obj[i].__name__()
-         print tabs, "i =",i
-         print tabs, "name =",name
+         printStructObject(theFile,tabs, i,name)
          stack.append(CTM) 
          level += 1
-         printTraversal(CTM, stack, obj[i], scene, level)
+         printTraversal(theFile,CTM, stack, obj[i], scene, level)
          level -= 1
          CTM = stack.pop()
    return scene
@@ -209,14 +248,86 @@ from architectural import *
 @< transform svg primitives to basic lar format @>
 @< transform a lar model to a list of lar structures @>
 @< transform an absolute lar model to a relative lar structure @>
-@< print a lar structure to a geoJson file @>
-@< Traverse a structure to print a geoJson file @>
+@< Print a lar structure to a geoJson file @>
 @}
 %------------------------------------------------------------------
+
 
 %===============================================================================
 \section{Examples}
 %===============================================================================
+
+\subsection{A complete 3D building example}
+
+In this section a complete 3D building example is developed, that starts by importing the data associated to the rect and polyline primitives of the 2D layout exported as svg file, and finishes by generating a complete 3D mock-up of a quite complex multi-floor office building.
+
+%------------------------------------------------------------------
+@O test/py/iot3d/test01.py
+@{"""Automatic construction of a simplified 3D building from 2D layout"""
+import sys
+PATH = "/Users/paoluzzi/Documents/RICERCA/sogei/edifici/"
+sys.path.insert(0, PATH)
+
+from buildings import *
+from iot3d import *
+
+# LAR models (absolute coordinates)
+ala_est = larEmbed(1)(polyline2lar(rects2polylines(eastRooms) + eastTip))
+ala_sud = larEmbed(1)(polyline2lar(rects2polylines(southRooms) + southTip))
+ala_ovest = larEmbed(1)(polyline2lar(rects2polylines(westRooms) + westTip))
+ala_nord = larEmbed(1)(polyline2lar(rects2polylines(northRooms) + northTip)) 
+ascensori = larEmbed(1)(polyline2lar(elevators))
+spazioComune = larEmbed(1)(polyline2lar(AA(REVERSE)(newLanding)))
+
+# test of input consistency (flat assembly of LAR models)
+pianoTipo = Struct([ala_est,ala_sud,ala_ovest,ala_nord,ascensori,spazioComune],"pianoTipo")
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(pianoTipo))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(pianoTipo)))))
+
+# LAR to structs
+Ala_est = Struct(lar2Structs(ala_est),"Ala_est")
+Ala_sud = Struct(lar2Structs(ala_sud),"Ala_sud")
+Ala_ovest = Struct(lar2Structs(ala_ovest),"Ala_ovest")
+Ala_nord = Struct(lar2Structs(ala_nord),"Ala_nord")
+Ascensori = Struct(lar2Structs(ascensori),"Ascensori")
+SpazioComune = Struct(lar2Structs(spazioComune),"SpazioComune")
+
+model = struct2lar(Ala_est)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+for k,room in enumerate(Ala_est.body):
+    print room.body
+
+# hierarchical assembly of simplest LAR models
+TreAli = Struct([Ala_est,Ala_sud,Ala_ovest,Ascensori,SpazioComune],"TreAli")
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(TreAli))))
+Ali_B_C_D = Struct(6*[TreAli, t(0,0,30)],"Ali_B_C_D")
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(Ali_B_C_D))))
+
+Ala_A = Struct(4*[Ala_nord,  t(0,0,30)],"Ala_A")
+ALA_A = EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(Ala_A)))
+VIEW(EXPLODE(1.2,1.2,1.2)([ ALA_A, COLOR(BLUE)(SKEL_1(ALA_A)) ]))
+
+Edificio = Struct([ Ala_A, Ali_B_C_D ],"Edificio")
+V,FV = struct2lar(Edificio)
+EDIFICIO = STRUCT(MKPOLS((V,FV)))
+VIEW(STRUCT([ EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
+
+VV = AA(LIST)(range(len(V)))
+SK = SKEL_1(EDIFICIO)
+VIEW(larModelNumbering(1,1,1)(V,[VV,[],FV],STRUCT([ COLOR(BLUE)(SK), EDIFICIO ]),20))
+
+Va,EVa = struct2lar(TreAli)
+Vb,EVb = struct2lar(Ala_A)
+a = PROD([ SKEL_1(STRUCT(MKPOLS( ([ v[:2] for v in Va], EVa) ))), QUOTE(5*[30]) ])
+b = PROD([ SKEL_1(STRUCT(MKPOLS( ([ v[:2] for v in Vb], EVb) ))), QUOTE(3*[30]) ])
+glass = MATERIAL([1,0,0,0.3,  0,1,0,0.3,  0,0,1,0.3, 0,0,0,0.3, 100])
+VIEW(glass(STRUCT([a,b])))
+
+VIEW(STRUCT([ glass(STRUCT([a,b])), EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
+test = printStruct2GeoJson(PATH,Edificio)
+@}
+%------------------------------------------------------------------
+
 
 
 %===============================================================================
