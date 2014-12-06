@@ -1,6 +1,12 @@
 """Module with automatic generation of simplified 3D buildings"""
 import sys; sys.path.insert(0, 'lib/py/')
 from architectural import *
+class Struct2(Struct):
+   def flatten(self): 
+      structs = copy(self.body)
+      structList = lar2Structs(CAT(structs.body))
+      return [ absModel2relStruct(struct[0].body) for struct in structList ]
+
 """ transform svg primitives to basic lar format """
 def rects2polylines(rooms): 
    return [[[x,y],[x+dx,y],[x+dx,y+dy],[x,y+dy]] for x,y,dx,dy in rooms]
@@ -30,8 +36,8 @@ def lar2Structs(model):
    return [ Struct([[[V[v] for v in cell], [range(len(cell))]]]) for cell in FV]
 
 """ transform an absolute lar model to a relative lar structure """
-def absModel2relStruct(larPolylineModel):
-   V,E = larPolylineModel
+def absModel2relStruct(larModel):
+   V,E = larModel
    Vnew = (array(V) - V[0]).tolist()
    return Struct([ t(*V[0]), (Vnew,E) ])
 

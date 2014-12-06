@@ -2,7 +2,7 @@
 import sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larstruct import *
 
 """ Generation of Struct object and transform to LAR model pair """
 cubes = larCuboids([10,10,10],True)

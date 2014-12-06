@@ -78,7 +78,7 @@ First we state the general rules that will be satisfied by the matrices used in 
             # V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
             V = scipy.dot(array([v+[1.0] for v in model.verts]), affineMatrix.T).tolist()
             V = [v[:-1] for v in V]
-            CV = copy(model.cells)
+            CV = copy.copy(model.cells)
             return Model((V,CV))
         elif isinstance(model,tuple) or isinstance(model,list):
             V,CV = model
@@ -201,6 +201,8 @@ class Verts(scipy.ndarray): pass
         # self.verts = scipy.array(verts).view(Verts)
         self.verts = verts
         self.cells = cells
+    def __getitem__(self,i):
+        return list((self.verts,self.cells))[i]
 @}
 %-------------------------------------------------------------------------------
 
@@ -212,6 +214,7 @@ class Verts(scipy.ndarray): pass
     def __init__(self,data,name='None'):
         self.body = data
         self.name = str(name)
+        self.box = box(self) 
     def __name__(self):
         return self.name
     def __iter__(self):
@@ -228,6 +231,37 @@ class Verts(scipy.ndarray): pass
 @}
 %-------------------------------------------------------------------------------
 
+
+\subsection{\texttt{Struct} containment box}
+
+%-------------------------------------------------------------------------------
+@D Computation of the containment box of a Lar Struct or Model
+@{""" Computation of the containment box of a Lar Struct or Model """
+import copy
+def box(model):
+    if isinstance(model,Mat): return []
+    elif isinstance(model,Struct):
+        dummyModel = copy.deepcopy(model)
+        dummyModel.body = [term if (not isinstance(term,Struct)) else [term.box,[[0,1]]]  for term in model.body]
+        listOfModels = evalStruct( dummyModel )
+        print "listOfModels =",listOfModels
+        dim = len(listOfModels[0][0][0])
+        theMin,theMax = box(listOfModels[0]) 
+        for theModel in listOfModels[1:]:
+            modelMin, modelMax = box(theModel)
+            theMin = [val if val<theMin[k] else theMin[k] for k,val in enumerate(modelMin)]
+            theMax = [val if val>theMax[k] else theMax[k] for k,val in enumerate(modelMax)]
+        return [theMin,theMax]
+    elif isinstance(model,Model):
+        V = model.verts
+    elif (isinstance(model,tuple) or isinstance(model,list)) and len(model)==2:
+        V = model[0]
+    coords = TRANS(V)
+    theMin = [min(coord) for coord in coords]
+    theMax = [max(coord) for coord in coords]
+    return [theMin,theMax]
+@}
+%-------------------------------------------------------------------------------
 
 
 %-------------------------------------------------------------------------------
@@ -280,14 +314,14 @@ A projection transformation, that removes the last $k$ coordinate of vertices, w
 %-------------------------------------------------------------------------------
 @D Embedding and projecting a geometric model
 @{def larEmbed(k):
-	def larEmbed0(model):
-		V,CV = model
-		if k>0:
-			V = [v+[0.]*k for v in V] 
-		elif k<0:
-			V = [v[:-k] for v in V] 
-		return V,CV
-	return larEmbed0
+    def larEmbed0(model):
+        V,CV = model
+        if k>0:
+            V = [v+[0.]*k for v in V] 
+        elif k<0:
+            V = [v[:-k] for v in V] 
+        return V,CV
+    return larEmbed0
 @}
 %-------------------------------------------------------------------------------
 
@@ -417,10 +451,11 @@ def checkStruct(lst):
 
         TODO: aggiungere test sulla dimensione minima delle celle (legata a quella di immersione)
     """
+    print "lst =",lst
     print "flatten(lst) =",flatten(lst)
     vertsDims = [computeDim(obj) for obj in flatten(lst)]
     vertsDims = [dim for dim in vertsDims if dim!=None and dim!=0]
-    if EQ(vertsDims): 
+    if EQ(vertsDims) and len(vertsDims)!=0: 
         return vertsDims[0]
     else: 
         print "\n vertsDims =", vertsDims
@@ -517,7 +552,9 @@ The \texttt{traversal} algorithm decides between three different cases, dependin
 %-------------------------------------------------------------------------------
 
 
+%===============================================================================
 \section{Larstruct exporting}
+%===============================================================================
 \label{sec:larstruct}
 Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the functional parts it is composed of. Of course, this one is the module version corresponding to the current state of the system, i.e.~to a very initial state. Other functions will be added when needed.
 %------------------------------------------------------------------
@@ -537,11 +574,14 @@ from lar2psm import *
 @< Struct class @>
 @< Structure to pair (Vertices,Cells) conversion @>
 @< Embedding and projecting a geometric model @>
+@< Computation of the containment box of a Lar Struct or Model @>
 @}
 %------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
+%===============================================================================
 \section{Examples}
+%===============================================================================
 %-------------------------------------------------------------------------------
 Some examples of structures as combinations of LAR models and affine transformations are given in this section. 
 
@@ -551,8 +591,9 @@ We start with a simple 2D example of a non-nested list of translated 2D object i
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test04.py
 @{""" Example of non-nested structure with translation and rotations """
-@< Initial import of modules @>
-from mapper import *
+import sys; sys.path.insert(0, 'lib/py/')
+from largrid import *
+from larstruct import *
 square = larCuboids([1,1])
 table = larApply( t(-.5,-.5) )(square)
 chair = larApply( s(.35,.35) )(table)
@@ -571,8 +612,9 @@ A different composition of transformations, from local to global coordinate fram
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test05.py
 @{""" Example of non-nested structure with translation and rotations """
-@< Initial import of modules @>
-from mapper import *
+import sys; sys.path.insert(0, 'lib/py/')
+from largrid import *
+from larstruct import *
 square = larCuboids([1,1])
 square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
@@ -590,13 +632,16 @@ Finally, a similar 2D example is given, by nesting one (or more) structures via 
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test06.py
 @{""" Example of nested structures with translation and rotations """
-@< Initial import of modules @>
-from mapper import *
+import sys; sys.path.insert(0, 'lib/py/')
+from largrid import *
+from larstruct import *
 square = larCuboids([1,1])
 square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
 chair = Struct([ t(.75, 0), s(.35,.35), table ])
 struct = Struct( [t(2,1)] + [table] + 4*[r(PI/2), chair])
+struct = Struct(10*[struct,t(0,2.5)])
+struct = Struct(10*[struct,t(3,0)])
 scene = evalStruct(struct)
 VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @}
@@ -651,7 +696,7 @@ Let us notice that due to the assembly process, some 2-cells in \texttt{FW} are 
 import sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larstruct import *
 
 @< Transform Struct object to LAR model pair @>
 @}
@@ -682,71 +727,9 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))
 
 
 
-\paragraph{Remove double instances of cells}
-
-%-------------------------------------------------------------------------------
-@O test/py/larstruct/test10.py
-@{""" Remove double instances of cells (and the unused vertices) """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from larcc import *
-from mapper import evalStruct
-
-@< Transform Struct object to LAR model pair @>
-@< Remove the double instances of cells @>
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))
-
-@< Remove the unused vertices @>
-@}
-%-------------------------------------------------------------------------------
-
-The actual removal of double cells (useful in several applications, and in particular in the extraction of boundary models from 3D medical images) is performed by first generating a dictionary of cells, using as key the tuple given by the cells themselves, and then removing those discovered having a double instance.
-The algorithm is extremely simple, and its implementation, given below, is straightforward.
-
-%-------------------------------------------------------------------------------
-@D Remove the double instances of cells
-@{""" Remove the double instances of cells """
-cellDict = defaultdict(list)
-for k,cell in enumerate(FW):
-    cellDict[tuple(cell)] += [k]
-FW = [list(key) for key in cellDict.keys() if len(cellDict[key])==1]
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Remove the unused vertices
-@{""" Remove the unused vertices """
-print "len(W) =",len(W)
-V,FV = larRemoveVertices(W,FW)
-print "len(V) =",len(V)
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Remove the unused vertices from a LAR model pair
-@{""" Remove the unused vertices """
-def larRemoveVertices(V,FV):
-    vertDict = dict()
-    index,defaultValue,FW,W = -1,-1,[],[]
-        
-    for k,incell in enumerate(FV):
-        outcell = []
-        for v in incell:
-            key = vcode(V[v])
-            if vertDict.get(key,defaultValue) == defaultValue:
-                index += 1
-                vertDict[key] = index
-                outcell += [index]
-                W += [eval(key)]
-            else: 
-                outcell += [vertDict[key]]
-        FW += [outcell]
-    return W,FW
-@}
-%-------------------------------------------------------------------------------
-
+%===============================================================================
 \appendix
+%===============================================================================
 \subsection{Importing a generic module}
 First we define a parametric macro to allow the importing of \texttt{larcc} modules from the project repository \texttt{lib/py/}. When the user needs to import some project's module, she may call this macro as done in Section~\ref{sec:lar2psm}.
 %------------------------------------------------------------------

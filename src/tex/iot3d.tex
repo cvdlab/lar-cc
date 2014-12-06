@@ -114,12 +114,22 @@ def lar2Structs(model):
 @}
 %-------------------------------------------------------------------------------
 
+%-------------------------------------------------------------------------------
+@D Struct class pushing local origin at the bottom of the structure
+@{class Struct2(Struct):
+	def flatten(self): 
+		structs = copy(self.body)
+		structList = lar2Structs(CAT(structs.body))
+		return [ absModel2relStruct(struct[0].body) for struct in structList ]
+@}
+%-------------------------------------------------------------------------------
+
 
 %-------------------------------------------------------------------------------
 @D transform an absolute lar model to a relative lar structure
 @{""" transform an absolute lar model to a relative lar structure """
-def absModel2relStruct(larPolylineModel):
-   V,E = larPolylineModel
+def absModel2relStruct(larModel):
+   V,E = larModel
    Vnew = (array(V) - V[0]).tolist()
    return Struct([ t(*V[0]), (Vnew,E) ])
 @}
@@ -240,17 +250,18 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0):
 \section{\texttt{Iot3D} Exporting}
 %===============================================================================
 
-%------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 @O lib/py/iot3d.py
 @{"""Module with automatic generation of simplified 3D buildings"""
 import sys; sys.path.insert(0, 'lib/py/')
 from architectural import *
+@< Struct class pushing local origin at the bottom of the structure @>
 @< transform svg primitives to basic lar format @>
 @< transform a lar model to a list of lar structures @>
 @< transform an absolute lar model to a relative lar structure @>
 @< Print a lar structure to a geoJson file @>
 @}
-%------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 
 
 %===============================================================================
@@ -261,7 +272,7 @@ from architectural import *
 
 In this section a complete 3D building example is developed, that starts by importing the data associated to the rect and polyline primitives of the 2D layout exported as svg file, and finishes by generating a complete 3D mock-up of a quite complex multi-floor office building.
 
-%------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 @O test/py/iot3d/test01.py
 @{"""Automatic construction of a simplified 3D building from 2D layout"""
 import sys
@@ -326,7 +337,7 @@ VIEW(glass(STRUCT([a,b])))
 VIEW(STRUCT([ glass(STRUCT([a,b])), EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
 test = printStruct2GeoJson(PATH,Edificio)
 @}
-%------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 
 
 

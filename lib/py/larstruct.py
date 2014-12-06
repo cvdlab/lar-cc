@@ -58,14 +58,14 @@ def r(*args):
     return mat.view(Mat)
 
 def larEmbed(k):
-   def larEmbed0(model):
-      V,CV = model
-      if k>0:
-         V = [v+[0.]*k for v in V] 
-      elif k<0:
-         V = [v[:-k] for v in V] 
-      return V,CV
-   return larEmbed0
+    def larEmbed0(model):
+        V,CV = model
+        if k>0:
+            V = [v+[0.]*k for v in V] 
+        elif k<0:
+            V = [v[:-k] for v in V] 
+        return V,CV
+    return larEmbed0
 
 def larApply(affineMatrix):
     def larApply0(model):
@@ -73,7 +73,7 @@ def larApply(affineMatrix):
             # V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
             V = scipy.dot(array([v+[1.0] for v in model.verts]), affineMatrix.T).tolist()
             V = [v[:-1] for v in V]
-            CV = copy(model.cells)
+            CV = copy.copy(model.cells)
             return Model((V,CV))
         elif isinstance(model,tuple) or isinstance(model,list):
             V,CV = model
@@ -109,10 +109,11 @@ def checkStruct(lst):
 
         TODO: aggiungere test sulla dimensione minima delle celle (legata a quella di immersione)
     """
+    print "lst =",lst
     print "flatten(lst) =",flatten(lst)
     vertsDims = [computeDim(obj) for obj in flatten(lst)]
     vertsDims = [dim for dim in vertsDims if dim!=None and dim!=0]
-    if EQ(vertsDims): 
+    if EQ(vertsDims) and len(vertsDims)!=0: 
         return vertsDims[0]
     else: 
         print "\n vertsDims =", vertsDims
@@ -170,12 +171,15 @@ class Model:
         # self.verts = scipy.array(verts).view(Verts)
         self.verts = verts
         self.cells = cells
+    def __getitem__(self,i):
+        return list((self.verts,self.cells))[i]
 
 class Struct:
     """ The assembly type of the LAR package """
     def __init__(self,data,name='None'):
         self.body = data
         self.name = str(name)
+        self.box = box(self) 
     def __name__(self):
         return self.name
     def __iter__(self):
@@ -218,12 +222,37 @@ def struct2lar(structure):
     return W,CW
 
 def larEmbed(k):
-   def larEmbed0(model):
-      V,CV = model
-      if k>0:
-         V = [v+[0.]*k for v in V] 
-      elif k<0:
-         V = [v[:-k] for v in V] 
-      return V,CV
-   return larEmbed0
+    def larEmbed0(model):
+        V,CV = model
+        if k>0:
+            V = [v+[0.]*k for v in V] 
+        elif k<0:
+            V = [v[:-k] for v in V] 
+        return V,CV
+    return larEmbed0
+
+""" Computation of the containment box of a Lar Struct or Model """
+import copy
+def box(model):
+    if isinstance(model,Mat): return []
+    elif isinstance(model,Struct):
+        dummyModel = copy.deepcopy(model)
+        dummyModel.body = [term if (not isinstance(term,Struct)) else [term.box,[[0,1]]]  for term in model.body]
+        listOfModels = evalStruct( dummyModel )
+        print "listOfModels =",listOfModels
+        dim = len(listOfModels[0][0][0])
+        theMin,theMax = box(listOfModels[0]) 
+        for theModel in listOfModels[1:]:
+            modelMin, modelMax = box(theModel)
+            theMin = [val if val<theMin[k] else theMin[k] for k,val in enumerate(modelMin)]
+            theMax = [val if val>theMax[k] else theMax[k] for k,val in enumerate(modelMax)]
+        return [theMin,theMax]
+    elif isinstance(model,Model):
+        V = model.verts
+    elif (isinstance(model,tuple) or isinstance(model,list)) and len(model)==2:
+        V = model[0]
+    coords = TRANS(V)
+    theMin = [min(coord) for coord in coords]
+    theMax = [max(coord) for coord in coords]
+    return [theMin,theMax]
 
