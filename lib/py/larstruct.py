@@ -176,9 +176,12 @@ class Model:
 
 class Struct:
     """ The assembly type of the LAR package """
-    def __init__(self,data,name='None'):
+    def __init__(self,data,name=None):
         self.body = data
-        self.name = str(name)
+        if name != None: 
+            self.name = str(name)
+        else:
+            self.name = str(id(self))
         self.box = box(self) 
     def __name__(self):
         return self.name
