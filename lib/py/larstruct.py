@@ -109,8 +109,6 @@ def checkStruct(lst):
 
         TODO: aggiungere test sulla dimensione minima delle celle (legata a quella di immersione)
     """
-    print "lst =",lst
-    print "flatten(lst) =",flatten(lst)
     vertsDims = [computeDim(obj) for obj in flatten(lst)]
     vertsDims = [dim for dim in vertsDims if dim!=None and dim!=0]
     if EQ(vertsDims) and len(vertsDims)!=0: 
@@ -137,7 +135,6 @@ def computeDim(obj):
 
 """ Traversal of a scene multigraph """
 def traversal(CTM, stack, obj, scene=[]):
-    print "\n CTM, obj =",obj
     for i in range(len(obj)):
         if isinstance(obj[i],Model): 
             scene += [larApply(CTM)(obj[i])]
@@ -153,9 +150,7 @@ def traversal(CTM, stack, obj, scene=[]):
 
 def evalStruct(struct):
     dim = checkStruct(struct.body)
-    print "\n dim =",dim
     CTM, stack = scipy.identity(dim+1), []
-    print "\n CTM, stack =",CTM, stack
     scene = traversal(CTM, stack, struct, []) 
     return scene
 
@@ -174,6 +169,7 @@ class Model:
     def __getitem__(self,i):
         return list((self.verts,self.cells))[i]
 
+from myfont import *
 class Struct:
     """ The assembly type of the LAR package """
     def __init__(self,data,name=None):
@@ -196,6 +192,16 @@ class Struct:
     def __repr__(self):
         return "<Struct name: %s>" % self.__name__()
         #return "'Struct(%s,%s)'" % (str(self.body),str(str(self.__name__())))
+    def draw(self,color=WHITE,scaling=1):
+      vmin,vmax = self.box
+      delta = VECTDIFF([vmax,vmin])
+      point = CCOMB(self.box)
+      scalingFactor = scaling*delta[0]/20.
+      text = TEXTWITHATTRIBUTES (TEXTALIGNMENT='centre', TEXTANGLE=0,
+               TEXTWIDTH=0.1*scalingFactor, 
+               TEXTHEIGHT=0.2*scalingFactor,
+               TEXTSPACING=0.025*scalingFactor)
+      return T([1,2,3])(point)(COLOR(color)(text(self.name)))
 
 """ Structure to pair (Vertices,Cells) conversion """
 
@@ -242,7 +248,6 @@ def box(model):
         dummyModel = copy.deepcopy(model)
         dummyModel.body = [term if (not isinstance(term,Struct)) else [term.box,[[0,1]]]  for term in model.body]
         listOfModels = evalStruct( dummyModel )
-        print "listOfModels =",listOfModels
         dim = len(listOfModels[0][0][0])
         theMin,theMax = box(listOfModels[0]) 
         for theModel in listOfModels[1:]:

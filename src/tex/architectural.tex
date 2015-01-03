@@ -492,13 +492,25 @@ The \texttt{face2edge} operator takes every consecutive pair of vertex indices f
 
 \paragraph{From LAR model to list of polylines}
 The function \texttt{lar2polylines}
-transform a LAR model into a list of polylines, i.e.~of (closed) lists of 2D points, where the last point coincides with the first one.
+transforms a LAR model into a list of polylines, i.e.~of (closed) lists of 2D points, where the last point coincides with the first one.
 %-------------------------------------------------------------------------------
 @D From faces FV to list of edges EV
 @{def lar2polylines (model):
 	""" From LAR model to list of polylines """
 	V,FV = model
 	return [[V[v] for v in cell]+[V[cell[0]]] for cell in FV]
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{From LAR model to list of lines}
+The function \texttt{lar2polylines}
+transform a LAR model into a list of lines, i.e.~of pairs of points.
+%-------------------------------------------------------------------------------
+@D From faces FV to list of edges EV
+@{def lar2lines (model):
+	""" From LAR model to list of lines """
+	V,EV = model
+	return [[V[v] for v in cell] for cell in EV]
 @}
 %-------------------------------------------------------------------------------
 

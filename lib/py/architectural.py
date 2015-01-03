@@ -18,6 +18,10 @@ def lar2polylines (model):
    """ From LAR model to list of polylines """
    V,FV = model
    return [[V[v] for v in cell]+[V[cell[0]]] for cell in FV]
+def lar2lines (model):
+   """ From LAR model to list of lines """
+   V,EV = model
+   return [[V[v] for v in cell] for cell in EV]
 
 
 def larCells(fun):

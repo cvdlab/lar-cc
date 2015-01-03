@@ -502,6 +502,18 @@ transform a LAR model into a list of polylines, i.e.~of (closed) lists of 2D poi
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{From LAR model to list of lines}
+The function \texttt{lar2polylines}
+transform a LAR model into a list of lines, i.e.~of pairs of points.
+%-------------------------------------------------------------------------------
+@D From faces FV to list of edges EV
+@{def lar2lines (model):
+	""" From LAR model to list of lines """
+	V,EV = model
+	return [[V[v] for v in cell] for cell in EV]
+@}
+%-------------------------------------------------------------------------------
+
 \paragraph{Boundary cells ($2D\to 1D$) computation}
 The computations of boundary cells is executed by calling the \texttt{boundaryCells} from the \texttt{larcc} module.
 
