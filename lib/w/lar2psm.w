@@ -115,7 +115,8 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 %------------------------------------------------------------------
 @d MaKe a list of HPC objects from a LAR model
 @{def MKPOLS (model):
-    V,FV = model
+    if len(model)==2: V,FV = model
+    elif len(model)==3: V,FV,EV = model
     pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
     return pols  
 @| MKPOLS @}

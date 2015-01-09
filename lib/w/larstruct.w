@@ -81,9 +81,11 @@ First we state the general rules that will be satisfied by the matrices used in 
             CV = copy.copy(model.cells)
             return Model((V,CV))
         elif isinstance(model,tuple) or isinstance(model,list):
-            V,CV = model
+            if len(model)==2: V,CV = model
+            elif len(model)==3: V,CV,FV = model
             V = scipy.dot([v+[1.0] for v in V], affineMatrix.T).tolist()
-            return [v[:-1] for v in V],CV
+            if len(model)==2: return [v[:-1] for v in V],CV
+            elif len(model)==3: return [v[:-1] for v in V],CV,FV
     return larApply0
 @}
 %-------------------------------------------------------------------------------
@@ -233,15 +235,15 @@ class Struct:
         return "<Struct name: %s>" % self.__name__()
         #return "'Struct(%s,%s)'" % (str(self.body),str(str(self.__name__())))
     def draw(self,color=WHITE,scaling=1):
-    	vmin,vmax = self.box
-		delta = VECTDIFF([vmax,vmin])
-		point = CCOMB(self.box)
-    	scalingFactor = scaling*delta[0]/20.
-    	text = TEXTWITHATTRIBUTES (TEXTALIGNMENT='centre', TEXTANGLE=0,
-					TEXTWIDTH=0.1*scalingFactor, 
-					TEXTHEIGHT=0.2*scalingFactor,
-					TEXTSPACING=0.025*scalingFactor)
-		return T([1,2,3])(point)(COLOR(color)(text(self.name)))
+        vmin,vmax = self.box
+        delta = VECTDIFF([vmax,vmin])
+        point = CCOMB(self.box)
+        scalingFactor = scaling*delta[0]/20.
+        text = TEXTWITHATTRIBUTES (TEXTALIGNMENT='centre', TEXTANGLE=0,
+                    TEXTWIDTH=0.1*scalingFactor, 
+                    TEXTHEIGHT=0.2*scalingFactor,
+                    TEXTSPACING=0.025*scalingFactor)
+        return T([1,2,3])(point)(COLOR(color)(text(self.name)))
 @}
 %-------------------------------------------------------------------------------
 
@@ -258,7 +260,7 @@ def box(model):
         dummyModel = copy.deepcopy(model)
         dummyModel.body = [term if (not isinstance(term,Struct)) else [term.box,[[0,1]]]  for term in model.body]
         listOfModels = evalStruct( dummyModel )
-        dim = len(listOfModels[0][0][0])
+        dim = checkStruct(listOfModels)
         theMin,theMax = box(listOfModels[0]) 
         for theModel in listOfModels[1:]:
             modelMin, modelMax = box(theModel)
@@ -267,7 +269,7 @@ def box(model):
         return [theMin,theMax]
     elif isinstance(model,Model):
         V = model.verts
-    elif (isinstance(model,tuple) or isinstance(model,list)) and len(model)==2:
+    elif (isinstance(model,tuple) or isinstance(model,list)) and (len(model)==2 or len(model)==3):
         V = model[0]
     coords = TRANS(V)
     theMin = [min(coord) for coord in coords]
@@ -290,13 +292,14 @@ def box(model):
 def struct2lar(structure):
     listOfModels = evalStruct(structure)
     vertDict = dict()
-    index,defaultValue,CW,W = -1,-1,[],[]
+    index,defaultValue,CW,W,FW = -1,-1,[],[],[]
         
     for model in listOfModels:
         if isinstance(model,Model):
             V,FV = model.verts,model.cells
-        elif (isinstance(model,tuple) or isinstance(model,list)) and len(model)==2:
-            V,FV = model
+        elif (isinstance(model,tuple) or isinstance(model,list)):
+            if len(model)==2: V,FV = model
+            elif len(model)==3: V,FV,EV = model
         for k,incell in enumerate(FV):
             outcell = []
             for v in incell:
@@ -309,8 +312,22 @@ def struct2lar(structure):
                 else: 
                     outcell += [vertDict[key]]
             CW += [outcell]
+        if len(model)==3:
+            for k,incell in enumerate(EV):
+                outcell = []
+                for v in incell:
+                    key = vcode(V[v])
+                    if vertDict.get(key,defaultValue) == defaultValue:
+                        index += 1
+                        vertDict[key] = index
+                        outcell += [index]
+                        W += [eval(key)]
+                    else: 
+                        outcell += [vertDict[key]]
+                FW += [outcell]
             
-    return W,CW
+    if len(model)==2: return W,CW
+    if len(model)==3: return W,CW,FW
 @}
 %-------------------------------------------------------------------------------
 \subsection{Embedding or projecting LAR models}
@@ -328,12 +345,14 @@ A projection transformation, that removes the last $k$ coordinate of vertices, w
 @D Embedding and projecting a geometric model
 @{def larEmbed(k):
     def larEmbed0(model):
-        V,CV = model
+        if len(model)==2: V,CV = model
+        elif len(model)==3: V,CV,FV = model
         if k>0:
             V = [v+[0.]*k for v in V] 
         elif k<0:
             V = [v[:-k] for v in V] 
-        return V,CV
+        if len(model)==2: return V,CV
+        elif len(model)==3: return V,CV,FV
     return larEmbed0
 @}
 %-------------------------------------------------------------------------------
@@ -455,6 +474,50 @@ The previous traversal algorithm is here customised for scene multigraph, where 
 \paragraph{Check models for common dimension}
 The input list of a call to \texttt{larStruct} primitive is preliminary checked for uniform dimensionality of the enclosed LAR models and transformations. The common dimension \texttt{dim} of models and matrices is returned by the function \texttt{checkStruct}, within the class definition \texttt{Struct} in the module \texttt{lar2psm}. Otherwise, an exception is generated (TODO).
 
+Currently, when $k$ is zero in the call to \texttt{embedStruct}, the \texttt[dim] of the first \texttt{struct} element is returned. Conversely, if $k>0$, then \texttt{struct} is returned, embedded in the $x_{d+1} = x_{d+2} = \cdots = x_{d+k} = 0$ subspace.
+
+%-------------------------------------------------------------------------------
+@D Check for dimension of a structure element (Verts or V)
+@{from copy import deepcopy
+
+def embedStruct(k):
+    def embedStruct0(struct):
+        struct,dim = embedding(k, struct) 
+        if k==0: return struct,dim
+        else: return struct
+    return embedStruct0
+
+def embedding(k, struct):
+    out = deepcopy(struct)
+    if isinstance(out,Struct):
+        if k==0: 
+            return out, len(out.box[0])
+        out.box[0] = out.box[0]+k*[0.0]
+        out.box[1] = out.box[1]+k*[0.0]
+        for i,obj in enumerate(out.body):
+            if isinstance(obj,Model): 
+                out.body[i] = larEmbed(k)(obj)
+                out.n = out.n + k
+            elif (isinstance(obj,tuple) or isinstance(obj,list)) and len(obj)==2:
+                out.body[i] = larEmbed(k)(obj)
+            elif isinstance(obj,Mat): 
+                out.body[i] = obj # TODO: embed matrix in identity
+            elif isinstance(obj,Struct):
+                out.body[i] = embedding(k, obj)
+    elif not isinstance(struct,Struct):
+        obj = struct[0]
+        if isinstance(obj,Struct): 
+            return struct,len(obj.box[0])
+        elif isinstance(obj,Model): 
+            return struct,obj.n
+        elif (isinstance(obj,tuple) or isinstance(obj,list)):
+            return struct,len(obj[0][0])
+        elif isinstance(obj,Mat): 
+            return struct,len(obj[0])-1
+    return out,k
+@}
+%-------------------------------------------------------------------------------
+
 
 %-------------------------------------------------------------------------------
 @D Check for dimension of a structure element (Verts or V)
@@ -464,29 +527,8 @@ def checkStruct(lst):
 
         TODO: aggiungere test sulla dimensione minima delle celle (legata a quella di immersione)
     """
-    vertsDims = [computeDim(obj) for obj in flatten(lst)]
-    vertsDims = [dim for dim in vertsDims if dim!=None and dim!=0]
-    if EQ(vertsDims) and len(vertsDims)!=0: 
-        return vertsDims[0]
-    else: 
-        print "\n vertsDims =", vertsDims
-        print "*** LAR ERROR: Struct dimension mismatch."
-
-def computeDim(obj):
-    """ Check for dimension of a structure element (Verts or V). 
-    """
-    if (isinstance(obj,Model)):
-        return obj.n
-    elif (isinstance(obj,tuple) or isinstance(obj,list)) and len(obj)==2:
-        V = obj[0]
-        if (isinstance(V,list) and isinstance(V[0],list) and 
-                (isinstance(V[0][0],float) or isinstance(V[0][0],int))): 
-            dim = len(V[0])
-            return dim
-    elif (isinstance(obj,Mat)):
-        dim = obj.shape[0]-1
-        return dim
-    else: return 0
+    lst,dim = embedStruct(0)(lst)
+    return dim
 @}
 %-------------------------------------------------------------------------------
 
@@ -547,7 +589,8 @@ The \texttt{traversal} algorithm decides between three different cases, dependin
     for i in range(len(obj)):
         if isinstance(obj[i],Model): 
             scene += [larApply(CTM)(obj[i])]
-        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+                len(obj[i])==2 or len(obj[i])==3):
             scene += [larApply(CTM)(obj[i])]
         elif isinstance(obj[i],Mat): 
             CTM = scipy.dot(CTM, obj[i])

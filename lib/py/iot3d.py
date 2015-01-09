@@ -28,7 +28,8 @@ def polyline2lar(polylines):
    items = TRANS(Vdict.items())
    V = TRANS(sorted(zip(items[1],AA(eval)(items[0]))))[1]
    #FV = AA(sorted)(FV)
-   return V,FV
+   EV = face2edge(FV)
+   return V,FV,EV
 
 """ transform a lar model to a list of lar structures """
 def lar2Structs(model):
@@ -62,7 +63,6 @@ def printStruct2GeoJson(path,struct):
     file_handle = open(path+filename+".yml")
     my_dictionary = yaml.safe_load(file_handle)
     file_handle.close()
-    print "ECCOMI"
     with open(path+filename+".json", 'w') as outfile:
          json.dump(my_dictionary, outfile, sort_keys=True, indent=4, ensure_ascii=False)
     

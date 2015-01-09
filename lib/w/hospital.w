@@ -60,8 +60,6 @@ In this module we develop stepwise the concept and the preliminary building prog
 
 \subsection{Reference grid}
 
-\subsection{Architecture of modeling process}
-
 \paragraph{Reference grid}
 %-------------------------------------------------------------------------------
 @D Reference grid
@@ -84,7 +82,14 @@ def index2coords(theArray):
 @}
 %-------------------------------------------------------------------------------
 
+
+\subsection{Architecture of modeling process}
+
+
+
+%===============================================================================
 \section{Building units planning}
+%===============================================================================
 
 \subsection{Wire-frame input}
 
@@ -376,8 +381,7 @@ HospitalRoom = Struct([polyline2lar([room,restRoom])],"Room")
 DounbleRoom =  Struct([HospitalRoom,t(0,1),s(1,-1),HospitalRoom])
 HalfWard = Struct(4*[DounbleRoom,t(0,1)])
 Ward = Struct([HalfWard, wardServices, t(3,0),s(-1,1), HalfWard])
-V,FV = struct2lar(Ward)
-EV = face2edge(FV)
+V,FV,EV = struct2lar(Ward)
 theWard = lar2lines((V,FV))
 @}
 %-------------------------------------------------------------------------------
@@ -491,8 +495,8 @@ surgicalWard2 = buildingUnit(SurgicalWard2,'SurgicalWard2')
 @< Third floor's building units @>
 
 buildingUnits4 = [generalWard1,surgicalWard2,publicCore4,serviceCore14,serviceCore24,
-				filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
-				corridor4c1,corridor4c2]
+                filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
+                corridor4c1,corridor4c2]
 
 thirdFloor = Struct(buildingUnits4, "thirdFloor")
 @}
@@ -525,8 +529,8 @@ pediatricWard2 = buildingUnit(PediatricWard2,'PediatricWard2')
 @< Fourth floor's building units @>
 
 buildingUnits5 = [pediatricWard1,pediatricWard2,publicCore4,serviceCore14,serviceCore24,
-				filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
-				corridor4c1,corridor4c2]
+                filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
+                corridor4c1,corridor4c2]
 
 fourthFloor = Struct(buildingUnits5, "fourthFloor")
 @}
@@ -560,8 +564,8 @@ generalWard3 = buildingUnit(GeneralWard3,'GeneralWard3')
 @< Fifth floor's building units @>
 
 buildingUnits6 = [generalWard2,generalWard3,publicCore4,serviceCore14,serviceCore24,
-				filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
-				corridor4c1,corridor4c2]
+                filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
+                corridor4c1,corridor4c2]
 
 fifthFloor = Struct(buildingUnits6, "fifthFloor")
 @}
@@ -573,14 +577,127 @@ fifthFloor = Struct(buildingUnits6, "fifthFloor")
 
 \subsubsection{Building structure}
 
+\paragraph{Column locations on grid}
+%-------------------------------------------------------------------------------
+@D Column locations on grid 
+@{""" Column locations on grid """
+SecondPillars = [((4,5),(1,10)),((3,4),(1,4)),((3,4),(7,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),((9,10),(4,7))]
+FirstPillars = [((0,5),(1,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),((9,10),(4,7))]
+FrontPillars = [((8,10),(0,11)),((10,11),(0,6)),((10,11),(7,11)),((11,12),(0,3)),((11,12),(4,11))]
+MezaninePillars = FirstPillars + FrontPillars
+BottomPillars = [((12,15),(0,5))]
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Generation of beams and structural chains}
+%-------------------------------------------------------------------------------
+@D Generation of beams and structural chains 
+@{""" Generation of beams and structural chains """
+def ManhattanTest(nodes,nDict,i,j):
+	hi,ki = nodes[i]
+	hj,kj = nodes[j]
+	return nDict.setdefault((hi,kj),-1)!=-1 and nDict.setdefault((hj,ki),-1)!=-1
+
+def structureGrid(loci):
+    nodes = AA(tuple)(CAT([CART([range(*I), range(*J)]) for (I,J) in loci]))
+    nDict = dict([(node,k) for k,node in enumerate(nodes)])
+    arcs = CAT([[(nDict[(i,j)], nDict.setdefault((i,j+1),-1)),
+             (nDict[(i,j)], nDict.setdefault((i,j-1),-1)),
+             (nDict[(i,j)], nDict.setdefault((i+1,j),-1)),
+             (nDict[(i,j)], nDict.setdefault((i-1,j),-1))] for (i,j) in nodes])
+    arcs1 = list(set(AA(tuple)([sorted(arc) for arc in arcs if arc[1]!=-1])))
+    arcs = CAT([[(nDict[(i,j)], nDict.setdefault((i+1,j+1),-1)),
+             (nDict[(i,j)], nDict.setdefault((i+1,j-1),-1)),
+             (nDict[(i,j)], nDict.setdefault((i-1,j-1),-1)),
+             (nDict[(i,j)], nDict.setdefault((i-1,j+1),-1))] for (i,j) in nodes])
+    arcs2 = list(set(AA(tuple)([sorted(arc) for arc in arcs if arc[1]!=-1])))
+    arcs2 = [[i,j] for i,j in arcs2 if ManhattanTest(nodes,nDict,i,j)]
+    nodes = metric([[j,i] for i,j in nodes])
+    return nodes, arcs1,arcs2
+@}
+%-------------------------------------------------------------------------------
+    
+\paragraph{Instancing of 3D structure frame}
+%-------------------------------------------------------------------------------
+@D Instancing of 3D structure frame 
+@{""" Instancing of 3D structure frame """
+nodes0, arcs10,arcs20 = structureGrid(MezaninePillars+BottomPillars)
+nodes1, arcs11,arcs21 = structureGrid(MezaninePillars)
+nodes2, arcs12,arcs22 = structureGrid(FirstPillars)
+nodes3, arcs13,arcs23 = structureGrid(SecondPillars)
+nodes4, arcs14,arcs24 = structureGrid(SecondPillars)
+nodes5, arcs15,arcs25 = structureGrid(SecondPillars)
+nodes6, arcs16,arcs26 = structureGrid(SecondPillars)
+VIEW(STRUCT(MKPOLS((nodes0, arcs10+arcs20)) ))
+@}
+%-------------------------------------------------------------------------------
 
 
+\paragraph{Assembling 3D structure frame}
+%-------------------------------------------------------------------------------
+@D Assembling 3D structure frame 
+@{""" Assembling 3D structure frame """
+Nodes0 = AA(lambda v: list(v)+[4-.3])(nodes0)
+Nodes1 = AA(lambda v: list(v)+[8-.3])(nodes1)
+Nodes2 = AA(lambda v: list(v)+[12-.3])(nodes2)
+Nodes3 = AA(lambda v: list(v)+[16-.3])(nodes3)
+Nodes4 = AA(lambda v: list(v)+[20-.3])(nodes4)
+Nodes5 = AA(lambda v: list(v)+[24-.3])(nodes5)
+Nodes6 = AA(lambda v: list(v)+[28-.3])(nodes6)
+
+Frame0 = STRUCT(MKPOLS((Nodes0, arcs10))+MKPOLS((Nodes1, arcs11))+
+	MKPOLS((Nodes2, arcs12))+MKPOLS((Nodes3, arcs13))+
+	MKPOLS((Nodes4, arcs14))+MKPOLS((Nodes5, arcs15))+
+	MKPOLS((Nodes6, arcs16)) + \
+	CONS(AA(T([1,2,3]))(Nodes0+Nodes1+Nodes2+Nodes3+Nodes4+Nodes5+Nodes6))(
+	POLYLINE([[0,0,0],[0,0,-4]])  ))
+
+Frame1 = STRUCT(MKPOLS((Nodes0, arcs20))+MKPOLS((Nodes1, arcs21))+
+	MKPOLS((Nodes2, arcs22))+MKPOLS((Nodes3, arcs23))+
+	MKPOLS((Nodes4, arcs24))+MKPOLS((Nodes5, arcs25))+
+	MKPOLS((Nodes6, arcs26)) )
+SteelFrame = OFFSET([.2,.2,.3])(STRUCT([Frame0,Frame1]))
+"""
+ConcreteFrame = OFFSET([.4,.4,.8])(Frame0)
+"""
+VIEW(Frame0)
+VIEW(STRUCT([Frame0,Frame1]))
+@}
+%-------------------------------------------------------------------------------
 
 
+\paragraph{2.5D building assembly}
+%-------------------------------------------------------------------------------
+@D 2.5D building assembly
+@{""" 2.5D building assembly """
+def embedBuildingUnitsIn3D(floors):
+    for floor in floors:
+        for buildingUnit in floor.body:
+            buildingUnit = larEmbed(1)(buildingUnit)
+    return floors
+        
+floors = [groundFloor,mezanineFloor,firstFloor,
+                secondFloor,thirdFloor,fourthFloor,fifthFloor]
+floors3D = AA(COMP([Struct,AA(larEmbed(1)),evalStruct]))(floors)
+building = evalStruct(Struct(CAT(DISTR([floors3D,t(0,0,4)]))))
+storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
 
+VIEW(STRUCT([storeys,SteelFrame] + CAT(AA(MKPOLS)(AA(CONS([S1,S3]))(building))) ))
+@}
+%-------------------------------------------------------------------------------
 
+%-------------------------------------------------------------------------------
+@D test
+@{""" 2.5D building assembly """
+floors = Struct([groundFloor,mezanineFloor,firstFloor,
+                secondFloor,thirdFloor,fourthFloor,fifthFloor,fifthFloor],"building")
 
-
+floors3D = embedStruct(1)(floors)
+building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])))
+models = AA(CONS([S1,S3]))(building)
+VIEW(STRUCT(CAT(AA(MKPOLS)(models))))
+@}
+%-------------------------------------------------------------------------------
 
 
 
@@ -588,8 +705,8 @@ fifthFloor = Struct(buildingUnits6, "fifthFloor")
 
 \paragraph{Storey viewing}
 %-------------------------------------------------------------------------------
-@D Storey viewing
-@{""" Storey viewing """
+@D Storey generation
+@{""" Storey generation """
 def structDraw(color,scaling):
     def structDraw0(obj): return obj.draw(color,scaling)
     return structDraw0
@@ -597,40 +714,52 @@ def structDraw(color,scaling):
 ground,W,EV = floor(X,Y)(groundFloor)
 ground2D = STRUCT([ground, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
             AA(structDraw(RED,10))(buildingUnits0))
-VIEW(ground2D)
-
 mezanine,W,EV = floor(X,Y)(mezanineFloor)
 mezanine2D = STRUCT([mezanine, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
             AA(structDraw(RED,10))(buildingUnits1))
-VIEW(mezanine2D)
-
 first,W,EV = floor(X,Y)(firstFloor)
 first2D = STRUCT([first, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
             AA(structDraw(RED,10))(buildingUnits2))
-VIEW(first2D)
-
 second,W,EV = floor(X,Y)(secondFloor)
 second2D = STRUCT([second, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
             AA(structDraw(RED,10))(buildingUnits3))
-VIEW(second2D)
-
 third,W,EV = floor(X,Y)(thirdFloor)
 third2D = STRUCT([third, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
             AA(structDraw(RED,10))(buildingUnits4))
-VIEW(third2D)
-
 fourth,W,EV = floor(X,Y)(fourthFloor)
 fourth2D = STRUCT([fourth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
             AA(structDraw(RED,10))(buildingUnits5))
-VIEW(fourth2D)
-
 fifth,W,EV = floor(X,Y)(fifthFloor)
 fifth2D = STRUCT([fifth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
             AA(structDraw(RED,10))(buildingUnits6))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Storey viewing
+@{""" Storey viewing """
+VIEW(ground2D)
+VIEW(mezanine2D)
+VIEW(first2D)
+VIEW(second2D)
+VIEW(third2D)
+VIEW(fourth2D)
 VIEW(fifth2D)
 @}
 %-------------------------------------------------------------------------------
 
+
+\paragraph{aaaa}
+%-------------------------------------------------------------------------------
+@D aaaa
+@{""" aaaa """
+
+@}
+%-------------------------------------------------------------------------------
+
+\subsection{Structural frame}
+
+Complex of columns, and beams, girders, spandrels, and trusses connected to one another and to the columns anchored in a foundation, as well as other components or members necessary for the stability of a structure. Floors and roof panels, not connected to the columns (and called secondary members) are not considered part of the structural frame.
 
 \paragraph{aaaa}
 %-------------------------------------------------------------------------------
@@ -654,14 +783,18 @@ VIEW(fifth2D)
 \subsection{Design review}
 
 
+%===============================================================================
 \section{System semantics}
+%===============================================================================
 
 \subsection{Topological requirements}
 
 \subsection{Geometrical requirements}
 
 
+%===============================================================================
 \section{Code exporting}
+%===============================================================================
 
 \paragraph{The \texttt{Hospital.py} module}
 %-------------------------------------------------------------------------------
@@ -680,12 +813,21 @@ DEBUG = True
 @< Coding utilities @>
 @< From array indices to grid coordinates @>
 @< Storey input @>
+@< Storey generation @>
 @< Storey viewing @>
+@< Column locations on grid @>
+@< Generation of beams and structural chains @>
+@< Instancing of 3D structure frame @>
+@< Assembling 3D structure frame @>
+@< 2.5D building assembly @>
 @}
 %-------------------------------------------------------------------------------
 
 
-\subsection{Code utilities}
+%===============================================================================
+\appendix
+\section{Code utilities}
+%===============================================================================
 
 \paragraph{Coding utilities}
 %-------------------------------------------------------------------------------
@@ -749,8 +891,7 @@ def embed(z):
 @{""" Solidify the boundary of polyline-like building units """
 def floor(X,Y):
     def floor0(structure2D):
-        V,FV = struct2lar(structure2D)
-        EV = face2edge(FV)
+        V,FV,EV = struct2lar(structure2D)
         BE = [EV[e] for e in boundaryCells(FV,EV)]
         theFloor = SOLIDIFY(STRUCT([POLYLINE([V[v],V[w]]) for v,w in BE]))
         return theFloor,V,EV

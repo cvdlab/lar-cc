@@ -2,7 +2,7 @@ import sys; sys.path.insert(0, 'lib/py/')
 from simplexn import *
 from larcc import *
 
-V,CV = larSimplexGrid1([20,20,5])
+V,CV = larSimplexGrid1([10,10,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 SK2 = (V,larSimplexFacets(CV))
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(SK2)))

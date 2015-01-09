@@ -93,7 +93,8 @@ def polyline2lar(polylines):
 	items = TRANS(Vdict.items())
 	V = TRANS(sorted(zip(items[1],AA(eval)(items[0]))))[1]
 	#FV = AA(sorted)(FV)
-	return V,FV
+	EV = face2edge(FV)
+	return V,FV,EV
 @}
 %-------------------------------------------------------------------------------
 

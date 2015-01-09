@@ -33,7 +33,8 @@ def vcode (vect):
     return prepKey(AA(fixedPrec)(vect))
 
 def MKPOLS (model):
-    V,FV = model
+    if len(model)==2: V,FV = model
+    elif len(model)==3: V,FV,EV = model
     pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
     return pols  
 

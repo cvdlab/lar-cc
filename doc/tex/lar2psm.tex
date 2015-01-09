@@ -205,7 +205,8 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def MKPOLS (model):@\\
-\mbox{}\verb@    V,FV = model@\\
+\mbox{}\verb@    if len(model)==2: V,FV = model@\\
+\mbox{}\verb@    elif len(model)==3: V,FV,EV = model@\\
 \mbox{}\verb@    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]@\\
 \mbox{}\verb@    return pols  @\\
 \mbox{}\verb@@{\NWsep}
