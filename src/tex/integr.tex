@@ -67,8 +67,8 @@ A finite integration method from\cite{CattaniP-BIL1990} is developed here the co
 %-------------------------------------------------------------------------------
 @D Surface and volume integrals
 @{""" Surface and volume integrals """
-def Surface(P):
-    return II(P, 0, 0, 0)
+def Surface(P, signed=False):
+    return II(P, 0, 0, 0, signed)
 def Volume(P):
     return III(P, 0, 0, 0)
 @}
@@ -135,12 +135,12 @@ def InertiaMoment(P):
 %-------------------------------------------------------------------------------
 @D Basic integration functions
 @{""" Basic integration functions """
-def II(P, alpha, beta, gamma):
+def II(P, alpha, beta, gamma, signed):
     w = 0
     V, FV = P
     for i in range(len(FV)):
         tau = [V[v] for v in FV[i]]
-        w += T(tau, alpha, beta, gamma)
+        w += TT(tau, alpha, beta, gamma, signed)
     return w
 
 def III(P, alpha, beta, gamma):
@@ -152,7 +152,7 @@ def III(P, alpha, beta, gamma):
         a = VECTDIFF([va,vo])
         b = VECTDIFF([vb,vo])
         c = VECTPROD([a,b])
-        w += (c[0]/VECTNORM(c)) * T(tau, alpha+1, beta, gamma)
+        w += (c[0]/VECTNORM(c)) * TT(tau, alpha+1, beta, gamma)
     return w/(alpha + 1)
 
 def M(alpha, beta):
@@ -169,7 +169,7 @@ def M(alpha, beta):
 %-------------------------------------------------------------------------------
 @D The main integration routine
 @{""" The main integration routine """
-def T(tau, alpha, beta, gamma):
+def TT(tau, alpha, beta, gamma, signed=False):
 	vo,va,vb = tau
 	a = VECTDIFF([va,vo])
 	b = VECTDIFF([vb,vo])
@@ -190,9 +190,11 @@ def T(tau, alpha, beta, gamma):
 					s2 += CHOOSE([h, i]) * POWER([a[0], h-i]) * POWER([b[0], i]) * s3;
 				sl += CHOOSE ([alpha, h]) * CHOOSE ([beta, k]) * CHOOSE ([gamma, m]) \
 					* POWER([vo[0], alpha-h]) * POWER([vo[1], beta-k]) \
-					* POWER([vo[2], gamma-m]) * s2;
-	c = VECTPROD([a, b]);
-	return sl * VECTNORM(c);
+					* POWER([vo[2], gamma-m]) * s2
+	c = VECTPROD([a, b])
+	if not signed: return sl * VECTNORM(c)
+	elif a[2]==b[2]==0.0: return sl * VECTNORM(c) * SIGN(c[2])
+	else: print "error: in signed surface integration"
 @}
 %-------------------------------------------------------------------------------
 
@@ -252,40 +254,91 @@ print Volume(P)
 
 
 \paragraph{Integrals on the standard 3D cube}
+
+Here we give a triangulation of the boundary of the unit standard cube in 3D,
+positively oriented, i.e. with all the triangle normals pointing towards the
+exterior of the solid cube.
+
+Notice that inverting the boundary orientation changes the sign of the volume, 
+but does not change the centroid.
+
 %-------------------------------------------------------------------------------
 @O test/py/integr/test03.py
 @{""" Integrals on the standard 3D cube """
 import sys; sys.path.insert(0, 'lib/py/')
 from integr import *
 
-V = [[0, 0, 0],
-    [1, 0, 0],
-    [0, 1, 0],
-    [1, 1, 0],
-    [0, 0, 1],
-    [1, 0, 1],
-    [0, 1, 1],
-    [1, 1, 1]]
+V = [[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]]
 
-FV = [[1, 0, 2],
-      [0, 1, 4],
-      [2, 0, 4],
-      [1, 2, 3],
-      [1, 3, 5],
-      [4, 1, 5],
-      [3, 2, 6],
-      [2, 4, 6],
-      [5, 3, 7],
-      [3, 6, 7],
-      [4, 5, 6],
-      [6, 5, 7]]
+FV = [[1,0,2],[0,1,4],[2,0,4],[1,2,3],[1,3,5],[4,1,5],[3,2,6],[2,4,6],
+	  [5,3,7],[3,6,7],[4,5,6],[6,5,7]]
 
 P = (V,FV)
+print Volume(P)
+print Centroid(P)
+
+""" changing the boundary orientation changes the sign of volume,
+	 but not changes the centroid """
+
+P = (V,AA(REVERSE)(FV))
 print Volume(P)
 print Centroid(P)
 @}
 %-------------------------------------------------------------------------------
 
+
+\paragraph{Integrals on a non-convex 2D polyline}
+
+Some problem appear when using the integration method~\cite{CattaniP-BIL1990} on 2D models.
+In fact, the basic integration formulas refer to the three-variate monomial $x^\alpha y^\beta z^gamma$, 
+and work even for the integration over 2D domains embedded in 3D, but of course in this case they do not return
+the integral values as \emph{signed} real numbers, but as positive numbers, since a positive orientation for a open 2D domain in 3D may be defined only locally.
+
+The problem is solved by using the variable \texttt{signed}, set to \texttt{True} for non-convex polygons embedded in $z=0$,
+as shown in the following example.
+
+%-------------------------------------------------------------------------------
+@O test/py/integr/test04.py
+@{""" Integrals on 2D non-convex polyline """
+import sys; sys.path.insert(0, 'lib/py/')
+from integr import *
+from iot3d import *
+
+polyline = TRANS([[10,10,20,40,30,30,15,15],[10,20,30,20,10,15,15,10]])
+model = polyline2lar([polyline])
+VIEW(POLYLINE(polyline+[polyline[0]]))
+
+V,FV,EV = model
+tria = FV[0]
+triangles = AA(C(AL)(0))(TRANS([tria[1:-1],tria[2:]]))
+V = [v+[0.0] for v in V]
+P = V,triangles
+
+area = Surface(P,signed=True)
+print "area =",area
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@O test/py/integr/test05.py
+@{""" Integrals on 2D non-convex polyline """
+import sys; sys.path.insert(0, 'lib/py/')
+from integr import *
+from hospital import *
+
+V,FV,EV = openCourt11.body[0]
+tria = FV[0]
+triangles = AA(C(AL)(0))(TRANS([tria[1:-1],tria[2:]]))
+V = [v+[0.0] for v in V]
+P = V,triangles
+
+area = Surface(P,signed=True)
+print "area =",area
+@}
+%-------------------------------------------------------------------------------
+
+   
 
 \appendix
 \section{Utilities}

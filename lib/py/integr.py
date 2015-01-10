@@ -5,8 +5,8 @@ import sys; sys.path.insert(0, 'lib/py/')
 from lar2psm import *
 
 """ Surface and volume integrals """
-def Surface(P):
-    return II(P, 0, 0, 0)
+def Surface(P, signed=False):
+    return II(P, 0, 0, 0, signed)
 def Volume(P):
     return III(P, 0, 0, 0)
 
@@ -51,12 +51,12 @@ def InertiaMoment(P):
     return out
 
 """ Basic integration functions """
-def II(P, alpha, beta, gamma):
+def II(P, alpha, beta, gamma, signed):
     w = 0
     V, FV = P
     for i in range(len(FV)):
         tau = [V[v] for v in FV[i]]
-        w += T(tau, alpha, beta, gamma)
+        w += TT(tau, alpha, beta, gamma, signed)
     return w
 
 def III(P, alpha, beta, gamma):
@@ -68,7 +68,7 @@ def III(P, alpha, beta, gamma):
         a = VECTDIFF([va,vo])
         b = VECTDIFF([vb,vo])
         c = VECTPROD([a,b])
-        w += (c[0]/VECTNORM(c)) * T(tau, alpha+1, beta, gamma)
+        w += (c[0]/VECTNORM(c)) * TT(tau, alpha+1, beta, gamma)
     return w/(alpha + 1)
 
 def M(alpha, beta):
@@ -78,7 +78,7 @@ def M(alpha, beta):
     return a/(alpha + 1)
 
 """ The main integration routine """
-def T(tau, alpha, beta, gamma):
+def TT(tau, alpha, beta, gamma, signed=False):
    vo,va,vb = tau
    a = VECTDIFF([va,vo])
    b = VECTDIFF([vb,vo])
@@ -99,7 +99,9 @@ def T(tau, alpha, beta, gamma):
                s2 += CHOOSE([h, i]) * POWER([a[0], h-i]) * POWER([b[0], i]) * s3;
             sl += CHOOSE ([alpha, h]) * CHOOSE ([beta, k]) * CHOOSE ([gamma, m]) \
                * POWER([vo[0], alpha-h]) * POWER([vo[1], beta-k]) \
-               * POWER([vo[2], gamma-m]) * s2;
-   c = VECTPROD([a, b]);
-   return sl * VECTNORM(c);
+               * POWER([vo[2], gamma-m]) * s2
+   c = VECTPROD([a, b])
+   if not signed: return sl * VECTNORM(c)
+   elif a[2]==b[2]==0.0: return sl * VECTNORM(c) * SIGN(c[2])
+   else: print "error: in signed surface integration"
 
