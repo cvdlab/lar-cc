@@ -32,7 +32,7 @@ def InertiaProduct(P):
     out[2] = III(P, 1, 1, 0)
     return out
 
-""" Vectors and convectors of mechanical interest """
+""" Vectors and covectors of mechanical interest """
 def Centroid(P):
     out = [None]*3
     firstMoment = FirstMoment(P)
@@ -56,7 +56,8 @@ def II(P, alpha, beta, gamma, signed):
     V, FV = P
     for i in range(len(FV)):
         tau = [V[v] for v in FV[i]]
-        w += TT(tau, alpha, beta, gamma, signed)
+        term = TT(tau, alpha, beta, gamma, signed)
+        w += term
     return w
 
 def III(P, alpha, beta, gamma):

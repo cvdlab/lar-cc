@@ -34,6 +34,23 @@
 \newcommand{\homog}[0]{\mbox{\rm homog}\,}
 \newcommand{\relint}[0]{\mbox{\rm relint}\,}
 
+
+\def\vint{\int\!\!\int\!\!\int}
+\def\sint{\int\!\!\int}
+\def\isum{\sum_{i=1}^n}
+\def\asum{\sum_{\alpha=0}^n}
+\def\bsum{\sum_{\beta=0}^m}
+\def\csum{\sum_{\gamma=0}^p}
+\def\sssum{\asum\bsum\csum}
+\def\XXa{\sum_{\tau\in T}  |{\bf a} \times {\bf b}| }
+\def\XXb{\pmatrix{\alpha\cr  h\cr}}
+\def\XXc{\pmatrix{\beta\cr k\cr}}
+\def\XXd{\pmatrix{\gamma\cr m\cr}}
+\def\XXe{\pmatrix{h\cr i\cr}} 
+\def\XXf{\pmatrix{k\cr j\cr}}
+\def\XXg{\pmatrix{m\cr l\cr}}
+\def\XXh{\pmatrix{p\!\!+\!\!1\cr h\cr}}
+
 %----macros end-----------------------------------------------------------------
 
 \title{Finite domain integration of polynomials
@@ -50,12 +67,332 @@
 In order to plan or control the static/dynamic behaviour of models in CAD applications, it is often necessary to evaluate integral properties ot solid models (i.e. volume, centroid, moments of inertia, etc.). This module deals with the exact evaluation of inertial properties of homogeneous polyhedral objects. 
 \end{abstract}
 
+\tableofcontents
+
 \section{Introduction}
 
 A finite integration method from\cite{CattaniP-BIL1990} is developed here the computation of various order monomial integrals over polyhedral solids and surfaces in 3D space. The integration method can be used for the exact evaluation of domain integrals of trivariate polynomial forms.
 
 
-\section{Algoritms}
+\section{Integration of polynomials over polyhedral domains}
+\index{Integration}
+\label{sec:cattani}
+
+Here we summarize from~\cite{CattaniP-BIL1990} an exact and symbolic solution
+both to the surface and volume integration of polynomials, by using a
+triangulation of the volume boundary.   The evaluation of
+surface and volume integrals is achieved by transforming them into line
+integrals over the boundary of every 2-simplex of a domain
+triangulation.  A different approach to integration, using a
+decomposition into volume elements induced by a boundary triangulation
+is given in~\cite{Kajiya:84} where a closed formula for volume
+integration over polyhedral volumes, by decomposing the solid into a set
+of solid tetrahedra, but such a method cannot be used for surface
+integrations.
+
+
+\paragraph{Problem statement}\index{Integration!problem}
+
+The finite method~\cite{CattaniP-BIL1990} to compute double and triplet integrals
+of monomials over linear regular polyhedra in $\R^3$ is discussed. 
+In particular, this method enables practical formulae for the
+exact evaluation of integrals to be achieved:
+\begin{eqnarray}
+II_{S} \equiv  \sint_{S} f({\bf p})\,dS, \qquad
+III_{P} \equiv  \vint_{P} f({\bf p})\,dV,\label{2} 
+\end{eqnarray}
+where $S$, and $P$ are linear and regular 2- or 3-polyhedra in $\R^3$,
+$dS$ and $dV$ are the differential surface
+and the differential volume.  The integrating function 
+is a  trivariate polynomial  
+\[ 
+f({\bf p})
+=
+\asum\bsum\csum
+a_{\alpha\beta\gamma} x^\alpha y^\beta z^\gamma,
+\] 
+where $\alpha,\beta,\gamma$ are non-negative integers.
+
+Since the extension to $f({\bf p})$ is straightforwardly given by the
+linearity of integral operator, we may focus on the calculation of
+integrals of monomials:
+\begin{eqnarray}
+II_{S}^{\alpha\beta\gamma} \equiv  
+\sint_{S} x^\alpha y^\beta z^\gamma \,dS,\qquad
+III_{P}^{\alpha\beta\gamma} \equiv 
+\vint_{P} x^\alpha y^\beta z^\gamma \,dV.
+\label{7} 
+\end{eqnarray}
+
+
+\paragraph{Algorithm preview}\index{Algorithm!integration}
+
+Surface integrals are computed as a summation of integrals over a 
+triangulation of the surface.  Any triangle is mapped into the unit 
+triangle in the 2-space of parameters, where integrals 
+of monomials become particularly 
+simple.  Then formulae for integrals over polyhedral volumes are 
+given.  They are easily derived by transforming volume integrals in 
+surface integrals.  It is possible to show that such integrals are 
+computable in polynomial time, and that inertia moments are computable 
+in $O(E)$ time, $E$ being the number of edges of the solid model of 
+the integration domain.
+
+A very important feature of the integration formulae presented here is
+that they can also be used with a partial model of a polyhedron,
+consisting of the collection of its face loops.  Loops are oriented
+counter-clockwise if external, clockwise if internal to another loop. 
+Such a  model, without explicit storage of face adjacencies, is
+very frequently adopted in Computer Graphics.
+
+In this case it is sufficient to consider any $n+1$-sided (also
+unconnected or multiply connected) face as topological sum of $n-1$
+oriented triangles $t_i$, with vertices $\langle v_0, v_i,
+v_{i+1}\rangle$, where $1\le i\le n-1$ .  In applying formulae
+(\ref{19}) or (\ref{27}) to such a set of triangles, any edge that
+does not belong to the original polygon will be computed twice, in the
+two opposite directions.  These contributions to the whole integral
+will mutually cancel each other out, as they correspond to pairs of
+line integrals evaluated along opposite paths.
+
+
+\paragraph{Surface integration}\index{Surface!integration}
+
+We call \emph{structure product}  the integral of a monomial over a 
+simplicial complex.  Exact formulae for
+ structure products over  n-sided polygons in 2-space,
+the unit triangle in 2-space, and an arbitrary triangle in 3-space, 
+are derived in the following.
+Structure products  are a generalization of the usual products
+and moments of inertia, that can be obtained from (\ref{7}) by assuming 
+$\alpha + \beta + \gamma\leq 2$.  
+
+
+\paragraph{Polygon integrals}\index{Polygon integrals}
+
+A structure product over a polygon $\pi$ in the plane $xy$ is
+\begin{equation} \label{9} 
+II_\pi^{\alpha\beta} = \sint_{\pi} x^\alpha y^\beta \,dS,
+\qquad \alpha,\beta\geq 0, integers.
+\end{equation}
+Such integrals can be exactly expressed, when
+$\pi$ is a  polygon with $n$ oriented edges, as:
+\begin{equation} \label{10} 
+II_\pi^{\alpha\beta} = 
+{1\over{\alpha \!+\!1}}
+\isum\sum_{h=0}^{\alpha+1}
+{\alpha+1\choose  h}
+x_i^{\alpha+1-h} X_i^h
+\sum_{k=0}^{\beta}
+{{{\beta\choose  k}}\over{h+k+1}}
+y_i^{\beta-k} Y_i^{k+1}
+\end{equation}
+where ${\bf p}_i=(x_i, y_i)$, $X_i=x_{i+1}-x_{i}$, $Y_i=y_{i+1}-y_{i}$
+and ${\bf p}_{n+1} = {\bf p}_1$.  The derivation of the formula
+(\ref{10}) is based on the application of Green's theorem and on
+Newton's expression for binomial powers.
+
+
+\paragraph{Unit triangle integrals}\index{Unit triangle integrals}
+
+The general formula (\ref{10})  can be specialized
+for the unit triangle 
+$\tau' = \langle {\bf w}_o, {\bf w}_a, {\bf w}_b \rangle$, with vertices 
+\begin{equation} \label{14} 
+{\bf w}_o=(0,0),\qquad {\bf w}_a=(1,0),\qquad {\bf w}_b=(0,1),
+\end{equation}
+getting a very simplified expression.
+With some  algebraic manipulations, we obtain\footnote{
+$II_\pi^{\alpha\beta}$ is substituted, 
+when referred to the unit triangle, by  the symbol
+$II^{\alpha\beta}$.
+}  
+\begin{equation}\label{15} 
+II^{\alpha\beta} = 
+{1\over{\alpha +1}}
+\sum_{h=0}^{\alpha+1}
+{\alpha+1\choose  h}
+{{(-1)^h}\over{h+\beta+1}},
+\end{equation}
+which reduces, for $\alpha=\beta=0$, to the area of the triangle (\ref{14}):
+$II^{0 0} = 1/2$.
+
+
+\paragraph{Triangle integrals}\index{Triangle!integrals}
+
+In the following we derive the general expression for structure products
+evaluated on  an arbitrary triangle 
+$\tau=\langle {\bf v}_o,{\bf v}_a,{\bf v}_b \rangle$  of
+the 3-space $xyz$, defined by ${\bf v}_o=(x_o,y_o,z_o)$ and
+by the vectors ${\bf a}={\bf v}_a-{\bf v}_o$ and 
+${\bf b}={\bf v}_b-{\bf v}_o$.
+The parametric equation of its embedding plane is:
+\begin{equation}\label{11} 
+{\bf p} = {\bf v}_o+ u \,{\bf a}+ v\, {\bf b},
+\end{equation}
+where the area element is 
+\begin{equation}\label{12} 
+d\tau=
+|J|\,du\,dv=
+\bigg| {{\partial {\bf p}}\over {\partial u}} 
+\times {{\partial {\bf p}}\over {\partial v}} \bigg|\,du\,dv=
+|{\bf a}\times{\bf b}|\,du\,dv.
+\end{equation}
+A structure product over a triangle $\tau$ in 3-space can be transformed
+by a coordinates transformation, as follows:
+\begin{equation}\label{13} 
+II_\tau^{\alpha\beta\gamma}=
+\sint_\tau x^\alpha y^\beta z^\gamma \,d\tau
+=
+|{\bf a}\times{\bf b}|
+\sint_{\tau'} {x^{\alpha}(u,v)} {y^{\beta}(u,v)} {z^{\gamma}(u,v)}\,du\,dv,
+\end{equation}
+where $\tau'$ is the $uv$ domain that corresponds to $\tau$ under the
+coordinate transformation (\ref{11}).  In this case we have (the proof
+is given in~\cite{CAD:90}):
+\begin{eqnarray}
+II_\tau^{\alpha\beta\gamma}&=&
+|{\bf a}\times{\bf b}|
+\sum_{h=0}^{\alpha}
+{\alpha\choose h}
+x_o^{\alpha-h}
+\sum_{k=0}^{\beta}
+{\beta \choose k}
+y_o^{\beta-k}
+\sum_{m=0}^{\gamma}
+{\gamma \choose m}
+z_o^{\gamma-m} \cdot \nonumber\\ & &
+\cdot\sum_{i=0}^{h}
+{h\choose i}
+a_x^{h-i} b_x^i
+\sum_{j=0}^{k}
+{k\choose j}
+a_y^{k-j} b_y^j
+\sum_{l=0}^{m}
+{m\choose l}
+a_z^{m-l} b_z^l 
+\,II^{\mu\nu} \label{17}  ,
+\end{eqnarray}
+where $\mu=(h+k+m)-(i+j+l), \nu=(i+j+l)$, and $II^{\mu\nu}$ is  a structure product  
+over the triangle (\ref{14}), as given by formula (\ref{15}).
+Of course the area of a triangle $\tau$
+is:
+\begin{equation}\label{18} 
+II_\tau^{000}=\sint_\tau \,d\tau=
+|{\bf a}\times{\bf b}|\,
+II^{00}=
+{{|{\bf a}\times{\bf b}|}\over 2}.
+\end{equation}
+
+
+\paragraph{Surface integrals}\index{Surface!integrals}
+
+In conclusion, a structure product over a polyhedral surface $S$,
+open or closed, is a summation  of structure products (\ref{17}) over 
+the 2-simplices of a triangulation $K_2$ of $S$:
+\begin{equation}\label{19} 
+II_S^{\alpha\beta\gamma}=
+\sint_S x^\alpha y^\beta z^\gamma \,dS=
+\sum_{\tau\in K_2}
+II_\tau^{\alpha\beta\gamma}.
+\end{equation}
+
+
+\paragraph{Volume integration}\index{Volume integration}
+
+Let $P$ be a three-dimensional polyhedron bounded by a polyhedral
+surface $\partial P$. The regularity of the integration domain and the continuity of 
+the integrating function enable us to apply the divergence theorem, which can be 
+briefly summarized, for
+a vector field ${\bf F}={\bf F}({\bf p})$ as:
+\begin{equation}\label{21} 
+\vint_P \nabla\cdot {\bf F} \,dx\,dy\,dz=
+\sint_{\partial P} {\bf F}\cdot{\bf n} \,dS=
+\sum_{\tau\in K_2}
+\sint_{\tau} {\bf F}\cdot{\bf n}_\tau \,d\tau,
+\end{equation}
+where ${\bf n}$ is the outward vector normal to the surface
+portion $dS$, and hence ${\bf n}_\tau={{{\bf a}\times{\bf b}}/{|{\bf a}\times{\bf b}|}}$.
+
+As the function $x^\alpha y^\beta z^\gamma$ equates the divergence of
+the vector field $ {\bf F}= ({{x^{\alpha+1} y^\beta
+z^\gamma}/{\alpha+1}}, 0, 0) $, an expression for
+$III_P^{\alpha\beta\gamma}$ is easily derived, which depends only on
+the 1-simplices of a triangulation of the domain boundary and on the
+structure products over its 2-simplices.
+
+As a matter of fact, we have:
+\begin{eqnarray}
+III_P^{\alpha\beta\gamma} 
+&=&
+\vint_P x^\alpha y^\beta z^\gamma \,dx\,dy\,dz\nonumber\\
+&=&
+\vint_P 
+{\partial\over{\partial x}}\left(
+{{1}\over{\alpha+1}}
+x^{\alpha+1} y^\beta z^\gamma \right)\,dx\,dy\,dz\nonumber\\
+&=&
+{1\over{\alpha+1}}
+\sum_{\tau'\in {K'}_2}
+({\bf a}\times{\bf b})_x
+\sint_{\tau'} 
+x^{\alpha+1} y^\beta z^\gamma\,du\,dv.\label{26} 
+\end{eqnarray}
+
+Taking into account  equations (\ref{12}) and (\ref{13}), we can substitute the integral in 
+the previous equation, getting finally:
+\begin{equation}\label{27} 
+III_P^{\alpha\beta\gamma} 
+=
+{1\over{\alpha+1}}
+\sum_{\tau\in {K}_2}
+\left[
+{{({\bf a}\times{\bf b})_x}\over{|{\bf a}\times{\bf b}|}}
+\right]_\tau
+II_\tau^{\alpha+1,\beta,\gamma}
+\end{equation}
+where the surface integrals are evaluated by using the formula (\ref{17}).
+
+
+
+
+\paragraph{Computation of inertia has linear complexity}
+\index{Computation!inertia}
+
+Surface and volume integrals over linear polyhedra are computable in 
+linear time.  In particular, \emph{surface and volume integrals of 
+a monomial $x^\alpha y^\beta z^\gamma$ over a linear 2-or 3-polyhedron 
+are computable in $O(\alpha^3\beta^2\gamma^2 E)$ time,  $E$ being the 
+number of edges of the polyhedron.  }
+
+In fact for the surface and volume integrals it is very easy to see, 
+from inspection of the given equations, that both integrals may be 
+evaluated in $O(\alpha^3\beta^2\gamma^2 T)$ time, $T$ being the number 
+of triangles of a minimal triangulation of the domain.  It is easy to 
+show that the relation $T=2E-2F<2E$ holds between the number $T$ of 
+triangles of a minimal triangulation of a polyhedron boundary and the 
+numbers $E$ and $F$ of its original edges and faces respectively.  
+When all triangle faces are triangular, the relation reduces to 
+$T={2\over 3} E$.  
+
+
+This property is very important for Computer-Aided Design and 
+Ro\-bo\-tics applications: it demonstrates that the inertia tensor of a 
+linear polyhedral solid is easy to compute.  It directly implies that
+\emph{the inertia tensor of a linear polyhedron is computable in $O(E)$ 
+time.  } 
+As a matter of fact the elements of the inertia matrix of a
+homogeneous object $B$, namely its \emph{mass} $M$, \emph{first moments}
+$M_x$,$M_y$,$M_z$, \emph{products of inertia} $M_{xy},M_{yz},M_{zx}$,
+and \emph{second moments} $M_{xx},M_{yy},M_{zz}$, can be all expressed
+as
+\begin{equation}\label{31} 
+\rho \int_B x^\alpha y^\beta z^\gamma \,dV,
+\end{equation}
+where  $\rho$
+is the constant density, and where $0\le\alpha+\beta+\gamma\le
+2$.  Being $\alpha,\beta,\gamma$ bounded, the assertion follows from
+the previous claim.
 
 
 \section{Implementation}
@@ -105,10 +442,10 @@ def InertiaProduct(P):
 
 
 
-\paragraph{Vectors and convectors of mechanical interest}
+\paragraph{Vectors and covectors of mechanical interest}
 %-------------------------------------------------------------------------------
-@D Vectors and convectors of mechanical interest
-@{""" Vectors and convectors of mechanical interest """
+@D Vectors and covectors of mechanical interest
+@{""" Vectors and covectors of mechanical interest """
 def Centroid(P):
     out = [None]*3
     firstMoment = FirstMoment(P)
@@ -140,7 +477,8 @@ def II(P, alpha, beta, gamma, signed):
     V, FV = P
     for i in range(len(FV)):
         tau = [V[v] for v in FV[i]]
-        w += TT(tau, alpha, beta, gamma, signed)
+        term = TT(tau, alpha, beta, gamma, signed)
+        w += term
     return w
 
 def III(P, alpha, beta, gamma):
@@ -213,7 +551,7 @@ from lar2psm import *
 
 @< Surface and volume integrals @>
 @< Terms of the Euler tensor @>
-@< Vectors and convectors of mechanical interest @>
+@< Vectors and covectors of mechanical interest @>
 @< Basic integration functions @>
 @< The main integration routine @>
 @}

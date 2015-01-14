@@ -132,37 +132,37 @@ object with the same name.
 %-------------------------------------------------------------------------------
 @D Ground floor 
 @{""" Ground floor """
-OpenCourt10 = metric(TRANS([[3,3,4,4,6,6,6.65,6.65],[4,8,8,7.8,7.8,8,8,4]]))
-RadioDiagnosticImaging = metric(TRANS([[7,7,9,10,10,8.7],[4,8,8,8,4,4]]))
-ServiceCore10 = metric(TRANS([[1.15, 1.15, 1.3,2.55, 2.55,2], [2.85, 3.7,3.7,3.7, 
-    2.85,2.85]]))
-ServiceCore20 = metric(TRANS([[7,7,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]]))
-EmergencyDepartment = metric(TRANS([[4.7,4.7,7,7,8.8,8.8,9.65,9.65],[0,3.7,3.7,
-    2.8,2.8,3.7,3.7,0]]))
-Endoscopy = metric(TRANS([[3,3,3,4.4,4.4],[0,2.5,3.7,3.7,0]]))
-OutPatientDepartment10 = metric(TRANS([[4./7.5, 4./7.5,1.15,1.15,2,2,3,3],
-    [0,3.7,3.7,2.85,2.85,2.5,2.5,0]]))
-OutPatientDepartment20 = metric(TRANS([[0,0,2.65,2.65,1.3],[4,5.85,5.85,4,4]]))
-RenalDialysis = metric(TRANS([[0,0,1,2.65,2.65],[5.85,8,8,8,5.85]]))
-OpenCourt20 = metric(TRANS([[2,2,2,2,4,4,4,4],[10,11,11.35,12,12,11.35,11,10]]))
-ChemiotherapyUnit = metric(TRANS([[0,0,4.5,4.5,4,4,2,2,1],
-    [11.35,14,14,11.35,11.35,12,12,11.35,11.35,]]))
-Service = metric(TRANS([[0,0,1,1,2,2,2,1],[8.35,10,10,9,9,8.5, 8.35,8.35]]))
-PhysicalMedicineDept = metric(TRANS([[2,2,1,1,0,0, 1,2,2,4,4,4.5,4.5,4,4],
-    [8.5,9,9,10,10,11,11,11,10,10,11,11,9,9,8.5]]))
-MainEntrance = metric(TRANS([[4,4,4,4.5,4.75,4.75,6.65,6.65,6,6],
-    [8.4,8.5,9,9,9,11,11, 9,9,8.4]]))
-Unknown = metric(TRANS([[7.25,7.25, 6.65,6.65,6.65,10,10,9,8.2],
-    [8.35,8.5,8.5,9,11,11,8.35,8.35,8.35]]))
-#Mortuary = metric(TRANS([[],[]]))
-Corridor0 = metric([[4.4,0],[4.4,3.7],[3,3.7],[3,2.5],[2,2.5],[2,2.85],[2.55,2.85],
+OpenCourt10 = TRANS([[3,3,4,4,6,6,6.65,6.65],[4,8,8,7.8,7.8,8,8,4]])
+RadioDiagnosticImaging = TRANS([[7,7,9,10,10,8.7],[4,8,8,8,4,4]])
+ServiceCore10 = TRANS([[1.15, 1.15, 1.3,2.55, 2.55,2], [2.85, 3.7,3.7,3.7, 
+    2.85,2.85]])
+ServiceCore20 = TRANS([[7,7,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])
+EmergencyDepartment = TRANS([[4.7,4.7,7,7,8.8,8.8,9.65,9.65],[0,3.7,3.7,
+    2.8,2.8,3.7,3.7,0]])
+Endoscopy = TRANS([[3,3,3,4.4,4.4],[0,2.5,3.7,3.7,0]])
+OutPatientDepartment10 = TRANS([[4./7.5, 4./7.5,1.15,1.15,2,2,3,3],
+    [0,3.7,3.7,2.85,2.85,2.5,2.5,0]])
+OutPatientDepartment20 = TRANS([[0,0,2.65,2.65,1.3],[4,5.85,5.85,4,4]])
+RenalDialysis = TRANS([[0,0,1,2.65,2.65],[5.85,8,8,8,5.85]])
+OpenCourt20 = TRANS([[2,2,2,2,4,4,4,4],[10,11,11.35,12,12,11.35,11,10]])
+ChemiotherapyUnit = TRANS([[0,0,4.5,4.5,4,4,2,2,1],
+    [11.35,14,14,11.35,11.35,12,12,11.35,11.35,]])
+Service = TRANS([[0,0,1,1,2,2,2,1],[8.35,10,10,9,9,8.5, 8.35,8.35]])
+PhysicalMedicineDept = TRANS([[2,2,1,1,0,0, 1,2,2,4,4,4.5,4.5,4,4],
+    [8.5,9,9,10,10,11,11,11,10,10,11,11,9,9,8.5]])
+MainEntrance = TRANS([[4,4,4,4.5,4.75,4.75,6.65,6.65,6,6],
+    [8.4,8.5,9,9,9,11,11, 9,9,8.4]])
+Unknown = TRANS([[7.25,7.25, 6.65,6.65,6.65,10,10,9,8.2],
+    [8.35,8.5,8.5,9,11,11,8.35,8.35,8.35]])
+#Mortuary = TRANS([[],[]])
+Corridor0 = [[4.4,0],[4.4,3.7],[3,3.7],[3,2.5],[2,2.5],[2,2.85],[2.55,2.85],
     [2.55,3.7],[1.3,3.7],[1.3,4],[2.65,4],[2.65,5.85],[2.65,8],[1,8],[1,8.35],
     [2,8.35],[2,8.5],[4,8.5],[4,8.4],[6,8.4],[6,9],[6.65,9],[6.65,8.5],[7.25,8.5],
     [7.25,8.35],[8.2,8.35],[9,8.35],[9,8],[7,8],[7,4],[8.7,4],[8.7,3.7],
-    [7,3.7],[4.7,3.7],[4.7,0]])
-Corridor0a = metric(TRANS([[1, 1, 2, 2], [11, 11.35, 11.35, 11]]))
-Corridor0b = metric(TRANS([[4.5, 4.5, 4, 4, 4.5, 4.5, 4.75,4.75, 4.75],
-    [9, 11, 11, 11.35, 11.35, 14,14, 11, 9]]))
+    [7,3.7],[4.7,3.7],[4.7,0]]
+Corridor0a = TRANS([[1, 1, 2, 2], [11, 11.35, 11.35, 11]])
+Corridor0b = TRANS([[4.5, 4.5, 4, 4, 4.5, 4.5, 4.75,4.75, 4.75],
+    [9, 11, 11, 11.35, 11.35, 14,14, 11, 9]])
 @}
 %-------------------------------------------------------------------------------
 
@@ -214,40 +214,40 @@ groundFloor = Struct(buildingUnits0, "groundFloor")
 %-------------------------------------------------------------------------------
 @D Mezanine floor
 @{""" Mezanine floor """
-MedicalWaste = metric(TRANS([[4./7.5,4./7.5,.8,1.25,1.25],[0,1.5,1.5,1.5,0]]))
-CentralStores = metric(TRANS([[1.25,1.25,.8,.8,3.7,3.7,2.55,2.55,2.2,2.2],[0,1.5,1.5,
-    2.65,2.65,.35,.35,.65,.65,0]]))
-StaffDining = metric(TRANS([[3.95,3.95,6.7,6.7,6.95,6.95],[0,3.7,3.7,2,2,0]]))
-CSSD = metric(TRANS([[6.95,6.95,6.95,8.8,8.8,9.65,9.65],[0,2,2.65,2.65,2,2,0]]))
-HouseKeeping = metric(TRANS([[8.8,8.8,8.8,8.8,9.65,9.65],[2,2.65,2.8,3.7,3.7,2]]))
-CentralStaffChanging11 = metric(TRANS([[4./7.5,4./7.5,1.15,1.15],[2.85,3.7,3.7,2.85]]))
-CentralStaffChanging21 = metric(TRANS([[2.55,2.55,3.7,3.7],[2.85,3.7,3.7,2.85]]))
-OpenCourt11 = metric(TRANS([[3,3,7,7,7],[4,8,8,6,4]]))
-Pharmacy = metric(TRANS([[0,0,2.65,2.65,1.3],[4,6.45,6.45,4,4]]))
-CentralWorkshop = metric(TRANS([[0,0,1,2.65,2.65],[6.45,8,8,8,6.45]]))
-Laundry = metric(TRANS([[7,7,10,10,8.7],[4,6,6,4,4]]))
-AdministrationSuite11 = metric(TRANS([[7,7,9,10,10],[6,8,8,8,6]]))
-MainLaboratories = metric(TRANS([[1,1,0,0,2,2,5,5,4,4,4],[8.3,8.4,8.4,11,11,10,10,9,
-    9,8.4,8.3]]))
-MedicalLibrary = metric(TRANS([[6.7,6.7,8,8,7.75],[9.7,11,11,9.7,9.7]]))
-MedicalRecords = metric(TRANS([[8,8,8,8.85,8.85,8.85],[8.3,9.7,11,11,9.75,8.3]]))
-AdministrationSuite21 = metric(TRANS([[8.85,8.85,10,10,9,9],[8.3,9.75,9.75,8.4,8.4,8.3]]))
-MeetingRooms = metric(TRANS([[6,6,6,6.7,6.7,7.75,7.75,7.45,7,7],[8.3,8.4,9,9,9.7,9.7,
-    8.7,8.7,8.7,8.3]]))
-DataCenter = metric(TRANS([[7,7,7.45,7.45],[8.3,8.7,8.7,8.3]]))
-ServerRoom = metric(TRANS([[7.45,7.45,7.75,7.75],[8.3,8.7,8.7,8.3]]))
-PublicCore = metric(TRANS([[4,4,5,6,6],[8.4,9,9,9,8.4]]))
-ServiceCore11 = metric(TRANS([[1.15,1.15,1.3,2.55,2.55],[2.85,3.7,3.7,3.7,2.85]]))
-ServiceCore21 = metric(TRANS([[7,7,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]]))
-Corridor1 = metric([[2.2,0],[2.2,0.65],[2.55,0.65],[2.55,0.35],[3.7,0.35],[3.7,2.65],
+MedicalWaste = TRANS([[4./7.5,4./7.5,.8,1.25,1.25],[0,1.5,1.5,1.5,0]])
+CentralStores = TRANS([[1.25,1.25,.8,.8,3.7,3.7,2.55,2.55,2.2,2.2],[0,1.5,1.5,
+    2.65,2.65,.35,.35,.65,.65,0]])
+StaffDining = TRANS([[3.95,3.95,6.7,6.7,6.95,6.95],[0,3.7,3.7,2,2,0]])
+CSSD = TRANS([[6.95,6.95,6.95,8.8,8.8,9.65,9.65],[0,2,2.65,2.65,2,2,0]])
+HouseKeeping = TRANS([[8.8,8.8,8.8,8.8,9.65,9.65],[2,2.65,2.8,3.7,3.7,2]])
+CentralStaffChanging11 = TRANS([[4./7.5,4./7.5,1.15,1.15],[2.85,3.7,3.7,2.85]])
+CentralStaffChanging21 = TRANS([[2.55,2.55,3.7,3.7],[2.85,3.7,3.7,2.85]])
+OpenCourt11 = TRANS([[3,3,7,7,7],[4,8,8,6,4]])
+Pharmacy = TRANS([[0,0,2.65,2.65,1.3],[4,6.45,6.45,4,4]])
+CentralWorkshop = TRANS([[0,0,1,2.65,2.65],[6.45,8,8,8,6.45]])
+Laundry = TRANS([[7,7,10,10,8.7],[4,6,6,4,4]])
+AdministrationSuite11 = TRANS([[7,7,9,10,10],[6,8,8,8,6]])
+MainLaboratories = TRANS([[1,1,0,0,2,2,5,5,4,4,4],[8.3,8.4,8.4,11,11,10,10,9,
+    9,8.4,8.3]])
+MedicalLibrary = TRANS([[6.7,6.7,8,8,7.75],[9.7,11,11,9.7,9.7]])
+MedicalRecords = TRANS([[8,8,8,8.85,8.85,8.85],[8.3,9.7,11,11,9.75,8.3]])
+AdministrationSuite21 = TRANS([[8.85,8.85,10,10,9,9],[8.3,9.75,9.75,8.4,8.4,8.3]])
+MeetingRooms = TRANS([[6,6,6,6.7,6.7,7.75,7.75,7.45,7,7],[8.3,8.4,9,9,9.7,9.7,
+    8.7,8.7,8.7,8.3]])
+DataCenter = TRANS([[7,7,7.45,7.45],[8.3,8.7,8.7,8.3]])
+ServerRoom = TRANS([[7.45,7.45,7.75,7.75],[8.3,8.7,8.7,8.3]])
+PublicCore = TRANS([[4,4,5,6,6],[8.4,9,9,9,8.4]])
+ServiceCore11 = TRANS([[1.15,1.15,1.3,2.55,2.55],[2.85,3.7,3.7,3.7,2.85]])
+ServiceCore21 = TRANS([[7,7,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])
+Corridor1 = [[2.2,0],[2.2,0.65],[2.55,0.65],[2.55,0.35],[3.7,0.35],[3.7,2.65],
     [0.8,2.65],[0.8,1.5],[0.5333,1.5],[0.5333,2.85],[1.15,2.85],[2.55,2.85],[3.7,
     2.85],[3.7,3.7],[2.55,3.7],[1.3,3.7],[1.3,4],[2.65,4],[2.65,6.45],[2.65,
     8],[1,8],[1,8.3],[4,8.3],[4,8.4],[6,8.4],[6,8.3],[7,8.3],[7.45,8.3],
     [7.75,8.3],[7.75,8.7],[7.75,9.7],[8,9.7],[8,8.3],[8.85,8.3],[9,8.3],[9,8],
     [7,8],[3,8],[3,4],[7,4],[8.7,4],[8.7,3.7],[7,3.7],[7,2.8],[8.8,2.8],
-    [8.8,2.65],[6.95,2.65],[6.95,2],[6.7,2],[6.7,3.7],[3.95,3.7],[3.95,0]])
-GroundRoof = metric(TRANS([[4,4,2,2,1,1,0,0,4.75,4.75],[10,12,12,11,11,11.35,11.35,14,
-    14,10]]))
+    [8.8,2.65],[6.95,2.65],[6.95,2],[6.7,2],[6.7,3.7],[3.95,3.7],[3.95,0]]
+GroundRoof = TRANS([[4,4,2,2,1,1,0,0,4.75,4.75],[10,12,12,11,11,11.35,11.35,14,
+    14,10]])
 @}
 %-------------------------------------------------------------------------------
 
@@ -304,23 +304,23 @@ mezanineFloor = Struct(buildingUnits1, "mezanineFloor")
 %-------------------------------------------------------------------------------
 @D First floor
 @{""" First floor """
-OpenCourt3 = metric(TRANS([[3.,3.,7.,7.],[4.,8.,8.,4.]]))
-Surgery = metric(TRANS([[4.15,4.15,7.,7.,8.8,8.8,9.65,9.65],[0,3.7,3.7, 2.8,2.8, 3.7,3.7,0]]))
-CatheterizationLab = metric(TRANS([[3,3,4.15,4.15],[0,3.7,3.7,0]]))
-ServiceCore32 = metric(TRANS([[7.,7.,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]]))
-CoronaryCareUnit = metric(TRANS([[7.,7.,8.3,9.,10.,10.,8.7],[4.,8.,8.,8.,8.,4.,4.]]))
-DeliveryAndNicu = metric(TRANS([[0,0, 1.7,2.65,2.65,1.3],[4.,8.,8.,8.,4.,4.]]))
-ServiceCore31 = metric(TRANS([[1.15, 1.15, 1.3,2.65, 2.65], [2.85, 3.7,3.7, 3.7, 2.85]]))
-IntensiveCareUnit = metric(TRANS([[4./7.5, 4./7.5,1.15,1.15,2.65, 2.65,1.95,1.95],
-    [0.,3.7,3.7,2.85,2.85,.6,.6,0.]]))
-ServiceCore33 = metric(TRANS([[1.95,1.95,2.65, 2.65],[0,.6,.6,0]]))
-PublicCore3 = metric(TRANS([[1.7,1.7,4.,4.,6.,6.,8.3,8.3,7,3,2.65],
-    [8,8.4,8.4,9,9,8.4,8.4,8,8,8,8]]))
-Corridor3 = metric(TRANS([[2.65,2.65,2.65,2.65,1.3,1.3,2.65,2.65,3.0,3.0,7.0,8.7,8.7,
+OpenCourt3 = TRANS([[3.,3.,7.,7.],[4.,8.,8.,4.]])
+Surgery = TRANS([[4.15,4.15,7.,7.,8.8,8.8,9.65,9.65],[0,3.7,3.7, 2.8,2.8, 3.7,3.7,0]])
+CatheterizationLab = TRANS([[3,3,4.15,4.15],[0,3.7,3.7,0]])
+ServiceCore32 = TRANS([[7.,7.,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])
+CoronaryCareUnit = TRANS([[7.,7.,8.3,9.,10.,10.,8.7],[4.,8.,8.,8.,8.,4.,4.]])
+DeliveryAndNicu = TRANS([[0,0, 1.7,2.65,2.65,1.3],[4.,8.,8.,8.,4.,4.]])
+ServiceCore31 = TRANS([[1.15, 1.15, 1.3,2.65, 2.65], [2.85, 3.7,3.7, 3.7, 2.85]])
+IntensiveCareUnit = TRANS([[4./7.5, 4./7.5,1.15,1.15,2.65, 2.65,1.95,1.95],
+    [0.,3.7,3.7,2.85,2.85,.6,.6,0.]])
+ServiceCore33 = TRANS([[1.95,1.95,2.65, 2.65],[0,.6,.6,0]])
+PublicCore3 = TRANS([[1.7,1.7,4.,4.,6.,6.,8.3,8.3,7,3,2.65],
+    [8,8.4,8.4,9,9,8.4,8.4,8,8,8,8]])
+Corridor3 = TRANS([[2.65,2.65,2.65,2.65,1.3,1.3,2.65,2.65,3.0,3.0,7.0,8.7,8.7,
     7.0,4.15,3.0,3.0],[0.0,0.6,2.85,3.7,3.7,4.0,4.0,8.0,8.0,4.0,4.0,4.0,3.7,
-    3.7,3.7,3.7,0.0]]))
-MezanineRoof = metric(TRANS([[1,1,0,0,2,2,4.75,4.75,10,10,9,9,8.3,8.3, 6,6,4,4 ,1.7,1.7],
-    [8,8.4,8.4,11,11,10,10,11,11,8.4,8.4,8,8,8.4,8.4,9,9,8.4,8.4,8]]))
+    3.7,3.7,3.7,0.0]])
+MezanineRoof = TRANS([[1,1,0,0,2,2,4.75,4.75,10,10,9,9,8.3,8.3, 6,6,4,4 ,1.7,1.7],
+    [8,8.4,8.4,11,11,10,10,11,11,8.4,8.4,8,8,8.4,8.4,9,9,8.4,8.4,8]])
 @}
 %-------------------------------------------------------------------------------
 
@@ -367,22 +367,30 @@ function.
 %-------------------------------------------------------------------------------
 @D Ward sections
 @{""" Ward sections """
-room = TRANS([[0,0,1,1,2./3,2./3],[0,0.5,0.5,0.25,0.25,0]])
-restRoom = TRANS([[2./3,2./3,1,1],[0,0.25,0.25,0]])
-nursing1 = TRANS([[0,0,.2,.2],[0,.4,.4,.0]])
-nursing2 = TRANS([[.2,.2,.4,.4],[0,.4,.4,.0]])
-nursing3 = TRANS([[0,0,.4,.4],[.4,.8,.8,.4]])
-nursing4 = TRANS([[0,0,.4,.4],[.8,1.1,1.1,.8]])
-nursing5 = TRANS([[0,0,.4,.4],[1.1,1.4,1.4,1.1]])
+Room = polyline2lar([TRANS([[0,0,1,1,2./3,2./3],[0,0.5,0.5,0.25,0.25,0]])])
+RestRoom = polyline2lar([TRANS([[2./3,2./3,1,1],[0,0.25,0.25,0]])])
+Nursing1 = polyline2lar([TRANS([[0,0,.2,.2],[0,.4,.4,.0]])])
+Nursing2 = polyline2lar([TRANS([[.2,.2,.4,.4],[0,.4,.4,.0]])])
+Nursing3 = polyline2lar([TRANS([[0,0,.4,.4,.2],[.4,.8,.8,.4,.4]])])
+Nursing4 = polyline2lar([TRANS([[0,0,.4,.4],[.8,1.1,1.1,.8]])])
+Nursing5 = polyline2lar([TRANS([[0,0,.4,.4],[1.1,1.4,1.4,1.1]])])
 
-service2 = Struct([polyline2lar([nursing1,nursing2,nursing3,nursing4,nursing5])])
-service1 = Struct([t(0,1.4),s(1,-1),service2])
-wardServices = Struct([t(1.3,.3),service1,t(0,2),service2])
-HospitalRoom = Struct([polyline2lar([room,restRoom])],"Room")
-DounbleRoom =  Struct([HospitalRoom,t(0,1),s(1,-1),HospitalRoom])
-HalfWard = Struct(4*[DounbleRoom,t(0,1)])
-Ward = Struct([HalfWard, wardServices, t(3,0),s(-1,1), HalfWard])
-V,FV,EV = struct2lar(Ward)
+room = Struct([Room],"Room")
+restRoom = Struct([RestRoom],"RestRoom")
+nursing1 = Struct([Nursing1],"Nursing1")
+nursing2 = Struct([Nursing2],"Nursing2")
+nursing3 = Struct([Nursing3],"Nursing3")
+nursing4 = Struct([Nursing4],"Nursing4")
+nursing5 = Struct([Nursing5],"Nursing5")
+
+service2 = Struct([nursing1,nursing2,nursing3,nursing4,nursing5],"Service2")
+service1 = Struct([t(0,1.4),s(1,-1),service2],"Service1")
+wardServices = Struct([t(1.3,.3),service1,t(0,2),service2],"WardServices")
+hospitalRoom = Struct([room,restRoom],"HospitalRoom")
+doubleRoom =  Struct([hospitalRoom,t(0,1),s(1,-1),hospitalRoom],"DoubleRoom")
+halfWard = Struct(4*[doubleRoom,t(0,1)],"HalfWard")
+ward = Struct([halfWard, wardServices, t(3,0),s(-1,1), halfWard],"Ward")
+V,FV,EV = struct2lar(ward)
 theWard = lar2lines((V,FV))
 @}
 %-------------------------------------------------------------------------------
@@ -396,36 +404,34 @@ theWard = lar2lines((V,FV))
 @< Ward sections @>
 
 """ Second floor """
-PublicCore4 = metric(TRANS([[1.7,1.7,4,4,6,6,8.3,8.3, 8,7+2./3, 7, 3, 2+1./3,2],
-    [8,8.4,8.4,9,9,8.4,8.4,8,8,8,8,8,8,8]]))
-ObstetricGinecologicWard = AA(metric)((AA(larTranslate([0,4]))(theWard)))
-SurgicalWard1 = AA(metric)((AA(larTranslate([7,4]))(theWard)))
-Filter1 = metric(TRANS([[1,1,1.35,1.35,1.15],[3.7,4,4,3.7,3.7]]))
-Filter2 = metric(TRANS([[8.65,8.65,9,9,8.8],[3.7,4,4,3.7,3.7]]))
-ServiceCore14 = metric(TRANS([[1.15, 1.15, 1.35,2.55, 2.55], [2.8, 3.7,3.7, 3.7, 2.8]]))
-ServiceCore24 = metric(TRANS([[7,7,8.65,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]]))
-FirstRoof = metric(TRANS([[4./7.5, 4./7.5,1.15,1.15,2.55,2.55,7,7,8.8,8.8,9.65,9.65],
-    [0,3.7,3.7,2.8,2.8,3.7,3.7,2.8,2.8,3.7,3.7,0]]))
-Corridor4a = metric([[1.35,3.7],[1.35,4],[2,4],[2.3333,4],[3,4],[7,4],[7.6667,4],[8,4],
-    [8.65,4],[8.65,3.7],[7,3.7],[2.55,3.7]])
-Corridor4b = metric([[1,4.0],[1,4.25],[1,4.5],[1,4.75],[1,5.0],[1,5.25],[1,5.5],
+PublicCore4 = TRANS([[1.7,1.7,4,4,6,6,8.3,8.3, 8,7+2./3, 7, 3, 2+1./3,2],
+    [8,8.4,8.4,9,9,8.4,8.4,8,8,8,8,8,8,8]])
+Filter1 = TRANS([[1,1,1.35,1.35,1.15],[3.7,4,4,3.7,3.7]])
+Filter2 = TRANS([[8.65,8.65,9,9,8.8],[3.7,4,4,3.7,3.7]])
+ServiceCore14 = TRANS([[1.15, 1.15, 1.35,2.55, 2.55], [2.8, 3.7,3.7, 3.7, 2.8]])
+ServiceCore24 = TRANS([[7,7,8.65,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])
+FirstRoof = TRANS([[4./7.5, 4./7.5,1.15,1.15,2.55,2.55,7,7,8.8,8.8,9.65,9.65],
+    [0,3.7,3.7,2.8,2.8,3.7,3.7,2.8,2.8,3.7,3.7,0]])
+Corridor4a = [[1.35,3.7],[1.35,4],[2,4],[2.3333,4],[3,4],[7,4],[7.6667,4],[8,4],
+    [8.65,4],[8.65,3.7],[7,3.7],[2.55,3.7]]
+Corridor4b = [[1,4.0],[1,4.25],[1,4.5],[1,4.75],[1,5.0],[1,5.25],[1,5.5],
     [1,5.75],[1,6.0],[1,6.25],[1,6.5],[1,6.75],[1,7.0],[1,7.25],[1,7.5],
     [1,7.75],[1,8.0],[2,8.0],[2,7.75],[2,7.5],[2,7.25],[2,7.0],[2,6.75],
     [2,6.5],[2,6.25],[2,6.0],[2,5.75],[2,5.5],[2,5.25],[2,5.0],[2,4.75],
-    [2,4.5],[2,4.25],[2,4.0],[1.35,4.0]])
-Corridor4b1 = metric([[1.3,4.3],[1.3,4.6],[1.3,4.9],[1.3,5.3],[1.3,5.7],[1.5,5.7],[1.7,5.7],
-    [1.7,5.3],[1.7,4.9],[1.7,4.6],[1.7,4.3]])
-Corridor4b2 = metric([[1.3,6.3],[1.3,6.7],[1.3,7.1],[1.3,7.4],[1.3,7.7],[1.7,7.7],[1.7,7.4],
-    [1.7,7.1],[1.7,6.7],[1.7,6.3],[1.5,6.3]])
-Corridor4c = metric([[8,4.0],[8,4.25],[8,4.5],[8,4.75],[8,5.0],[8,5.25],[8,5.5],
+    [2,4.5],[2,4.25],[2,4.0],[1.35,4.0]]
+Corridor4b1 = [[1.3,4.3],[1.3,4.6],[1.3,4.9],[1.3,5.3],[1.3,5.7],[1.5,5.7],[1.7,5.7],
+    [1.7,5.3],[1.7,4.9],[1.7,4.6],[1.7,4.3]]
+Corridor4b2 = [[1.3,6.3],[1.3,6.7],[1.3,7.1],[1.3,7.4],[1.3,7.7],[1.7,7.7],[1.7,7.4],
+    [1.7,7.1],[1.7,6.7],[1.7,6.3],[1.5,6.3]]
+Corridor4c = [[8,4.0],[8,4.25],[8,4.5],[8,4.75],[8,5.0],[8,5.25],[8,5.5],
     [8,5.75],[8,6.0],[8,6.25],[8,6.5],[8,6.75],[8,7.0],[8,7.25],[8,7.5],
     [8,7.75],[8,8.0],[8.3,8.0],[9,8.0],[9,7.75],[9,7.5],[9,7.25],[9,7.0],
     [9,6.75],[9,6.5],[9,6.25],[9,6.0],[9,5.75],[9,5.5],[9,5.25],[9,5.0],
-    [9,4.75],[9,4.5],[9,4.25],[9,4.0],[8.65,4.0]])
-Corridor4c1 = metric([[8.3,4.3],[8.3,4.6],[8.3,4.9],[8.3,5.3],[8.3,5.7],[8.5,5.7],[8.7,5.7],
-    [8.7,5.3],[8.7,4.9],[8.7,4.6],[8.7,4.3]])
-Corridor4c2 = metric([[8.3,6.3],[8.3,6.7],[8.3,7.1],[8.3,7.4],[8.3,7.7],[8.7,7.7],[8.7,7.4],
-    [8.7,7.1],[8.7,6.7],[8.7,6.3],[8.5,6.3]])
+    [9,4.75],[9,4.5],[9,4.25],[9,4.0],[8.65,4.0]]
+Corridor4c1 = [[8.3,4.3],[8.3,4.6],[8.3,4.9],[8.3,5.3],[8.3,5.7],[8.5,5.7],[8.7,5.7],
+    [8.7,5.3],[8.7,4.9],[8.7,4.6],[8.7,4.3]]
+Corridor4c2 = [[8.3,6.3],[8.3,6.7],[8.3,7.1],[8.3,7.4],[8.3,7.7],[8.7,7.7],[8.7,7.4],
+    [8.7,7.1],[8.7,6.7],[8.7,6.3],[8.5,6.3]]
 @}
 %-------------------------------------------------------------------------------
 
@@ -434,8 +440,10 @@ Corridor4c2 = metric([[8.3,6.3],[8.3,6.7],[8.3,7.1],[8.3,7.4],[8.3,7.7],[8.7,7.7
 @D Second floor's building units 
 @{""" Second floor's building units """
 publicCore4 = buildingUnit(PublicCore4,'PublicCore4')
-obstetricGinecologicWard = buildingUnit(ObstetricGinecologicWard,'ObstetricGinecologicWard')
-surgicalWard1 = buildingUnit(SurgicalWard1,'SurgicalWard1')
+ward21 = deepcopy(ward)
+ward22 = deepcopy(ward)
+obstetricGinecologicWard = Struct([t(0,4),ward21],'ObstetricGinecologicWard')
+surgicalWard1 = Struct([t(7,4),ward22],'SurgicalWard1')
 filter1 = buildingUnit(Filter1,'Filter1')
 filter2 = buildingUnit(Filter2,'Filter2')
 serviceCore14 = buildingUnit(ServiceCore14,'ServiceCore14')
@@ -473,9 +481,9 @@ secondFloor = Struct(buildingUnits3, "secondFloor")
 \paragraph{Third floor}
 %-------------------------------------------------------------------------------
 @D Third floor
-@{""" Third floor floor """
+@{""" Third floor floor 
 GeneralWard1 = AA(metric)(AA(larTranslate([0,4]))(theWard))
-SurgicalWard2 = AA(metric)(AA(larTranslate([7,4]))(theWard))
+SurgicalWard2 = AA(metric)(AA(larTranslate([7,4]))(theWard)) """
 @}
 %-------------------------------------------------------------------------------
 
@@ -484,8 +492,10 @@ SurgicalWard2 = AA(metric)(AA(larTranslate([7,4]))(theWard))
 %-------------------------------------------------------------------------------
 @D Third floor's building units 
 @{""" Third floor's building units """
-generalWard1 = buildingUnit(GeneralWard1,'GeneralWard1')
-surgicalWard2 = buildingUnit(SurgicalWard2,'SurgicalWard2')
+ward31 = deepcopy(ward)
+ward32 = deepcopy(ward)
+generalWard1 = Struct([t(0,4),ward31],'GeneralWard1')
+surgicalWard2 = Struct([t(7,4),ward32],'SurgicalWard2')
 @}
 %-------------------------------------------------------------------------------
 
@@ -508,9 +518,9 @@ thirdFloor = Struct(buildingUnits4, "thirdFloor")
 \paragraph{Fourth floor}
 %-------------------------------------------------------------------------------
 @D Fourth floor
-@{""" Fourth floor floor """
+@{""" Fourth floor floor 
 PediatricWard1 = AA(metric)(AA(larTranslate([0,4]))(theWard))
-PediatricWard2 = AA(metric)(AA(larTranslate([7,4]))(theWard))
+PediatricWard2 = AA(metric)(AA(larTranslate([7,4]))(theWard)) """
 @}
 %-------------------------------------------------------------------------------
 
@@ -518,8 +528,10 @@ PediatricWard2 = AA(metric)(AA(larTranslate([7,4]))(theWard))
 %-------------------------------------------------------------------------------
 @D Fourth floor's building units 
 @{""" Fourth floor's building units """
-pediatricWard1 = buildingUnit(PediatricWard1,'PediatricWard1')
-pediatricWard2 = buildingUnit(PediatricWard2,'PediatricWard2')
+ward41 = deepcopy(ward)
+ward42 = deepcopy(ward)
+pediatricWard1 = Struct([t(0,4),ward41],'PediatricWard1')
+pediatricWard2 = Struct([t(7,4),ward42],'PediatricWard2')
 @}
 %-------------------------------------------------------------------------------
 
@@ -542,9 +554,9 @@ fourthFloor = Struct(buildingUnits5, "fourthFloor")
 \paragraph{Fifth floor}
 %-------------------------------------------------------------------------------
 @D Fifth floor
-@{""" Fifth floor floor """
+@{""" Fifth floor floor 
 GeneralWard2 = AA(metric)(AA(larTranslate([0,4]))(theWard))
-GeneralWard3 = AA(metric)(AA(larTranslate([7,4]))(theWard))
+GeneralWard3 = AA(metric)(AA(larTranslate([7,4]))(theWard)) """
 @}
 %-------------------------------------------------------------------------------
 
@@ -553,8 +565,10 @@ GeneralWard3 = AA(metric)(AA(larTranslate([7,4]))(theWard))
 %-------------------------------------------------------------------------------
 @D Fifth floor's building units 
 @{""" Fifth floor's building units """
-generalWard2 = buildingUnit(GeneralWard2,'GeneralWard2')
-generalWard3 = buildingUnit(GeneralWard3,'GeneralWard3')
+ward51 = deepcopy(ward)
+ward52 = deepcopy(ward)
+generalWard2 = Struct([t(0,4),ward51],'GeneralWard2')
+generalWard3 = Struct([t(7,4),ward52],'GeneralWard3')
 @}
 %-------------------------------------------------------------------------------
 
@@ -595,9 +609,9 @@ BottomPillars = [((12,15),(0,5))]
 @D Generation of beams and structural chains 
 @{""" Generation of beams and structural chains """
 def ManhattanTest(nodes,nDict,i,j):
-	hi,ki = nodes[i]
-	hj,kj = nodes[j]
-	return nDict.setdefault((hi,kj),-1)!=-1 and nDict.setdefault((hj,ki),-1)!=-1
+    hi,ki = nodes[i]
+    hj,kj = nodes[j]
+    return nDict.setdefault((hi,kj),-1)!=-1 and nDict.setdefault((hj,ki),-1)!=-1
 
 def structureGrid(loci):
     nodes = AA(tuple)(CAT([CART([range(*I), range(*J)]) for (I,J) in loci]))
@@ -647,16 +661,16 @@ Nodes5 = AA(lambda v: list(v)+[24-.3])(nodes5)
 Nodes6 = AA(lambda v: list(v)+[28-.3])(nodes6)
 
 Frame0 = STRUCT(MKPOLS((Nodes0, arcs10))+MKPOLS((Nodes1, arcs11))+
-	MKPOLS((Nodes2, arcs12))+MKPOLS((Nodes3, arcs13))+
-	MKPOLS((Nodes4, arcs14))+MKPOLS((Nodes5, arcs15))+
-	MKPOLS((Nodes6, arcs16)) + \
-	CONS(AA(T([1,2,3]))(Nodes0+Nodes1+Nodes2+Nodes3+Nodes4+Nodes5+Nodes6))(
-	POLYLINE([[0,0,0],[0,0,-4]])  ))
+    MKPOLS((Nodes2, arcs12))+MKPOLS((Nodes3, arcs13))+
+    MKPOLS((Nodes4, arcs14))+MKPOLS((Nodes5, arcs15))+
+    MKPOLS((Nodes6, arcs16)) + \
+    CONS(AA(T([1,2,3]))(Nodes0+Nodes1+Nodes2+Nodes3+Nodes4+Nodes5+Nodes6))(
+    POLYLINE([[0,0,0],[0,0,-4]])  ))
 
 Frame1 = STRUCT(MKPOLS((Nodes0, arcs20))+MKPOLS((Nodes1, arcs21))+
-	MKPOLS((Nodes2, arcs22))+MKPOLS((Nodes3, arcs23))+
-	MKPOLS((Nodes4, arcs24))+MKPOLS((Nodes5, arcs25))+
-	MKPOLS((Nodes6, arcs26)) )
+    MKPOLS((Nodes2, arcs22))+MKPOLS((Nodes3, arcs23))+
+    MKPOLS((Nodes4, arcs24))+MKPOLS((Nodes5, arcs25))+
+    MKPOLS((Nodes6, arcs26)) )
 SteelFrame = OFFSET([.2,.2,.3])(STRUCT([Frame0,Frame1]))
 """
 ConcreteFrame = OFFSET([.4,.4,.8])(Frame0)
@@ -665,6 +679,42 @@ VIEW(Frame0)
 VIEW(STRUCT([Frame0,Frame1]))
 @}
 %-------------------------------------------------------------------------------
+
+
+\subsection{Structure embedding}
+
+\paragraph{Structure embedding}
+%-------------------------------------------------------------------------------
+@D Structure embedding 
+@{""" Structure embedding """
+def structEmbed(struct):
+    new = deepcopy(struct)
+    embedTraversal(new) 
+    return new
+    
+def embedTraversal(obj):
+    for i in range(len(obj)):
+        if (isinstance(obj[i],tuple) or isinstance(obj[i],list)):
+            [vert.append(0.0) for vert in obj[i][0]]
+        elif isinstance(obj[i],Struct):
+            embedTraversal(obj[i])
+        elif isinstance(obj[i],Mat): 
+            """
+            d = obj[i].shape[0]
+            print "d =",d
+            mat = scipy.identity(d+1)
+            print "mat =",mat
+            for h in range(d-1):
+                mat[h,d] = obj[i][h,d-1]
+                for k in range(d-1):
+                    mat[h,k] = obj[i][h,k]
+            obj[i] = mat.view(Mat)
+            """
+            pass
+    return None    
+@}
+%-------------------------------------------------------------------------------
+
 
 
 \paragraph{2.5D building assembly}
@@ -677,26 +727,31 @@ def embedBuildingUnitsIn3D(floors):
             buildingUnit = larEmbed(1)(buildingUnit)
     return floors
         
-floors = [groundFloor,mezanineFloor,firstFloor,
-                secondFloor,thirdFloor,fourthFloor,fifthFloor]
-floors3D = AA(COMP([Struct,AA(larEmbed(1)),evalStruct]))(floors)
-building = evalStruct(Struct(CAT(DISTR([floors3D,t(0,0,4)]))))
-storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
+floors = Struct([groundFloor,mezanineFloor,firstFloor,
+                secondFloor,thirdFloor,fourthFloor,fifthFloor],"Floors")
 
-VIEW(STRUCT([storeys,SteelFrame] + CAT(AA(MKPOLS)(AA(CONS([S1,S3]))(building))) ))
+#floors3D = structEmbed(floors)
+
+#building = Struct(CAT(DISTR([floors3D,t(0,0,4)])))
+
+
+
+#storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
+
+#VIEW(STRUCT([storeys,SteelFrame] + CAT(AA(MKPOLS)(AA(CONS([S1,S3]))(building))) ))
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @D test
 @{""" 2.5D building assembly """
-floors = Struct([groundFloor,mezanineFloor,firstFloor,
-                secondFloor,thirdFloor,fourthFloor,fifthFloor,fifthFloor],"building")
-
-floors3D = embedStruct(1)(floors)
-building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])))
-models = AA(CONS([S1,S3]))(building)
-VIEW(STRUCT(CAT(AA(MKPOLS)(models))))
+%floors = Struct([groundFloor,mezanineFloor,firstFloor,
+%                secondFloor,thirdFloor,fourthFloor,fifthFloor,fifthFloor],"building")
+%
+%floors3D = embedStruct(1)(floors)
+%building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])))
+%models = AA(CONS([S1,S3]))(building)
+%VIEW(STRUCT(CAT(AA(MKPOLS)(models))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -781,7 +836,103 @@ Complex of columns, and beams, girders, spandrels, and trusses connected to one 
 @}
 %-------------------------------------------------------------------------------
 
-\subsection{Design review}
+%===============================================================================
+\section{Design review}
+%===============================================================================
+
+
+%-------------------------------------------------------------------------------
+\subsection{Integration and cochains computation}
+%-------------------------------------------------------------------------------
+
+\paragraph{Surface integration}
+
+%-------------------------------------------------------------------------------
+@D Surface integration
+@{from integr import *
+""" Surface integration """
+def surfIntegration(model):
+    V,FV,EV = model
+    V = [v+[0.0] for v in V]
+    cochain = []
+    for face in FV:
+        triangles = AA(C(AL)(face[0]))(TRANS([face[1:-1],face[2:]]))
+        P = V,triangles
+        area = Surface(P,signed=True) 
+        cochain += [abs(area)]
+    return cochain
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Surface cochain computation}
+
+%-------------------------------------------------------------------------------
+@D Surface cochain computation
+@{""" Surface cochain computation """
+def surfaceCochain(buildingUnit):
+    print "\nbuildingUnit.name =",buildingUnit.name
+    cochain = AA(int)(surfIntegration(struct2lar(buildingUnit)))
+    names = [struct.name for struct in buildingUnit.body]
+    return zip(names,cochain)
+
+for floor in floors:
+    areas = surfaceCochain(floor)
+    print floor.name + " =", areas
+    print floor.name + " m^2 =", sum(TRANS(areas)[1])
+    print ""
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Computing of a surface cochain via Struct instance traversal}
+
+%-------------------------------------------------------------------------------
+@D Computing of a surface cochain via Struct instance traversal
+@{""" Computing of a surface cochain via Struct instance traversal """
+def structCochain(struct,levels=1):
+    cochain = defaultdict(int)
+    dim = checkStruct(struct.body)
+    CTM, stack = scipy.identity(dim+1), []
+    nameStack,cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
+    for cell,cochainValue in cochainMap:
+        nameArray = cell.split(".")
+        cochain[".".join(nameArray[:levels])] += cochainValue[0]
+    return cochain
+
+def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
+    repeatedNames = defaultdict(int)
+    
+    def map(model):
+        V,FV,EV = larApply(CTM)(model)
+        return AA(int)(surfIntegration((metric(V),FV,EV)))
+    
+    for i in range(len(obj)):
+        if isinstance(obj[i],Struct):
+            repeatedNames[obj[i].name] += 1
+            if repeatedNames[obj[i].name]==1: theName = obj[i].name
+            else: theName = obj[i].name + str(repeatedNames[obj[i].name]-1)
+            names.append(theName)
+            nameStack = nameStack+[names]
+            stack.append(CTM) 
+            
+            structCochainTraversal(CTM, stack, obj[i], scene, names, nameStack)
+            
+            CTM = stack.pop()
+            theName = names.pop()
+        elif isinstance(obj[i],Model): 
+            scene += [( ".".join(names), map(obj[i]) )]
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+              len(obj[i])==2 or len(obj[i])==3):
+            scene += [( ".".join(names), map(obj[i]) )]
+        elif isinstance(obj[i],Mat): 
+            CTM = scipy.dot(CTM, obj[i])
+    return nameStack,scene
+
+if __name__ == "__main__":
+    print "\nsurface cochain(ward) =", structCochain(ward,2)
+    print "\nsurface cochain(doubleRoom) =", structCochain(doubleRoom,4)
+@}
+%-------------------------------------------------------------------------------
 
 
 %===============================================================================
@@ -820,7 +971,11 @@ DEBUG = True
 @< Generation of beams and structural chains @>
 @< Instancing of 3D structure frame @>
 @< Assembling 3D structure frame @>
+@< Structure embedding @>
 @< 2.5D building assembly @>
+@< Surface integration @>
+@< Surface cochain computation @>
+@< Computing of a surface cochain via Struct instance traversal @>
 @}
 %-------------------------------------------------------------------------------
 

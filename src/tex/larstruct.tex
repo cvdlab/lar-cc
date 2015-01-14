@@ -229,6 +229,8 @@ class Struct:
         return len(list(self.body))
     def __getitem__(self,i):
         return list(self.body)[i]
+    def __setitem__(self,i,value):
+        self.body[i] = value
     def __print__(self): 
         return "<Struct name: %s>" % self.__name__()
     def __repr__(self):
