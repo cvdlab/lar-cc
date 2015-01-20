@@ -103,23 +103,39 @@ and you will see something like
 \end{figure}
 
 \subsection{Working-file}
-For the impatient, open a terminal, and change directory to \texttt{larcc}, the root of the LAR-CC project, if not already there, whenever you hold it on your system. Then create your working-file \texttt{src/tex/<name>.tex} as a copy of \texttt{src/tex/template.tex}. Open the working-file with an editor, possibly with one aware of the \LaTeX\ syntax, and make few mandatory changes on the template text: 
+For the impatient, open a terminal, and change directory to \texttt{larcc}, the root of the LAR-CC project, if not already there, whenever you hold it on your system. 
+
+Then create your working-file \texttt{src/tex/<name>.tex} as a copy of \texttt{src/tex/template.tex}. Open the working-file with an editor, possibly with one aware of the \LaTeX\ syntax, and make few mandatory changes on the template text: 
 
 \begin{description}
 \item[Title] change the \texttt{title} command, substituting the ``Title'' string with the actual sentence to be used as document title;
+
 \item[Author]  do the same for the \texttt{author} command, substituting the ``TheAuthor'' string with the actual document author;
 
 \item[Bibliography] substitute the ``template'' string with the actual working-file name (without the file extension).
+
+\item[Test files folder] within the \texttt{test/py/} folder, create a folder named \texttt{<name>} --- the working-file name (without the file extension) --- where to put the example files and the file used for unit testing of the module.
+
+\item[\texttt{Makefile} editing]
+edit the first non-comment line of the \texttt{Makefile} writing
+{\small
+\begin{verbatim}
+NAME = <name>
+\end{verbatim}}
 \end{description}
 
-Finally you may starting the real work by writing the documentation/code within your \texttt{<name>.tex} file, using the simple mark-up rules of \href{run:nuwebdoc.pdf}{Nuweb}.
+
 
 \subsection{Using the IDE}
+
+Finally, you may starting the real work by writing the documentation/code within your \texttt{<name>.tex} file, using the simple mark-up rules of \href{run:nuwebdoc.pdf}{Nuweb}.
 
 In short, in order to use the development environment, you must (a) open your terminal and move to the \texttt{larcc} directory, (b) write a \texttt{tex} file, including documentation and suitably tagged computer code, (c) save it in the \texttt{src} subdirectory, and (d)  execute a \texttt{make} command, asking either for generation of the \texttt{pdf} or the \texttt{html} documentation, or  execution of \href{http://en.wikipedia.org/wiki/Unit_testing}{unit testing}, or simply for the compilation of the source code.
 
 
 \subsubsection{Using Leo}
+
+Currently, \texttt{Leo} is not being used. I found it extremely interesting, but the learning curve is too hard for me.
 
 \href{http://leoeditor.com}{Leo} is a multi-platform and open-source outliner and \emph{non-linear} text editor allowing for 
 fundamentally different ways of using and organizing data, programs and scripts. 
