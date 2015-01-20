@@ -31,6 +31,7 @@ def polyline2lar(polylines):
    EV = face2edge(FV)
    return V,FV,EV
 
+
 """ transform a lar model to a list of lar structures """
 def lar2Structs(model):
    V,FV = model

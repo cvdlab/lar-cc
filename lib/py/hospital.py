@@ -4,6 +4,7 @@ from pyplasm import *
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+from copy import deepcopy
 from architectural import *
 from iot3d import *
 DEBUG = True
@@ -14,7 +15,7 @@ Y = [0]+14*[8.4]+[0]
 xgrid = QUOTE(X[1:-1])
 ygrid = QUOTE(Y[1:-1])
 structuralGrid = PROD([xgrid,ygrid])
-ymax = SUM(Y)
+YMAX = SUM(Y)
 
 """ Coding utilities """
 """ From grid to metric coordinates """
@@ -31,20 +32,20 @@ def grid2coords(X,Y):
         else: return [xcoord, ycoord, point[2]]
     return grid2coords0
 
-def coordMaps(ymax):
+def coordMaps(YMAX):
     def coordMaps0(polyline):
         polyline = AA(grid2coords(X,Y))(polyline)
-        polyline = vmap(ymax)(polyline)
+        polyline = vmap(YMAX)(polyline)
         return [eval(vcode(point)) for point in polyline]
     return coordMaps0
 
-metric = coordMaps(ymax)
+metric = coordMaps(YMAX)
 
 """ Mapping the grid frame to a Cartesian right-hand frame """
-def vmap(ymax):
+def vmap(YMAX):
     def vmap0(V):
-        if len(V[0])==3: W = [[x,ymax-y,z] for x,y,z in V]
-        else: W = [[x,ymax-y] for x,y in V]
+        if len(V[0])==3: W = [[x,YMAX-y,z] for x,y,z in V]
+        else: W = [[x,YMAX-y] for x,y in V]
         return W
     return vmap0
                 
@@ -55,13 +56,21 @@ def embed(z):
 
 """ Solidify the boundary of polyline-like building units """
 def floor(X,Y):
-    def floor0(structure2D):
-        V,FV,EV = struct2lar(structure2D)
+    def floor0(structure2D,metric=ID):
+        V,FV,EV = struct2lar(structure2D,metric)
         BE = [EV[e] for e in boundaryCells(FV,EV)]
         theFloor = SOLIDIFY(STRUCT([POLYLINE([V[v],V[w]]) for v,w in BE]))
         return theFloor,V,EV
     return floor0
 
+""" Make a struct object from a 2D sequence of polylines  """
+isPolyline = ISSEQOF(ISSEQOF(ISNUM))
+isPolylineSet = ISSEQOF(ISSEQOF(ISSEQOF(ISNUM)))
+
+def buildingUnit(polyline,string):
+    if ISSEQOF(ISSEQOF(ISNUM))(polyline): model = polyline2lar([polyline])
+    else: model = polyline2lar(polyline)
+    return Struct([model],str(string))
 """ Make a struct object from a 2D polyline """
 isPolyline = ISSEQOF(ISSEQOF(ISNUM))
 isPolylineSet = ISSEQOF(ISSEQOF(ISSEQOF(ISNUM)))
@@ -270,7 +279,7 @@ corridor0b = buildingUnit(Corridor0b,"Corridor0b")
 
 buildingUnits0 = [openCourt10,radioDiagnosticImaging,serviceCore10,serviceCore20,
     emergencyDepartment,endoscopy,outPatientDepartment10,outPatientDepartment20,
-    renalDialysis,openCourt20,chemiotherapyUnit,service,physicalMedicineDept,
+    renalDialysis,chemiotherapyUnit,service,physicalMedicineDept,
     mainEntrance,unknown,corridor0,corridor0a,corridor0b]
     
 groundFloor = Struct(buildingUnits0, "groundFloor")
@@ -405,38 +414,38 @@ generalWard3 = Struct([t(7,4),ward52],'GeneralWard3')
 
 
 buildingUnits6 = [generalWard2,generalWard3,publicCore4,serviceCore14,serviceCore24,
-                filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
-                corridor4c1,corridor4c2]
+                filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,
+                corridor4c,corridor4c1,corridor4c2]
 
 fifthFloor = Struct(buildingUnits6, "fifthFloor")
 
 
 """ Storey generation """
-def structDraw(color,scaling):
-    def structDraw0(obj): return obj.draw(color,scaling)
+def structDraw(color,scaling,metric=ID):
+    def structDraw0(obj): return obj.draw(color,scaling,metric)
     return structDraw0
 
-ground,W,EV = floor(X,Y)(groundFloor)
+ground,W,EV = floor(X,Y)(groundFloor,metric)
 ground2D = STRUCT([ground, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits0))
-mezanine,W,EV = floor(X,Y)(mezanineFloor)
+            AA(structDraw(RED,40,metric))(buildingUnits0))
+mezanine,W,EV = floor(X,Y)(mezanineFloor,metric)
 mezanine2D = STRUCT([mezanine, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits1))
-first,W,EV = floor(X,Y)(firstFloor)
+            AA(structDraw(RED,40,metric))(buildingUnits1))
+first,W,EV = floor(X,Y)(firstFloor,metric)
 first2D = STRUCT([first, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits2))
-second,W,EV = floor(X,Y)(secondFloor)
+            AA(structDraw(RED,40,metric))(buildingUnits2))
+second,W,EV = floor(X,Y)(secondFloor,metric)
 second2D = STRUCT([second, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits3))
-third,W,EV = floor(X,Y)(thirdFloor)
+            AA(structDraw(RED,40,metric))(buildingUnits3))
+third,W,EV = floor(X,Y)(thirdFloor,metric)
 third2D = STRUCT([third, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits4))
-fourth,W,EV = floor(X,Y)(fourthFloor)
+            AA(structDraw(RED,40,metric))(buildingUnits4))
+fourth,W,EV = floor(X,Y)(fourthFloor,metric)
 fourth2D = STRUCT([fourth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits5))
-fifth,W,EV = floor(X,Y)(fifthFloor)
+            AA(structDraw(RED,40,metric))(buildingUnits5))
+fifth,W,EV = floor(X,Y)(fifthFloor,metric)
 fifth2D = STRUCT([fifth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits6))
+            AA(structDraw(RED,40,metric))(buildingUnits6))
 
 """ Storey viewing """
 VIEW(ground2D)
@@ -448,9 +457,12 @@ VIEW(fourth2D)
 VIEW(fifth2D)
 
 """ Column locations on grid """
-SecondPillars = [((4,5),(1,10)),((3,4),(1,4)),((3,4),(7,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),((9,10),(4,7))]
-FirstPillars = [((0,5),(1,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),((9,10),(4,7))]
-FrontPillars = [((8,10),(0,11)),((10,11),(0,6)),((10,11),(7,11)),((11,12),(0,3)),((11,12),(4,11))]
+SecondPillars = [((4,5),(1,10)),((3,4),(1,4)),((3,4),(7,10)),((4,8),(0,4)),((4,8),
+            (7,11)),((8,9),(0,11)),((9,10),(4,7))]
+FirstPillars = [((0,5),(1,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),
+            ((9,10),(4,7))]
+FrontPillars = [((8,10),(0,11)),((10,11),(0,6)),((10,11),(7,11)),((11,12),(0,3)),
+            ((11,12),(4,11))]
 MezaninePillars = FirstPillars + FrontPillars
 BottomPillars = [((12,15),(0,5))]
 
@@ -514,52 +526,18 @@ ConcreteFrame = OFFSET([.4,.4,.8])(Frame0)
 VIEW(Frame0)
 VIEW(STRUCT([Frame0,Frame1]))
 
-""" Structure embedding """
-def structEmbed(struct):
-    new = deepcopy(struct)
-    embedTraversal(new) 
-    return new
-    
-def embedTraversal(obj):
-    for i in range(len(obj)):
-        if (isinstance(obj[i],tuple) or isinstance(obj[i],list)):
-            [vert.append(0.0) for vert in obj[i][0]]
-        elif isinstance(obj[i],Struct):
-            embedTraversal(obj[i])
-        elif isinstance(obj[i],Mat): 
-            """
-            d = obj[i].shape[0]
-            print "d =",d
-            mat = scipy.identity(d+1)
-            print "mat =",mat
-            for h in range(d-1):
-                mat[h,d] = obj[i][h,d-1]
-                for k in range(d-1):
-                    mat[h,k] = obj[i][h,k]
-            obj[i] = mat.view(Mat)
-            """
-            pass
-    return None    
 
-""" 2.5D building assembly """
-def embedBuildingUnitsIn3D(floors):
-    for floor in floors:
-        for buildingUnit in floor.body:
-            buildingUnit = larEmbed(1)(buildingUnit)
-    return floors
-        
+""" 2.5D building assembly """        
 floors = Struct([groundFloor,mezanineFloor,firstFloor,
-                secondFloor,thirdFloor,fourthFloor,fifthFloor],"Floors")
+                 secondFloor,thirdFloor,fourthFloor,fifthFloor],"Floors")
 
-#floors3D = structEmbed(floors)
+floors3D = embedStruct(1)(floors)
+building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])),"Building")
+V,FV,EV = struct2lar(building,metric)
+VIEW(STRUCT(MKPOLS((V,EV))))
 
-#building = Struct(CAT(DISTR([floors3D,t(0,0,4)])))
-
-
-
-#storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
-
-#VIEW(STRUCT([storeys,SteelFrame] + CAT(AA(MKPOLS)(AA(CONS([S1,S3]))(building))) ))
+storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
+VIEW(STRUCT([storeys,SteelFrame] + MKPOLS((V,EV)) ))
 
 from integr import *
 """ Surface integration """

@@ -48,19 +48,48 @@
 \tableofcontents
 
 \begin{abstract}
-In this module we develop stepwise the concept and the preliminary building program of a hospital of medium size, using as source the document~\cite{who:2013} of the World Health Organisation.
+In this module we develop stepwise the concept and the preliminary building program of a hospital of medium size, using as source the document~\cite{who:2013} of the World Health Organisation. The main aim of this modelling is to make experiments with ``cochain calculus'' over a cell decomposition of a quite complex engineering project. It may be useful to eemplify some characters of a model-based engineering approach to the initial, and more important setps of an engineering project.
 \end{abstract}
 
 \section{Introduction}
 
+The development of the geometric model of a general hospital, and some computational experiments of model-based engineering, is the topic and the main aim of this software module.
 
 \section{Model planning}
 
 \subsection{Data sources}
 
+The starting point of the modelling developed here is the paper~\cite{who:2013}, about Hospital Planning and Design, downloadable from~\href{http://paoluzzi.dia.uniroma3.it/web/hospital-planning-and-design.pdf}{here}, and in particular the two images shown in Figure~\ref{fig:hismail} and relative to the functional zoning of floors, and providing an axonometric view of the vertical organisation of the hospital.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.495\linewidth]{images/hismail-1} 
+   \includegraphics[width=0.495\linewidth]{images/hismail-2} 
+   \caption{Two images of the example model for hospital planning and design used in this module: (a) functional zoning of the mezzanine floor; (b) axonometric view of the vertical design organisation.}
+   \label{fig:hismail}
+\end{figure}
+
 \subsection{Reference grid}
 
+Looking at the images of Figure~\ref{fig:hismail}, it is easy to notice the presence of a very regular structural frame, providing in the following a reference grid for the numeric input of the geometry of the departments and floors of the hospital model. Some images with evidenced (in blue) the structural frame grid are shown in Figure~\ref{fig:referencegrid}.
+
+It may be useful to underline that the grid step in the $y$ direction (from top to bottom of the drawings) is constant and equal to $8.4 m$, whereas the grid in the $x$ direction (from left to right of the drawings) alternates the $[7.5,9.5,7.5] m$ pattern with the step-size used in the other direction ($8.4 m$). 
+
+Notice also that both grid directions, and of course the structural frame of the building, are aligned with the \emph{inpatient wards}, that supply one the main ideas of the design concept as a whole.
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.495\linewidth]{images/firstfloor} 
+   \includegraphics[width=0.495\linewidth]{images/secondfloor} 
+   \caption{The zooming of two floor plans, with evidentced the structural grid (in blue): (a) first floor; (b) second floor.}
+   \label{fig:referencegrid1}
+\end{figure}
+
 \paragraph{Reference grid}
+
+The reference grid is defined as \texttt{structuralGrid} in the script below, where \texttt{PROD} is the \texttt{pyplasm} primitive for Cartesian product of geometric values. The global variable \texttt{YMAX} is used in this module to compute (in the \texttt{metric} function) a proper coordinate transformation of the model from the reference frame used in the 2D hospital drawings (origin at top-left point, $y$ pointing downwards---see Figure~\ref{fig:referencegrid1}) to the standard righthand reference frame (origin at bottom-left point, $y$ pointing upwards---see Figure~\ref{fig:referencegrid2}).
+
 %-------------------------------------------------------------------------------
 @D Reference grid
 @{""" Reference grid """
@@ -69,11 +98,24 @@ Y = [0]+14*[8.4]+[0]
 xgrid = QUOTE(X[1:-1])
 ygrid = QUOTE(Y[1:-1])
 structuralGrid = PROD([xgrid,ygrid])
-ymax = SUM(Y)
+YMAX = SUM(Y)
 @}
 %-------------------------------------------------------------------------------
 
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.33\linewidth]{images/hospitalgrid} 
+   \caption{The reference grid used in the model construction. The intersections of grid lines have integer coordinates.}
+   \label{fig:referencegrid2}
+\end{figure}
+
+
 \paragraph{From array indices to grid coordinates}
+
+The reference grid, as the Cartesian product of two subsets of adjacent integers, will be used both to strongly simplify the input of data, and to assign to such coordinate numbers a more interesting meaning. For example the open space in the middle of the building will so defined as the 2D box with extreme points of integer coordinates $(3,4)$ and $(7,11)$.
+Therefore the whole building  will be contained in the 2D interval $[0,10]\times [0,14]$ in ``\emph{grid coordinates}''.
+
 %-------------------------------------------------------------------------------
 @D From array indices to grid coordinates
 @{""" From array indices to grid coordinates """
@@ -83,8 +125,54 @@ def index2coords(theArray):
 %-------------------------------------------------------------------------------
 
 
+\paragraph{From grid to metric coordinates}
+The actual transformation of vertices of geometric data is executed by applying the (partial) function \texttt{metric} to a list of 2D points, as shown by the example below.
+
+%-------------------------------------------------------------------------------
+@D From grid to metric coordinates
+@{""" From grid to metric coordinates """
+def grid2coords(X,Y):
+    xMeasures = list(cumsum(X))
+    yMeasures = list(cumsum(Y))
+    def grid2coords0(point):
+        x,y = point[0:2]
+        xint,yint = int(x), int(y)
+        xdec,ydec = float(x-xint), float(y-yint)
+        xcoord = xMeasures[xint] + xdec*X[xint+1]
+        ycoord = yMeasures[yint] + ydec*Y[yint+1]
+        if len(point)==2: return [xcoord, ycoord]
+        else: return [xcoord, ycoord, point[2]]
+    return grid2coords0
+
+def coordMaps(YMAX):
+    def coordMaps0(polyline):
+        polyline = AA(grid2coords(X,Y))(polyline)
+        polyline = vmap(YMAX)(polyline)
+        return [eval(vcode(point)) for point in polyline]
+    return coordMaps0
+
+metric = coordMaps(YMAX)
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Example} 
+A simple example of transformation from grid to metric coordinates is given here:
+{\small 
+\begin{verbatim}
+polyline = metric([[3,4],[3,8],[4,8],[4,7.8],[6,7.8],[6,8],[6.65,8],[6.65,4]])
+>>> [[24.5,84.0],[24.5,50.4],[32.9,50.4],[32.9,52.08],[49.7,52.08],[49.7,50.4],
+	 [55.16,50.4],[55.16,84.0]]
+\end{verbatim}}
+
+
+
 \subsection{Architecture of modeling process}
 
+A short summary of the  modelling process of the whole hospital follows. First we found the schematic plans of the building,
+and provided them with a reference grid by locating the main design choices about the structural frame.
+Then we enter floor-wise the 2D geometry of the single storeys, as aggregations of hospital departments and services.
+The input of data is made carefully, in order to get a snap of coincident vertices of adjacent departments, i.e.~of departments sharing some common edges. The input of geometry is done in grid coordinates, giving the boundary sequences of vertices in counterclockwise order. These are then transformed in LAR (Linear Algebraic Representation) data structures~\cite{Dicarlo:2014:TNL:2543138.2543294} and embedded into instances of the \texttt{Struct}, the \texttt{lar-cc} class for  hierarchical structures, in order to append some specific information (like the structure name, the containment box, and so on). At the end of this step the whole building is defined as the \texttt{Struct} made by his storeys. An embedding in 3D of such 2D geometric data provided a 2.5-dimensional mock-up of the building.
 
 
 %===============================================================================
@@ -96,7 +184,8 @@ def index2coords(theArray):
 As already said, the data input for this project was made by hand. Of course, an
 interactive user-interface in underway. I would like to notice that to enter apart the 
 coordinates of the vertices of cells, as two (or three) adjacent arrays, is much 
-faster and lesser in danger of getting errors than to enter an array of points.
+faster and lesser in danger of getting errors than to enter an array of points as 
+pairs of coordinates.
 
 The several building units contained in this storey are given in the below script,
 each associated to a single ordered polyline, transposed on coordinates. Let us notice the used of 
@@ -127,6 +216,11 @@ object with the same name.
 
 
 \subsubsection{Ground floor}
+
+The first set of definitions concerns the several departments of the hospital's ground floor,
+given in the script below. Just notice that most the various counterclockwise ordered sets of points are obtained by 
+transposing (see the \texttt{TRANS} primitive) the two arrays of $x$ and $y$ coordinates. An exception is the \texttt{Corridor0} array of 2D points.
+
 \paragraph{Ground floor input}
 
 %-------------------------------------------------------------------------------
@@ -167,7 +261,31 @@ Corridor0b = TRANS([[4.5, 4.5, 4, 4, 4.5, 4.5, 4.75,4.75, 4.75],
 %-------------------------------------------------------------------------------
 
 
+
+\paragraph{Make a struct object from a 2D polyline sequence}
+
+The following script gives the \texttt{buildingUnit} function, that takes as input a list of pollens (list of points)
+and a naming string, and returns a \texttt{Struct} instance, with the given name.
+
+%-------------------------------------------------------------------------------
+@D Make a struct object from a 2D polyline 
+@{""" Make a struct object from a 2D sequence of polylines  """
+isPolyline = ISSEQOF(ISSEQOF(ISNUM))
+isPolylineSet = ISSEQOF(ISSEQOF(ISSEQOF(ISNUM)))
+
+def buildingUnit(polyline,string):
+    if ISSEQOF(ISSEQOF(ISNUM))(polyline): model = polyline2lar([polyline])
+    else: model = polyline2lar(polyline)
+    return Struct([model],str(string))
+@}
+%-------------------------------------------------------------------------------
+
+
 \paragraph{Ground floor's building units}
+
+The following script transforms the previous sets of polylines into some equivalent \texttt{Struct} instances.
+Notice the use of the first capital-case letter for the polylines, and the first lower-case letter for the \texttt{Struct} objects.
+
 %-------------------------------------------------------------------------------
 @D Ground floor's building units 
 @{""" Ground floor's building units """
@@ -193,6 +311,10 @@ corridor0b = buildingUnit(Corridor0b,"Corridor0b")
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{The \texttt{groundFloor} hierarchical object}
+The hierarchical structure of the lowest floor, denoted as \texttt{groundFloor}, is given here.
+Some images of it, including the names of the component departments, in either grid or metric coordinates, are shown in Figure~\ref{fig:groundFloor}.
+
 %-------------------------------------------------------------------------------
 @D Ground floor structure
 @{""" Ground floor structure """
@@ -201,12 +323,47 @@ corridor0b = buildingUnit(Corridor0b,"Corridor0b")
 
 buildingUnits0 = [openCourt10,radioDiagnosticImaging,serviceCore10,serviceCore20,
     emergencyDepartment,endoscopy,outPatientDepartment10,outPatientDepartment20,
-    renalDialysis,openCourt20,chemiotherapyUnit,service,physicalMedicineDept,
+    renalDialysis,chemiotherapyUnit,service,physicalMedicineDept,
     mainEntrance,unknown,corridor0,corridor0a,corridor0b]
     
 groundFloor = Struct(buildingUnits0, "groundFloor")
 @}
 %-------------------------------------------------------------------------------
+
+
+\paragraph{Example}
+
+A visual image of the  \texttt{groundFloor} structure is shown in Figure~\ref{fig:groundFloor}.
+The image in Figure~\ref{fig:groundFloor}b, produced in \emph{grid coordinates}, is generated by
+the script below. The corresponding plan in actual metric coordinates is shown in Figure~\ref{fig:groundFloor}c.
+Notice the translation and the scaling, that transform the geometric model in actual measurable quantities and correctly orient it with respect to the input images.
+
+%-------------------------------------------------------------------------------
+@O test/py/hospital/test01.py
+@{import sys
+sys.path.insert(0, 'lib/py/')
+from hospital import *
+
+models = evalStruct(copyStruct(groundFloor))
+lars = AA(AS(SEL)([1,3]))(models)
+VIEW(STRUCT(CAT(AA(MKPOLS)(lars))))
+
+Vs,EVs = TRANS(AA(AS(SEL)([1,3]))(models))
+Vs = AA(metric)(Vs)
+lars = TRANS([Vs,EVs])
+VIEW(STRUCT(CAT(AA(MKPOLS)(lars))))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/groundFloor1} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/groundFloor} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/groundFloorMetric} 
+   \caption{\texttt{groundFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \label{fig:groundFloor}
+\end{figure}
+
 
 \subsubsection{Mezanine floor}
 \paragraph{Mezanine floor input}
@@ -282,6 +439,15 @@ groundRoof = buildingUnit(GroundRoof,"GroundRoof")
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/mezanineFloor1} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/mezanineFloor} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/mezanineFloor2} 
+   \caption{\texttt{mezanineFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \label{fig:mezanine}
+\end{figure}
+
 %-------------------------------------------------------------------------------
 @D Mezanine floor structure
 @{""" Mezanine floor structure """
@@ -343,6 +509,15 @@ mezanineRoof = buildingUnit(MezanineRoof,"MezanineRoof")
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/firstFloor2Hospital} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/firstFloorHospital} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/firstFloor2} 
+   \caption{\texttt{firstFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \label{fig:firstFloor}
+\end{figure}
+
 %-------------------------------------------------------------------------------
 @D First floor structure
 @{""" First floor structure """
@@ -395,9 +570,16 @@ theWard = lar2lines((V,FV))
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/ward} 
+   \caption{The cellular complex $(V,FV,EV)$ generated by the \texttt{ward} structure.}
+   \label{fig:ward}
+\end{figure}
+
 
 \subsubsection{Second floor}
-\paragraph{Second floor}
+\paragraph{Second floor} 
 %-------------------------------------------------------------------------------
 @D Second floor
 @{
@@ -461,6 +643,15 @@ corridor4c2 = buildingUnit(Corridor4c2,'Corridor4c2')
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/secondFloor2} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/secondFloor1} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/secondFloor3} 
+   \caption{\texttt{secondFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \label{fig:secondFloor}
+\end{figure}
+
 %-------------------------------------------------------------------------------
 @D Second floor structure
 @{""" Second floor structure """
@@ -499,6 +690,16 @@ surgicalWard2 = Struct([t(7,4),ward32],'SurgicalWard2')
 @}
 %-------------------------------------------------------------------------------
 
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor2} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor1} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor3} 
+   \caption{\texttt{thirdFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \label{fig:thirdFloor}
+\end{figure}
+
 %-------------------------------------------------------------------------------
 @D Third floor structure
 @{""" Third floor structure """
@@ -534,6 +735,15 @@ pediatricWard1 = Struct([t(0,4),ward41],'PediatricWard1')
 pediatricWard2 = Struct([t(7,4),ward42],'PediatricWard2')
 @}
 %-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor2} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/fourthFloor1} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor3} 
+   \caption{\texttt{fourthFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \label{fig:fourthFloor}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 @D Fourth floor structure
@@ -572,6 +782,15 @@ generalWard3 = Struct([t(7,4),ward52],'GeneralWard3')
 @}
 %-------------------------------------------------------------------------------
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor2} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/fifthFloor1} 
+   \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor3} 
+   \caption{\texttt{fifthFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \label{fig:fifthFloor}
+\end{figure}
+
 %-------------------------------------------------------------------------------
 @D Fifth floor structure
 @{""" Fifth floor structure """
@@ -579,8 +798,8 @@ generalWard3 = Struct([t(7,4),ward52],'GeneralWard3')
 @< Fifth floor's building units @>
 
 buildingUnits6 = [generalWard2,generalWard3,publicCore4,serviceCore14,serviceCore24,
-                filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,corridor4c,
-                corridor4c1,corridor4c2]
+                filter1,filter2,corridor4a,corridor4b,corridor4b1,corridor4b2,
+                corridor4c,corridor4c1,corridor4c2]
 
 fifthFloor = Struct(buildingUnits6, "fifthFloor")
 @}
@@ -588,17 +807,69 @@ fifthFloor = Struct(buildingUnits6, "fifthFloor")
 
 
 
-\subsection{Preliminary 2.5D mock-up}
+\subsubsection{Storey viewing}
 
-\subsubsection{Building structure}
+\paragraph{Storey viewing}
+%-------------------------------------------------------------------------------
+@D Storey generation
+@{""" Storey generation """
+def structDraw(color,scaling,metric=ID):
+    def structDraw0(obj): return obj.draw(color,scaling,metric)
+    return structDraw0
+
+ground,W,EV = floor(X,Y)(groundFloor,metric)
+ground2D = STRUCT([ground, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+            AA(structDraw(RED,40,metric))(buildingUnits0))
+mezanine,W,EV = floor(X,Y)(mezanineFloor,metric)
+mezanine2D = STRUCT([mezanine, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+            AA(structDraw(RED,40,metric))(buildingUnits1))
+first,W,EV = floor(X,Y)(firstFloor,metric)
+first2D = STRUCT([first, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+            AA(structDraw(RED,40,metric))(buildingUnits2))
+second,W,EV = floor(X,Y)(secondFloor,metric)
+second2D = STRUCT([second, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+            AA(structDraw(RED,40,metric))(buildingUnits3))
+third,W,EV = floor(X,Y)(thirdFloor,metric)
+third2D = STRUCT([third, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+            AA(structDraw(RED,40,metric))(buildingUnits4))
+fourth,W,EV = floor(X,Y)(fourthFloor,metric)
+fourth2D = STRUCT([fourth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+            AA(structDraw(RED,40,metric))(buildingUnits5))
+fifth,W,EV = floor(X,Y)(fifthFloor,metric)
+fifth2D = STRUCT([fifth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+            AA(structDraw(RED,40,metric))(buildingUnits6))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Storey viewing
+@{""" Storey viewing """
+VIEW(ground2D)
+VIEW(mezanine2D)
+VIEW(first2D)
+VIEW(second2D)
+VIEW(third2D)
+VIEW(fourth2D)
+VIEW(fifth2D)
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\section{Preliminary 2.5D mock-up}
+
+\subsection{Structural frame structure}
 
 \paragraph{Column locations on grid}
 %-------------------------------------------------------------------------------
 @D Column locations on grid 
 @{""" Column locations on grid """
-SecondPillars = [((4,5),(1,10)),((3,4),(1,4)),((3,4),(7,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),((9,10),(4,7))]
-FirstPillars = [((0,5),(1,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),((9,10),(4,7))]
-FrontPillars = [((8,10),(0,11)),((10,11),(0,6)),((10,11),(7,11)),((11,12),(0,3)),((11,12),(4,11))]
+SecondPillars = [((4,5),(1,10)),((3,4),(1,4)),((3,4),(7,10)),((4,8),(0,4)),((4,8),
+				(7,11)),((8,9),(0,11)),((9,10),(4,7))]
+FirstPillars = [((0,5),(1,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),
+				((9,10),(4,7))]
+FrontPillars = [((8,10),(0,11)),((10,11),(0,6)),((10,11),(7,11)),((11,12),(0,3)),
+				((11,12),(4,11))]
 MezaninePillars = FirstPillars + FrontPillars
 BottomPillars = [((12,15),(0,5))]
 @}
@@ -681,137 +952,34 @@ VIEW(STRUCT([Frame0,Frame1]))
 %-------------------------------------------------------------------------------
 
 
-\subsection{Structure embedding}
-
-\paragraph{Structure embedding}
-%-------------------------------------------------------------------------------
-@D Structure embedding 
-@{""" Structure embedding """
-def structEmbed(struct):
-    new = deepcopy(struct)
-    embedTraversal(new) 
-    return new
-    
-def embedTraversal(obj):
-    for i in range(len(obj)):
-        if (isinstance(obj[i],tuple) or isinstance(obj[i],list)):
-            [vert.append(0.0) for vert in obj[i][0]]
-        elif isinstance(obj[i],Struct):
-            embedTraversal(obj[i])
-        elif isinstance(obj[i],Mat): 
-            """
-            d = obj[i].shape[0]
-            print "d =",d
-            mat = scipy.identity(d+1)
-            print "mat =",mat
-            for h in range(d-1):
-                mat[h,d] = obj[i][h,d-1]
-                for k in range(d-1):
-                    mat[h,k] = obj[i][h,k]
-            obj[i] = mat.view(Mat)
-            """
-            pass
-    return None    
-@}
-%-------------------------------------------------------------------------------
-
 
 
 \paragraph{2.5D building assembly}
 %-------------------------------------------------------------------------------
 @D 2.5D building assembly
-@{""" 2.5D building assembly """
-def embedBuildingUnitsIn3D(floors):
-    for floor in floors:
-        for buildingUnit in floor.body:
-            buildingUnit = larEmbed(1)(buildingUnit)
-    return floors
-        
+@{""" 2.5D building assembly """        
 floors = Struct([groundFloor,mezanineFloor,firstFloor,
-                secondFloor,thirdFloor,fourthFloor,fifthFloor],"Floors")
+                 secondFloor,thirdFloor,fourthFloor,fifthFloor],"Floors")
 
-#floors3D = structEmbed(floors)
+floors3D = embedStruct(1)(floors)
+building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])),"Building")
+V,FV,EV = struct2lar(building,metric)
+VIEW(STRUCT(MKPOLS((V,EV))))
 
-#building = Struct(CAT(DISTR([floors3D,t(0,0,4)])))
-
-
-
-#storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
-
-#VIEW(STRUCT([storeys,SteelFrame] + CAT(AA(MKPOLS)(AA(CONS([S1,S3]))(building))) ))
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D test
-@{""" 2.5D building assembly """
-%floors = Struct([groundFloor,mezanineFloor,firstFloor,
-%                secondFloor,thirdFloor,fourthFloor,fifthFloor,fifthFloor],"building")
-%
-%floors3D = embedStruct(1)(floors)
-%building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])))
-%models = AA(CONS([S1,S3]))(building)
-%VIEW(STRUCT(CAT(AA(MKPOLS)(models))))
+storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
+VIEW(STRUCT([storeys,SteelFrame] + MKPOLS((V,EV)) ))
 @}
 %-------------------------------------------------------------------------------
 
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.35\linewidth,width=0.495\linewidth]{images/floor3D} 
+   \includegraphics[height=0.35\linewidth,width=0.495\linewidth]{images/floor3Da} 
+   \caption{example caption}
+   \label{fig:example}
+\end{figure}
 
-\subsubsection{Storey viewing}
-
-\paragraph{Storey viewing}
-%-------------------------------------------------------------------------------
-@D Storey generation
-@{""" Storey generation """
-def structDraw(color,scaling):
-    def structDraw0(obj): return obj.draw(color,scaling)
-    return structDraw0
-
-ground,W,EV = floor(X,Y)(groundFloor)
-ground2D = STRUCT([ground, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits0))
-mezanine,W,EV = floor(X,Y)(mezanineFloor)
-mezanine2D = STRUCT([mezanine, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits1))
-first,W,EV = floor(X,Y)(firstFloor)
-first2D = STRUCT([first, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits2))
-second,W,EV = floor(X,Y)(secondFloor)
-second2D = STRUCT([second, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits3))
-third,W,EV = floor(X,Y)(thirdFloor)
-third2D = STRUCT([third, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits4))
-fourth,W,EV = floor(X,Y)(fourthFloor)
-fourth2D = STRUCT([fourth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits5))
-fifth,W,EV = floor(X,Y)(fifthFloor)
-fifth2D = STRUCT([fifth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,10))(buildingUnits6))
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Storey viewing
-@{""" Storey viewing """
-VIEW(ground2D)
-VIEW(mezanine2D)
-VIEW(first2D)
-VIEW(second2D)
-VIEW(third2D)
-VIEW(fourth2D)
-VIEW(fifth2D)
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{aaaa}
-%-------------------------------------------------------------------------------
-@D aaaa
-@{""" aaaa """
-
-@}
-%-------------------------------------------------------------------------------
 
 \subsection{Structural frame}
 
@@ -957,6 +1125,7 @@ from pyplasm import *
 
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
+from copy import deepcopy
 from architectural import *
 from iot3d import *
 DEBUG = True
@@ -996,41 +1165,14 @@ DEBUG = True
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{From grid to metric coordinates}
-%-------------------------------------------------------------------------------
-@D From grid to metric coordinates
-@{""" From grid to metric coordinates """
-def grid2coords(X,Y):
-    xMeasures = list(cumsum(X))
-    yMeasures = list(cumsum(Y))
-    def grid2coords0(point):
-        x,y = point[0:2]
-        xint,yint = int(x), int(y)
-        xdec,ydec = float(x-xint), float(y-yint)
-        xcoord = xMeasures[xint] + xdec*X[xint+1]
-        ycoord = yMeasures[yint] + ydec*Y[yint+1]
-        if len(point)==2: return [xcoord, ycoord]
-        else: return [xcoord, ycoord, point[2]]
-    return grid2coords0
-
-def coordMaps(ymax):
-    def coordMaps0(polyline):
-        polyline = AA(grid2coords(X,Y))(polyline)
-        polyline = vmap(ymax)(polyline)
-        return [eval(vcode(point)) for point in polyline]
-    return coordMaps0
-
-metric = coordMaps(ymax)
-@}
-%-------------------------------------------------------------------------------
 \paragraph{Mapping the grid frame to a Cartesian right-hand frame}
 %-------------------------------------------------------------------------------
 @D Mapping a grid frame to a Cartesian one
 @{""" Mapping the grid frame to a Cartesian right-hand frame """
-def vmap(ymax):
+def vmap(YMAX):
     def vmap0(V):
-        if len(V[0])==3: W = [[x,ymax-y,z] for x,y,z in V]
-        else: W = [[x,ymax-y] for x,y in V]
+        if len(V[0])==3: W = [[x,YMAX-y,z] for x,y,z in V]
+        else: W = [[x,YMAX-y] for x,y in V]
         return W
     return vmap0
                 
@@ -1046,8 +1188,8 @@ def embed(z):
 @D Solidify the boundary of polyline-like building units
 @{""" Solidify the boundary of polyline-like building units """
 def floor(X,Y):
-    def floor0(structure2D):
-        V,FV,EV = struct2lar(structure2D)
+    def floor0(structure2D,metric=ID):
+        V,FV,EV = struct2lar(structure2D,metric)
         BE = [EV[e] for e in boundaryCells(FV,EV)]
         theFloor = SOLIDIFY(STRUCT([POLYLINE([V[v],V[w]]) for v,w in BE]))
         return theFloor,V,EV

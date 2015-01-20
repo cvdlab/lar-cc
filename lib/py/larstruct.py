@@ -80,48 +80,11 @@ def larApply(affineMatrix):
         elif isinstance(model,tuple) or isinstance(model,list):
             if len(model)==2: V,CV = model
             elif len(model)==3: V,CV,FV = model
-            V = scipy.dot([v+[1.0] for v in V], affineMatrix.T).tolist()
+            V = scipy.dot([list(v)+[1.0] for v in V], affineMatrix.T).tolist()
             if len(model)==2: return [v[:-1] for v in V],CV
             elif len(model)==3: return [v[:-1] for v in V],CV,FV
     return larApply0
 
-from copy import deepcopy
-
-def embedStruct(k):
-    def embedStruct0(struct):
-        struct,dim = embedding(k, struct) 
-        if k==0: return struct,dim
-        else: return struct
-    return embedStruct0
-
-def embedding(k, struct):
-    out = deepcopy(struct)
-    if isinstance(out,Struct):
-        if k==0: 
-            return out, len(out.box[0])
-        out.box[0] = out.box[0]+k*[0.0]
-        out.box[1] = out.box[1]+k*[0.0]
-        for i,obj in enumerate(out.body):
-            if isinstance(obj,Model): 
-                out.body[i] = larEmbed(k)(obj)
-                out.n = out.n + k
-            elif (isinstance(obj,tuple) or isinstance(obj,list)) and len(obj)==2:
-                out.body[i] = larEmbed(k)(obj)
-            elif isinstance(obj,Mat): 
-                out.body[i] = obj # TODO: embed matrix in identity
-            elif isinstance(obj,Struct):
-                out.body[i] = embedding(k, obj)
-    elif not isinstance(struct,Struct):
-        obj = struct[0]
-        if isinstance(obj,Struct): 
-            return struct,len(obj.box[0])
-        elif isinstance(obj,Model): 
-            return struct,obj.n
-        elif (isinstance(obj,tuple) or isinstance(obj,list)):
-            return struct,len(obj[0][0])
-        elif isinstance(obj,Mat): 
-            return struct,len(obj[0])-1
-    return out,k
 """ Flatten a list using Python generators """
 def flatten(lst):
     for x in lst:
@@ -150,7 +113,13 @@ def checkStruct(lst):
 
         TODO: aggiungere test sulla dimensione minima delle celle (legata a quella di immersione)
     """
-    lst,dim = embedStruct(0)(lst)
+    obj = lst[0]
+    if (isinstance(obj,tuple) or isinstance(obj,list)):
+        dim = len(obj[0][0])
+    elif isinstance(obj,Mat): 
+        dim = obj.shape[0]-1    
+    elif isinstance(obj,Struct): 
+        dim = len(obj.box[0])    
     return dim
 
 """ Traversal of a scene multigraph """
@@ -193,13 +162,16 @@ class Model:
 from myfont import *
 class Struct:
     """ The assembly type of the LAR package """
-    def __init__(self,data,name=None):
-        self.body = data
+    def __init__(self,data=None,name=None):
+        if data==None or data==[]:
+            self.body = []
+        else:
+            self.body = data
+            self.box = box(self) 
         if name != None: 
             self.name = str(name)
         else:
             self.name = str(id(self))
-        self.box = box(self) 
     def __name__(self):
         return self.name
     def __iter__(self):
@@ -215,7 +187,7 @@ class Struct:
     def __repr__(self):
         return "<Struct name: %s>" % self.__name__()
         #return "'Struct(%s,%s)'" % (str(self.body),str(str(self.__name__())))
-    def draw(self,color=WHITE,scaling=1):
+    def draw(self,color=WHITE,scaling=1,metric=ID):
         vmin,vmax = self.box
         delta = VECTDIFF([vmax,vmin])
         point = CCOMB(self.box)
@@ -224,11 +196,12 @@ class Struct:
                     TEXTWIDTH=0.1*scalingFactor, 
                     TEXTHEIGHT=0.2*scalingFactor,
                     TEXTSPACING=0.025*scalingFactor)
+        point = metric([point])[0]
         return T([1,2,3])(point)(COLOR(color)(text(self.name)))
 
 """ Structure to pair (Vertices,Cells) conversion """
 
-def struct2lar(structure):
+def struct2lar(structure,metric=ID):
     listOfModels = evalStruct(structure)
     vertDict = dict()
     index,defaultValue,CW,W,FW = -1,-1,[],[],[]
@@ -265,8 +238,8 @@ def struct2lar(structure):
                         outcell += [vertDict[key]]
                 FW += [outcell]
             
-    if len(model)==2: return W,CW
-    if len(model)==3: return W,CW,FW
+    if len(model)==2: return metric(W),CW
+    if len(model)==3: return metric(W),CW,FW
 
 def larEmbed(k):
     def larEmbed0(model):
@@ -280,6 +253,47 @@ def larEmbed(k):
         elif len(model)==3: return V,CV,FV
     return larEmbed0
 
+""" embed a struct object """
+""" Structure embedding algorithm """
+def embedTraversal(cloned, obj,n):
+    for i in range(len(obj)):
+        if isinstance(obj[i],Model): 
+            cloned.body += [obj[i]]
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+                len(obj[i])==2 or len(obj[i])==3):
+            V,FV,EV = obj[i]
+            V = [v+n*[0.0] for v in V]
+            cloned.body  += [(V,FV,EV)]
+        elif isinstance(obj[i],Mat): 
+            mat = obj[i]
+            d,d = mat.shape
+
+            newMat = scipy.identity(d+n*1)
+            for h in range(d-1): 
+                for k in range(d-1): 
+                    newMat[h,k] = mat[h,k]
+                newMat[h,d-1+n*1] = mat[h,d-1]
+            cloned.body  +=  [newMat.view(Mat)]
+
+        elif isinstance(obj[i],Struct):
+            newObj = Struct()
+            newObj.box = hstack((obj[i].box, [n*[0],n*[0]]))
+            newObj.name = obj[i].name+"New"
+            cloned.body  += [embedTraversal(newObj, obj[i], n)]
+    return cloned
+
+
+def embedStruct(n):
+    def embedStruct0(struct):
+        if n==0: 
+            return struct, len(struct.box[0])
+        cloned = Struct()
+        cloned.box = hstack((struct.box, [n*[0],n*[0]])).tolist()
+        cloned.name = struct.name+"New"
+        cloned = embedTraversal(cloned,struct,n) 
+        return cloned
+    return embedStruct0
+
 """ Computation of the containment box of a Lar Struct or Model """
 import copy
 def box(model):
@@ -288,7 +302,7 @@ def box(model):
         dummyModel = copy.deepcopy(model)
         dummyModel.body = [term if (not isinstance(term,Struct)) else [term.box,[[0,1]]]  for term in model.body]
         listOfModels = evalStruct( dummyModel )
-        dim = checkStruct(listOfModels)
+        #dim = checkStruct(listOfModels)
         theMin,theMax = box(listOfModels[0]) 
         for theModel in listOfModels[1:]:
             modelMin, modelMax = box(theModel)
