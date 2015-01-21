@@ -201,9 +201,9 @@ nursing5 = Struct([Nursing5],"Nursing5")
 service2 = Struct([nursing1,nursing2,nursing3,nursing4,nursing5],"Service2")
 service1 = Struct([t(0,1.4),s(1,-1),service2],"Service1")
 wardServices = Struct([t(1.3,.3),service1,t(0,2),service2],"WardServices")
-hospitalRoom = Struct([room,restRoom],"HospitalRoom")
-doubleRoom =  Struct([hospitalRoom,t(0,1),s(1,-1),hospitalRoom],"DoubleRoom")
-halfWard = Struct(4*[doubleRoom,t(0,1)],"HalfWard")
+theRoom = Struct([room,restRoom],"TheRoom")
+twoRooms =  Struct([theRoom,t(0,1),s(1,-1),theRoom],"TwoRooms")
+halfWard = Struct(4*[twoRooms,t(0,1)],"HalfWard")
 ward = Struct([halfWard, wardServices, t(3,0),s(-1,1), halfWard],"Ward")
 V,FV,EV = struct2lar(ward)
 theWard = lar2lines((V,FV))
@@ -552,30 +552,9 @@ def surfIntegration(model):
         cochain += [abs(area)]
     return cochain
 
-""" Surface cochain computation """
-def surfaceCochain(buildingUnit):
-    print "\nbuildingUnit.name =",buildingUnit.name
-    cochain = AA(int)(surfIntegration(struct2lar(buildingUnit)))
-    names = [struct.name for struct in buildingUnit.body]
-    return zip(names,cochain)
+""" Computing a surface cochain via Struct traversal """
 
-for floor in floors:
-    areas = surfaceCochain(floor)
-    print floor.name + " =", areas
-    print floor.name + " m^2 =", sum(TRANS(areas)[1])
-    print ""
-
-""" Computing of a surface cochain via Struct instance traversal """
-def structCochain(struct,levels=1):
-    cochain = defaultdict(int)
-    dim = checkStruct(struct.body)
-    CTM, stack = scipy.identity(dim+1), []
-    nameStack,cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
-    for cell,cochainValue in cochainMap:
-        nameArray = cell.split(".")
-        cochain[".".join(nameArray[:levels])] += cochainValue[0]
-    return cochain
-
+""" Traversing a hierarchical surface cochain """
 def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
     repeatedNames = defaultdict(int)
     
@@ -590,12 +569,12 @@ def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
             else: theName = obj[i].name + str(repeatedNames[obj[i].name]-1)
             names.append(theName)
             nameStack = nameStack+[names]
+            
             stack.append(CTM) 
-            
             structCochainTraversal(CTM, stack, obj[i], scene, names, nameStack)
-            
             CTM = stack.pop()
             theName = names.pop()
+            
         elif isinstance(obj[i],Model): 
             scene += [( ".".join(names), map(obj[i]) )]
         elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
@@ -605,7 +584,25 @@ def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
             CTM = scipy.dot(CTM, obj[i])
     return nameStack,scene
 
+
+def structCochain(struct,levels=1):
+    cochain = defaultdict(int)
+    dim = checkStruct(struct.body)
+    CTM, stack = scipy.identity(dim+1), []
+    nameStack,cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
+    for cell,cochainValue in cochainMap:
+        nameArray = cell.split(".")
+        cochain[".".join(nameArray[:levels])] += cochainValue[0]
+    return cochain
+    
+""" Computing a surface cochain via Struct traversal """
 if __name__ == "__main__":
+    print "\nsurface cochain(ward) =", structCochain(ward,0)
+    print "\nsurface cochain(ward) =", structCochain(ward,1)
     print "\nsurface cochain(ward) =", structCochain(ward,2)
-    print "\nsurface cochain(doubleRoom) =", structCochain(doubleRoom,4)
+    print "\nsurface cochain(ward) =", structCochain(ward,3)
+    print "\nsurface cochain(ward) =", structCochain(ward,4)
+    print "\nsurface cochain(twoRooms) =", structCochain(twoRooms,1)
+    print "\nsurface cochain(twoRooms) =", structCochain(twoRooms,3)
+
 
