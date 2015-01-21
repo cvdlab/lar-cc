@@ -555,7 +555,7 @@ def surfIntegration(model):
 """ Computing a surface cochain via Struct traversal """
 
 """ Traversing a hierarchical surface cochain """
-def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
+def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
     repeatedNames = defaultdict(int)
     
     def map(model):
@@ -571,28 +571,28 @@ def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
             nameStack = nameStack+[names]
             
             stack.append(CTM) 
-            structCochainTraversal(CTM, stack, obj[i], scene, names, nameStack)
+            structCochainTraversal(CTM, stack, obj[i], cochainMap, names, nameStack)
             CTM = stack.pop()
             theName = names.pop()
             
         elif isinstance(obj[i],Model): 
-            scene += [( ".".join(names), map(obj[i]) )]
+            cochainMap += [( ".".join(names), map(obj[i]) )]
         elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
               len(obj[i])==2 or len(obj[i])==3):
-            scene += [( ".".join(names), map(obj[i]) )]
+            cochainMap += [( ".".join(names), map(obj[i]) )]
         elif isinstance(obj[i],Mat): 
             CTM = scipy.dot(CTM, obj[i])
-    return nameStack,scene
+    return cochainMap
 
 
-def structCochain(struct,levels=1):
+def structCochain(struct,depth=1):
     cochain = defaultdict(int)
     dim = checkStruct(struct.body)
     CTM, stack = scipy.identity(dim+1), []
-    nameStack,cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
+    cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
     for cell,cochainValue in cochainMap:
         nameArray = cell.split(".")
-        cochain[".".join(nameArray[:levels])] += cochainValue[0]
+        cochain[".".join(nameArray[:depth])] += cochainValue[0]
     return cochain
     
 """ Computing a surface cochain via Struct traversal """

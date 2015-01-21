@@ -1027,8 +1027,8 @@ a chain (subset of cells) defined above the design decomposition. Both the chain
 
 Very often, the discrete field value associated to every cell of a cellular decomposition  results from the integration  of some differential $k$-form on the given $k$-cell.  In general, a $k$-form can be described as an entity to be integrated on a $k$-dimensional (sub)region~\cite{Desbrun:2005:DDF:1198555.1198666}.
 For this purpose, we are going to  (a)  approximate the given form (function $\R^k \to \R$) with a multivariate polynomial;
-(b)	use a finite integration method of $k$-variate monomials in 2D or 3D Euclidean space~\cite{CattaniP-BIL1990}.
-The result is a mapping between the cells of the decomposition and the integral of an approximating polynomial on the cell.
+(b)	use a finite integration method for $k$-variate monomials in 2D or 3D Euclidean space~\cite{CattaniP-BIL1990}.
+The result is a (hierarchical) mapping between the (hierarchy of) cells of the decomposition, and the integral of an approximating polynomial on the cells.
 
 \paragraph{Surface integration}
 
@@ -1058,20 +1058,22 @@ def surfIntegration(model):
 
 \paragraph{Computing a surface cochain via Struct traversal}
 
+The function \texttt{structCochain}, given in the script below, returns the hierarchical (surface) cochain corresponding to the given \texttt{depth} of the \texttt{struct} input. In particular, every value in the output dictionary \texttt{cochain} returns the evaluated (i.e.~summed) cochain associated to the \texttt{struct} subgraph rooted in every node at  \texttt{depth} distance from the root node of \texttt{struct}. Just notice that the keys of the output \texttt{cochain} dictionary result from the \emph{string-join} of the names of the \texttt{struct} nodes along the \emph{current} path from the root to the node (at level \texttt{depth}) associated with the key.
+
 %-------------------------------------------------------------------------------
 @D Computing a surface cochain via Struct traversal
 @{""" Computing a surface cochain via Struct traversal """
 
 @< Traversing a hierarchical surface cochain @>
 
-def structCochain(struct,levels=1):
+def structCochain(struct,depth=1):
     cochain = defaultdict(int)
     dim = checkStruct(struct.body)
     CTM, stack = scipy.identity(dim+1), []
-    nameStack,cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
+    cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
     for cell,cochainValue in cochainMap:
         nameArray = cell.split(".")
-        cochain[".".join(nameArray[:levels])] += cochainValue[0]
+        cochain[".".join(nameArray[:depth])] += cochainValue[0]
     return cochain
     
 @< Example of hierarchical surface cochains @>
@@ -1079,10 +1081,16 @@ def structCochain(struct,levels=1):
 %-------------------------------------------------------------------------------
 
 \paragraph{Traversing a hierarchical surface cochain}
+The \texttt{structCochainTraversal} function given below executes a standard traversal of a hierarchical structure, consisting in relocating all encountered objects from local coordinates to the root coordinates. 
+
+While executing the traversal, a set of pairs (corresponding to each traversed node) is accumulated in the \texttt{cochainMap} list, initially empty. Every such pair contains the joined names of nodes along the current path, and the surface integral evaluated on the traversed node, cast to an integer value. 
+
+Notice that if a \texttt{struct} node contains more than one instance of the same \texttt{struct} son, then the names of such instances are joined with the counter index value of a dictionary \texttt{repeatedNames}, in order to make individually identifiable the various object instances.
+
 %-------------------------------------------------------------------------------
 @D Traversing a hierarchical surface cochain
 @{""" Traversing a hierarchical surface cochain """
-def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
+def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
     repeatedNames = defaultdict(int)
     
     def map(model):
@@ -1098,22 +1106,24 @@ def structCochainTraversal(CTM, stack, obj, scene=[], names=[], nameStack=[]):
             nameStack = nameStack+[names]
             
             stack.append(CTM) 
-            structCochainTraversal(CTM, stack, obj[i], scene, names, nameStack)
+            structCochainTraversal(CTM, stack, obj[i], cochainMap, names, nameStack)
             CTM = stack.pop()
             theName = names.pop()
             
         elif isinstance(obj[i],Model): 
-            scene += [( ".".join(names), map(obj[i]) )]
+            cochainMap += [( ".".join(names), map(obj[i]) )]
         elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
               len(obj[i])==2 or len(obj[i])==3):
-            scene += [( ".".join(names), map(obj[i]) )]
+            cochainMap += [( ".".join(names), map(obj[i]) )]
         elif isinstance(obj[i],Mat): 
             CTM = scipy.dot(CTM, obj[i])
-    return nameStack,scene
+    return cochainMap
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{Example}
+
+Few examples are given below of computation of the surface cochain of the \texttt{ward} and the \texttt{twoRooms} structures, at several different depth depths.
 
 %-------------------------------------------------------------------------------
 @D Example of hierarchical surface cochains
