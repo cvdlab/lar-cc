@@ -456,50 +456,80 @@ VIEW(third2D)
 VIEW(fourth2D)
 VIEW(fifth2D)
 
-""" Column locations on grid """
-SecondPillars = [((4,5),(1,10)),((3,4),(1,4)),((3,4),(7,10)),((4,8),(0,4)),((4,8),
-            (7,11)),((8,9),(0,11)),((9,10),(4,7))]
-FirstPillars = [((0,5),(1,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),
-            ((9,10),(4,7))]
-FrontPillars = [((8,10),(0,11)),((10,11),(0,6)),((10,11),(7,11)),((11,12),(0,3)),
-            ((11,12),(4,11))]
-MezaninePillars = FirstPillars + FrontPillars
-BottomPillars = [((12,15),(0,5))]
 
-""" Generation of beams and structural chains """
-def ManhattanTest(nodes,nDict,i,j):
+""" Column locations on grid """
+secondPillars = [((4,5),(1,10)),((3,4),(1,4)),((3,4),(7,10)),((4,8),(0,4)),
+    ((4,8),(7,11)),((8,9),(0,11)),((9,10),(4,7))]
+firstPillars = [((0,5),(1,10)),((4,8),(0,4)),((4,8),(7,11)),((8,9),(0,11)),
+    ((9,10),(4,7))]
+frontPillars = [((8,10),(0,11)),((10,11),(0,6)),((10,11),(7,11)),((11,12),
+    (0,3)),((11,12),(4,11))]
+bottomPillars = [((12,15),(0,5))]
+mezaninePillars = firstPillars + frontPillars
+pillars = CAT([secondPillars,firstPillars,frontPillars,bottomPillars])
+
+
+def RANGE(pair): 
+    return range(*pair)
+EXPAND = COMP([sorted,list,set,AA(tuple),CAT,AA(CART),AA(swap),AA(AA(RANGE))])
+
+
+""" Manhattan test """
+def manhattanTest(nodes,nDict,i,j):
     hi,ki = nodes[i]
     hj,kj = nodes[j]
     return nDict.setdefault((hi,kj),-1)!=-1 and nDict.setdefault((hj,ki),-1)!=-1
 
+""" Remove duplicates in structure frame """
+def removeDups(nodes,arcs1,arcs2,faces):
+    ndict = defaultdict(list)
+    index = [None for k in range(len(nodes))]
+    for k,node in enumerate(nodes):
+        ndict[vcode(node)] += [k]
+    for h,nodeIndices in enumerate(ndict.values()):
+        for k in nodeIndices:
+            index[k] = h
+    outNodes = [eval(node) for node in ndict.keys()]
+    outArcs1 = list(set([tuple(sorted([index[i],index[j]])) for i,j in arcs1]))
+    outArcs2 = list(set([tuple(sorted([index[i],index[j]])) for i,j in arcs2]))
+    outFaces = list(set([tuple(sorted([index[i],index[j],index[h],index[k]])) 
+        for i,j,h,k in faces]))
+    return outNodes, outArcs1,outArcs2,outFaces
+
+
+""" Generation of beams and structural chains """
 def structureGrid(loci):
     nodes = AA(tuple)(CAT([CART([range(*I), range(*J)]) for (I,J) in loci]))
     nDict = dict([(node,k) for k,node in enumerate(nodes)])
-    arcs = CAT([[(nDict[(i,j)], nDict.setdefault((i,j+1),-1)),
-             (nDict[(i,j)], nDict.setdefault((i,j-1),-1)),
-             (nDict[(i,j)], nDict.setdefault((i+1,j),-1)),
-             (nDict[(i,j)], nDict.setdefault((i-1,j),-1))] for (i,j) in nodes])
+    def node(h,k): return nDict.setdefault((h,k),-1)
+    arcs = CAT([[ (node(i,j),node(i,j+1)), (node(i,j),node(i,j-1)),
+        (node(i,j),node(i+1,j)), (node(i,j),node(i-1,j)) ] for (i,j) in nodes])
     arcs1 = list(set(AA(tuple)([sorted(arc) for arc in arcs if arc[1]!=-1])))
-    arcs = CAT([[(nDict[(i,j)], nDict.setdefault((i+1,j+1),-1)),
-             (nDict[(i,j)], nDict.setdefault((i+1,j-1),-1)),
-             (nDict[(i,j)], nDict.setdefault((i-1,j-1),-1)),
-             (nDict[(i,j)], nDict.setdefault((i-1,j+1),-1))] for (i,j) in nodes])
+    arcs = CAT([[ (node(i,j),node(i+1,j+1)), (node(i,j),node(i+1,j-1)),
+        (node(i,j),node(i-1,j-1)), (node(i,j),node(i-1,j+1)) ] for (i,j) in nodes])
     arcs2 = list(set(AA(tuple)([sorted(arc) for arc in arcs if arc[1]!=-1])))
-    arcs2 = [[i,j] for i,j in arcs2 if ManhattanTest(nodes,nDict,i,j)]
+    arcs2 = [(i,j) for i,j in arcs2 if manhattanTest(nodes,nDict,i,j)]
+    faces = [(node(i,j),node(i,j+1),node(i+1,j+1),node(i+1,j)) for (i,j) in nodes]
+    faces = [face for face in faces if not any([v==-1 for v in face])]
     nodes = metric([[j,i] for i,j in nodes])
-    return nodes, arcs1,arcs2
+    return removeDups(nodes,arcs1,arcs2,faces)
 
-""" Instancing of 3D structure frame """
-nodes0, arcs10,arcs20 = structureGrid(MezaninePillars+BottomPillars)
-nodes1, arcs11,arcs21 = structureGrid(MezaninePillars)
-nodes2, arcs12,arcs22 = structureGrid(FirstPillars)
-nodes3, arcs13,arcs23 = structureGrid(SecondPillars)
-nodes4, arcs14,arcs24 = structureGrid(SecondPillars)
-nodes5, arcs15,arcs25 = structureGrid(SecondPillars)
-nodes6, arcs16,arcs26 = structureGrid(SecondPillars)
-VIEW(STRUCT(MKPOLS((nodes0, arcs10+arcs20)) ))
+""" Instancing of structure frame by floor """
+nodes0, arcs10,arcs20, faces0 = structureGrid(mezaninePillars+bottomPillars)
+nodes1, arcs11,arcs21, faces1 = structureGrid(mezaninePillars)
+nodes2, arcs12,arcs22, faces2 = structureGrid(firstPillars)
+nodes3, arcs13,arcs23, faces3 = structureGrid(secondPillars)
+nodes4, arcs14,arcs24, faces4 = structureGrid(secondPillars)
+nodes5, arcs15,arcs25, faces5 = structureGrid(secondPillars)
+nodes6, arcs16,arcs26, faces6 = structureGrid(secondPillars)
 
-""" Assembling 3D structure frame """
+V,FV,EV = nodes0,faces0,arcs10
+VIEW(STRUCT(MKPOLS((V,EV)) ))
+VIEW(STRUCT(MKPOLS((V,EV + arcs20)) ))
+VIEW(STRUCT(MKPOLS((V,FV)) ))
+VIEW(STRUCT(MKPOLS((V,[EV[e] for e in boundaryCells(FV,EV)]))))
+
+""" Assembling the 3D structure frame """
 Nodes0 = AA(lambda v: list(v)+[4-.3])(nodes0)
 Nodes1 = AA(lambda v: list(v)+[8-.3])(nodes1)
 Nodes2 = AA(lambda v: list(v)+[12-.3])(nodes2)
