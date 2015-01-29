@@ -31,10 +31,9 @@ def polyline2lar(polylines):
    EV = face2edge(FV)
    return V,FV,EV
 
-
 """ transform a lar model to a list of lar structures """
 def lar2Structs(model):
-   V,FV = model
+   V,FV,_ = model
    return [ Struct([[[V[v] for v in cell], [range(len(cell))]]]) for cell in FV]
 
 """ transform an absolute lar model to a relative lar structure """

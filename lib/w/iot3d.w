@@ -110,7 +110,7 @@ def polyline2lar(polylines):
 @D transform a lar model to a list of lar structures
 @{""" transform a lar model to a list of lar structures """
 def lar2Structs(model):
-   V,FV = model
+   V,FV,_ = model
    return [ Struct([[[V[v] for v in cell], [range(len(cell))]]]) for cell in FV]
 @}
 %-------------------------------------------------------------------------------

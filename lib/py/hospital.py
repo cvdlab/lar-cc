@@ -63,14 +63,6 @@ def floor(X,Y):
         return theFloor,V,EV
     return floor0
 
-""" Make a struct object from a 2D sequence of polylines  """
-isPolyline = ISSEQOF(ISSEQOF(ISNUM))
-isPolylineSet = ISSEQOF(ISSEQOF(ISSEQOF(ISNUM)))
-
-def buildingUnit(polyline,string):
-    if ISSEQOF(ISSEQOF(ISNUM))(polyline): model = polyline2lar([polyline])
-    else: model = polyline2lar(polyline)
-    return Struct([model],str(string))
 """ Make a struct object from a 2D polyline """
 isPolyline = ISSEQOF(ISSEQOF(ISNUM))
 isPolylineSet = ISSEQOF(ISSEQOF(ISSEQOF(ISNUM)))
@@ -198,9 +190,9 @@ nursing3 = Struct([Nursing3],"Nursing3")
 nursing4 = Struct([Nursing4],"Nursing4")
 nursing5 = Struct([Nursing5],"Nursing5")
 
-service2 = Struct([nursing1,nursing2,nursing3,nursing4,nursing5],"Service2")
-service1 = Struct([t(0,1.4),s(1,-1),service2],"Service1")
-wardServices = Struct([t(1.3,.3),service1,t(0,2),service2],"WardServices")
+service1 = Struct([nursing1,nursing2,nursing3,nursing4,nursing5],"Service1")
+service2 = Struct([t(0,1.4),s(1,-1),service1],"Service2")
+wardServices = Struct([t(1.3,.3),service2,t(0,2),service1],"WardServices")
 theRoom = Struct([room,restRoom],"TheRoom")
 twoRooms =  Struct([theRoom,t(0,1),s(1,-1),theRoom],"TwoRooms")
 halfWard = Struct(4*[twoRooms,t(0,1)],"HalfWard")
@@ -568,6 +560,21 @@ VIEW(STRUCT(MKPOLS((V,EV))))
 
 storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
 VIEW(STRUCT([storeys,SteelFrame] + MKPOLS((V,EV)) ))
+""" 2.5D building assembly """    
+"""    
+VIEW(STRUCT([ STRUCT(MKPOLS((metric(V),EV))), STRUCT(CONS(AA(T([1,2]))(metric(EXPAND(pillars))))(CIRCLE(.4)([8,1]))) ]))
+lars = AA(struct2lar)(floors)
+AA(COMP([STRUCT,MKPOLS,CONS([S1,S3])]))(lars)
+AA(COLOR)([RED,GREEN,BLUE,CYAN,MAGENTA,YELLOW,BROWN])
+colors = AA(COLOR)([RED,GREEN,BLUE,CYAN,MAGENTA,YELLOW,BROWN])
+hpcs = AA(COMP([STRUCT,MKPOLS,CONS([S1,S3])]))(lars)
+AA(APPLY)(TRANS([colors,hpcs]))
+VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))))
+hpcs = AA(COMP([STRUCT,MKPOLS,CONS([COMP([metric,S1]),S3])]))(lars)
+VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))))
+pils = STRUCT(CONS(AA(T([1,2]))(metric(EXPAND(pillars))))(CIRCLE(.4)([8,1])))
+VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))+[COLOR(BLACK)(pils)]))
+"""
 
 from integr import *
 """ Surface integration """

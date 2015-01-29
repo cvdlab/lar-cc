@@ -75,7 +75,7 @@ The starting point of the modelling developed here is the paper~\cite{who:2013},
 
 Looking at the images of Figure~\ref{fig:hismail}, it is easy to notice the presence of a very regular structural frame, providing in the following a reference grid for the numeric input of the geometry of the departments and floors of the hospital model. Some images with evidenced (in blue) the structural frame grid are shown in Figure~\ref{fig:referencegrid}.
 
-It may be useful to underline that the grid step in the $y$ direction (from top to bottom of the drawings) is constant and equal to $8.4 m$, whereas the grid in the $x$ direction (from left to right of the drawings) alternates the $[7.5,9.5,7.5] m$ pattern with the step-size used in the other direction ($8.4 m$). 
+It may be useful to underline that the grid step in the $y$ direction (from top to bottom of the drawings) is constant and equal to $8.4 m$, whereas the grid in the $x$ direction (from left to right of the drawings) alternates the $[7.5,9.5,7.5] m$ pattern with the step-size used in the other direction ($8.4 m$).  the above numeric patterns are actually derived by the architect from the layout of the inpatient wards.
 
 Notice also that both grid directions, and of course the structural frame of the building, are aligned with the \emph{inpatient wards}, that supply one the main ideas of the design concept as a whole.
 
@@ -264,25 +264,6 @@ Corridor0b = TRANS([[4.5, 4.5, 4, 4, 4.5, 4.5, 4.75,4.75, 4.75],
 
 
 
-\paragraph{Make a struct object from a 2D polyline sequence}
-
-The following script gives the \texttt{buildingUnit} function, that takes as input a list of pollens (list of points)
-and a naming string, and returns a \texttt{Struct} instance, with the given name.
-
-%-------------------------------------------------------------------------------
-@D Make a struct object from a 2D polyline 
-@{""" Make a struct object from a 2D sequence of polylines  """
-isPolyline = ISSEQOF(ISSEQOF(ISNUM))
-isPolylineSet = ISSEQOF(ISSEQOF(ISSEQOF(ISNUM)))
-
-def buildingUnit(polyline,string):
-    if ISSEQOF(ISSEQOF(ISNUM))(polyline): model = polyline2lar([polyline])
-    else: model = polyline2lar(polyline)
-    return Struct([model],str(string))
-@}
-%-------------------------------------------------------------------------------
-
-
 \paragraph{Ground floor's building units}
 
 The following script transforms the previous sets of polylines into some equivalent \texttt{Struct} instances.
@@ -359,7 +340,7 @@ VIEW(STRUCT(MKPOLS((V,EV))))
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/groundFloor1} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/groundFloor} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/groundFloorMetric} 
-   \caption{\texttt{groundFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \caption{\texttt{groundFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures in metric coordinates; (c) 1-skeleton. Notice the position and the scale of the reference frames.}
    \label{fig:groundFloor}
 \end{figure}
 
@@ -443,7 +424,7 @@ groundRoof = buildingUnit(GroundRoof,"GroundRoof")
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/mezanineFloor1} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/mezanineFloor} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/mezanineFloor2} 
-   \caption{\texttt{mezanineFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \caption{\texttt{mezanineFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures in metric coordinates; (c) 1-skeleton. Notice the position and the scale of the reference frames.}
    \label{fig:mezanine}
 \end{figure}
 
@@ -513,7 +494,7 @@ mezanineRoof = buildingUnit(MezanineRoof,"MezanineRoof")
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/firstFloor2Hospital} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/firstFloorHospital} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/firstFloor2} 
-   \caption{\texttt{firstFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \caption{\texttt{firstFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures in metric coordinates; (c) 1-skeleton. Notice the position and the scale of the reference frames.}
    \label{fig:firstFloor}
 \end{figure}
 
@@ -557,9 +538,9 @@ nursing3 = Struct([Nursing3],"Nursing3")
 nursing4 = Struct([Nursing4],"Nursing4")
 nursing5 = Struct([Nursing5],"Nursing5")
 
-service2 = Struct([nursing1,nursing2,nursing3,nursing4,nursing5],"Service2")
-service1 = Struct([t(0,1.4),s(1,-1),service2],"Service1")
-wardServices = Struct([t(1.3,.3),service1,t(0,2),service2],"WardServices")
+service1 = Struct([nursing1,nursing2,nursing3,nursing4,nursing5],"Service1")
+service2 = Struct([t(0,1.4),s(1,-1),service1],"Service2")
+wardServices = Struct([t(1.3,.3),service2,t(0,2),service1],"WardServices")
 theRoom = Struct([room,restRoom],"TheRoom")
 twoRooms =  Struct([theRoom,t(0,1),s(1,-1),theRoom],"TwoRooms")
 halfWard = Struct(4*[twoRooms,t(0,1)],"HalfWard")
@@ -647,7 +628,7 @@ corridor4c2 = buildingUnit(Corridor4c2,'Corridor4c2')
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/secondFloor2} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/secondFloor1} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/secondFloor3} 
-   \caption{\texttt{secondFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \caption{\texttt{secondFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures in metric coordinates; (c) 1-skeleton. Notice the position and the scale of the reference frames.}
    \label{fig:secondFloor}
 \end{figure}
 
@@ -695,7 +676,7 @@ surgicalWard2 = Struct([t(7,4),ward32],'SurgicalWard2')
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor2} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor1} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor3} 
-   \caption{\texttt{thirdFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \caption{\texttt{thirdFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures in metric coordinates; (c) 1-skeleton. Notice the position and the scale of the reference frames.}
    \label{fig:thirdFloor}
 \end{figure}
 
@@ -740,7 +721,7 @@ pediatricWard2 = Struct([t(7,4),ward42],'PediatricWard2')
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor2} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/fourthFloor1} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor3} 
-   \caption{\texttt{fourthFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \caption{\texttt{fourthFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures in metric coordinates; (c) 1-skeleton. Notice the position and the scale of the reference frames.}
    \label{fig:fourthFloor}
 \end{figure}
 
@@ -786,7 +767,7 @@ generalWard3 = Struct([t(7,4),ward52],'GeneralWard3')
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor2} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/fifthFloor1} 
    \includegraphics[height=0.329\linewidth,width=0.327\linewidth]{images/thirdFloor3} 
-   \caption{\texttt{fifthFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures; (c) same in metric coordinates. Notice the position and the scale of the reference frames.}
+   \caption{\texttt{fifthFloor} images of (a) the 1-skeleton of its \texttt{LAR} representation, in grid coordinates; (b) component substructures in metric coordinates; (c) 1-skeleton. Notice the position and the scale of the reference frames.}
    \label{fig:fifthFloor}
 \end{figure}
 
@@ -933,9 +914,10 @@ VIEW(STRUCT(AA(MK)(metric(EXPAND(pillars))))) # metric coordinates
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
-   \includegraphics[height=0.495\linewidth,width=0.495\linewidth]{images/pillars1} 
-   \includegraphics[height=0.495\linewidth,width=0.495\linewidth]{images/pillars2} 
-   \caption{The position of pillars of \texttt{groundFloor}, in (a) \emph{grid} and (b) \emph{metric} coordinates.}
+   \includegraphics[height=0.33\linewidth,width=0.328\linewidth]{images/pillars1} 
+   \includegraphics[height=0.33\linewidth,width=0.328\linewidth]{images/pillars2} 
+   \includegraphics[height=0.33\linewidth,width=0.328\linewidth]{images/pillars3} 
+   \caption{The position of pillars of \texttt{groundFloor}, in (a) \emph{grid} and (b) \emph{metric} coordinates, and (c) superimposed to \texttt{floors} layouts.}
    \label{fig:pillars}
 \end{figure}
 
@@ -1006,7 +988,7 @@ def removeDups(nodes,arcs1,arcs2,faces):
    \includegraphics[height=0.243\linewidth,width=0.243\linewidth]{images/frame2} 
    \includegraphics[height=0.243\linewidth,width=0.243\linewidth]{images/frame3} 
    \includegraphics[height=0.243\linewidth,width=0.243\linewidth]{images/frame4} 
-   \caption{The 1-complexes and the 2-complex defined by the LAR models by (a) \texttt{(nodes,arcs1)}, (b) \texttt{(nodes,arcs1+arcs2)}, (c) \texttt{(nodes,faces)}, (d) \texttt{(V,[EV[e] for e in boundaryCells(FV,EV)])} respectively.}
+   \caption{The 1-complexes and the 2-complex defined by the LAR models by (a) \texttt{(nodes,arcs1)}, (b) \texttt{(nodes,arcs1+arcs2)}, (c) \texttt{(nodes,faces)}, (d) \texttt{(V,[EV[e] for e in boundaryCells(FV,EV)])}, respectively.}
    \label{fig:frames}
 \end{figure}
 
@@ -1097,10 +1079,41 @@ VIEW(STRUCT([storeys,SteelFrame] + MKPOLS((V,EV)) ))
    \centering
    \includegraphics[height=0.35\linewidth,width=0.495\linewidth]{images/floor3D} 
    \includegraphics[height=0.35\linewidth,width=0.495\linewidth]{images/floor3Da} 
-   \caption{example caption}
+   \caption{2.5D building assembly: (a) 1-skeletons of 2D floors embedded in 3D; (b) 2-skeletons of floors and 3D structural grid.}
    \label{fig:example}
 \end{figure}
 
+
+
+
+\paragraph{2.5D building assembly}
+%-------------------------------------------------------------------------------
+@D 2.5D building assembly
+@{""" 2.5D building assembly """    
+"""    
+VIEW(STRUCT([ STRUCT(MKPOLS((metric(V),EV))), STRUCT(CONS(AA(T([1,2]))(metric(EXPAND(pillars))))(CIRCLE(.4)([8,1]))) ]))
+lars = AA(struct2lar)(floors)
+AA(COMP([STRUCT,MKPOLS,CONS([S1,S3])]))(lars)
+AA(COLOR)([RED,GREEN,BLUE,CYAN,MAGENTA,YELLOW,BROWN])
+colors = AA(COLOR)([RED,GREEN,BLUE,CYAN,MAGENTA,YELLOW,BROWN])
+hpcs = AA(COMP([STRUCT,MKPOLS,CONS([S1,S3])]))(lars)
+AA(APPLY)(TRANS([colors,hpcs]))
+VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))))
+hpcs = AA(COMP([STRUCT,MKPOLS,CONS([COMP([metric,S1]),S3])]))(lars)
+VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))))
+pils = STRUCT(CONS(AA(T([1,2]))(metric(EXPAND(pillars))))(CIRCLE(.4)([8,1])))
+VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))+[COLOR(BLACK)(pils)]))
+"""
+@}
+%-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=\linewidth]{images/planupdate} 
+   \caption{Superimposition of the 2D floors in different colours, and vertical communications of visitors (green); patients (red); personel (blue).}
+   \label{fig:example}
+\end{figure}
 
 
 \subsection{Vertical communications}
@@ -1192,7 +1205,7 @@ The \texttt{structCochainTraversal} function given below executes a standard tra
 
 While executing the traversal, a set of pairs (corresponding to each traversed node) is accumulated in the \texttt{cochainMap} list, initially empty. Every such pair contains the joined names of nodes along the current path, and the surface integral evaluated on the traversed node, cast to an integer value. 
 
-Notice that if a \texttt{struct} node contains more than one instance of the same \texttt{struct} son, then the names of such instances are joined with the counter index value of a dictionary \texttt{repeatedNames}, in order to make individually identifiable the various object instances.
+Notice that if a \texttt{struct} node contains more than one instance of the same son, then the names of such instances are joined with the counter value associated to the son's \texttt{name} within a dictionary \texttt{repeatedNames}, in order to make individually identifiable the various object instances.
 
 %-------------------------------------------------------------------------------
 @D Traversing a hierarchical surface cochain
