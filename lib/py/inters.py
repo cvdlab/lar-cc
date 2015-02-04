@@ -52,7 +52,7 @@ def containmentBoxes(randomLineArray):
     return boxes
 
 """ Splitting the input above and below a threshold """
-def splitOnThreshold(boxes,subset,x1,x2,xy='x'):
+def splitOnThreshold(boxes,subset,xy='x'):
     theBoxes = [boxes[k] for k in subset]
     threshold = centroid(theBoxes,xy)
     if xy=='x': a=0;b=2;
@@ -64,26 +64,17 @@ def splitOnThreshold(boxes,subset,x1,x2,xy='x'):
         if boxes[k][b] >= threshold: above += [k]
     return below,above
 
-""" Box metadata computation """
-def boxOrdering(boxes):
-    boxes = [box+[k] for k,box in enumerate(boxes)]
-    x1 = TRANS(sorted(boxes,key=S1))[4]
-    y1 = TRANS(sorted(boxes,key=S2))[4]
-    x2 = TRANS(sorted(boxes,key=S3,reverse=True))[4]
-    y2 = TRANS(sorted(boxes,key=S4,reverse=True))[4]
-    return x1,y1,x2,y2
 
 """ Iterative splitting of box buckets """
 def boxBuckets(boxes):
-    x1,y1,x2,y2 = boxOrdering(boxes)
     bucket = range(len(boxes))
     splittingStack = [bucket]
     finalBuckets = []
     while splittingStack != []:
         bucket = splittingStack.pop()
-        below,above = splitOnThreshold(boxes,bucket,x1,x2,'x')
-        below1,above1 = splitOnThreshold(boxes,above,y1,y2,'y')
-        below2,above2 = splitOnThreshold(boxes,below,y1,y2,'y')
+        below,above = splitOnThreshold(boxes,bucket,'x')
+        below1,above1 = splitOnThreshold(boxes,above,'y')
+        below2,above2 = splitOnThreshold(boxes,below,'y')
         
         if (len(below1)<4 and len(above1)<4) or len(set(bucket).difference(below1))<7 \
             or len(set(bucket).difference(above1))<7: 
@@ -156,9 +147,9 @@ def lineIntersection(lineArray):
     from collections import defaultdict
     pointStorage = defaultdict(list)
     for line in lineArray:
-      p1,p2 = line
-      key = '['+ vcode(p1) +','+ vcode(p2) +']'
-      pointStorage[key] = []
+        p1,p2 = line
+        key = '['+ vcode(p1) +','+ vcode(p2) +']'
+        pointStorage[key] = []
 
     boxes = containmentBoxes(lineArray)
     buckets = boxBuckets(boxes)
@@ -199,4 +190,66 @@ def lines2lar(lineArray):
                 edge += [vertDict[key]]
         EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
     return V,EV
+
+""" Biconnected components """
+""" Adjacency lists of 1-complex vertices """
+def vertices2vertices(model):
+    V,EV = model
+    csrEV = csrCreate(EV)
+    csrVE = csrTranspose(csrEV)
+    csrVV = matrixProduct(csrVE,csrEV)    
+    cooVV = csrVV.tocoo()
+    data,rows,cols = AA(list)([cooVV.data, cooVV.row, cooVV.col])
+    triples = zip(data,rows,cols)
+    VV = [[] for k in range(len(V))]
+    for datum,row,col in triples:
+        if row != col: VV[col] += [row]
+    return AA(sorted)(VV)
+
+""" Main procedure for biconnected components """
+def biconnectedComponent(model):
+    W,_ = model
+    V = range(len(W))
+    count = 0
+    stack,out = [],[]
+    visited = [None for v in V]
+    parent = [None for v in V]
+    d = [None for v in V]
+    low = [None for v in V]
+    for u in V: visited[u] = False
+    for u in V: parent[u] = []
+    VV = vertices2vertices(model)
+    for u in V: 
+        if not visited[u]: 
+            DFV_visit( VV,out,count,visited,parent,d,low,stack, u )
+    return [component for component in out if len(component) > 1]
+
+""" Hopcroft-Tarjan algorithm """
+def DFV_visit( VV,out,count,visited,parent,d,low,stack,u ):
+    visited[u] = True
+    count += 1
+    d[u] = count
+    low[u] = d[u]
+    for v in VV[u]:
+        if not visited[v]:
+            stack += [(u,v)]
+            parent[v] = u
+            DFV_visit( VV,out,count,visited,parent,d,low,stack, v )
+            if low[v] >= d[u]:
+                out += [outputComp(stack,u,v)]
+            low[u] = min( low[u], low[v] )
+        else:
+            if not (parent[u]==v) and (d[v] < d[u]):
+                stack += [(u,v)]
+                low[u] = min( low[u], d[v] )
+
+""" Output of biconnected components """
+def outputComp(stack,u,v):
+    out = []
+    while True:
+        e = stack.pop()
+        out += [list(e)]
+        if e == (u,v): break
+    return list(set(AA(tuple)(AA(sorted)(out))))
+
 

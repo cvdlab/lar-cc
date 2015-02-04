@@ -1,4 +1,4 @@
-""" Generation of independent line buckets """
+""" Generation and random coloring of independent line buckets """
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *

@@ -1,4 +1,4 @@
-""" Generation of independent line buckets """
+""" LAR of random line arrangement """
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
