@@ -17,7 +17,7 @@ DEBUG = True
 TRACE,tracing = True,-1
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 4.
+PRECISION = 3.
 
 def mytrace(tracing,name):
    string = tracing*"  " + name

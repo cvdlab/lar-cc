@@ -2,6 +2,7 @@
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
+from bool1 import larRemoveVertices
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GREEN, ORANGE, BLACK, BLUE, PURPLE]
 
 
@@ -14,8 +15,11 @@ V,EV = lines2lar(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 
 model = V,EV
-EVs = biconnectedComponent(model)
+V,EVs = biconnectedComponent(model)
 HPCs = [STRUCT(MKPOLS((V,EV))) for EV in EVs]
 
 sets = [COLOR(colors[k%10])(hpc) for k,hpc in enumerate(HPCs)]
 VIEW(STRUCT(sets))
+VIEW(STRUCT(MKPOLS((V,CAT(EVs)))))
+
+#V,EV = larRemoveVertices(V,CAT(EVs))

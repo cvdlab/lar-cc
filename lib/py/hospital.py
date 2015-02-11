@@ -417,36 +417,39 @@ def structDraw(color,scaling,metric=ID):
     def structDraw0(obj): return obj.draw(color,scaling,metric)
     return structDraw0
 
-ground,W,EV = floor(X,Y)(groundFloor,metric)
-ground2D = STRUCT([ground, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,40,metric))(buildingUnits0))
-mezanine,W,EV = floor(X,Y)(mezanineFloor,metric)
-mezanine2D = STRUCT([mezanine, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,40,metric))(buildingUnits1))
-first,W,EV = floor(X,Y)(firstFloor,metric)
-first2D = STRUCT([first, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,40,metric))(buildingUnits2))
-second,W,EV = floor(X,Y)(secondFloor,metric)
-second2D = STRUCT([second, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,40,metric))(buildingUnits3))
-third,W,EV = floor(X,Y)(thirdFloor,metric)
-third2D = STRUCT([third, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,40,metric))(buildingUnits4))
-fourth,W,EV = floor(X,Y)(fourthFloor,metric)
-fourth2D = STRUCT([fourth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,40,metric))(buildingUnits5))
-fifth,W,EV = floor(X,Y)(fifthFloor,metric)
-fifth2D = STRUCT([fifth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
-            AA(structDraw(RED,40,metric))(buildingUnits6))
+if __name__=="__main__":
+    
+    ground,W,EV = floor(X,Y)(groundFloor,metric)
+    ground2D = STRUCT([ground, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+                AA(structDraw(RED,40,metric))(buildingUnits0))
+    mezanine,W,EV = floor(X,Y)(mezanineFloor,metric)
+    mezanine2D = STRUCT([mezanine, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+                AA(structDraw(RED,40,metric))(buildingUnits1))
+    first,W,EV = floor(X,Y)(firstFloor,metric)
+    first2D = STRUCT([first, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+                AA(structDraw(RED,40,metric))(buildingUnits2))
+    second,W,EV = floor(X,Y)(secondFloor,metric)
+    second2D = STRUCT([second, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+                AA(structDraw(RED,40,metric))(buildingUnits3))
+    third,W,EV = floor(X,Y)(thirdFloor,metric)
+    third2D = STRUCT([third, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+                AA(structDraw(RED,40,metric))(buildingUnits4))
+    fourth,W,EV = floor(X,Y)(fourthFloor,metric)
+    fourth2D = STRUCT([fourth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+                AA(structDraw(RED,40,metric))(buildingUnits5))
+    fifth,W,EV = floor(X,Y)(fifthFloor,metric)
+    fifth2D = STRUCT([fifth, COLOR(RED)(STRUCT(MKPOLS((W,EV))))] + \
+                AA(structDraw(RED,40,metric))(buildingUnits6))
 
 """ Storey viewing """
-VIEW(ground2D)
-VIEW(mezanine2D)
-VIEW(first2D)
-VIEW(second2D)
-VIEW(third2D)
-VIEW(fourth2D)
-VIEW(fifth2D)
+if __name__=="__main__":
+    VIEW(ground2D)
+    VIEW(mezanine2D)
+    VIEW(first2D)
+    VIEW(second2D)
+    VIEW(third2D)
+    VIEW(fourth2D)
+    VIEW(fifth2D)
 
 
 """ Column locations on grid """
@@ -516,50 +519,57 @@ nodes5, arcs15,arcs25, faces5 = structureGrid(secondPillars)
 nodes6, arcs16,arcs26, faces6 = structureGrid(secondPillars)
 
 V,FV,EV = nodes0,faces0,arcs10
-VIEW(STRUCT(MKPOLS((V,EV)) ))
-VIEW(STRUCT(MKPOLS((V,EV + arcs20)) ))
-VIEW(STRUCT(MKPOLS((V,FV)) ))
-VIEW(STRUCT(MKPOLS((V,[EV[e] for e in boundaryCells(FV,EV)]))))
+
+if __name__=="__main__":
+    VIEW(STRUCT(MKPOLS((V,EV)) ))
+    VIEW(STRUCT(MKPOLS((V,EV + arcs20)) ))
+    VIEW(STRUCT(MKPOLS((V,FV)) ))
+    VIEW(STRUCT(MKPOLS((V,[EV[e] for e in boundaryCells(FV,EV)]))))
 
 """ Assembling the 3D structure frame """
-Nodes0 = AA(lambda v: list(v)+[4-.3])(nodes0)
-Nodes1 = AA(lambda v: list(v)+[8-.3])(nodes1)
-Nodes2 = AA(lambda v: list(v)+[12-.3])(nodes2)
-Nodes3 = AA(lambda v: list(v)+[16-.3])(nodes3)
-Nodes4 = AA(lambda v: list(v)+[20-.3])(nodes4)
-Nodes5 = AA(lambda v: list(v)+[24-.3])(nodes5)
-Nodes6 = AA(lambda v: list(v)+[28-.3])(nodes6)
+if __name__=="__main__":
 
-Frame0 = STRUCT(MKPOLS((Nodes0, arcs10))+MKPOLS((Nodes1, arcs11))+
-    MKPOLS((Nodes2, arcs12))+MKPOLS((Nodes3, arcs13))+
-    MKPOLS((Nodes4, arcs14))+MKPOLS((Nodes5, arcs15))+
-    MKPOLS((Nodes6, arcs16)) + \
-    CONS(AA(T([1,2,3]))(Nodes0+Nodes1+Nodes2+Nodes3+Nodes4+Nodes5+Nodes6))(
-    POLYLINE([[0,0,0],[0,0,-4]])  ))
+    Nodes0 = AA(lambda v: list(v)+[4-.3])(nodes0)
+    Nodes1 = AA(lambda v: list(v)+[8-.3])(nodes1)
+    Nodes2 = AA(lambda v: list(v)+[12-.3])(nodes2)
+    Nodes3 = AA(lambda v: list(v)+[16-.3])(nodes3)
+    Nodes4 = AA(lambda v: list(v)+[20-.3])(nodes4)
+    Nodes5 = AA(lambda v: list(v)+[24-.3])(nodes5)
+    Nodes6 = AA(lambda v: list(v)+[28-.3])(nodes6)
+    
+    Frame0 = STRUCT(MKPOLS((Nodes0, arcs10))+MKPOLS((Nodes1, arcs11))+
+        MKPOLS((Nodes2, arcs12))+MKPOLS((Nodes3, arcs13))+
+        MKPOLS((Nodes4, arcs14))+MKPOLS((Nodes5, arcs15))+
+        MKPOLS((Nodes6, arcs16)) + \
+        CONS(AA(T([1,2,3]))(Nodes0+Nodes1+Nodes2+Nodes3+Nodes4+Nodes5+Nodes6))(
+        POLYLINE([[0,0,0],[0,0,-4]])  ))
+    
+    Frame1 = STRUCT(MKPOLS((Nodes0, arcs20))+MKPOLS((Nodes1, arcs21))+
+        MKPOLS((Nodes2, arcs22))+MKPOLS((Nodes3, arcs23))+
+        MKPOLS((Nodes4, arcs24))+MKPOLS((Nodes5, arcs25))+
+        MKPOLS((Nodes6, arcs26)) )
+    SteelFrame = OFFSET([.2,.2,.3])(STRUCT([Frame0,Frame1]))
+    """
+    ConcreteFrame = OFFSET([.4,.4,.8])(Frame0)
+    """
+    VIEW(Frame0)
+    VIEW(STRUCT([Frame0,Frame1]))
 
-Frame1 = STRUCT(MKPOLS((Nodes0, arcs20))+MKPOLS((Nodes1, arcs21))+
-    MKPOLS((Nodes2, arcs22))+MKPOLS((Nodes3, arcs23))+
-    MKPOLS((Nodes4, arcs24))+MKPOLS((Nodes5, arcs25))+
-    MKPOLS((Nodes6, arcs26)) )
-SteelFrame = OFFSET([.2,.2,.3])(STRUCT([Frame0,Frame1]))
-"""
-ConcreteFrame = OFFSET([.4,.4,.8])(Frame0)
-"""
-VIEW(Frame0)
-VIEW(STRUCT([Frame0,Frame1]))
 
-
-""" 2.5D building assembly """        
-floors = Struct([groundFloor,mezanineFloor,firstFloor,
-                 secondFloor,thirdFloor,fourthFloor,fifthFloor],"Floors")
-
-floors3D = embedStruct(1)(floors)
-building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])),"Building")
-V,FV,EV = struct2lar(building,metric)
-VIEW(STRUCT(MKPOLS((V,EV))))
-
-storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,second,third,fourth,fifth],T(3)(4)])))
-VIEW(STRUCT([storeys,SteelFrame] + MKPOLS((V,EV)) ))
+""" 2.5D building assembly """       
+if __name__=="__main__":
+ 
+    floors = Struct([groundFloor,mezanineFloor,firstFloor,
+                     secondFloor,thirdFloor,fourthFloor,fifthFloor],"Floors")
+    
+    floors3D = embedStruct(1)(floors)
+    building = Struct(CAT(DISTR([floors3D.body,t(0,0,4)])),"Building")
+    V,FV,EV = struct2lar(building,metric)
+    VIEW(STRUCT(MKPOLS((V,EV))))
+    
+    storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,
+               second,third,fourth,fifth],T(3)(4)])))
+    VIEW(STRUCT([storeys,SteelFrame] + MKPOLS((V,EV)) ))
 """ 2.5D building assembly """    
 """    
 VIEW(STRUCT([ STRUCT(MKPOLS((metric(V),EV))), STRUCT(CONS(AA(T([1,2]))(metric(EXPAND(pillars))))(CIRCLE(.4)([8,1]))) ]))

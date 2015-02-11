@@ -166,7 +166,7 @@ def lineIntersection(lineArray):
 
 """ Create the LAR of fragmented lines """
 def lines2lar(lineArray):
-    intersectionPoints,params,frags = lineIntersection(lineArray)
+    _,params,frags = lineIntersection(lineArray)
     vertDict = dict()
     index,defaultValue,V,EV = -1,-1,[],[]
     
@@ -188,7 +188,23 @@ def lines2lar(lineArray):
                 V += [eval(key)]
             else:
                 edge += [vertDict[key]]
-        EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
+            EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
+    
+    # identification of close vertices
+    closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION))
+    if closePairs != []:
+        EV_ = []
+        for v1,v2 in EV:
+            for v,w in closePairs:
+                if v1 == w: v1 = v
+                elif v2 == w: v2 = v
+            EV_ += [[v1,v2]]
+        EV = EV_
+        print "\nclosePairs =",closePairs
+
+    # Remove double edges
+    EV = list(set(AA(tuple)(AA(sorted)(EV))))
+
     return V,EV
 
 """ Biconnected components """
@@ -222,7 +238,7 @@ def biconnectedComponent(model):
     for u in V: 
         if not visited[u]: 
             DFV_visit( VV,out,count,visited,parent,d,low,stack, u )
-    return [component for component in out if len(component) > 1]
+    return W,[component for component in out if len(component) > 1]
 
 """ Hopcroft-Tarjan algorithm """
 def DFV_visit( VV,out,count,visited,parent,d,low,stack,u ):
@@ -252,4 +268,87 @@ def outputComp(stack,u,v):
         if e == (u,v): break
     return list(set(AA(tuple)(AA(sorted)(out))))
 
+
+""" Circular ordering of edges around vertices """
+def edgeSlopeOrdering(model):
+    V,EV = model
+    from bool1 import invertRelation
+    VE,VE_angle = invertRelation(EV),[]
+    for v,ve in enumerate(VE):
+        ve_angle = []
+        if ve != []:
+            for edge in ve:
+                v0,v1 = EV[edge]
+                if v == v0:     x,y = list(array(V[v1]) - array(V[v0]))
+                elif v == v1:    x,y = list(array(V[v0]) - array(V[v1]))
+                angle = math.atan2(y,x)
+                ve_angle += [180*angle/PI]
+        pairs = sorted(zip(ve_angle,ve))
+        #VE_angle += [TRANS(pairs)[1]]
+        VE_angle += [[pair[1] for pair in pairs]]
+    return VE_angle
+
+""" Ordered incidence relationship of vertices and edges """
+def ordered_csrVE(VE_angle):
+    triples = []
+    for v,ve in enumerate(VE_angle):
+        n = len(ve)
+        for k,edge in enumerate(ve):
+            triples += [[v, ve[k], ve[ (k+1)%n ]]]
+    csrVE = triples2mat(triples,shape="csr")
+    return csrVE
+
+""" Faces from biconnected components """
+
+def firstSearch(visited):
+    for edge,vertices in enumerate(visited):
+        for v,vertex in enumerate(vertices):
+            if visited[edge,v] == 0.0:
+                visited[edge,v] = 1.0
+                return edge,v
+    return -1,-1
+"""
+import itertools
+cooEV = csrEV.tocoo()
+navigation = [[i,j,v] for i,j,v 
+    in itertools.izip(cooEV.row,cooEV.col,cooEV.data)]
+"""
+def facesFromComponents(model):
+    V,EV = model
+    FV = []
+    VE_angle = edgeSlopeOrdering(model)
+    csrEV = ordered_csrVE(VE_angle).T
+    visited = zeros((len(EV),2))
+    edge,v = firstSearch(visited)
+    vertex = EV[edge][v]
+    fv = []
+    while True:
+        if (edge,v) == (-1,-1):
+            return [face for face in FV if face != None]
+        elif (fv == []) or (fv[0] != vertex):
+            
+            fv += [vertex]
+            nextEdge = csrEV[edge,vertex]
+            v0,v1 = EV[nextEdge]
+            
+            try:
+                vertex, = set([v0,v1]).difference([vertex])
+            except ValueError:
+                print 'ValueError: too many values to unpack'
+                break
+                
+            if v0==vertex: pos=0
+            elif v1==vertex: pos=1
+                        
+            if visited[nextEdge, pos] == 0:
+                visited[nextEdge, pos] = 1
+                edge = nextEdge                
+        else:
+            FV += [fv]
+            fv = []
+            edge,v = firstSearch(visited)
+            vertex = EV[edge][v]
+        #print "fv =",fv
+        #print "edge,vertex =",edge,vertex
+    
 

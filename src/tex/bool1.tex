@@ -2385,7 +2385,7 @@ A small set of utility functions is used to transform a \emph{point} representat
 @D Symbolic utility to represent points as strings
 @{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
-PRECISION = 4.
+PRECISION = 3.
 
 def mytrace(tracing,name):
 	string = tracing*"  " + name
