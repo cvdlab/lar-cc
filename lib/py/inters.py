@@ -165,6 +165,8 @@ def lineIntersection(lineArray):
     return intersectionPoints,params,frags  ### GOOD: 1, WRONG: 2 !!!
 
 """ Create the LAR of fragmented lines """
+from scipy import spatial
+
 def lines2lar(lineArray):
     _,params,frags = lineIntersection(lineArray)
     vertDict = dict()
@@ -307,12 +309,7 @@ def firstSearch(visited):
                 visited[edge,v] = 1.0
                 return edge,v
     return -1,-1
-"""
-import itertools
-cooEV = csrEV.tocoo()
-navigation = [[i,j,v] for i,j,v 
-    in itertools.izip(cooEV.row,cooEV.col,cooEV.data)]
-"""
+
 def facesFromComponents(model):
     V,EV = model
     FV = []
@@ -350,5 +347,47 @@ def facesFromComponents(model):
             vertex = EV[edge][v]
         #print "fv =",fv
         #print "edge,vertex =",edge,vertex
+    return [face for face in FV if face != None]
+
+""" SVG input parsing and transformation """
+from larcc import *
+import re # regular expression
+
+def svg2lines(filename):
+
+    lines = [line.strip() for line in open(filename) if re.match("<line ",line)!=None]   
+    for line in lines: print line
+        
+    out = ""    
+    for line in lines:
+        #searchObj = re.search( r'([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)', line)
+        searchObj = re.search( r'(<line )(.+)(" x1=")(.+)(" y1=")(.+)(" x2=")(.+)(" y2=")(.+)("/>)', line)
+        if searchObj:
+            #out += "[["+searchObj.group(1)+","+searchObj.group(3)+"], ["+searchObj.group(5)+","+searchObj.group(7)+"]],"
+            out += "[["+searchObj.group(4)+","+searchObj.group(6)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
     
+    lines = list(eval(out))
+    
+    # window-viewport transformation
+    xs,ys = TRANS(CAT(lines))
+    box = [min(xs), min(ys), max(xs), max(ys)]
+    
+    # viewport aspect-ratio checking, setting a computed-viewport 'b'
+    b = [None for k in range(4)]
+    if (box[2]-box[0])/(box[3]-box[1]) > 1:  
+        b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
+    else: 
+        b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
+    
+    # isomorphic 'box -> b' transform to standard unit square
+    lines = [[[ 
+    ((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
+    ((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
+    ((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
+    ((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
+          for [[x1,y1],[x2,y2]] in lines]
+    
+    # line vertices set to fixed resolution
+    lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
+    return lines
 

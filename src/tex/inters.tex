@@ -261,6 +261,8 @@ A fourth stage identifies the possibly duplicated edges. Some of these could app
 %-------------------------------------------------------------------------------
 @D Create the LAR of fragmented lines
 @{""" Create the LAR of fragmented lines """
+from scipy import spatial
+
 def lines2lar(lineArray):
     _,params,frags = lineIntersection(lineArray)
     vertDict = dict()
@@ -466,7 +468,7 @@ def edgeSlopeOrdering(model):
 
 \paragraph{Ordered incidence relationship vertices to edges}
 
-As we have seen, the \texttt{VE\_angle} list of lists reports, for every vertex in \texttt{V}, the list of incident edges, \emph{counterclockwise ordered} around the vertex. Therefore the \texttt{ordered\_csrVE} function, given below, returns the ``compressed sparse row'' matrix row-indexed by vertices and column-indexed by edges, and such that in position $(v,e)$ contains the index $\ell$ of the next edge (after $e$, say) in the counterclockwise ordering of edges around $v$.
+As we have seen, the \texttt{VE\_angle} list of lists reports, for every vertex in \texttt{V}, the list of incident edges, \emph{counterclockwise ordered} around the vertex. Therefore the \texttt{ordered\_csrVE} function, given below, returns the ``compressed sparse row'' matrix, row-indexed by vertices and column-indexed by edges, and such that in position $(v,e)$ contains the index $\ell$ of the next edge (after $e$, say) in the counterclockwise ordering of edges around $v$.
 
 %-------------------------------------------------------------------------------
 @D Ordered incidence relationship of vertices and edges
@@ -498,12 +500,7 @@ def firstSearch(visited):
                 visited[edge,v] = 1.0
                 return edge,v
     return -1,-1
-"""
-import itertools
-cooEV = csrEV.tocoo()
-navigation = [[i,j,v] for i,j,v 
-    in itertools.izip(cooEV.row,cooEV.col,cooEV.data)]
-"""
+
 def facesFromComponents(model):
     V,EV = model
     FV = []
@@ -541,7 +538,7 @@ def facesFromComponents(model):
             vertex = EV[edge][v]
         #print "fv =",fv
         #print "edge,vertex =",edge,vertex
-    
+    return [face for face in FV if face != None]
 @}
 %-------------------------------------------------------------------------------
 
@@ -600,6 +597,7 @@ DEBUG = True
 @< Slope of edges @>
 @< Ordered incidence relationship of vertices and edges @>
 @< Faces from biconnected components @>
+@< SVG input parsing and transformation @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -877,6 +875,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV],submodel,0.015))
 
 
 
+
 \paragraph{SVG input parsing and transformation}
 
 We postulate here that the input file \texttt{test/py/inters/test.svg} should contain only \texttt{<line>} primitives, so we skip any other content. Such primitives are parsed by matching against regular expressions, and their \texttt{x1,y1,x2,y2} attributes are extracted and stored into the \texttt{lines} variable.
@@ -889,43 +888,43 @@ The input vertices are finally set to a fixed resolution, using the \texttt{vcod
 from larcc import *
 import re # regular expression
 
-filename = "test/py/inters/test1.svg"
-lines = [line.strip() for line in open(filename) if re.match("<line ",line)!=None]   
-for line in lines: print line
+def svg2lines(filename):
+
+    lines = [line.strip() for line in open(filename) if re.match("<line ",line)!=None]   
+    for line in lines: print line
+        
+    out = ""    
+    for line in lines:
+        #searchObj = re.search( r'([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)', line)
+        searchObj = re.search( r'(<line )(.+)(" x1=")(.+)(" y1=")(.+)(" x2=")(.+)(" y2=")(.+)("/>)', line)
+        if searchObj:
+            #out += "[["+searchObj.group(1)+","+searchObj.group(3)+"], ["+searchObj.group(5)+","+searchObj.group(7)+"]],"
+            out += "[["+searchObj.group(4)+","+searchObj.group(6)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
     
-out = ""    
-for line in lines:
-    #searchObj = re.search( r'([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)', line)
-    searchObj = re.search( r'(<line )(.+)(" x1=")(.+)(" y1=")(.+)(" x2=")(.+)(" y2=")(.+)("/>)', line)
-    if searchObj:
-        #out += "[["+searchObj.group(1)+","+searchObj.group(3)+"], ["+searchObj.group(5)+","+searchObj.group(7)+"]],"
-        out += "[["+searchObj.group(4)+","+searchObj.group(6)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
-
-lines = list(eval(out))
-VIEW(STRUCT(AA(POLYLINE)(lines)))
-
-# window-viewport transformation
-xs,ys = TRANS(CAT(lines))
-box = [min(xs), min(ys), max(xs), max(ys)]
-
-# viewport aspect-ratio checking, setting a computed-viewport 'b'
-b = [None for k in range(4)]
-if (box[2]-box[0])/(box[3]-box[1]) > 1:  
-    b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
-else: 
-    b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
-
-# isomorphic 'box -> b' transform to standard unit square
-lines = [[[ 
-((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
-((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
-((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
-((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
-      for [[x1,y1],[x2,y2]] in lines]
-
-# line vertices set to fixed resolution
-lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
-VIEW(STRUCT(AA(POLYLINE)(lines)))
+    lines = list(eval(out))
+    
+    # window-viewport transformation
+    xs,ys = TRANS(CAT(lines))
+    box = [min(xs), min(ys), max(xs), max(ys)]
+    
+    # viewport aspect-ratio checking, setting a computed-viewport 'b'
+    b = [None for k in range(4)]
+    if (box[2]-box[0])/(box[3]-box[1]) > 1:  
+        b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
+    else: 
+        b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
+    
+    # isomorphic 'box -> b' transform to standard unit square
+    lines = [[[ 
+    ((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
+    ((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
+    ((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
+    ((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
+          for [[x1,y1],[x2,y2]] in lines]
+    
+    # line vertices set to fixed resolution
+    lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
+    return lines
 @}
 %-------------------------------------------------------------------------------
 
@@ -947,13 +946,11 @@ from bool1 import larRemoveVertices
 from hospital import surfIntegration
 from iot3d import polyline2lar
 
-@< SVG input parsing and transformation @>
+filename = "test/py/inters/test1.svg"
+lines = svg2lines(filename)
+VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 V,EV = lines2lar(lines)
-
-
-
-
 print "\nV =",V
 print "\nEV =",EV
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
@@ -981,6 +978,16 @@ VIEW(STRUCT(MKPOLS((V,EV))))
 @}
 %-------------------------------------------------------------------------------
 
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.2425\linewidth,width=0.2425\linewidth]{images/svg1} 
+   \includegraphics[height=0.2425\linewidth,width=0.2425\linewidth]{images/svg2} 
+   \includegraphics[height=0.2425\linewidth,width=0.2425\linewidth]{images/svg3} 
+   \includegraphics[height=0.2425\linewidth,width=0.2425\linewidth]{images/svg4} 
+   \caption{\texttt{LAR} complex generation from \texttt{SVG} file. (a) the input set of lines parsed from an \texttt{SVG} file; (b) the intersection of lines; (c) the extracted \emph{regularized} 2-complex, drawn exploded; (d) the boundary \texttt{LAR}.}
+   \label{fig:ortho}
+\end{figure}
 
 
 \appendix
