@@ -391,3 +391,20 @@ def svg2lines(filename):
     lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
     return lines
 
+
+""" Transformation of an array of lines in a 2D LAR complex """
+from bool1 import larRemoveVertices
+from hospital import surfIntegration
+
+def larFromLines(lines):
+    V,EV = lines2lar(lines)
+    V,EVs = biconnectedComponent((V,EV))
+    EV = list(set(AA(tuple)(sorted(AA(sorted)(CAT(EVs)))))) 
+    V,EV = larRemoveVertices(V,EV)
+    FV = facesFromComponents((V,EV))
+    areas = surfIntegration((V,FV,EV))
+    boundaryArea = max(areas)
+    interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
+    boundaryFace = FV[areas.index(boundaryArea)]
+    return V,interiorFaces+[boundaryFace],EV
+
