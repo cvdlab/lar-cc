@@ -96,11 +96,12 @@ def containmentBoxes(randomLineArray):
 %-------------------------------------------------------------------------------
 @D Splitting the input above and below a threshold
 @{""" Splitting the input above and below a threshold """
-def splitOnThreshold(boxes,subset,xy='x'):
+def splitOnThreshold(boxes,subset,coord):
     theBoxes = [boxes[k] for k in subset]
-    threshold = centroid(theBoxes,xy)
-    if xy=='x': a=0;b=2;
-    elif xy=='y': a=1;b=3;
+    threshold = centroid(theBoxes,coord)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
     below,above = [],[]
     for k in subset:
         if boxes[k][a] <= threshold: below += [k]
@@ -115,32 +116,28 @@ def splitOnThreshold(boxes,subset,xy='x'):
 %-------------------------------------------------------------------------------
 @D Iterative splitting of box buckets
 @{""" Iterative splitting of box buckets """
+def splitting(bucket,below,above, finalBuckets,splittingStack):
+    if (len(below)<4 and len(above)<4) or len(set(bucket).difference(below))<7 \
+        or len(set(bucket).difference(above))<7: 
+        finalBuckets.append(below)
+        finalBuckets.append(above)
+    else: 
+        splittingStack.append(below)
+        splittingStack.append(above)
+
 def boxBuckets(boxes):
     bucket = range(len(boxes))
     splittingStack = [bucket]
     finalBuckets = []
     while splittingStack != []:
         bucket = splittingStack.pop()
-        below,above = splitOnThreshold(boxes,bucket,'x')
-        below1,above1 = splitOnThreshold(boxes,above,'y')
-        below2,above2 = splitOnThreshold(boxes,below,'y')
-        
-        if (len(below1)<4 and len(above1)<4) or len(set(bucket).difference(below1))<7 \
-            or len(set(bucket).difference(above1))<7: 
-            finalBuckets.append(below1)
-            finalBuckets.append(above1)
-        else: 
-            splittingStack.append(below1)
-            splittingStack.append(above1)
-            
-        if (len(below2)<4 and len(above2)<4) or len(set(bucket).difference(below2))<7 \
-            or len(set(bucket).difference(above2))<7:  
-            finalBuckets.append(below2)
-            finalBuckets.append(above2)
-        else: 
-            splittingStack.append(below2)
-            splittingStack.append(above2)
-    return list(set(AA(tuple)(finalBuckets)))
+        below,above = splitOnThreshold(boxes,bucket,1)
+        below1,above1 = splitOnThreshold(boxes,above,2)
+        below2,above2 = splitOnThreshold(boxes,below,2)                      
+        splitting(above,below1,above1, finalBuckets,splittingStack)
+        splitting(below,below2,above2, finalBuckets,splittingStack)      
+        finalBuckets = list(set(AA(tuple)(finalBuckets)))
+    return finalBuckets
 @}
 %-------------------------------------------------------------------------------
 
@@ -668,9 +665,9 @@ randomLineArray = randomLines(200,0.3)
 VIEW(STRUCT(AA(POLYLINE)(randomLineArray)))
 boxes = containmentBoxes(randomLineArray)
 bucket = range(len(boxes))
-below,above = splitOnThreshold(boxes,bucket,'x')
-below1,above1 = splitOnThreshold(boxes,above,'y')
-below2,above2 = splitOnThreshold(boxes,below,'y')
+below,above = splitOnThreshold(boxes,bucket,1)
+below1,above1 = splitOnThreshold(boxes,above,2)
+below2,above2 = splitOnThreshold(boxes,below,2)
 
 cyan = COLOR(CYAN)(STRUCT(AA(POLYLINE)(randomLineArray[k] for k in below1)))
 yellow = COLOR(YELLOW)(STRUCT(AA(POLYLINE)(randomLineArray[k] for k in above1)))
@@ -714,7 +711,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
 
-lines = randomLines(400,0.2)
+lines = randomLines(800,0.1)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 intersectionPoints,params,frags = lineIntersection(lines)
@@ -987,12 +984,11 @@ lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
 V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.10))
-
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
 verts,faces,edges = polyline2lar([[ V[v] for v in FV[-1] ]])
 VIEW(STRUCT(MKPOLS((verts,edges))))
@@ -1093,13 +1089,15 @@ The direction of computation (either $x$ or $y$) is chosen depending on the valu
 %-------------------------------------------------------------------------------
 @D Computation of the 1D centroid of a list of 2D boxes
 @{""" Computation of the 1D centroid of a list of 2D boxes """    
-def centroid(boxes,xy='x'):
+def centroid(boxes,coord):
     delta,n = 0,len(boxes)
-    if xy=='x': a=0; b=2
-    elif xy=='y': a=1; b=3
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
     for box in boxes:
         delta += (box[a] + box[b])/2
     return delta/n
+
 @}
 %-------------------------------------------------------------------------------
 

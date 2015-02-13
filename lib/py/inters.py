@@ -27,13 +27,15 @@ def box2rect(box):
     return verts
 
 """ Computation of the 1D centroid of a list of 2D boxes """    
-def centroid(boxes,xy='x'):
+def centroid(boxes,coord):
     delta,n = 0,len(boxes)
-    if xy=='x': a=0; b=2
-    elif xy=='y': a=1; b=3
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
     for box in boxes:
         delta += (box[a] + box[b])/2
     return delta/n
+
 
 
 """ Generation of random lines """
@@ -52,11 +54,12 @@ def containmentBoxes(randomLineArray):
     return boxes
 
 """ Splitting the input above and below a threshold """
-def splitOnThreshold(boxes,subset,xy='x'):
+def splitOnThreshold(boxes,subset,coord):
     theBoxes = [boxes[k] for k in subset]
-    threshold = centroid(theBoxes,xy)
-    if xy=='x': a=0;b=2;
-    elif xy=='y': a=1;b=3;
+    threshold = centroid(theBoxes,coord)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
     below,above = [],[]
     for k in subset:
         if boxes[k][a] <= threshold: below += [k]
@@ -66,32 +69,45 @@ def splitOnThreshold(boxes,subset,xy='x'):
 
 
 """ Iterative splitting of box buckets """
+def splitting(bucket,below,above, finalBuckets,splittingStack):
+    if (len(below)<4 and len(above)<4) or len(set(bucket).difference(below))<7 \
+        or len(set(bucket).difference(above))<7: 
+        finalBuckets.append(below)
+        finalBuckets.append(above)
+    else: 
+        splittingStack.append(below)
+        splittingStack.append(above)
+
 def boxBuckets(boxes):
     bucket = range(len(boxes))
     splittingStack = [bucket]
     finalBuckets = []
     while splittingStack != []:
         bucket = splittingStack.pop()
-        below,above = splitOnThreshold(boxes,bucket,'x')
-        below1,above1 = splitOnThreshold(boxes,above,'y')
-        below2,above2 = splitOnThreshold(boxes,below,'y')
-        
-        if (len(below1)<4 and len(above1)<4) or len(set(bucket).difference(below1))<7 \
-            or len(set(bucket).difference(above1))<7: 
-            finalBuckets.append(below1)
-            finalBuckets.append(above1)
-        else: 
-            splittingStack.append(below1)
-            splittingStack.append(above1)
-            
-        if (len(below2)<4 and len(above2)<4) or len(set(bucket).difference(below2))<7 \
-            or len(set(bucket).difference(above2))<7:  
-            finalBuckets.append(below2)
-            finalBuckets.append(above2)
-        else: 
-            splittingStack.append(below2)
-            splittingStack.append(above2)
+        below,above = splitOnThreshold(boxes,bucket,1)
+        splitting(bucket,below,above, finalBuckets,splittingStack)
+        below1,above1 = splitOnThreshold(boxes,above,2)
+        splitting(bucket,below1,above1, finalBuckets,splittingStack)
+        below2,above2 = splitOnThreshold(boxes,below,2)        
+        splitting(bucket,below2,above2, finalBuckets,splittingStack)
     return list(set(AA(tuple)(finalBuckets)))
+
+def boxBuckets(boxes):
+    bucket = range(len(boxes))
+    splittingStack = [bucket]
+    finalBuckets = []
+    while splittingStack != []:
+        bucket = splittingStack.pop()
+        below,above = splitOnThreshold(boxes,bucket,1)
+        below1,above1 = splitOnThreshold(boxes,above,2)
+        below2,above2 = splitOnThreshold(boxes,below,2)        
+              
+        splitting(above,below1,above1, finalBuckets,splittingStack)
+        splitting(below,below2,above2, finalBuckets,splittingStack)
+        
+        finalBuckets = list(set(AA(tuple)(finalBuckets)))
+    return finalBuckets
+
 
 """ Intersection of two line segments """
 def segmentIntersect(pointStorage):
