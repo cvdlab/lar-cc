@@ -37,6 +37,19 @@ def centroid(boxes,coord):
     return delta/n
 
 
+""" XOR of FAN of ordered points """ 
+def FAN(points): 
+   pairs = zip(points[1:-2],points[2:-1])
+   triangles = [MKPOL([[points[0],p1,p2],[[1,2,3]],None]) for p1,p2 in pairs]
+   return XOR(triangles)
+ 
+if __name__=="__main__":
+    pol = [[0.476,0.332],[0.461,0.359],[0.491,0.375],[0.512,0.375],[0.514,0.375],
+    [0.527,0.375],[0.543,0.34],[0.551,0.321],[0.605,0.314],[0.602,0.307],[0.589,
+    0.279],[0.565,0.244],[0.559,0.235],[0.553,0.227],[0.527,0.239],[0.476,0.332]]
+
+    VIEW(EXPLODE(1.2,1.2,1)(FAN(pol)))
+
 
 """ Generation of random lines """
 def randomLines(numberOfLines=200,scaling=0.3):

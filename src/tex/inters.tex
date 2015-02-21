@@ -867,7 +867,19 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV+EV)) + AA(MK)(V)))
 @}
 %-------------------------------------------------------------------------------
 
-    
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/random2d0} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/random2d1} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/random2d2} 
+
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/random2d3} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/random2d4} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/random2d5} 
+   \caption{\texttt{LAR} complex generation random lines. (a) the input random lines; (b) maximal biconnected graph extracted from the 1D LAR of intersected lines; (c) 2D cells of such \emph{regularized} 2-complex; (d) 2-cells, drawn exploded; (e) boundaries of 2D cells; (f) regularized cellular 2-complex extracted from lines.}
+   \label{fig:ortho}
+\end{figure}
 
 \paragraph{Biconnected components from random LAR model}
 %-------------------------------------------------------------------------------
@@ -881,9 +893,10 @@ from hospital import surfIntegration
 from iot3d import polyline2lar
 colors = [CYAN, MAGENTA, YELLOW, RED, GREEN, ORANGE, PURPLE, WHITE, BLACK, BLUE]
 
-lines = randomLines(600,.2)
+lines = randomLines(100,.8)
 V,EV = lines2lar(lines)
 model = V,EV
+VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 V,EVs = biconnectedComponent(model)
 HPCs = [STRUCT(MKPOLS((V,EV))) for EV in EVs]
@@ -898,9 +911,16 @@ from hospital import surfIntegration
 areas = surfIntegration((V,FV,EV))
 boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV+EV)) + AA(MK)(V)))
 
 polylines = [[V[v] for v in face+[face[0]]] for face in FV]
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV)) + AA(MK)(V) + AA(FAN)(polylines) ))
+
+colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, PURPLE, BROWN]
+sets = [COLOR(colors[k%12])(FAN(pol)) for k,pol in enumerate(polylines)]
+VIEW(STRUCT(sets))
+
+
+VIEW(EXPLODE(1.2,1.2,1)((AA(FAN)(polylines))))
 VIEW(EXPLODE(1.2,1.2,1)((AA(POLYLINE)(polylines))))
 
 VV = AA(LIST)(range(len(V)))
@@ -908,6 +928,7 @@ submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV],submodel,0.1))
 @}
 %-------------------------------------------------------------------------------
+
 
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
@@ -1034,6 +1055,7 @@ Some utility fuctions used by the module are collected in this appendix. Their m
 @< Generation of a random line segment @>
 @< Transformation of a 2D box into a closed polyline @>
 @< Computation of the 1D centroid of a list of 2D boxes @>
+@< Pyplasm XOR of FAN of ordered points @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1109,6 +1131,26 @@ def centroid(boxes,coord):
         delta += (box[a] + box[b])/2
     return delta/n
 
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Pyplasm XOR of FAN of ordered points}
+
+%-------------------------------------------------------------------------------
+@D Pyplasm XOR of FAN of ordered points
+@{""" XOR of FAN of ordered points """ 
+def FAN(points): 
+	pairs = zip(points[1:-2],points[2:-1])
+	triangles = [MKPOL([[points[0],p1,p2],[[1,2,3]],None]) for p1,p2 in pairs]
+	return XOR(triangles)
+ 
+if __name__=="__main__":
+    pol = [[0.476,0.332],[0.461,0.359],[0.491,0.375],[0.512,0.375],[0.514,0.375],
+    [0.527,0.375],[0.543,0.34],[0.551,0.321],[0.605,0.314],[0.602,0.307],[0.589,
+    0.279],[0.565,0.244],[0.559,0.235],[0.553,0.227],[0.527,0.239],[0.476,0.332]]
+
+    VIEW(EXPLODE(1.2,1.2,1)(FAN(pol)))
 @}
 %-------------------------------------------------------------------------------
 
