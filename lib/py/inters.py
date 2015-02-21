@@ -78,19 +78,14 @@ def splitting(bucket,below,above, finalBuckets,splittingStack):
         splittingStack.append(below)
         splittingStack.append(above)
 
-def boxBuckets(boxes):
-    bucket = range(len(boxes))
-    splittingStack = [bucket]
-    finalBuckets = []
-    while splittingStack != []:
-        bucket = splittingStack.pop()
-        below,above = splitOnThreshold(boxes,bucket,1)
-        splitting(bucket,below,above, finalBuckets,splittingStack)
-        below1,above1 = splitOnThreshold(boxes,above,2)
-        splitting(bucket,below1,above1, finalBuckets,splittingStack)
-        below2,above2 = splitOnThreshold(boxes,below,2)        
-        splitting(bucket,below2,above2, finalBuckets,splittingStack)
-    return list(set(AA(tuple)(finalBuckets)))
+def geomPartitionate(boxes,buckets):
+    geomInters = [set() for h in range(len(boxes))]
+    for bucket in buckets:
+        for k in bucket:
+            geomInters[k] = geomInters[k].union(bucket)
+    for h,inters in enumerate(geomInters):
+        geomInters[h] = geomInters[h].difference([h])
+    return AA(list)(geomInters)
 
 def boxBuckets(boxes):
     bucket = range(len(boxes))
@@ -100,29 +95,28 @@ def boxBuckets(boxes):
         bucket = splittingStack.pop()
         below,above = splitOnThreshold(boxes,bucket,1)
         below1,above1 = splitOnThreshold(boxes,above,2)
-        below2,above2 = splitOnThreshold(boxes,below,2)        
-              
+        below2,above2 = splitOnThreshold(boxes,below,2)                      
         splitting(above,below1,above1, finalBuckets,splittingStack)
-        splitting(below,below2,above2, finalBuckets,splittingStack)
-        
+        splitting(below,below2,above2, finalBuckets,splittingStack)      
         finalBuckets = list(set(AA(tuple)(finalBuckets)))
-    return finalBuckets
-
+    parts = geomPartitionate(boxes,finalBuckets)
+    return AA(sorted)(parts)
+    #return finalBuckets
 
 """ Intersection of two line segments """
-def segmentIntersect(pointStorage):
-    def segmentIntersect0(segment1):
-        p1,p2 = segment1
+def segmentIntersect(boxes,lineArray,pointStorage):
+    def segmentIntersect0(h):
+        p1,p2 = lineArray[h]
         line1 = '['+ vcode(p1) +','+ vcode(p2) +']'
         (x1,y1),(x2,y2) = p1,p2
-        #B1,B2,B3,B4 = eval(vcode([min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2)]))
-        def segmentIntersect1(segment2):
-            p3,p4 = segment2
+        B1,B2,B3,B4 = boxes[h]
+        def segmentIntersect1(k):
+            p3,p4 = lineArray[k]
             line2 = '['+ vcode(p3) +','+ vcode(p4) +']'
             (x3,y3),(x4,y4) = p3,p4
-            #b1,b2,b3,b4 = eval(vcode([min(x3,x4),min(y3,y4),max(x3,x4),max(y3,y4)]))
-            #if ((B1<=b1<=B3) or (B1<=b3<=B3)) and ((B2<=b2<=B4) or (B2<=b4<=B4)):
-            if True:
+            b1,b2,b3,b4 = boxes[k]
+            if not (b3<B1 or B3<b1 or b4<B2 or B4<b2):
+            #if True:
                 m23 = mat([p2,p3])
                 m14 = mat([p1,p4])
                 m = m23 - m14
@@ -144,17 +138,14 @@ def segmentIntersect(pointStorage):
     return segmentIntersect0
 
 """ Brute force bucket intersection """
-def lineBucketIntersect(lines,pointStorage):
-    intersect0 = segmentIntersect(pointStorage)
+def lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage):
+    intersect0 = segmentIntersect(boxes,lineArray,pointStorage)
     intersectionPoints = []
-    n = len(lines)
-    for k,line in enumerate(lines):
-        intersect1 = intersect0(line)
-        for h in range(k+1,n):
-            line1 = lines[h]
-            point = intersect1(line1)
-            if point != None: 
-                intersectionPoints.append(eval(vcode(point)))
+    intersect1 = intersect0(h)
+    for line in bucket:
+        point = intersect1(line)
+        if point != None: 
+            intersectionPoints.append(eval(vcode(point)))
     return intersectionPoints
 
 """ Accelerate intersection of lines """
@@ -170,9 +161,8 @@ def lineIntersection(lineArray):
     boxes = containmentBoxes(lineArray)
     buckets = boxBuckets(boxes)
     intersectionPoints = set()
-    for bucket in buckets:
-        lines = [lineArray[k] for k in bucket]
-        pointBucket = lineBucketIntersect(lines,pointStorage)
+    for h,bucket in enumerate(buckets):
+        pointBucket = lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage)
         intersectionPoints = intersectionPoints.union(AA(tuple)(pointBucket))
 
     frags = AA(eval)(pointStorage.keys())
@@ -215,14 +205,13 @@ def lines2lar(lineArray):
         for v1,v2 in EV:
             for v,w in closePairs:
                 if v1 == w: v1 = v
-                elif v2 == w: v2 = v
+                if v2 == w: v2 = v
             EV_ += [[v1,v2]]
         EV = EV_
         print "\nclosePairs =",closePairs
 
     # Remove double edges
-    EV = list(set(AA(tuple)(AA(sorted)(EV))))
-
+    EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
     return V,EV
 
 """ Biconnected components """
@@ -328,8 +317,10 @@ def firstSearch(visited):
 
 def facesFromComponents(model):
     V,EV = model
+    # Remove zero edges
+    EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
     FV = []
-    VE_angle = edgeSlopeOrdering(model)
+    VE_angle = edgeSlopeOrdering((V,EV))
     csrEV = ordered_csrVE(VE_angle).T
     visited = zeros((len(EV),2))
     edge,v = firstSearch(visited)
@@ -337,7 +328,7 @@ def facesFromComponents(model):
     fv = []
     while True:
         if (edge,v) == (-1,-1):
-            return [face for face in FV if face != None]
+            break #return [face for face in FV if face != None]
         elif (fv == []) or (fv[0] != vertex):
             
             fv += [vertex]
@@ -363,7 +354,8 @@ def facesFromComponents(model):
             vertex = EV[edge][v]
         #print "fv =",fv
         #print "edge,vertex =",edge,vertex
-    return [face for face in FV if face != None]
+        FV = [face for face in FV if face != None]
+    return V,FV,EV
 
 """ SVG input parsing and transformation """
 from larcc import *
@@ -417,7 +409,7 @@ def larFromLines(lines):
     V,EVs = biconnectedComponent((V,EV))
     EV = list(set(AA(tuple)(sorted(AA(sorted)(CAT(EVs)))))) 
     V,EV = larRemoveVertices(V,EV)
-    FV = facesFromComponents((V,EV))
+    V,FV,EV = facesFromComponents((V,EV))
     areas = surfIntegration((V,FV,EV))
     boundaryArea = max(areas)
     interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]

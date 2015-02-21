@@ -23,7 +23,7 @@ VIEW(STRUCT(sets))
 EV = sorted(CAT(EVs))
 VIEW(STRUCT(MKPOLS((V,EV))))
 
-FV = facesFromComponents((V,EV))
+V,FV,EV = facesFromComponents((V,EV))
 
 from hospital import surfIntegration
 areas = surfIntegration((V,FV,EV))

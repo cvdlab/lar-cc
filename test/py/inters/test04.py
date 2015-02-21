@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
 
-lines = randomLines(400,0.2)
+lines = randomLines(300,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 intersectionPoints,params,frags = lineIntersection(lines)

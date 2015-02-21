@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
 
-lines = randomLines(400,0.2)
+lines = randomLines(800,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 V,EV = lines2lar(lines)

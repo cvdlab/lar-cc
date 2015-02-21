@@ -1,0 +1,147 @@
+
+import sys
+sys.path.insert(0, 'lib/py/')
+from inters import *
+from largrid import *
+
+#-------------------------------------------------------------------------
+
+def rpoint():
+    return eval( vcode([ random.random(), random.random(), random.random() ]) )
+
+def redge(scaling):
+    v1,v2 = array(rpoint()), array(rpoint())
+    c = (v1+v2)/2
+    pos = rpoint()
+    v1 = (v1-c)*scaling + pos
+    v2 = (v2-c)*scaling + pos
+    return tuple(eval(vcode(v1))), tuple(eval(vcode(v2)))
+
+def randomLines(numberOfLines=400,scaling=0.3):
+    randomLineArray = [redge(scaling) for k in range(numberOfLines)]
+    [xs,ys,zs] = TRANS(CAT(randomLineArray))
+    xmin, ymin, zmin = min(xs), min(ys), min(zs)
+    v = array([-xmin,-ymin, -zmin])
+    randomLineArray = [[list(v1+v), list(v2+v)] for v1,v2, in randomLineArray]
+    return randomLineArray
+
+#-------------------------------------------------------------------------
+
+def box2exa(box):
+    x1,y1,z1,x2,y2,z2 = box
+    verts = [[x1,y1,z1], [x1,y1,z2], [x1,y2,z1], [x1,y2,z2], [x2,y1,z1], [x2,y1,z2], [x2,y2,z1], [x2,y2,z2]]
+    cell = [range(1,len(verts)+1)]
+    return verts,cell,None
+
+def containmentBoxes(randomLineArray):
+    boxes = [eval(vcode([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))
+            for ((x1,y1,z1),(x2,y2,z2)) in randomLineArray]
+    return boxes
+
+def modelBoxes(model):
+	V,CV = model
+	boxes = []
+	for cell in CV:
+		verts = [V[v] for v in cell]
+		x1,y1,z1 = [min(coord) for coord in TRANS(verts)]
+		x2,y2,z2 = [max(coord) for coord in TRANS(verts)]
+		boxes += [eval(vcode([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))]
+	return boxes
+
+def centroid(boxes,coord):
+    delta,n = 0,len(boxes)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
+    for box in boxes:
+        delta += (box[a] + box[b])/2
+    return delta/n
+
+def splitOnThreshold(boxes,subset,coord):
+    theBoxes = [boxes[k] for k in subset]
+    threshold = centroid(theBoxes,coord)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
+    below,above = [],[]
+    for k in subset:
+        if boxes[k][a] <= threshold: below += [k]
+    for k in subset:
+        if boxes[k][b] >= threshold: above += [k]
+    return below,above
+
+
+def splitting(bucket,below,above, finalBuckets,splittingStack):
+    if (len(below)<4 and len(above)<4) or len(set(bucket).difference(below))<7 \
+        or len(set(bucket).difference(above))<7: 
+        finalBuckets.append(below)
+        finalBuckets.append(above)
+    else: 
+        splittingStack.append(below)
+        splittingStack.append(above)
+
+def boxBuckets(boxes):
+    bucket = range(len(boxes))
+    splittingStack = [bucket]
+    finalBuckets = []
+    while splittingStack != []:
+        bucket = splittingStack.pop()
+        below,above = splitOnThreshold(boxes,bucket,1)
+        below1,above1 = splitOnThreshold(boxes,above,2)
+        below2,above2 = splitOnThreshold(boxes,below,2)        
+        below11,above11 = splitOnThreshold(boxes,above1,3)
+        below21,above21 = splitOnThreshold(boxes,below1,3)        
+        below12,above12 = splitOnThreshold(boxes,above2,3)
+        below22,above22 = splitOnThreshold(boxes,below2,3)  
+              
+        splitting(above1,below11,above11, finalBuckets,splittingStack)
+        splitting(below1,below21,above21, finalBuckets,splittingStack)
+        splitting(above2,below12,above12, finalBuckets,splittingStack)
+        splitting(below2,below22,above22, finalBuckets,splittingStack)
+        
+        finalBuckets = list(set(AA(tuple)(finalBuckets)))
+    return finalBuckets
+
+#-------------------------------------------------------------------------
+
+randomLineArray = randomLines(8000,0.1)
+VIEW(STRUCT(AA(POLYLINE)(randomLineArray)))
+
+boxes = containmentBoxes(randomLineArray)
+hexas = AA(box2exa)(boxes)
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+cyan = COLOR(CYAN)(STRUCT(AA(POLYLINE)(randomLineArray)))
+yellow = STRUCT(AA(glass)(AA(MKPOL)(hexas)))
+VIEW(STRUCT([cyan,yellow]))
+
+buckets = boxBuckets(boxes)
+colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, PURPLE, BROWN]
+sets = [COLOR(colors[k%12])(STRUCT(AA(POLYLINE)([randomLineArray[h] 
+            for h in bucket]))) for k,bucket in enumerate(buckets)]
+VIEW(STRUCT(sets))
+
+#-------------------------------------------------------------------------
+
+mod1 = larSplit(1)(1), larGrid(1)(1)
+mod_1 = struct2lar(Struct(5*[mod1,t(2)]))
+squares = larModelProduct([mod_1,mod_1])
+#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(squares)))
+cubes = larModelProduct([squares,mod_1])
+rt_cubes = struct2lar(Struct([s(1./5,1./5,1./5), r(PI/12,PI/12,PI/12), t(-4.5,-4.5,-4.5), cubes]))
+V,FV = larCuboidsFacets(rt_cubes)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(rt_cubes)))
+
+boxes = modelBoxes((V,FV))
+hexas = AA(box2exa)(boxes)
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+#cyan = COLOR(CYAN)(STRUCT(MKPOLS(rt_cubes)))
+yellow = STRUCT(AA(glass)(AA(MKPOL)(hexas)))
+VIEW(STRUCT([#cyan,
+	yellow]))
+
+buckets = boxBuckets(boxes)
+colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, PURPLE, BROWN]
+sets = [COLOR(colors[k%12])(STRUCT( [MKPOL(hexas[h]) for h in bucket])) for k,bucket in enumerate(buckets)]
+VIEW(STRUCT(sets))
+
+

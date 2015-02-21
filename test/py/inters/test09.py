@@ -7,7 +7,7 @@ from hospital import surfIntegration
 from iot3d import polyline2lar
 colors = [CYAN, MAGENTA, YELLOW, RED, GREEN, ORANGE, PURPLE, WHITE, BLACK, BLUE]
 
-lines = randomLines(800,0.2)
+lines = randomLines(600,.2)
 V,EV = lines2lar(lines)
 model = V,EV
 
@@ -17,16 +17,18 @@ sets = [COLOR(colors[k%10])(hpc) for k,hpc in enumerate(HPCs)]
 VIEW(STRUCT(sets))
 
 EV = CAT(EVs)
+from bool1 import larRemoveVertices
 V,EV = larRemoveVertices(V,EV)
-FV = facesFromComponents((V,EV))
+V,FV,EV = facesFromComponents((V,EV))
 from hospital import surfIntegration
 areas = surfIntegration((V,FV,EV))
 boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV+EV)) + AA(MK)(V)))
 
-from bool1 import larRemoveVertices
-V,EV = larRemoveVertices(V,EV)
+polylines = [[V[v] for v in face+[face[0]]] for face in FV]
+VIEW(EXPLODE(1.2,1.2,1)((AA(POLYLINE)(polylines))))
+
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV],submodel,0.015))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV],submodel,0.1))
