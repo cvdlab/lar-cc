@@ -157,14 +157,10 @@ def removeSubsets(buckets):
 def geomPartitionate(boxes,buckets):
     geomInters = [set() for h in range(len(boxes))]
     for bucket in buckets:
-        print "\nbucket =",bucket
         for k in bucket:
-            print "k =",k
             geomInters[k] = geomInters[k].union(bucket)
-            print "geomInters[k] =",geomInters[k]
-
-    """for h,inters in enumerate(geomInters):
-        geomInters[h] = geomInters[h].difference([h])"""
+    for h,inters in enumerate(geomInters):
+        geomInters[h] = geomInters[h].difference([h])
     return AA(list)(geomInters)
 @}
 %-------------------------------------------------------------------------------
@@ -175,6 +171,11 @@ def geomPartitionate(boxes,buckets):
 %-------------------------------------------------------------------------------
 @D Iterate the splitting until splittingStack is empty
 @{""" Iterate the splitting until \texttt{splittingStack} is empty """
+def boxTest(boxes,h,k):
+    B1,B2,B3,B4,B5,B6,_ = boxes[k]
+    b1,b2,b3,b4,b5,b6,_ = boxes[h]
+    return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
+
 def boxBuckets(boxes):
     bucket = range(len(boxes))
     splittingStack = [bucket]
@@ -183,7 +184,8 @@ def boxBuckets(boxes):
         bucket = splittingStack.pop()
         below,above = splitOnThreshold(boxes,bucket,1)
         below1,above1 = splitOnThreshold(boxes,above,2)
-        below2,above2 = splitOnThreshold(boxes,below,2)        
+        below2,above2 = splitOnThreshold(boxes,below,2) 
+               
         below11,above11 = splitOnThreshold(boxes,above1,3)
         below21,above21 = splitOnThreshold(boxes,below1,3)        
         below12,above12 = splitOnThreshold(boxes,above2,3)
@@ -196,7 +198,8 @@ def boxBuckets(boxes):
         
         finalBuckets = list(set(AA(tuple)(finalBuckets)))
     parts = geomPartitionate(boxes,finalBuckets)
-    return sorted(AA(sorted)(parts))
+    parts = [[h for h in part if boxTest(boxes,h,k)] for k,part in enumerate(parts)]
+    return AA(sorted)(parts)
 @}
 %-------------------------------------------------------------------------------
 
@@ -307,7 +310,7 @@ sys.path.insert(0, 'lib/py/')
 from bool2 import *
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
-randomQuadArray = randomQuads(30,0.2)
+randomQuadArray = randomQuads(30,0.8)
 VIEW(STRUCT(AA(MKPOL)([[verts, [[1,2,3,4]], None] for verts in randomQuadArray])))
 
 boxes = containmentBoxes(randomQuadArray)
@@ -325,6 +328,9 @@ for k,part in enumerate(parts):
 @}
 %-------------------------------------------------------------------------------
 
+bunch=[]
+for k,part in enumerate(parts):
+    bunch += [[h for h in part if boxTest(boxes,h,k)]]
 
 \appendix
 %===============================================================================

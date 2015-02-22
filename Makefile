@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = inters
+NAME = bool2
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
