@@ -160,3 +160,24 @@ def boxBuckets(boxes):
     parts = [[h for h in part if boxTest(boxes,h,k)] for k,part in enumerate(parts)]
     return AA(sorted)(parts)
 
+""" Computation of affine face transformations """
+def COVECTOR(points):
+    pointdim = len(points[0])
+    plane = Planef.bestFittingPlane(pointdim,[item for sublist in points for item in sublist])
+    return [plane.get(I) for I in range(0,pointdim+1)]
+
+def faceTransformations(facet):
+    covector = COVECTOR(facet)
+    translVector = facet[0]
+    # translation 
+    newFacet = [ VECTDIFF([v,translVector]) for v in facet ]
+    # linear transformation: boundaryFacet -> standard (d-1)-simplex
+    d = len(facet[0])
+    transformMat = mat( newFacet[1:d] + [covector[1:]] ).T.I
+    # transformation in the subspace x_d = 0
+    out = (transformMat * (mat(newFacet).T)).T.tolist()
+    print "\nin =",facet
+    print "out =",out
+    return transformMat
+
+

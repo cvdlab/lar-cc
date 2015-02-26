@@ -212,7 +212,7 @@ def lines2lar(lineArray):
             EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
     
     # identification of close vertices
-    closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION))
+    closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION+1))
     if closePairs != []:
         EV_ = []
         for v1,v2 in EV:
@@ -223,7 +223,7 @@ def lines2lar(lineArray):
         EV = EV_
         print "\nclosePairs =",closePairs
 
-    # Remove double edges
+    # Remove zero edges
     EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
     return V,EV
 
@@ -347,6 +347,7 @@ def facesFromComponents(model):
             fv += [vertex]
             nextEdge = csrEV[edge,vertex]
             v0,v1 = EV[nextEdge]
+            print "v0,v1,vertex =",v0,v1,vertex
             
             try:
                 vertex, = set([v0,v1]).difference([vertex])
@@ -362,6 +363,7 @@ def facesFromComponents(model):
                 edge = nextEdge                
         else:
             FV += [fv]
+            print "fv =",fv,"\n"
             fv = []
             edge,v = firstSearch(visited)
             vertex = EV[edge][v]
