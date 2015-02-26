@@ -163,7 +163,8 @@ def boxBuckets(boxes):
 """ Computation of affine face transformations """
 def COVECTOR(points):
     pointdim = len(points[0])
-    plane = Planef.bestFittingPlane(pointdim,[item for sublist in points for item in sublist])
+    plane = Planef.bestFittingPlane(pointdim,
+               [item for sublist in points for item in sublist])
     return [plane.get(I) for I in range(0,pointdim+1)]
 
 def faceTransformations(facet):
@@ -190,7 +191,8 @@ def crossRelation(XV,YV):
     for k,face in enumerate(XV):
         data = csrXY[k].data
         col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2] # NOTE:  depends on the relation ...
+        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+        # NOTE: val depends on the relation under consideration ...
     return XY
 
 """ Submanifold mapping computation """
@@ -199,7 +201,8 @@ def submanifoldMapping(pivotFace):
     transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
     facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
     m = faceTransformations(facet)
-    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],m[2,1],m[2,2],0],[0,0,0,1]])
+    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],
+               m[2,1],m[2,2],0],[0,0,0,1]])
     transform = mapping * transl
     return transform
 
@@ -208,7 +211,7 @@ def intersection(V,FV,EV):
     def intersection0(k,bundledFaces):
         FE = crossRelation(FV,EV)
         pivotFace = [V[v] for v in FV[k]]
-        transform = submanifoldMapping(pivotFace)    # submanifold transformation
+        transform = submanifoldMapping(pivotFace)  # submanifold transformation
         transformedCells,edges,faces = [],[],[]
         for face in bundledFaces:
             edge = set(FE[k]).intersection(FE[face])  # common edge index
@@ -216,10 +219,12 @@ def intersection(V,FV,EV):
                 print "\nk,face,FE[face] =",k,face,FE[face],"\n"
                 candidateEdges = FE[face]
                 for e in candidateEdges:
-                    cell = [V[v]+[1.0] for v in EV[e]]    # vertices of incident face
-                    transformedCell = (transform * (mat(cell).T)).T.tolist()  # vertices in local frame
+                    cell = [V[v]+[1.0] for v in EV[e]]  # verts of incident face
+                    transformedCell = (transform * (mat(cell).T)).T.tolist()  
+                    # vertices in local frame
                     transformedCells += [[point[:-1] for point in transformedCell]]
-                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) for cell in transformedCells]
+                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) 
+                           for cell in transformedCells]
             else:  # boundary edges of face k
                 e, = edge
                 vs = [V[v]+[1.0] for v in EV[e]]

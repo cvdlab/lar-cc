@@ -219,7 +219,10 @@ def boxBuckets(boxes):
 
 In this section we implement the splitting of $(d-1)$-faces, stored in \texttt{FV}, induced by the buckets of $(d-1)$-faces, stored in \texttt{parts}, and one-to-one associated to them. Of course, (a) both such arrays have the same number of elements, and (b) whereas \texttt{FV} contains the indices of incident vertices for each face, \texttt{parts}  contains the indices of adjacent faces for each face, with the further constraint that $i \not\in \texttt{parts}(i)$.
 
-\paragraph{Computation of topological relation}
+\paragraph{Computation of topological relations} 
+The function \texttt{crossRelation} is used here to compute a topological relation starting from two characteristic matrices \texttt{XV} and \texttt{YV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively.
+The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sparse Row) format is used.
+
 %-------------------------------------------------------------------------------
 @D Computation of topological relation
 @{""" Computation of topological relation """
@@ -231,12 +234,15 @@ def crossRelation(XV,YV):
     for k,face in enumerate(XV):
         data = csrXY[k].data
         col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2] # NOTE:  depends on the relation ...
+        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+        # NOTE: val depends on the relation under consideration ...
     return XY
 @}
 %-------------------------------------------------------------------------------
     
 \paragraph{Submanifold mapping computation}
+The $4\times 4$ (affine) scipy matrix \texttt{transform} of type \texttt{mat} is computed by the function \texttt{submanifoldMapping}, using as input the array \texttt{pivotFace} that contains the vertices of the so-called \emph{pivot} face, i.e.~of the face to be mapped to the coordinate subspace $z=0$ (in 3D).
+
 %-------------------------------------------------------------------------------
 @D Submanifold mapping computation
 @{""" Submanifold mapping computation """
@@ -245,13 +251,16 @@ def submanifoldMapping(pivotFace):
     transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
     facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
     m = faceTransformations(facet)
-    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],m[2,1],m[2,2],0],[0,0,0,1]])
+    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],
+    				m[2,1],m[2,2],0],[0,0,0,1]])
     transform = mapping * transl
     return transform
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{Set of line segments partitioning a facet}
+The more important function of this section is the higher level \texttt{intersection} function, that accepts as input the \texttt{LAR} model \texttt{(V,FV,EV)} to be partitioned, and the pair \texttt{(k,bundledFaces)}, where \texttt{k} is the index of the pivot face (to be transformed to the $z=0$ subspace) and where \texttt{bundledFaces} is an array of indices of faces that are guarantee to share points with face $k$. Such shared points may be either boundary edges of $k$ or a segment that is internal both to face $k$ and to some face in  \texttt{bundledFaces}.
+
 %-------------------------------------------------------------------------------
 @D Set of line segments partitioning a facet
 @{""" Set of line segments partitioning a facet """
@@ -259,7 +268,7 @@ def intersection(V,FV,EV):
     def intersection0(k,bundledFaces):
         FE = crossRelation(FV,EV)
         pivotFace = [V[v] for v in FV[k]]
-        transform = submanifoldMapping(pivotFace)    # submanifold transformation
+        transform = submanifoldMapping(pivotFace)  # submanifold transformation
         transformedCells,edges,faces = [],[],[]
         for face in bundledFaces:
             edge = set(FE[k]).intersection(FE[face])  # common edge index
@@ -267,10 +276,12 @@ def intersection(V,FV,EV):
                 print "\nk,face,FE[face] =",k,face,FE[face],"\n"
                 candidateEdges = FE[face]
                 for e in candidateEdges:
-                    cell = [V[v]+[1.0] for v in EV[e]]    # vertices of incident face
-                    transformedCell = (transform * (mat(cell).T)).T.tolist()  # vertices in local frame
+                    cell = [V[v]+[1.0] for v in EV[e]]  # verts of incident face
+                    transformedCell = (transform * (mat(cell).T)).T.tolist()  
+                    # vertices in local frame
                     transformedCells += [[point[:-1] for point in transformedCell]]
-                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) for cell in transformedCells]
+                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) 
+                				for cell in transformedCells]
             else:  # boundary edges of face k
                 e, = edge
                 vs = [V[v]+[1.0] for v in EV[e]]
@@ -289,7 +300,8 @@ The faces in every $\texttt{parts}(i)$ must be affinely transformed into the sub
 @{""" Computation of affine face transformations """
 def COVECTOR(points):
     pointdim = len(points[0])
-    plane = Planef.bestFittingPlane(pointdim,[item for sublist in points for item in sublist])
+    plane = Planef.bestFittingPlane(pointdim,
+    				[item for sublist in points for item in sublist])
     return [plane.get(I) for I in range(0,pointdim+1)]
 
 def faceTransformations(facet):
