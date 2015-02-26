@@ -219,6 +219,67 @@ def boxBuckets(boxes):
 
 In this section we implement the splitting of $(d-1)$-faces, stored in \texttt{FV}, induced by the buckets of $(d-1)$-faces, stored in \texttt{parts}, and one-to-one associated to them. Of course, (a) both such arrays have the same number of elements, and (b) whereas \texttt{FV} contains the indices of incident vertices for each face, \texttt{parts}  contains the indices of adjacent faces for each face, with the further constraint that $i \not\in \texttt{parts}(i)$.
 
+\paragraph{Computation of topological relation}
+%-------------------------------------------------------------------------------
+@D Computation of topological relation
+@{""" Computation of topological relation """
+def crossRelation(XV,YV):
+    csrXV = csrCreate(XV)
+    csrYV = csrCreate(YV)
+    csrXY = matrixProduct(csrXV, csrYV.T)
+    XY = [None for k in range(len(XV))]
+    for k,face in enumerate(XV):
+        data = csrXY[k].data
+        col = csrXY[k].indices
+        XY[k] = [col[h] for h,val in enumerate(data) if val==2] # NOTE:  depends on the relation ...
+    return XY
+@}
+%-------------------------------------------------------------------------------
+    
+\paragraph{Submanifold mapping computation}
+%-------------------------------------------------------------------------------
+@D Submanifold mapping computation
+@{""" Submanifold mapping computation """
+def submanifoldMapping(pivotFace):
+    tx,ty,tz = pivotFace[0]
+    transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
+    facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
+    m = faceTransformations(facet)
+    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],m[2,1],m[2,2],0],[0,0,0,1]])
+    transform = mapping * transl
+    return transform
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Set of line segments partitioning a facet}
+%-------------------------------------------------------------------------------
+@D Set of line segments partitioning a facet
+@{""" Set of line segments partitioning a facet """
+def intersection(V,FV,EV):
+    def intersection0(k,bundledFaces):
+        FE = crossRelation(FV,EV)
+        pivotFace = [V[v] for v in FV[k]]
+        transform = submanifoldMapping(pivotFace)    # submanifold transformation
+        transformedCells,edges,faces = [],[],[]
+        for face in bundledFaces:
+            edge = set(FE[k]).intersection(FE[face])  # common edge index
+            if edge == set():
+                print "\nk,face,FE[face] =",k,face,FE[face],"\n"
+                candidateEdges = FE[face]
+                for e in candidateEdges:
+                    cell = [V[v]+[1.0] for v in EV[e]]    # vertices of incident face
+                    transformedCell = (transform * (mat(cell).T)).T.tolist()  # vertices in local frame
+                    transformedCells += [[point[:-1] for point in transformedCell]]
+                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) for cell in transformedCells]
+            else:  # boundary edges of face k
+                e, = edge
+                vs = [V[v]+[1.0] for v in EV[e]]
+                ws = (transform * (mat(vs).T)).T.tolist()
+                edges += [POLYLINE([p[:-1] for p in ws])]
+        return edges,faces
+    return intersection0    
+@}
+%-------------------------------------------------------------------------------
 
 \paragraph{Computation of face transformations}
 The faces in every $\texttt{parts}(i)$ must be affinely transformed into the subspace $x_d=0$, in order to compute the intersection of its elements with this subspace, that are submanifolds of dimension $d-2$.
@@ -246,18 +307,6 @@ def faceTransformations(facet):
     return transformMat
 @}
 %-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@D Submanifold maps computation
-@{""" Submanifold maps computation """
-for face in FV:
-    verts = [V[v] for v in face]
-    facet = [ VECTDIFF([v,verts[0]]) for v in verts ]
-    transf = faceTransformations(facet)
-    new = (transf * (mat(facet).T)).T.tolist()
-    VIEW(POLYLINE(new))
-@}
-%-------------------------------------------------------------------------------
     
 \subsection{Boolean chains}
 %===============================================================================
@@ -283,6 +332,9 @@ DEBUG = True
 @< Iterate the splitting until splittingStack is empty @>
 @< Computation of face transformations @>
 @< Computation of affine face transformations @>
+@< Computation of topological relation @>
+@< Submanifold mapping computation @>
+@< Set of line segments partitioning a facet @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -461,53 +513,24 @@ parts = boxBuckets(boxes)
 
 @< Two unit cubes @>
 
-def crossRelation(XV,YV):
-    csrXV = csrCreate(XV)
-    csrYV = csrCreate(YV)
-    csrXY = matrixProduct(csrXV, csrYV.T)
-    XY = [None for k in range(len(XV))]
-    for k,face in enumerate(XV):
-        data = csrXY[k].data
-        col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2]
-    return XY
-    
-def mapping(pivotFace):
-    tx,ty,tz = pivotFace[0]
-    transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
-    facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
-    m = faceTransformations(facet)
-    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],m[2,1],m[2,2],0],[0,0,0,1]])
-    transform = mapping * transl
-    return transform
-
-def intersection(V,FV,EV):
-    def intersection0(k,bundledFaces):
-        FE = crossRelation(FV,EV)
-        pivotFace = [V[v] for v in FV[k]]
-        transform = mapping(pivotFace)    # submanifold transformation
-        transformedCells,edges,faces = [],[],[]
-        for face in bundledFaces:
-            edge = set(FE[k]).intersection(FE[face])
-            if edge == set():
-                cell = [V[v]+[1.0] for v in FV[face]]    # vertices of incident face
-                transformedCell = (transform * (mat(cell).T)).T.tolist()  # vertices in local frame
-                transformedCells += [[point[:-1] for point in transformedCell]]
-                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) for cell in transformedCells]
-            else: 
-                e, = edge
-                vs = [V[v]+[1.0] for v in EV[e]]
-                ws = (transform * (mat(vs).T)).T.tolist()
-                edges += [POLYLINE([p[:-1] for p in ws])]
-        return edges,faces
-    return intersection0    
-
-
 for k,bundledFaces in enumerate(parts):
     edges,faces = intersection(V,FV,EV)(k,bundledFaces)
-    VIEW(STRUCT(edges + AA(glass)(faces)))
+    VIEW(STRUCT(edges + (AA)(COLOR(YELLOW))(faces)))
 @}
 %-------------------------------------------------------------------------------
+
+k,face,FE[face] = 1 8 [14, 21, 20, 12] 
+k,face,FE[face] = 1 10 [18, 22, 20, 16] 
+k,face,FE[face] = 3 6 [13, 17, 16, 12] 
+k,face,FE[face] = 3 10 [18, 22, 20, 16] 
+k,face,FE[face] = 5 6 [13, 17, 16, 12] 
+k,face,FE[face] = 5 8 [14, 21, 20, 12] 
+k,face,FE[face] = 6 3 [3, 11, 10, 1] 
+k,face,FE[face] = 6 5 [7, 11, 9, 5] 
+k,face,FE[face] = 8 1 [3, 7, 6, 2] 
+k,face,FE[face] = 8 5 [7, 11, 9, 5] 
+k,face,FE[face] = 10 1 [3, 7, 6, 2] 
+k,face,FE[face] = 10 3 [3, 11, 10, 1] 
 
 
 \appendix

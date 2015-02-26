@@ -181,3 +181,50 @@ def faceTransformations(facet):
     return transformMat
 
 
+""" Computation of topological relation """
+def crossRelation(XV,YV):
+    csrXV = csrCreate(XV)
+    csrYV = csrCreate(YV)
+    csrXY = matrixProduct(csrXV, csrYV.T)
+    XY = [None for k in range(len(XV))]
+    for k,face in enumerate(XV):
+        data = csrXY[k].data
+        col = csrXY[k].indices
+        XY[k] = [col[h] for h,val in enumerate(data) if val==2] # NOTE:  depends on the relation ...
+    return XY
+
+""" Submanifold mapping computation """
+def submanifoldMapping(pivotFace):
+    tx,ty,tz = pivotFace[0]
+    transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
+    facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
+    m = faceTransformations(facet)
+    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],m[2,1],m[2,2],0],[0,0,0,1]])
+    transform = mapping * transl
+    return transform
+
+""" Set of line segments partitioning a facet """
+def intersection(V,FV,EV):
+    def intersection0(k,bundledFaces):
+        FE = crossRelation(FV,EV)
+        pivotFace = [V[v] for v in FV[k]]
+        transform = submanifoldMapping(pivotFace)    # submanifold transformation
+        transformedCells,edges,faces = [],[],[]
+        for face in bundledFaces:
+            edge = set(FE[k]).intersection(FE[face])  # common edge index
+            if edge == set():
+                print "\nk,face,FE[face] =",k,face,FE[face],"\n"
+                candidateEdges = FE[face]
+                for e in candidateEdges:
+                    cell = [V[v]+[1.0] for v in EV[e]]    # vertices of incident face
+                    transformedCell = (transform * (mat(cell).T)).T.tolist()  # vertices in local frame
+                    transformedCells += [[point[:-1] for point in transformedCell]]
+                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) for cell in transformedCells]
+            else:  # boundary edges of face k
+                e, = edge
+                vs = [V[v]+[1.0] for v in EV[e]]
+                ws = (transform * (mat(vs).T)).T.tolist()
+                edges += [POLYLINE([p[:-1] for p in ws])]
+        return edges,faces
+    return intersection0    
+
