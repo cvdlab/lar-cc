@@ -252,7 +252,7 @@ def submanifoldMapping(pivotFace):
     facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
     m = faceTransformations(facet)
     mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],
-    				m[2,1],m[2,2],0],[0,0,0,1]])
+                    m[2,1],m[2,2],0],[0,0,0,1]])
     transform = mapping * transl
     return transform
 @}
@@ -273,24 +273,25 @@ def intersection(V,FV,EV):
         for face in bundledFaces:
             edge = set(FE[k]).intersection(FE[face])  # common edge index
             if edge == set():
-                print "\nk,face,FE[face] =",k,face,FE[face],"\n"
                 candidateEdges = FE[face]
+                facet = []
                 for e in candidateEdges:
                     cell = [V[v]+[1.0] for v in EV[e]]  # verts of incident face
                     transformedCell = (transform * (mat(cell).T)).T.tolist()  
                     # vertices in local frame
-                    transformedCells += [[point[:-1] for point in transformedCell]]
-                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) 
-                				for cell in transformedCells]
+                    facet += [[point[:-1] for point in transformedCell]]
+                faces += [facet]
             else:  # boundary edges of face k
                 e, = edge
                 vs = [V[v]+[1.0] for v in EV[e]]
                 ws = (transform * (mat(vs).T)).T.tolist()
-                edges += [POLYLINE([p[:-1] for p in ws])]
+                edges += [[p[:-1] for p in ws]]
         return edges,faces
     return intersection0    
 @}
 %-------------------------------------------------------------------------------
+
+
 
 \paragraph{Computation of face transformations}
 The faces in every $\texttt{parts}(i)$ must be affinely transformed into the subspace $x_d=0$, in order to compute the intersection of its elements with this subspace, that are submanifolds of dimension $d-2$.
@@ -301,7 +302,7 @@ The faces in every $\texttt{parts}(i)$ must be affinely transformed into the sub
 def COVECTOR(points):
     pointdim = len(points[0])
     plane = Planef.bestFittingPlane(pointdim,
-    				[item for sublist in points for item in sublist])
+                    [item for sublist in points for item in sublist])
     return [plane.get(I) for I in range(0,pointdim+1)]
 
 def faceTransformations(facet):
@@ -314,8 +315,6 @@ def faceTransformations(facet):
     transformMat = mat( newFacet[1:d] + [covector[1:]] ).T.I
     # transformation in the subspace x_d = 0
     out = (transformMat * (mat(newFacet).T)).T.tolist()
-    print "\nin =",facet
-    print "out =",out
     return transformMat
 @}
 %-------------------------------------------------------------------------------
@@ -527,22 +526,34 @@ parts = boxBuckets(boxes)
 
 for k,bundledFaces in enumerate(parts):
     edges,faces = intersection(V,FV,EV)(k,bundledFaces)
-    VIEW(STRUCT(edges + (AA)(COLOR(YELLOW))(faces)))
+    for face in faces:
+        line = []
+        for edge in face:
+            (x1,y1,z1),(x2,y2,z2) = edge
+            if not verySmall(z2-z1):
+                x = (x2-x1)/(z2-z1) + x1
+                y = (y2-y1)/(z2-z1) + y1
+                p = [x,y,0]
+                line += [eval(vcode(p))]
+        edges += [line]
+    print "k,edges =",k,edges
+    
+    hpcedges = AA(POLYLINE)(edges)
+    VIEW(STRUCT(hpcedges))
+    v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])
+    VIEW(EXPLODE(1.2,1.2,1)( MKPOLS((v,ev)) ))
+    
+    vv = AA(LIST)(range(len(v)))
+    submodel = STRUCT(MKPOLS((v,ev)))
+    VIEW(larModelNumbering(1,1,1)(v,[vv,ev,fv[:-1]],submodel,1))
+    
+    polylines = [[v[k] for k in face+[face[0]]] for face in fv[:-1]]
+    VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((v,ev)) + AA(MK)(v) + AA(FAN)(polylines) ))
+
+
+
 @}
 %-------------------------------------------------------------------------------
-
-k,face,FE[face] = 1 8 [14, 21, 20, 12] 
-k,face,FE[face] = 1 10 [18, 22, 20, 16] 
-k,face,FE[face] = 3 6 [13, 17, 16, 12] 
-k,face,FE[face] = 3 10 [18, 22, 20, 16] 
-k,face,FE[face] = 5 6 [13, 17, 16, 12] 
-k,face,FE[face] = 5 8 [14, 21, 20, 12] 
-k,face,FE[face] = 6 3 [3, 11, 10, 1] 
-k,face,FE[face] = 6 5 [7, 11, 9, 5] 
-k,face,FE[face] = 8 1 [3, 7, 6, 2] 
-k,face,FE[face] = 8 5 [7, 11, 9, 5] 
-k,face,FE[face] = 10 1 [3, 7, 6, 2] 
-k,face,FE[face] = 10 3 [3, 11, 10, 1] 
 
 
 \appendix

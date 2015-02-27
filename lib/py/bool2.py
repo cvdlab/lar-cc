@@ -164,7 +164,7 @@ def boxBuckets(boxes):
 def COVECTOR(points):
     pointdim = len(points[0])
     plane = Planef.bestFittingPlane(pointdim,
-               [item for sublist in points for item in sublist])
+                    [item for sublist in points for item in sublist])
     return [plane.get(I) for I in range(0,pointdim+1)]
 
 def faceTransformations(facet):
@@ -177,8 +177,6 @@ def faceTransformations(facet):
     transformMat = mat( newFacet[1:d] + [covector[1:]] ).T.I
     # transformation in the subspace x_d = 0
     out = (transformMat * (mat(newFacet).T)).T.tolist()
-    print "\nin =",facet
-    print "out =",out
     return transformMat
 
 
@@ -202,7 +200,7 @@ def submanifoldMapping(pivotFace):
     facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
     m = faceTransformations(facet)
     mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],
-               m[2,1],m[2,2],0],[0,0,0,1]])
+                    m[2,1],m[2,2],0],[0,0,0,1]])
     transform = mapping * transl
     return transform
 
@@ -216,20 +214,19 @@ def intersection(V,FV,EV):
         for face in bundledFaces:
             edge = set(FE[k]).intersection(FE[face])  # common edge index
             if edge == set():
-                print "\nk,face,FE[face] =",k,face,FE[face],"\n"
                 candidateEdges = FE[face]
+                facet = []
                 for e in candidateEdges:
                     cell = [V[v]+[1.0] for v in EV[e]]  # verts of incident face
                     transformedCell = (transform * (mat(cell).T)).T.tolist()  
                     # vertices in local frame
-                    transformedCells += [[point[:-1] for point in transformedCell]]
-                faces = [MKPOL([cell,[range(1,len(cell)+1)],None]) 
-                           for cell in transformedCells]
+                    facet += [[point[:-1] for point in transformedCell]]
+                faces += [facet]
             else:  # boundary edges of face k
                 e, = edge
                 vs = [V[v]+[1.0] for v in EV[e]]
                 ws = (transform * (mat(vs).T)).T.tolist()
-                edges += [POLYLINE([p[:-1] for p in ws])]
+                edges += [[p[:-1] for p in ws]]
         return edges,faces
     return intersection0    
 

@@ -596,7 +596,7 @@ def larFromLines(lines):
     V,FV,EV = facesFromComponents((V,EV))
     areas = surfIntegration((V,FV,EV))
     boundaryArea = max(areas)
-    interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
+    interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea and len(areas)>2]
     boundaryFace = FV[areas.index(boundaryArea)]
     return V,interiorFaces+[boundaryFace],EV
 @}
