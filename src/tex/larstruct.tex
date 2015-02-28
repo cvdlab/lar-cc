@@ -289,6 +289,23 @@ def box(model):
 \section{Structure to LAR conversion}
 %-------------------------------------------------------------------------------
 
+\subsection{Remove duplicate faces}
+%-------------------------------------------------------------------------------
+@D Remove duplicate faces
+@{""" Remove duplicate faces  """
+from collections import defaultdict
+def removeDups (CW):
+    CW = list(set(AA(tuple)(CW)))
+    CWs = list(set(AA(tuple)  (AA(sorted)(CW))  ))
+    no_duplicates = defaultdict(list)
+    for f in CWs: no_duplicates[f] = []
+    for f in CW:
+    	no_duplicates[tuple(sorted(f))] += [f]
+    CW = [f[0] for f in no_duplicates.values()]
+    return CW
+@}
+%-------------------------------------------------------------------------------
+
 
 \subsection{Structure to pair (Vertices,Cells) conversion}
 %-------------------------------------------------------------------------------
@@ -332,8 +349,16 @@ def struct2lar(structure,metric=ID):
                         outcell += [vertDict[key]]
                 FW += [outcell]
             
-    if len(model)==2: return metric(W),CW
-    if len(model)==3: return metric(W),CW,FW
+    
+    if len(model)==2: 
+    	if len(CW[0])==2: 
+			CW = list(set(AA(tuple)(AA(sorted)(CW))))
+		else: CW = removeDups(CW)
+    	return metric(W),CW
+    if len(model)==3: 
+    	FW = list(set(AA(tuple)(AA(sorted)(FW))))
+		CW = removeDups(CW)
+    	return metric(W),CW,FW
 @}
 %-------------------------------------------------------------------------------
 \subsection{Embedding or projecting LAR models}
@@ -637,6 +662,7 @@ from lar2psm import *
 @< Embedding and projecting a geometric model @>
 @< Apply an affine transformation to a LAR model @>
 @< Check for dimension of a structure element (Verts or V) @>
+@< Remove duplicate faces @>
 @< Traversal of a scene multigraph @>
 @< types Mat and Verts @>
 @< Model class @>

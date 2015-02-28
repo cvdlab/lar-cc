@@ -286,7 +286,7 @@ def intersection(V,FV,EV):
                 vs = [V[v]+[1.0] for v in EV[e]]
                 ws = (transform * (mat(vs).T)).T.tolist()
                 edges += [[p[:-1] for p in ws]]
-        return edges,faces
+        return edges,faces,transform
     return intersection0    
 @}
 %-------------------------------------------------------------------------------
@@ -319,6 +319,41 @@ def faceTransformations(facet):
 @}
 %-------------------------------------------------------------------------------
     
+    
+
+\paragraph{Space partitioning via submanifold mapping}
+
+the function \texttt{spacePartition} given in the below script takes as input a \emph{non-valid} (with the meaning used in solid modeling field --- see~\cite{Requicha:1980:RRS:356827.356833}) \texttt{LAR} model of dimension $d-1$, i.e.~a triple \texttt{(V,FV,EV)}, and an array \texttt{parts} indexed on faces, and containing the subset of faces with greatest probability of intersecting each indexing face, respectively. The \texttt{spacePartition} function returns the \emph{valid} \texttt{LAR} boundary model \texttt{(W,FW,EW)} of the space partition induced by \texttt{FV}.
+ 
+%-------------------------------------------------------------------------------
+@D Space partitioning via submanifold mapping
+@{""" Space partitioning via submanifold mapping """
+def spacePartition(V,FV,EV, parts):
+    transfFaces = []
+    for k,bundledFaces in enumerate(parts):
+        edges,faces,transform = intersection(V,FV,EV)(k,bundledFaces)
+        for face in faces:
+            line = []
+            for edge in face:
+                (x1,y1,z1),(x2,y2,z2) = edge
+                if not verySmall(z2-z1):
+                    x = (x2-x1)/(z2-z1) + x1
+                    y = (y2-y1)/(z2-z1) + y1
+                    p = [x,y,0]
+                    line += [eval(vcode(p))]
+            if line!=[]: edges += [line]
+        print "k,edges =",k,edges
+        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])    
+        if len(fv)>1: fv = fv[:-1]
+        lar = [w+[0.0] for w in v],fv,ev
+        transfFaces += [Struct([ larApply(transform.I)(lar) ])]
+    W,FW,EW = struct2lar(Struct(transfFaces))
+    return W,FW,EW
+@}
+%-------------------------------------------------------------------------------
+
+
+
 \subsection{Boolean chains}
 %===============================================================================
 
@@ -346,6 +381,7 @@ DEBUG = True
 @< Computation of topological relation @>
 @< Submanifold mapping computation @>
 @< Set of line segments partitioning a facet @>
+@< Space partitioning via submanifold mapping @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -505,6 +541,8 @@ glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
+#twoCubes = Struct([cube1,t(.5,.5,0),cube1])    # other test example
+#twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
 V,FV,EV = struct2lar(twoCubes)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 
@@ -516,6 +554,15 @@ parts = boxBuckets(boxes)
 %-------------------------------------------------------------------------------
 
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/twocubes1} 
+   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/twocubes2} 
+   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/twocubes3} 
+   \caption{\texttt{LAR} complex from two cubes. (a) translation on one coordinate; (b) translation on two coordinates;  (c) translation on three coordinates.}
+   \label{fig:twocubes}
+\end{figure}
+
 
 \paragraph{Face (and incident faces) transformation}
 %-------------------------------------------------------------------------------
@@ -523,35 +570,16 @@ parts = boxBuckets(boxes)
 @{""" Face (and incident faces) transformation """
 
 @< Two unit cubes @>
-
-for k,bundledFaces in enumerate(parts):
-    edges,faces = intersection(V,FV,EV)(k,bundledFaces)
-    for face in faces:
-        line = []
-        for edge in face:
-            (x1,y1,z1),(x2,y2,z2) = edge
-            if not verySmall(z2-z1):
-                x = (x2-x1)/(z2-z1) + x1
-                y = (y2-y1)/(z2-z1) + y1
-                p = [x,y,0]
-                line += [eval(vcode(p))]
-        edges += [line]
-    print "k,edges =",k,edges
     
-    hpcedges = AA(POLYLINE)(edges)
-    VIEW(STRUCT(hpcedges))
-    v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])
-    VIEW(EXPLODE(1.2,1.2,1)( MKPOLS((v,ev)) ))
-    
-    vv = AA(LIST)(range(len(v)))
-    submodel = STRUCT(MKPOLS((v,ev)))
-    VIEW(larModelNumbering(1,1,1)(v,[vv,ev,fv[:-1]],submodel,1))
-    
-    polylines = [[v[k] for k in face+[face[0]]] for face in fv[:-1]]
-    VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((v,ev)) + AA(MK)(v) + AA(FAN)(polylines) ))
+W,FW,EW = spacePartition(V,FV,EV, parts)
 
+from architectural import *
+polylines = lar2polylines((W,FW))
+VIEW(EXPLODE(1.2,1.2,1.2)(AA(POLYLINE)(polylines)))
 
-
+WW = AA(LIST)(range(len(W)))
+submodel = STRUCT(MKPOLS((W,EW)))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.5))
 @}
 %-------------------------------------------------------------------------------
 

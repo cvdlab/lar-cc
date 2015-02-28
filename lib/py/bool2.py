@@ -227,6 +227,29 @@ def intersection(V,FV,EV):
                 vs = [V[v]+[1.0] for v in EV[e]]
                 ws = (transform * (mat(vs).T)).T.tolist()
                 edges += [[p[:-1] for p in ws]]
-        return edges,faces
+        return edges,faces,transform
     return intersection0    
+
+""" Space partitioning via submanifold mapping """
+def spacePartition(V,FV,EV, parts):
+    transfFaces = []
+    for k,bundledFaces in enumerate(parts):
+        edges,faces,transform = intersection(V,FV,EV)(k,bundledFaces)
+        for face in faces:
+            line = []
+            for edge in face:
+                (x1,y1,z1),(x2,y2,z2) = edge
+                if not verySmall(z2-z1):
+                    x = (x2-x1)/(z2-z1) + x1
+                    y = (y2-y1)/(z2-z1) + y1
+                    p = [x,y,0]
+                    line += [eval(vcode(p))]
+            if line!=[]: edges += [line]
+        print "k,edges =",k,edges
+        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])    
+        if len(fv)>1: fv = fv[:-1]
+        lar = [w+[0.0] for w in v],fv,ev
+        transfFaces += [Struct([ larApply(transform.I)(lar) ])]
+    W,FW,EW = struct2lar(Struct(transfFaces))
+    return W,FW,EW
 

@@ -122,6 +122,18 @@ def checkStruct(lst):
         dim = len(obj.box[0])    
     return dim
 
+""" Remove duplicate faces  """
+from collections import defaultdict
+def removeDups (CW):
+    CW = list(set(AA(tuple)(CW)))
+    CWs = list(set(AA(tuple)  (AA(sorted)(CW))  ))
+    no_duplicates = defaultdict(list)
+    for f in CWs: no_duplicates[f] = []
+    for f in CW:
+      no_duplicates[tuple(sorted(f))] += [f]
+    CW = [f[0] for f in no_duplicates.values()]
+    return CW
+
 """ Traversal of a scene multigraph """
 def traversal(CTM, stack, obj, scene=[]):
     for i in range(len(obj)):
@@ -238,8 +250,16 @@ def struct2lar(structure,metric=ID):
                         outcell += [vertDict[key]]
                 FW += [outcell]
             
-    if len(model)==2: return metric(W),CW
-    if len(model)==3: return metric(W),CW,FW
+    
+    if len(model)==2: 
+      if len(CW[0])==2: 
+         CW = list(set(AA(tuple)(AA(sorted)(CW))))
+      else: CW = removeDups(CW)
+      return metric(W),CW
+    if len(model)==3: 
+      FW = list(set(AA(tuple)(AA(sorted)(FW))))
+      CW = removeDups(CW)
+      return metric(W),CW,FW
 
 def larEmbed(k):
     def larEmbed0(model):
