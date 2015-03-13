@@ -656,9 +656,9 @@ glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 #twoCubes = Struct([cube1,t(-1,.5,1),cube1])     # other test example
-#twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
+twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
 #twoCubes = Struct([cube1,t(.5,.5,0),cube1])    # other test example
-twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
+#twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
 V,FV,EV = struct2lar(twoCubes)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 
@@ -748,10 +748,10 @@ trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
 VIEW(STRUCT(AA(POLYLINE)(trias)))
 
 def orientTriangle(pointTriple):
-	v1 = array(pointTriple[1])-pointTriple[0]
-	v2 = array(pointTriple[2])-pointTriple[0]
-	if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
-	else: return pointTriple
+    v1 = array(pointTriple[1])-pointTriple[0]
+    v2 = array(pointTriple[2])-pointTriple[0]
+    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
+    else: return pointTriple
 
 triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
 VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))
@@ -790,7 +790,9 @@ def boundaryTriangulation(W,FW):
         trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
         mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
         points = [p[:-1] for p in mappedVerts]
-        trias = [[points[k],points[k+1],points[k+2],points[k]] for k in range(0,len(points),3)]
+        trias = [[points[k],points[k+1],points[k+2],points[k]] for k in range(0,len(points),3) 
+            if scipy.linalg.norm(cross(array(points[k+1])-points[k], 
+                                       array(points[k+2])-points[k])) != 0 ]
         triangles += DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
     return triangles
 

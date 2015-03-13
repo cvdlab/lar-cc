@@ -24,7 +24,9 @@ def boundaryTriangulation(W,FW):
         trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
         mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
         points = [p[:-1] for p in mappedVerts]
-        trias = [[points[k],points[k+1],points[k+2],points[k]] for k in range(0,len(points),3)]
+        trias = [[points[k],points[k+1],points[k+2],points[k]] for k in range(0,len(points),3) 
+            if scipy.linalg.norm(cross(array(points[k+1])-points[k], 
+                                       array(points[k+2])-points[k])) != 0 ]
         triangles += DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
     return triangles
 

@@ -18,10 +18,10 @@ trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
 VIEW(STRUCT(AA(POLYLINE)(trias)))
 
 def orientTriangle(pointTriple):
-   v1 = array(pointTriple[1])-pointTriple[0]
-   v2 = array(pointTriple[2])-pointTriple[0]
-   if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
-   else: return pointTriple
+    v1 = array(pointTriple[1])-pointTriple[0]
+    v2 = array(pointTriple[2])-pointTriple[0]
+    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
+    else: return pointTriple
 
 triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
 VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))
