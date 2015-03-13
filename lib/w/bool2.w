@@ -323,7 +323,7 @@ def faceTransformations(facet):
 
 \paragraph{Space partitioning via submanifold mapping}
 
-the function \texttt{spacePartition} given in the below script takes as input a \emph{non-valid} (with the meaning used in solid modeling field --- see~\cite{Requicha:1980:RRS:356827.356833}) \texttt{LAR} model of dimension $d-1$, i.e.~a triple \texttt{(V,FV,EV)}, and an array \texttt{parts} indexed on faces, and containing the subset of faces with greatest probability of intersecting each indexing face, respectively. The \texttt{spacePartition} function returns the \emph{valid} \texttt{LAR} boundary model \texttt{(W,FW,EW)} of the space partition induced by \texttt{FV}.
+the function \texttt{spacePartition}, given in the below script, takes as input a \emph{non-valid} (with the meaning used in solid modeling field --- see~\cite{Requicha:1980:RRS:356827.356833}) \texttt{LAR} model of dimension $d-1$, i.e.~a triple \texttt{(V,FV,EV)}, and an array \texttt{parts} indexed on faces, and containing the subset of faces with greatest probability of intersecting each indexing face, respectively. The \texttt{spacePartition} function returns the \emph{valid} \texttt{LAR} boundary model \texttt{(W,FW,EW)} of the space partition induced by \texttt{FV}.
  
 %-------------------------------------------------------------------------------
 @D Space partitioning via submanifold mapping
@@ -352,6 +352,119 @@ def spacePartition(V,FV,EV, parts):
 @}
 %-------------------------------------------------------------------------------
 
+
+\subsection{Circular ordering of faces around edges}
+
+
+\paragraph{Directional and orthogonal projection operators}
+
+In order to sort circularly the faces incident on each edge, we need of course to compute the relation EF, and for each face $f$ incident on $e = (v_1,v_2)$, to project a vector $w_f = (v_1,v_f)$ on the subspace ortogonal to $e$. This may be done by mapping $w_f$ with the tensor $I-e \otimes e$. Finally, the angles between vectors $a,b$ in this orthogonal space to $e$ may be computed by using the \texttt{atan2} function, that combines both the $sin$ and the $cos$ of the angle:
+\[
+angle = atan2(norm(cross(a,b)),dot(a,b)).
+\]
+Let us just remember that, by definition, $(e \otimes e)v = (e \cdot v)e$, where $e,v$ are vectors.
+%-------------------------------------------------------------------------------
+@D Directional and orthogonal projection operators
+@{""" Directional and orthogonal projection operators """
+def dirProject (e):
+    def dirProject0 (v):
+        return SCALARVECTPROD([ INNERPROD([ UNITVECT(e), v ]), UNITVECT(e) ])
+    return dirProject0
+
+def orthoProject (e):
+    def orthoProject0 (v):  
+        return VECTDIFF([ v, dirProject(UNITVECT(e))(v) ])
+    return orthoProject0
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Slope of edges}
+
+%-------------------------------------------------------------------------------
+@D Slope of edges
+@{""" Circular ordering of faces around edges """
+from bool1 import invertRelation
+
+def faceSlopeOrdering(model):
+    V,FV,EV = model
+
+    print "\n V,FV,EV =",V,FV,EV
+
+    FE = crossRelation(FV,EV)
+
+    print "\n FE =",FE
+
+    EF,EF_angle = invertRelation(FE),[]
+
+    print "\n EF,EF_angle =",EF,EF_angle
+
+    for e,ef in enumerate(EF):
+
+        print "\n e,ef =",e,ef
+
+        v1,v2 = EV[e]
+
+        print "\n v1,v2 =",v1,v2
+
+        E = array(UNITVECT(VECTDIFF([V[v2],V[v1]])))
+
+        print "\n E =",E
+
+        refFace = EF[e][0]
+
+        print "\n refFace =",refFace
+
+        ef_angle = []
+
+        print "\n ef_angle =",ef_angle
+
+        for face in ef:
+
+            print "\n face =",face
+
+            fverts = [ VECTDIFF([ V[k],V[v1] ]) for k in FV[face] if k!=v1 ]
+
+            print "\n fverts =",fverts
+
+            fvects = array([ E.dot( vf ) for vf in fverts ])
+
+            print "\n fvects =",fvects
+
+            index_min = fvects.argmin()
+
+            print "\n index_min =",index_min
+
+            W = fverts[index_min]
+
+            print "\n W =",W
+
+            if not verySmall(E.dot(W)): W = UNITVECT(orthoProject(list(E))(W))
+
+            print "\n W =",W
+
+            if (face == refFace): refVect = array(UNITVECT(W))
+
+            print "\n refVect =",refVect
+
+            angle = math.atan2(VECTNORM(VECTPROD([refVect,W])),refVect.dot(W))
+
+            print "\n angle =",angle
+
+            ef_angle += [180*angle/PI]
+
+            print "\n ef_angle =",ef_angle
+
+        pairs = sorted(zip(ef_angle,ef))
+
+        print "\n pairs =",pairs
+
+        EF_angle += [[pair[1] for pair in pairs]]
+
+        print "\n EF_angle =",EF_angle
+
+    return EF_angle
+@}
+%-------------------------------------------------------------------------------
 
 
 \subsection{Boolean chains}
@@ -382,6 +495,8 @@ DEBUG = True
 @< Submanifold mapping computation @>
 @< Set of line segments partitioning a facet @>
 @< Space partitioning via submanifold mapping @>
+@< Directional and orthogonal projection operators @>
+@< Slope of edges @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -540,9 +655,10 @@ glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
-twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
+#twoCubes = Struct([cube1,t(-1,.5,1),cube1])     # other test example
+#twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
 #twoCubes = Struct([cube1,t(.5,.5,0),cube1])    # other test example
-#twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
+twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
 V,FV,EV = struct2lar(twoCubes)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 
@@ -556,10 +672,11 @@ parts = boxBuckets(boxes)
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
-   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/twocubes1} 
-   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/twocubes2} 
-   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/twocubes3} 
-   \caption{\texttt{LAR} complex from two cubes. (a) translation on one coordinate; (b) translation on two coordinates;  (c) translation on three coordinates.}
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes1} 
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes2} 
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes3} 
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes4} 
+   \caption{\texttt{LAR} complex of the space decomposition generated by two cubes in special positions. (a) translation on one coordinate; (b) translation on two coordinates;  (c) translation on three coordinates; (d) non-manifold position along an edge.}
    \label{fig:twocubes}
 \end{figure}
 
@@ -567,7 +684,7 @@ parts = boxBuckets(boxes)
 \paragraph{Face (and incident faces) transformation}
 %-------------------------------------------------------------------------------
 @O test/py/bool2/test05.py
-@{""" Face (and incident faces) transformation """
+@{""" non-valid -> valid solid representation of a space partition """
 
 @< Two unit cubes @>
     
@@ -582,6 +699,115 @@ submodel = STRUCT(MKPOLS((W,EW)))
 VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.5))
 @}
 %-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+\paragraph{3-cell reconstruction from LAR space partition}
+%-------------------------------------------------------------------------------
+@O test/py/bool2/test06.py
+@{""" 3-cell reconstruction from LAR space partition """
+@< Two unit cubes @>
+W,FW,EW = spacePartition(V,FV,EV, parts)
+WW = AA(LIST)(range(len(W)))
+submodel = STRUCT(MKPOLS((W,EW)))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
+
+faceSlopeOrdering((W,FW,EW))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{2D polygon triangulation}
+Here a 2D polygon is imported from an SVG file made of boundary lines, and the \texttt{V,FV,EV}
+LAR model is generated. Then the unique polygonal face in \texttt{FV} is embedded in 3D ($z=0$), and triangulated using the tassellation algorithm extracted from pyOpenGL and pyGLContext, stored in the \texttt{lib/py/support.py} file. The generated triangles are finally coherently oriented, by testing the $z$-component of their normal vector.
+
+%-------------------------------------------------------------------------------
+@O test/py/bool2/test07.py
+@{""" 2D polygon triangulation """
+import sys
+sys.path.insert(0, 'lib/py/')
+from inters import *
+from support import PolygonTessellator,vertex
+
+filename = "test/py/bool2/interior.svg"
+lines = svg2lines(filename)    
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
+
+pivotFace = [V[v] for v in FV[0]+[FV[0][0]]]
+pol = PolygonTessellator()
+vertices = [ vertex.Vertex( (x,y,0) ) for (x,y) in pivotFace  ]
+verts = pol.tessellate(vertices)
+ps = [list(v.point) for v in verts]
+trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
+VIEW(STRUCT(AA(POLYLINE)(trias)))
+
+def orientTriangle(pointTriple):
+	v1 = array(pointTriple[1])-pointTriple[0]
+	v2 = array(pointTriple[2])-pointTriple[0]
+	if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
+	else: return pointTriple
+
+triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
+VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{3D boundary triangulation of the space partition}
+The function \texttt{boundaryTriangulation} given below is used to guarantee that there is a unique (simple) facet incident to an edge and contained in one LAR facet. More clearly, the Boolean decompositions generated by LAR allow for non convex cells, and in particular for nonconvex boundary facets of $d$-cells. This fact may induce errors in the computation of circularly sorted faces around edges. Conversely, by decomposing the faces into triangles, such ordering problems cannot appear.  
+
+%-------------------------------------------------------------------------------
+@O test/py/bool2/test08.py
+@{""" 3D boundary triangulation of the space partition """
+import sys
+sys.path.insert(0, 'test/py/bool2/')
+from test06 import *
+from support import PolygonTessellator,vertex
+
+def orientTriangle(pointTriple):
+    v1 = array(pointTriple[1])-pointTriple[0]
+    v2 = array(pointTriple[2])-pointTriple[0]
+    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
+    else: return pointTriple
+
+def boundaryTriangulation(W,FW):
+    triangles = []
+    for face in FW:
+        pivotFace = [W[v] for v in face+(face[0],)]
+        transform = submanifoldMapping(pivotFace)
+        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
+        facet = [point[:-2] for point in mappedVerts]
+        pol = PolygonTessellator()
+        vertices = [ vertex.Vertex( (x,y,0) ) for (x,y) in facet  ]
+        verts = pol.tessellate(vertices)
+        ps = [list(v.point) for v in verts]
+        trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
+        mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
+        points = [p[:-1] for p in mappedVerts]
+        trias = [[points[k],points[k+1],points[k+2],points[k]] for k in range(0,len(points),3)]
+        triangles += DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
+    return triangles
+
+triangles = boundaryTriangulation(W,FW)
+VIEW(EXPLODE(1.2,1.2,1.2)(CAT(AA(MKPOLS)(triangles))))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/3Dtriangulation} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/3Dtriangulation2} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/3Dtriangulation3} 
+   \caption{The triangulated boundaries of the space partition induced by two cubes (one is variously translated).}
+   \label{fig:3Dtriangulation}
+\end{figure}
+
 
 
 \appendix

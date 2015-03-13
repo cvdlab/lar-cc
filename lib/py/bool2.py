@@ -253,3 +253,96 @@ def spacePartition(V,FV,EV, parts):
     W,FW,EW = struct2lar(Struct(transfFaces))
     return W,FW,EW
 
+""" Directional and orthogonal projection operators """
+def dirProject (e):
+    def dirProject0 (v):
+        return SCALARVECTPROD([ INNERPROD([ UNITVECT(e), v ]), UNITVECT(e) ])
+    return dirProject0
+
+def orthoProject (e):
+    def orthoProject0 (v):  
+        return VECTDIFF([ v, dirProject(UNITVECT(e))(v) ])
+    return orthoProject0
+
+""" Circular ordering of faces around edges """
+from bool1 import invertRelation
+
+def faceSlopeOrdering(model):
+    V,FV,EV = model
+
+    print "\n V,FV,EV =",V,FV,EV
+
+    FE = crossRelation(FV,EV)
+
+    print "\n FE =",FE
+
+    EF,EF_angle = invertRelation(FE),[]
+
+    print "\n EF,EF_angle =",EF,EF_angle
+
+    for e,ef in enumerate(EF):
+
+        print "\n e,ef =",e,ef
+
+        v1,v2 = EV[e]
+
+        print "\n v1,v2 =",v1,v2
+
+        E = array(UNITVECT(VECTDIFF([V[v2],V[v1]])))
+
+        print "\n E =",E
+
+        refFace = EF[e][0]
+
+        print "\n refFace =",refFace
+
+        ef_angle = []
+
+        print "\n ef_angle =",ef_angle
+
+        for face in ef:
+
+            print "\n face =",face
+
+            fverts = [ VECTDIFF([ V[k],V[v1] ]) for k in FV[face] if k!=v1 ]
+
+            print "\n fverts =",fverts
+
+            fvects = array([ E.dot( vf ) for vf in fverts ])
+
+            print "\n fvects =",fvects
+
+            index_min = fvects.argmin()
+
+            print "\n index_min =",index_min
+
+            W = fverts[index_min]
+
+            print "\n W =",W
+
+            if not verySmall(E.dot(W)): W = UNITVECT(orthoProject(list(E))(W))
+
+            print "\n W =",W
+
+            if (face == refFace): refVect = array(UNITVECT(W))
+
+            print "\n refVect =",refVect
+
+            angle = math.atan2(VECTNORM(VECTPROD([refVect,W])),refVect.dot(W))
+
+            print "\n angle =",angle
+
+            ef_angle += [180*angle/PI]
+
+            print "\n ef_angle =",ef_angle
+
+        pairs = sorted(zip(ef_angle,ef))
+
+        print "\n pairs =",pairs
+
+        EF_angle += [[pair[1] for pair in pairs]]
+
+        print "\n EF_angle =",EF_angle
+
+    return EF_angle
+

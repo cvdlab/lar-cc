@@ -1,5 +1,4 @@
-""" non-valid -> valid solid representation of a space partition """
-
+""" 3-cell reconstruction from LAR space partition """
 """ Two unit cubes """
 import sys
 sys.path.insert(0, 'lib/py/')
@@ -20,13 +19,9 @@ boxes = containmentBoxes(quadArray)
 hexas = AA(box2exa)(boxes)
 parts = boxBuckets(boxes)
 
-    
 W,FW,EW = spacePartition(V,FV,EV, parts)
-
-from architectural import *
-polylines = lar2polylines((W,FW))
-VIEW(EXPLODE(1.2,1.2,1.2)(AA(POLYLINE)(polylines)))
-
 WW = AA(LIST)(range(len(W)))
 submodel = STRUCT(MKPOLS((W,EW)))
-VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.5))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
+
+faceSlopeOrdering((W,FW,EW))

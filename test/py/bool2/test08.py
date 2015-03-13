@@ -1,6 +1,7 @@
-
-
-%run test/py/bool2/test06.py
+""" 3D boundary triangulation of the space partition """
+import sys
+sys.path.insert(0, 'test/py/bool2/')
+from test06 import *
 from support import PolygonTessellator,vertex
 
 def orientTriangle(pointTriple):
@@ -29,6 +30,3 @@ def boundaryTriangulation(W,FW):
 
 triangles = boundaryTriangulation(W,FW)
 VIEW(EXPLODE(1.2,1.2,1.2)(CAT(AA(MKPOLS)(triangles))))
-
-
-
