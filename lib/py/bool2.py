@@ -245,7 +245,6 @@ def spacePartition(V,FV,EV, parts):
                     p = [x,y,0]
                     line += [eval(vcode(p))]
             if line!=[]: edges += [line]
-        print "k,edges =",k,edges
         v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])    
         if len(fv)>1: fv = fv[:-1]
         lar = [w+[0.0] for w in v],fv,ev
@@ -296,13 +295,10 @@ def edgesTriangles(EF, FW, TW, EW):
     ET = [None for k in range(len(EF))]
     for e,edgeFaces in enumerate(EF):
         ET[e] = []
-        print "\ne,edgeFaces,EW[e] =", e,edgeFaces,EW[e]
         for f in edgeFaces:
-            print "f,FW[f],TW[f] =", f,FW[f],TW[f]
             for t in TW[f]:
                 if set(EW[e]).intersection(t)==set(EW[e]):
                     ET[e] += [t]
-                    print "ET[e] =",ET[e]
     return ET
 
 """ Directional and orthogonal projection operators """
@@ -319,82 +315,49 @@ def orthoProject (e):
 """ Circular ordering of faces around edges """
 from bool1 import invertRelation
 
+def orientFace(v1,v2):
+    def orientFace0(faceVerts):
+        facet = faceVerts + [faceVerts[0]]
+        pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
+        OK = False
+        for pair in pairs:
+            if [v1,v2] == pair: OK = True
+        if OK: return faceVerts
+        else: return REVERSE(faceVerts)
+    return orientFace0
+
+def planeProjection(normals):
+    V = mat(normals)
+    if all(V[:,0]==0): V = np.delete(V, 0, 1)
+    elif all(V[:,1]==0): V = np.delete(V, 1, 1)
+    elif all(V[:,2]==0): V = np.delete(V, 2, 1)
+    return V
+
 def faceSlopeOrdering(model):
     V,FV,EV = model
-
-    print "\n V,FV,EV =",V,FV,EV
-
     FE = crossRelation(FV,EV)
-
-    print "\n FE =",FE
-
     EF,EF_angle = invertRelation(FE),[]
-
-    print "\n EF,EF_angle =",EF,EF_angle
-
     for e,ef in enumerate(EF):
-
-        print "\n e,ef =",e,ef
-
         v1,v2 = EV[e]
-
-        print "\n v1,v2 =",v1,v2
-
-        E = array(UNITVECT(VECTDIFF([V[v2],V[v1]])))
-
-        print "\n E =",E
-
+        E = UNITVECT(VECTDIFF([V[v2],V[v1]]))
         refFace = EF[e][0]
-
-        print "\n refFace =",refFace
-
         ef_angle = []
-
-        print "\n ef_angle =",ef_angle
-
+        normals = []
         for face in ef:
-
-            print "\n face =",face
-
-            fverts = [ VECTDIFF([ V[k],V[v1] ]) for k in FV[face] if k!=v1 ]
-
-            print "\n fverts =",fverts
-
-            fvects = array([ E.dot( vf ) for vf in fverts ])
-
-            print "\n fvects =",fvects
-
-            index_min = fvects.argmin()
-
-            print "\n index_min =",index_min
-
-            W = fverts[index_min]
-
-            print "\n W =",W
-
-            if not verySmall(E.dot(W)): W = UNITVECT(orthoProject(list(E))(W))
-
-            print "\n W =",W
-
-            if (face == refFace): refVect = array(UNITVECT(W))
-
-            print "\n refVect =",refVect
-
-            angle = math.atan2(VECTNORM(VECTPROD([refVect,W])),refVect.dot(W))
-
-            print "\n angle =",angle
-
-            ef_angle += [180*angle/PI]
-
-            print "\n ef_angle =",ef_angle
-
+            theFace = orientFace(v1,v2)(FV[face])
+            vect1 = array(W[theFace[1]])-W[theFace[0]]
+            vect2 = array(W[theFace[2]])-W[theFace[0]]
+            normals += [cross(vect1,vect2).tolist()]
+        w1,w2 = E,normals[0]
+        w3 = cross(array(w1),w2).tolist()
+        basis = [w1,w2,w3]
+        transform = mat(basis).I
+        mappedNormals = (transform * mat(normals).T).T
+        mappedNormals = planeProjection(mappedNormals)
+        for k,f in enumerate(ef):
+            angle = math.atan2(mappedNormals[k,1],mappedNormals[k,0])
+            ef_angle += [angle]
         pairs = sorted(zip(ef_angle,ef))
-
-        print "\n pairs =",pairs
-
         EF_angle += [[pair[1] for pair in pairs]]
-
-        print "\n EF_angle =",EF_angle
-
     return EF_angle
 

@@ -4,7 +4,7 @@ sys.path.insert(0, 'lib/py/')
 from inters import *
 from iot3d import polyline2lar
 
-filename = "test/py/inters/test1.svg"
+filename = "test/py/inters/complex.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     

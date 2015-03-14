@@ -23,5 +23,3 @@ W,FW,EW = spacePartition(V,FV,EV, parts)
 WW = AA(LIST)(range(len(W)))
 submodel = STRUCT(MKPOLS((W,EW)))
 VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
-
-faceSlopeOrdering((W,FW,EW))

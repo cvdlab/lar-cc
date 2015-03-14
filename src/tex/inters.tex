@@ -302,7 +302,6 @@ def lines2lar(lineArray):
                 if v2 == w: v2 = v
             EV_ += [[v1,v2]]
         EV = EV_
-        print "\nclosePairs =",closePairs
 
     # Remove zero edges
     EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
@@ -523,7 +522,6 @@ def facesFromComponents(model):
             fv += [vertex]
             nextEdge = csrEV[edge,vertex]
             v0,v1 = EV[nextEdge]
-            print "v0,v1,vertex =",v0,v1,vertex
             
             try:
                 vertex, = set([v0,v1]).difference([vertex])
@@ -539,12 +537,9 @@ def facesFromComponents(model):
                 edge = nextEdge                
         else:
             FV += [fv]
-            print "fv =",fv,"\n"
             fv = []
             edge,v = firstSearch(visited)
             vertex = EV[edge][v]
-        #print "fv =",fv
-        #print "edge,vertex =",edge,vertex
         FV = [face for face in FV if face != None]
     return V,FV,EV
 @}
