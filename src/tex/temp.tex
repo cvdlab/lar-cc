@@ -1,6 +1,7 @@
-
-
-%run test/py/bool2/test06.py
+""" 3D boundary triangulation of the space partition """
+import sys
+sys.path.insert(0, 'test/py/bool2/')
+from test06 import *
 from support import PolygonTessellator,vertex
 
 def orientTriangle(pointTriple):
@@ -10,7 +11,7 @@ def orientTriangle(pointTriple):
     else: return pointTriple
 
 def boundaryTriangulation(W,FW):
-    triangles = []
+    triangleSet = []
     for face in FW:
         pivotFace = [W[v] for v in face+(face[0],)]
         transform = submanifoldMapping(pivotFace)
@@ -23,12 +24,57 @@ def boundaryTriangulation(W,FW):
         trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
         mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
         points = [p[:-1] for p in mappedVerts]
-        trias = [[points[k],points[k+1],points[k+2],points[k]] for k in range(0,len(points),3)]
-        triangles += DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
-    return triangles
+        trias = [[points[k],points[k+1],points[k+2],points[k]] 
+            for k in range(0,len(points),3) 
+            if scipy.linalg.norm(cross(array(points[k+1])-points[k], 
+                                       array(points[k+2])-points[k])) != 0 ]
+        triangleSet += [AA(orientTriangle)(trias)]
+    return triangleSet
+    
+def triangleIndices(triangleSet,W):
+    vertDict,out = defaultdict(),[]
+    for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
+    for h,faceSetOfTriangles in enumerate(triangleSet):
+        out += [[[vertDict[vcode(p)] for p in triangle[:-1]] 
+                    for triangle in faceSetOfTriangles]]
+    return out
 
-triangles = boundaryTriangulation(W,FW)
-VIEW(EXPLODE(1.2,1.2,1.2)(CAT(AA(MKPOLS)(triangles))))
+triangleSet = boundaryTriangulation(W,FW)
+TW = triangleIndices(triangleSet,W)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
+
+
+model = W,FW,EW
+faceSlopeOrdering(model)
+
+
+
+
+
+def edgesTriangles(EF, FW, TW, EW):
+    ET = [None for k in range(len(EF))]
+    for e,edgeFaces in enumerate(EF):
+        ET[e] = []
+        print "\ne,edgeFaces,EW[e] =", e,edgeFaces,EW[e]
+        for f in edgeFaces:
+            print "f,FW[f],TW[f] =", f,FW[f],TW[f]
+            for t in TW[f]:
+                if set(EW[e]).intersection(t)==set(EW[e]):
+                    ET[e] += [t]
+                    print "ET[e] =",ET[e]
+    return ET
+
+FE = crossRelation(FW,EW)
+EF = invertRelation(FE)
+
+ET = edgesTriangles(EF,FW,TW,EW)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(ET)))))
+VIEW(STRUCT(MKPOLS((W,ET[35]))))
+
+from iot3d import polyline2lar
+V,FV,EV = polyline2lar([[W[v] for v in FW[f]] for f in EF[35]] )
+VIEW(STRUCT(MKPOLS((V,EV))))
+
 
 
 

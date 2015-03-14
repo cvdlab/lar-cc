@@ -1,8 +1,7 @@
 """ 2D polygon triangulation """
 import sys
 sys.path.insert(0, 'lib/py/')
-from inters import *
-from support import PolygonTessellator,vertex
+from bool2 import *
 
 filename = "test/py/bool2/interior.svg"
 lines = svg2lines(filename)    
@@ -16,12 +15,6 @@ verts = pol.tessellate(vertices)
 ps = [list(v.point) for v in verts]
 trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
 VIEW(STRUCT(AA(POLYLINE)(trias)))
-
-def orientTriangle(pointTriple):
-    v1 = array(pointTriple[1])-pointTriple[0]
-    v2 = array(pointTriple[2])-pointTriple[0]
-    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
-    else: return pointTriple
 
 triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
 VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))

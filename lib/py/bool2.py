@@ -253,6 +253,58 @@ def spacePartition(V,FV,EV, parts):
     W,FW,EW = struct2lar(Struct(transfFaces))
     return W,FW,EW
 
+from support import PolygonTessellator,vertex
+
+def orientTriangle(pointTriple):
+    v1 = array(pointTriple[1])-pointTriple[0]
+    v2 = array(pointTriple[2])-pointTriple[0]
+    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
+    else: return pointTriple
+
+def boundaryTriangulation(W,FW):
+    triangleSet = []
+    for face in FW:
+        pivotFace = [W[v] for v in face+(face[0],)]
+        transform = submanifoldMapping(pivotFace)
+        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
+        facet = [point[:-2] for point in mappedVerts]
+        pol = PolygonTessellator()
+        vertices = [ vertex.Vertex( (x,y,0) ) for (x,y) in facet  ]
+        verts = pol.tessellate(vertices)
+        ps = [list(v.point) for v in verts]
+        trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
+        mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
+        points = [p[:-1] for p in mappedVerts]
+        trias = [[points[k],points[k+1],points[k+2],points[k]] 
+            for k in range(0,len(points),3) 
+            if scipy.linalg.norm(cross(array(points[k+1])-points[k], 
+                                       array(points[k+2])-points[k])) != 0 ]
+        triangleSet += [AA(orientTriangle)(trias)]
+    return triangleSet
+
+
+def triangleIndices(triangleSet,W):
+    vertDict,out = defaultdict(),[]
+    for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
+    for h,faceSetOfTriangles in enumerate(triangleSet):
+        out += [[[vertDict[vcode(p)] for p in triangle[:-1]] 
+                    for triangle in faceSetOfTriangles]]
+    return out
+
+
+def edgesTriangles(EF, FW, TW, EW):
+    ET = [None for k in range(len(EF))]
+    for e,edgeFaces in enumerate(EF):
+        ET[e] = []
+        print "\ne,edgeFaces,EW[e] =", e,edgeFaces,EW[e]
+        for f in edgeFaces:
+            print "f,FW[f],TW[f] =", f,FW[f],TW[f]
+            for t in TW[f]:
+                if set(EW[e]).intersection(t)==set(EW[e]):
+                    ET[e] += [t]
+                    print "ET[e] =",ET[e]
+    return ET
+
 """ Directional and orthogonal projection operators """
 def dirProject (e):
     def dirProject0 (v):
