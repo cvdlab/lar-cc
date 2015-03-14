@@ -317,7 +317,7 @@ from bool1 import invertRelation
 
 def orientFace(v1,v2):
     def orientFace0(faceVerts):
-        facet = faceVerts + [faceVerts[0]]
+        facet = faceVerts + (faceVerts[0],)
         pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
         OK = False
         for pair in pairs:
@@ -345,8 +345,8 @@ def faceSlopeOrdering(model):
         normals = []
         for face in ef:
             theFace = orientFace(v1,v2)(FV[face])
-            vect1 = array(W[theFace[1]])-W[theFace[0]]
-            vect2 = array(W[theFace[2]])-W[theFace[0]]
+            vect1 = array(V[theFace[1]])-V[theFace[0]]
+            vect2 = array(V[theFace[2]])-V[theFace[0]]
             normals += [cross(vect1,vect2).tolist()]
         w1,w2 = E,normals[0]
         w3 = cross(array(w1),w2).tolist()

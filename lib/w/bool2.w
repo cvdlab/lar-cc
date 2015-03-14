@@ -487,7 +487,7 @@ from bool1 import invertRelation
 
 def orientFace(v1,v2):
     def orientFace0(faceVerts):
-        facet = faceVerts + [faceVerts[0]]
+        facet = faceVerts + (faceVerts[0],)
         pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
         OK = False
         for pair in pairs:
@@ -515,8 +515,8 @@ def faceSlopeOrdering(model):
         normals = []
         for face in ef:
             theFace = orientFace(v1,v2)(FV[face])
-            vect1 = array(W[theFace[1]])-W[theFace[0]]
-            vect2 = array(W[theFace[2]])-W[theFace[0]]
+            vect1 = array(V[theFace[1]])-V[theFace[0]]
+            vect2 = array(V[theFace[2]])-V[theFace[0]]
             normals += [cross(vect1,vect2).tolist()]
         w1,w2 = E,normals[0]
         w3 = cross(array(w1),w2).tolist()
@@ -865,6 +865,28 @@ VIEW(STRUCT(MKPOLS((W,ET[35]))))
 from iot3d import polyline2lar
 V,FV,EV = polyline2lar([[W[v] for v in FW[f]] for f in EF[35]] )
 VIEW(STRUCT(MKPOLS((V,EV))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Visualization of indices of the boundary triangulation}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool2/test10.py @{
+""" Visualization of indices of the boundary triangulation """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool2 import *
+sys.path.insert(0, 'test/py/bool2/')
+from test09 import *
+
+model = W,FW,EW
+faceSlopeOrdering(model)
+
+WW = AA(LIST)(range(len(W)))
+submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
 @}
 %-------------------------------------------------------------------------------
 
