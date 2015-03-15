@@ -487,7 +487,8 @@ from bool1 import invertRelation
 
 def orientFace(v1,v2):
     def orientFace0(faceVerts):
-        facet = faceVerts + (faceVerts[0],)
+        print "\nfaceVerts =",faceVerts
+        facet = list(faceVerts) + [list(faceVerts)[0]]
         pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
         OK = False
         for pair in pairs:
@@ -532,6 +533,28 @@ def faceSlopeOrdering(model):
     return EF_angle
 @}
 %-------------------------------------------------------------------------------
+
+
+
+\paragraph{Ordered incidence relationship vertices to edges}
+
+As we have seen, the \texttt{EF\_angle} list of lists reports, for every vertex in \texttt{V}, the list of incident edges, \emph{counterclockwise ordered} around the vertex. Therefore the \texttt{ordered\_csrVE} function, given below, returns the ``compressed sparse row'' matrix, row-indexed by vertices and column-indexed by edges, and such that in position $(v,e)$ contains the index $\ell$ of the next edge (after $e$, say) in the counterclockwise ordering of edges around $v$.
+
+%-------------------------------------------------------------------------------
+@D Ordered incidence relationship of vertices and edges
+@{""" Ordered incidence relationship of vertices and edges """
+def ordered_csrVE(VE_angle):
+    triples = []
+    for v,ve in enumerate(VE_angle):
+        n = len(ve)
+        for k,edge in enumerate(ve):
+            triples += [[v, ve[k], ve[ (k+1)%n ]]]
+    csrVE = triples2mat(triples,shape="csr")
+    return csrVE
+@}
+%-------------------------------------------------------------------------------
+
+
 
 
 \subsection{Boolean chains}
@@ -882,7 +905,7 @@ sys.path.insert(0, 'test/py/bool2/')
 from test09 import *
 
 model = W,FW,EW
-faceSlopeOrdering(model)
+EF_angle = faceSlopeOrdering(model)
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))

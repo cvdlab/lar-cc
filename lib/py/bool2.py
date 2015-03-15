@@ -317,7 +317,8 @@ from bool1 import invertRelation
 
 def orientFace(v1,v2):
     def orientFace0(faceVerts):
-        facet = faceVerts + (faceVerts[0],)
+        print "\nfaceVerts =",faceVerts
+        facet = list(faceVerts) + [list(faceVerts)[0]]
         pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
         OK = False
         for pair in pairs:

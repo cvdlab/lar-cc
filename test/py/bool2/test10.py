@@ -7,7 +7,7 @@ sys.path.insert(0, 'test/py/bool2/')
 from test09 import *
 
 model = W,FW,EW
-faceSlopeOrdering(model)
+EF_angle = faceSlopeOrdering(model)
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))
