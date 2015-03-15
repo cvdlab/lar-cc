@@ -13,7 +13,7 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.10))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.6))
 
 verts,faces,edges = polyline2lar([[ V[v] for v in FV[-1] ]])
 VIEW(STRUCT(MKPOLS((verts,edges))))

@@ -317,7 +317,6 @@ from bool1 import invertRelation
 
 def orientFace(v1,v2):
     def orientFace0(faceVerts):
-        print "\nfaceVerts =",faceVerts
         facet = list(faceVerts) + [list(faceVerts)[0]]
         pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
         OK = False
@@ -336,16 +335,18 @@ def planeProjection(normals):
 
 def faceSlopeOrdering(model):
     V,FV,EV = model
-    FE = crossRelation(FV,EV)
-    EF,EF_angle = invertRelation(FE),[]
-    for e,ef in enumerate(EF):
+    triangleSet = boundaryTriangulation(V,FV)
+    TV = triangleIndices(triangleSet,V)
+    TE = crossRelation(CAT(TV),EV)
+    ET,ET_angle = invertRelation(TE),[]
+    for e,et in enumerate(ET):
         v1,v2 = EV[e]
         E = UNITVECT(VECTDIFF([V[v2],V[v1]]))
-        refFace = EF[e][0]
-        ef_angle = []
+        refFace = ET[e][0]
+        et_angle = []
         normals = []
-        for face in ef:
-            theFace = orientFace(v1,v2)(FV[face])
+        for triangle in et:
+            theFace = orientFace(v1,v2)(CAT(TV)[triangle])
             vect1 = array(V[theFace[1]])-V[theFace[0]]
             vect2 = array(V[theFace[2]])-V[theFace[0]]
             normals += [cross(vect1,vect2).tolist()]
@@ -355,10 +356,34 @@ def faceSlopeOrdering(model):
         transform = mat(basis).I
         mappedNormals = (transform * mat(normals).T).T
         mappedNormals = planeProjection(mappedNormals)
-        for k,f in enumerate(ef):
+        for k,t in enumerate(et):
             angle = math.atan2(mappedNormals[k,1],mappedNormals[k,0])
-            ef_angle += [angle]
-        pairs = sorted(zip(ef_angle,ef))
-        EF_angle += [[pair[1] for pair in pairs]]
+            et_angle += [angle]
+        pairs = sorted(zip(et_angle,et))
+        ET_angle += [[pair[1] for pair in pairs]]
+    EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
     return EF_angle
+
+""" Ordered incidence relationship of edges and triangles """
+def ordered_csrEF(EF_angle):
+    triples = []
+    for e,et in enumerate(EF_angle):
+        n = len(et)
+        for k,face in enumerate(et):
+            triples += [[e, et[k], et[ (k+1)%n ]]]
+    csrEF = triples2mat(triples,shape="csr")
+    return csrEF
+
+""" Edge-triangles to Edge-faces incidence """
+def ET_to_EF_incidence(TW,FW, ET_angle):
+    tableFT = [None for k in range(len(FW))]
+    t = 0
+    for f,trias in enumerate(TW):
+        tableFT[f] = range(t,t+len(trias))
+        t += len(trias)
+    tableTF = invertRelation(tableFT)
+    EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
+    print "ET_angle =", ET_angle
+    assert( len(EF_angle) == 2*len(FW) )
+    return "EF_angle =", EF_angle
 

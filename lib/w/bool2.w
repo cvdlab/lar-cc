@@ -487,7 +487,6 @@ from bool1 import invertRelation
 
 def orientFace(v1,v2):
     def orientFace0(faceVerts):
-        print "\nfaceVerts =",faceVerts
         facet = list(faceVerts) + [list(faceVerts)[0]]
         pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
         OK = False
@@ -506,16 +505,18 @@ def planeProjection(normals):
 
 def faceSlopeOrdering(model):
     V,FV,EV = model
-    FE = crossRelation(FV,EV)
-    EF,EF_angle = invertRelation(FE),[]
-    for e,ef in enumerate(EF):
+    triangleSet = boundaryTriangulation(V,FV)
+    TV = triangleIndices(triangleSet,V)
+    TE = crossRelation(CAT(TV),EV)
+    ET,ET_angle = invertRelation(TE),[]
+    for e,et in enumerate(ET):
         v1,v2 = EV[e]
         E = UNITVECT(VECTDIFF([V[v2],V[v1]]))
-        refFace = EF[e][0]
-        ef_angle = []
+        refFace = ET[e][0]
+        et_angle = []
         normals = []
-        for face in ef:
-            theFace = orientFace(v1,v2)(FV[face])
+        for triangle in et:
+            theFace = orientFace(v1,v2)(CAT(TV)[triangle])
             vect1 = array(V[theFace[1]])-V[theFace[0]]
             vect2 = array(V[theFace[2]])-V[theFace[0]]
             normals += [cross(vect1,vect2).tolist()]
@@ -525,35 +526,116 @@ def faceSlopeOrdering(model):
         transform = mat(basis).I
         mappedNormals = (transform * mat(normals).T).T
         mappedNormals = planeProjection(mappedNormals)
-        for k,f in enumerate(ef):
+        for k,t in enumerate(et):
             angle = math.atan2(mappedNormals[k,1],mappedNormals[k,0])
-            ef_angle += [angle]
-        pairs = sorted(zip(ef_angle,ef))
-        EF_angle += [[pair[1] for pair in pairs]]
+            et_angle += [angle]
+        pairs = sorted(zip(et_angle,et))
+        ET_angle += [[pair[1] for pair in pairs]]
+    EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
     return EF_angle
 @}
 %-------------------------------------------------------------------------------
 
 
 
-\paragraph{Ordered incidence relationship vertices to edges}
+\paragraph{Edge-triangles to Edge-faces incidence}
 
-As we have seen, the \texttt{EF\_angle} list of lists reports, for every vertex in \texttt{V}, the list of incident edges, \emph{counterclockwise ordered} around the vertex. Therefore the \texttt{ordered\_csrVE} function, given below, returns the ``compressed sparse row'' matrix, row-indexed by vertices and column-indexed by edges, and such that in position $(v,e)$ contains the index $\ell$ of the next edge (after $e$, say) in the counterclockwise ordering of edges around $v$.
+In the function \texttt{ET\_to\_EF\_incidence} below, we convert the Edge-triangles incidence table \texttt{ET\_angle} to a Edge-faces incidence table \texttt{EF\_angle}. The input data to the algoritm are the relations \texttt{TW,FW}, and, of course, the incidence \texttt{ET\_angle}. It works by computing two translationa tables \texttt{tableFT} and \texttt{tableTF} from face indices to triangle indices and viceversa. Of course, \texttt{assert( len(EF\_angle) == 2*len(FW) )} must be \texttt{True}.
 
 %-------------------------------------------------------------------------------
-@D Ordered incidence relationship of vertices and edges
-@{""" Ordered incidence relationship of vertices and edges """
-def ordered_csrVE(VE_angle):
-    triples = []
-    for v,ve in enumerate(VE_angle):
-        n = len(ve)
-        for k,edge in enumerate(ve):
-            triples += [[v, ve[k], ve[ (k+1)%n ]]]
-    csrVE = triples2mat(triples,shape="csr")
-    return csrVE
+@D Edge-triangles to Edge-faces incidence
+@{""" Edge-triangles to Edge-faces incidence """
+def ET_to_EF_incidence(TW,FW, ET_angle):
+    tableFT = [None for k in range(len(FW))]
+    t = 0
+    for f,trias in enumerate(TW):
+        tableFT[f] = range(t,t+len(trias))
+        t += len(trias)
+    tableTF = invertRelation(tableFT)
+    EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
+    print "ET_angle =", ET_angle
+    assert( len(EF_angle) == 2*len(FW) )
+    return "EF_angle =", EF_angle
 @}
 %-------------------------------------------------------------------------------
 
+
+\paragraph{Ordered incidence relationship vertices to edges}
+
+The \texttt{EF\_angle} list of lists reports, for every edge in \texttt{EW}, the list of incident boundary faces, \emph{counterclockwise ordered} around the positive edge direction (going from vertex of smaller index to vertex of grater index). Therefore the \texttt{ordered\_csrEF} function, given below, returns the ``compressed sparse row'' matrix, row-indexed by edges (of the standard LAR model \texttt{W,FW,EW} returned after the faces splitting) and column-indexed by faces of the boundary, and such that in position $(e,f)$ contains the index $\ell$ of the next face (after $f$, say) in the counterclockwise ordering of faces around $e$.
+
+%-------------------------------------------------------------------------------
+@D Ordered incidence relationship of edges and triangles
+@{""" Ordered incidence relationship of edges and triangles """
+def ordered_csrEF(EF_angle):
+    triples = []
+    for e,et in enumerate(EF_angle):
+        n = len(et)
+        for k,face in enumerate(et):
+            triples += [[e, et[k], et[ (k+1)%n ]]]
+    csrEF = triples2mat(triples,shape="csr")
+    return csrEF
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Faces from biconnected components}
+Since edges in the plane partition induced by a line arrangement are $(d-1)$-cells, they are located on the boundary of \emph{two} $d$-cells (faces) of the partition. Hence, the traversal algorithm of the data structure storing the relevant information may be driven by signing the two extremes (vertices) of each edge as either already visited or not.
+
+
+%-------------------------------------------------------------------------------
+@D Faces from biconnected components
+@{""" Faces from biconnected components """
+
+def firstSearch(visited):
+    for face,edges in enumerate(visited):
+        for e,edge in enumerate(edges):
+            if visited[face,e] == 0.0:
+                visited[face,e] = 1.0
+                return face,e
+    return -1,-1
+
+def facesFromComponents(model):
+    V,FV,EV = model
+    CV = []
+    EF_angle = faceSlopeOrdering(model)
+    csrET = ordered_csrET(ET_angle).T
+    visited = zeros((len(FE),2))
+    face,e = firstSearch(visited)
+    edge = TV[face][e]
+    cv = []
+    while True:
+        if (face,e) == (-1,-1):
+            break #return [face for face in FV if face != None]
+        elif (cv == []) or (cv[0] != face):
+            
+            ce += [edge]
+            nextFace = csrFE[face,edge]
+            e0,e1,e2 = FE[nextface]
+            
+            try:
+                edge, = set([e0,e1,e2]).difference([edge])
+            except ValueError:
+                print 'ValueError: too many values to unpack'
+                break
+                
+            if e0==edge: pos=0
+            elif e1==edge: pos=1
+            elif e2==edge: pos=2
+                        
+            if visited[nextFace, pos] == 0:
+                visited[nextFace, pos] = 1
+                face = nextface                
+        else:
+            CV += [cv]
+            fv = []
+            edge,v = firstSearch(visited)
+            vertex = EV[edge][v]
+        FV = [face for face in FV if face != None]
+    return V,FV,EV
+@}
+%-------------------------------------------------------------------------------
 
 
 
@@ -589,6 +671,8 @@ DEBUG = True
 @< Computation of incidence between edges and 3D triangles @>
 @< Directional and orthogonal projection operators @>
 @< Slope of edges @>
+@< Ordered incidence relationship of edges and triangles @>
+@< Edge-triangles to Edge-faces incidence @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -910,6 +994,28 @@ EF_angle = faceSlopeOrdering(model)
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))
 VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Visualization after sorted edge-faces incidence computation}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool2/test11.py @{
+""" Visualization of indices of the boundary triangulation """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool2 import *
+sys.path.insert(0, 'test/py/bool2/')
+from test06 import *
+
+model = W,FW,EW
+EF_angle = faceSlopeOrdering(model)
+print "EF_angle =",EF_angle
+
+WW = AA(LIST)(range(len(W)))
+submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
 @}
 %-------------------------------------------------------------------------------
 
