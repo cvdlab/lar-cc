@@ -8,7 +8,6 @@ from test06 import *
 
 model = W,FW,EW
 EF_angle = faceSlopeOrdering(model)
-print "EF_angle =",EF_angle
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))

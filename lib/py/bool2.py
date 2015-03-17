@@ -364,13 +364,55 @@ def faceSlopeOrdering(model):
     EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
     return EF_angle
 
-""" Ordered incidence relationship of edges and triangles """
+""" Oriented cycle of vertices from a 1-cycle of unoriented edges """
+def theNext(EF_angle,EV,cb):
+    def theNext0(edge,face):
+        orientedEdges = edgeCycleOrientation(cb, EV)
+        theEdge = set(EV[edge])
+        for k,orientedEdge in enumerate(orientedEdges):
+            if theEdge==set(orientedEdge): break   #computed the position k
+    
+        nextFaces = EF_angle[edge]
+        f = nextFaces.index(face)
+        n = len(nextFaces)
+        
+        if EV[edge]==orientedEdges[k]:
+            nextFace = nextFaces[(f+1)%n]
+        elif set(EV[edge])==set(orientedEdges[k]):
+            nextFace = nextFaces[(f-1)%n]
+        else: print "ERROR: in looking for next 3-cell facet"
+            
+        return nextFace
+    return theNext0
+
+def edgeCycleOrientation(cb, EV):
+    pairs = [list(EV[e]) for e in cb]
+    table = defaultdict(list)
+    for a,b in pairs:
+        table[a] += [b]
+        table[b] += [a]
+    pre,go = pairs[0]
+    out = []
+    for k in range(len(cb)):
+        old = go
+        go = list(set(table[go]).difference([pre]))[0]
+        pre = old
+        out += [go]
+    return zip(out,out[1:]+[out[0]])
+
+"""
+cb = [2, 7, 10, 12, 13, 18, 19, 22, 27, 28, 33, 35]
+edgeCycleOrientation(cb, EW) 
+>>>    [1, 0, 3, 18, 15, 6, 10, 13, 12, 8, 7, 16]
+"""
+
+""" Ordered incidence relationship of edges and faces """
 def ordered_csrEF(EF_angle):
     triples = []
-    for e,et in enumerate(EF_angle):
-        n = len(et)
-        for k,face in enumerate(et):
-            triples += [[e, et[k], et[ (k+1)%n ]]]
+    for e,ef in enumerate(EF_angle):
+        n = len(ef)
+        for k,face in enumerate(ef):
+            triples += [[e, ef[k], ef[ (k+1)%n ]]]
     csrEF = triples2mat(triples,shape="csr")
     return csrEF
 
@@ -385,5 +427,53 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
     EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
     print "ET_angle =", ET_angle
     assert( len(EF_angle) == 2*len(FW) )
-    return "EF_angle =", EF_angle
+    print "EF_angle =", EF_angle
+    return EF_angle
+
+""" Cells from $(d-1)$-dimensional LAR model """
+
+def firstSearch(visited,FE):
+    for f,edges in enumerate(visited):
+        for e,edge in enumerate(edges):
+            if visited[f][e] == 0:
+                visited[f][e] = 1
+                return f,FE[f][e],e
+    return -1,-1
+
+def facesFromComponents(model):
+    V,FV,EV = model
+    CV = []
+    EF_angle = faceSlopeOrdering(model)
+    csrEF = ordered_csrEF(EF_angle)
+    FE = crossRelation(FV,EV)
+    visitedFE = [[0 for edge in face] for face in FE]
+    face,edge,e = firstSearch(visitedFE,FE)
+    cv = set(FV[face])
+    cb = set(FE[face])
+    oriented_cb = edgeCycleOrientation(cb, EV)
+    ce = set([edge])
+    cf = set([face])
+    while True:
+        if (face,edge) == (-1,-1):
+            print "BREAK"
+            #break
+        elif cb != set():  
+            #face = csrEF[edge,face]
+            face = theNext(EF_angle,EV,cb)(edge,face)
+            cv = cv.union(FV[face])
+            edges = FE[face]
+            cb_union = cb.union(edges)
+            cb_intersection = cb.intersection(edges)
+            #xor of edges of collected faces=:boundary
+            cb = cb_union.difference(cb_intersection) 
+            visitedFE[face][e] = 1  # ???
+            edge = list(set(FE[face]).difference(ce))[0]
+            ce = ce.union(edges)
+            cf = cf.union([face])
+        else:
+            CV += [cv]
+            fv = []
+            face,edge,e = firstSearch(visitedFE,FE)
+            edge = FE[face][e]
+    return V,CV,FV,EV
 
