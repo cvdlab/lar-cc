@@ -69,19 +69,16 @@ def printStruct2GeoJson(path,struct):
     return scene,fathers
 
 """ Print a model object in a geoJson file """
-def printModelObject(theFile,tabs, i,name,verts,cells,father):
+def printModelObject(theFile,tabs, i,name,category,verts,cells,father):
     tab = "    "
     print >> theFile, "-   ","id:", name
     print >> theFile, tab, "type:", "Feature"
     print >> theFile, tab, "geometry:" 
     print >> theFile, tab+tab, "type:", "Polygon"
     print >> theFile, tab+tab, "coordinates:" 
-    print >> theFile, tab+tab+tab, "verts:"
-    print >> theFile, tab+tab+tab+tab, AA(eval)(AA(vcode)(verts))
-    print >> theFile, tab+tab+tab, "cells:"
-    print >> theFile, tab+tab+tab+tab, cells
+    print >> theFile, tab+tab+tab, AA(eval)(AA(vcode)(verts))
     print >> theFile, tab, "properties:"
-    print >> theFile, tab+tab, "class:", "room"
+    print >> theFile, tab+tab, "class:", category
     print >> theFile, tab+tab, "parent:", father
     print >> theFile, tab+tab, "son:", i
     print >> theFile, tab+tab, "description:", name
@@ -94,7 +91,7 @@ def printMatObject(theFile,tabs, theMat):
     print >> theFile, tab+tab, "tVector:", theMat.T[-1,:-1].tolist()
 
 """ Print a struct object in a geoJson file """
-def printStructObject(theFile,tabs, i,name,box,father):
+def printStructObject(theFile,tabs, i,name,category,box,father):
     tab = "    "
     print >> theFile, "-   ","id:", name
     print >> theFile, tab,"type:", "Feature"
@@ -102,7 +99,7 @@ def printStructObject(theFile,tabs, i,name,box,father):
     print >> theFile, tab+tab, "type:", "Polygon"
     print >> theFile, tab+tab, "box:", box
     print >> theFile, tab,"properties:"
-    print >> theFile, tab+tab, "class:", "assembly"
+    print >> theFile, tab+tab, "class:", category
     print >> theFile, tab+tab, "parent:", father
     print >> theFile, tab+tab, "son:", i
     print >> theFile, tab+tab, "description:", name
@@ -119,13 +116,13 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
             name = father+'-'+ str(id(obj[i]))
          else: 
             name = father+'-'+ str(obj[i].__name__())
-         printModelObject(theFile,tabs, i,name,verts,cells,father)
+         printModelObject(theFile,tabs, i,name,obj[i].__category__(),verts,cells,father)
          scene += [larApply(CTM)(obj[i])]
          fathers += [father]
       elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
          verts,cells = obj[i]
          name = father+'-'+ str(id(obj[i]))
-         printModelObject(theFile,tabs, i,name,verts,cells,father)
+         printModelObject(theFile,tabs, i,name,obj[i].__category__(),verts,cells,father)
          scene += [larApply(CTM)(obj[i])]
          fathers += [father]
       elif isinstance(obj[i],Mat): 
@@ -137,7 +134,7 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
          else: 
             name = father+'-'+ str(obj[i].__name__())
          box = obj[i].box
-         printStructObject(theFile,tabs, i,name,box,father)
+         printStructObject(theFile,tabs, i,name,obj[i].__category__(),box,father)
          stack.append(CTM) 
          level += 1
          fathers.append(name)
