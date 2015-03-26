@@ -1,85 +1,76 @@
-""" 3D boundary triangulation of the space partition """
-import sys
-sys.path.insert(0, 'test/py/bool2/')
-from test06 import *
-from support import PolygonTessellator,vertex
+import sys;sys.path.insert(0, 'lib/py/')
+from bool2 import *
+sys.path.insert(0, 'test/py/larcc/')
+from test11 import *
 
-def orientTriangle(pointTriple):
-    v1 = array(pointTriple[1])-pointTriple[0]
-    v2 = array(pointTriple[2])-pointTriple[0]
-    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
-    else: return pointTriple
+C2 = csr_matrix((len(FV),1))
+for i in [21,16,23,22, 2,3,4, 9,28,5]: C2[i,0] = 1
+BD = boundary(FV,EV)
+C1 = BD * C2
+C_1 = [i for i in range(len(EV)) if ABS(C1[i,0]) == 1 ]
+C_2 = [i for i in range(len(FV)) if C2[i,0] == 1 ]
 
-def boundaryTriangulation(W,FW):
-    triangleSet = []
-    for face in FW:
-        pivotFace = [W[v] for v in face+(face[0],)]
-        transform = submanifoldMapping(pivotFace)
-        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
-        facet = [point[:-2] for point in mappedVerts]
-        pol = PolygonTessellator()
-        vertices = [ vertex.Vertex( (x,y,0) ) for (x,y) in facet  ]
-        verts = pol.tessellate(vertices)
-        ps = [list(v.point) for v in verts]
-        trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
-        mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
-        points = [p[:-1] for p in mappedVerts]
-        trias = [[points[k],points[k+1],points[k+2],points[k]] 
-            for k in range(0,len(points),3) 
-            if scipy.linalg.norm(cross(array(points[k+1])-points[k], 
-                                       array(points[k+2])-points[k])) != 0 ]
-        triangleSet += [AA(orientTriangle)(trias)]
-    return triangleSet
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[EV[k] for k in C_1] + [FV[k] for k in C_2]))))
+
+def boundaryCicles(edgeBoundary,EV):
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    cbe = copy.copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==[cycle[k%n -1][1],cycle[k][1]] else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
     
-def triangleIndices(triangleSet,W):
-    vertDict,out = defaultdict(),[]
-    for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
-    for h,faceSetOfTriangles in enumerate(triangleSet):
-        out += [[[vertDict[vcode(p)] for p in triangle[:-1]] 
-                    for triangle in faceSetOfTriangles]]
-    return out
+def cycles2permutation(cycles):
+    next = []
+    for cycle in cycles:
+        next += zip(AA(ABS)(cycle),AA(ABS)(cycle[1:]+[cycle[0]]))
+    next = dict(next)
+    sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
+    return sign,next
 
-triangleSet = boundaryTriangulation(W,FW)
-TW = triangleIndices(triangleSet,W)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
-
-
-model = W,FW,EW
-faceSlopeOrdering(model)
+sign,next = cycles2permutation(boundaryCicles(C_1, EV))
+print "\nsign =",sign
+print "\nnext =",next,"\n"
 
 
+def joinCycles(perm1,perm2):
+	print "cycle permutation 1",perm1
+	print "cycle permutation 2",perm2
 
 
+#= ciclo corrente ===================================
+C2 = csr_matrix((len(FV),1))
+for i in [21,16,23,22]: C2[i,0] = 1
+BD = boundary(FV,EV)
+C1 = BD * C2
+C_1a = [i for i in range(len(EV)) if ABS(C1[i,0]) == 1 ]
+C_2a = [i for i in range(len(FV)) if C2[i,0] == 1 ]
 
-def edgesTriangles(EF, FW, TW, EW):
-    ET = [None for k in range(len(EF))]
-    for e,edgeFaces in enumerate(EF):
-        ET[e] = []
-        print "\ne,edgeFaces,EW[e] =", e,edgeFaces,EW[e]
-        for f in edgeFaces:
-            print "f,FW[f],TW[f] =", f,FW[f],TW[f]
-            for t in TW[f]:
-                if set(EW[e]).intersection(t)==set(EW[e]):
-                    ET[e] += [t]
-                    print "ET[e] =",ET[e]
-    return ET
-
-FE = crossRelation(FW,EW)
-EF = invertRelation(FE)
-
-ET = edgesTriangles(EF,FW,TW,EW)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(ET)))))
-VIEW(STRUCT(MKPOLS((W,ET[35]))))
-
-from iot3d import polyline2lar
-V,FV,EV = polyline2lar([[W[v] for v in FW[f]] for f in EF[35]] )
-VIEW(STRUCT(MKPOLS((V,EV))))
-
-
-
-
-WW = AA(LIST)(range(len(W)))
-submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))
-VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
-
+#= nuova faccia ===================================
+C2 = csr_matrix((len(FV),1))
+for i in [33]: C2[i,0] = 1
+BD = boundary(FV,EV)
+C1 = BD * C2
+C_1b = [i for i in range(len(EV)) if ABS(C1[i,0]) == 1 ]
+C_2b = [i for i in range(len(FV)) if C2[i,0] == 1 ]
+  
+#= join di faccia e ciclo ===================================
+perm1 = cycles2permutation(boundaryCicles(C_1a, EV))
+perm2 = cycles2permutation(boundaryCicles(C_1b, EV))
+joinCycles(perm1,perm2)
 

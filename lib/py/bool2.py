@@ -365,40 +365,54 @@ def faceSlopeOrdering(model):
     return EF_angle
 
 """ Oriented cycle of vertices from a 1-cycle of unoriented edges """
-def theNext(EF_angle,EV,cb):
-    def theNext0(edge,face):
+def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges):
+    
+    commonBoundary = cb.intersection(previous_cb)
+    if commonBoundary != set():
+        commonEdge = list(commonBoundary)[0]
+        commonArc = EV[commonEdge]
+    else: commonArc = []
+
+    def edgeCycleOrientation(cb, EV):
+        pairs = [list(EV[e]) for e in cb]
+        table = defaultdict(list)
+        for a,b in pairs:
+            table[a] += [b]
+            table[b] += [a]
+        pre,go = pairs[0]
+        out = []
+        for k in range(len(cb)):
+            old = go
+            go = list(set(table[go]).difference([pre]))[0]
+            pre = old
+            out += [go]
+        return zip(out,out[1:]+[out[0]])
+
+    def theNext0(previous_edge,face):
+        Edge = list(cb.intersection(FE[face]))[0]
         orientedEdges = edgeCycleOrientation(cb, EV)
-        theEdge = set(EV[edge])
+        print "orientedEdges =",orientedEdges
+        
+        # test for coherence of orientedEdges
+        if not (commonArc in previousOrientedEdges and commonArc in orientedEdges):
+            orientedEdges = REVERSE(AA(REVERSE)(orientedEdges))
+        
+        theEdge = set(EV[Edge])
         for k,orientedEdge in enumerate(orientedEdges):
             if theEdge==set(orientedEdge): break   #computed the position k
     
-        nextFaces = EF_angle[edge]
-        f = nextFaces.index(face)
+        nextFaces = EF_angle[Edge]
+        f = nextFaces.index(face) 
         n = len(nextFaces)
         
-        if EV[edge]==orientedEdges[k]:
+        if EV[Edge]==orientedEdges[k]:
             nextFace = nextFaces[(f+1)%n]
-        elif set(EV[edge])==set(orientedEdges[k]):
+        elif set(EV[Edge])==set(orientedEdges[k]):
             nextFace = nextFaces[(f-1)%n]
         else: print "ERROR: in looking for next 3-cell facet"
             
-        return nextFace
+        return orientedEdges,nextFace,Edge
     return theNext0
-
-def edgeCycleOrientation(cb, EV):
-    pairs = [list(EV[e]) for e in cb]
-    table = defaultdict(list)
-    for a,b in pairs:
-        table[a] += [b]
-        table[b] += [a]
-    pre,go = pairs[0]
-    out = []
-    for k in range(len(cb)):
-        old = go
-        go = list(set(table[go]).difference([pre]))[0]
-        pre = old
-        out += [go]
-    return zip(out,out[1:]+[out[0]])
 
 """
 cb = [2, 7, 10, 12, 13, 18, 19, 22, 27, 28, 33, 35]
@@ -425,9 +439,7 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
         t += len(trias)
     tableTF = invertRelation(tableFT)
     EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
-    print "ET_angle =", ET_angle
     assert( len(EF_angle) == 2*len(FW) )
-    print "EF_angle =", EF_angle
     return EF_angle
 
 """ Cells from $(d-1)$-dimensional LAR model """
@@ -442,7 +454,7 @@ def firstSearch(visited,FE):
 
 def facesFromComponents(model):
     V,FV,EV = model
-    CV = []
+    CV,CF,CE = [],[],[]
     EF_angle = faceSlopeOrdering(model)
     csrEF = ordered_csrEF(EF_angle)
     FE = crossRelation(FV,EV)
@@ -450,7 +462,8 @@ def facesFromComponents(model):
     face,edge,e = firstSearch(visitedFE,FE)
     cv = set(FV[face])
     cb = set(FE[face])
-    oriented_cb = edgeCycleOrientation(cb, EV)
+    previous_cb = []
+    orientedEdges = []
     ce = set([edge])
     cf = set([face])
     while True:
@@ -458,22 +471,55 @@ def facesFromComponents(model):
             print "BREAK"
             #break
         elif cb != set():  
-            #face = csrEF[edge,face]
-            face = theNext(EF_angle,EV,cb)(edge,face)
+            previousOrientedEdges = orientedEdges
+            orientedEdges,face,edge = theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges)(edge,face)
             cv = cv.union(FV[face])
             edges = FE[face]
             cb_union = cb.union(edges)
             cb_intersection = cb.intersection(edges)
-            #xor of edges of collected faces=:boundary
+            previous_cb = cb
             cb = cb_union.difference(cb_intersection) 
             visitedFE[face][e] = 1  # ???
-            edge = list(set(FE[face]).difference(ce))[0]
             ce = ce.union(edges)
             cf = cf.union([face])
         else:
             CV += [cv]
-            fv = []
+            CF += [cf]
+            CE += [ce]
             face,edge,e = firstSearch(visitedFE,FE)
-            edge = FE[face][e]
+            cv,cb,ce, cf = set(FV[face]),set(FE[face]),set([edge]),set([face])
     return V,CV,FV,EV
+
+""" Edge cycles associated to a closed chain of edges """
+def boundaryCicles(edgeBoundary,EV):
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    cbe = copy.copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==[cycle[k%n -1][1],cycle[k][1]] else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
+
+""" Permutation of edges defined by edge cycles """
+def cycles2permutation(cycles):
+    next = []
+    for cycle in cycles:
+        next += zip(AA(ABS)(cycle),AA(ABS)(cycle[1:]+[cycle[0]]))
+    next = dict(next)
+    sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
+    return sign,next
 

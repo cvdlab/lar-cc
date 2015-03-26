@@ -627,6 +627,31 @@ VIEW(submodel)
 %-------------------------------------------------------------------------------
 
 
+\paragraph{Extracting the boundary of whichever chain}
+
+The boundary of whichever chain, here defined as the list of indices of its cells, then transformed to its coordinate representation (column vector in the given basis), is explicitly computed by matrix product times the matrix of the boundary operator in the given basis, transformed back in its BRC representation, and displayed as  LAR model.
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test19.py
+@{""" Example of oriented edge drawing """
+import sys;sys.path.insert(0, 'lib/py/')
+from larcc import *
+sys.path.insert(0, 'test/py/larcc/')
+from test11 import *
+
+C2 = csr_matrix((len(FV),1))
+for i in [1,2, 12,13,14,15, 22,23, 29,30,31]: C2[i,0] = 1
+BD = boundary(FV,EV)
+C1 = BD * C2
+C_1 = [i for i in range(len(EV)) if ABS(C1[i,0]) == 1 ]
+C_2 = [i for i in range(len(FV)) if C2[i,0] == 1 ]
+
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[EV[k] for k in C_1] + [FV[k] for k in C_2]))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
 \subsection{Incidence and adjacency operators}
 
 Let us start by computing the more interesting subset of the binary relationships between the 4 decompositive and/or boundary entities of 3D cellular models.  Therefore, in this case we denote with \texttt{C}, \texttt{F}, \texttt{E}, and \texttt{V}, the 3-cells and their faces, edges and vertices, respectively.

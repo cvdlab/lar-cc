@@ -894,6 +894,37 @@ An example of drawing of oriented edges is given in \texttt{test/py/larcc/test11
 %-------------------------------------------------------------------------------
 
 
+\paragraph{Extracting the boundary of whichever chain}
+
+The boundary of whichever chain, here defined as the list of indices of its cells, then transformed to its coordinate representation (column vector in the given basis), is explicitly computed by matrix product times the matrix of the boundary operator in the given basis, transformed back in its BRC representation, and displayed as  LAR model.
+%-------------------------------------------------------------------------------
+\begin{flushleft} \small \label{scrap26}
+\protect\makebox[0ex][r]{\NWtarget{nuweb15}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test19.py"@\nobreak\ {\footnotesize 15 }$\equiv$
+\vspace{-1ex}
+\begin{list}{}{} \item
+\mbox{}\verb@""" Example of oriented edge drawing """@\\
+\mbox{}\verb@import sys;sys.path.insert(0, 'lib/py/')@\\
+\mbox{}\verb@from larcc import *@\\
+\mbox{}\verb@sys.path.insert(0, 'test/py/larcc/')@\\
+\mbox{}\verb@from test11 import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@C2 = csr_matrix((len(FV),1))@\\
+\mbox{}\verb@for i in [1,2, 12,13,14,15, 22,23, 29,30,31]: C2[i,0] = 1@\\
+\mbox{}\verb@BD = boundary(FV,EV)@\\
+\mbox{}\verb@C1 = BD * C2@\\
+\mbox{}\verb@C_1 = [i for i in range(len(EV)) if ABS(C1[i,0]) == 1 ]@\\
+\mbox{}\verb@C_2 = [i for i in range(len(FV)) if C2[i,0] == 1 ]@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[EV[k] for k in C_1] + [FV[k] for k in C_2]))))@\\
+\mbox{}\verb@@{\NWsep}
+\end{list}
+\vspace{-2ex}
+\end{flushleft}
+%-------------------------------------------------------------------------------
+
+
+
+
 \subsection{Incidence and adjacency operators}
 
 Let us start by computing the more interesting subset of the binary relationships between the 4 decompositive and/or boundary entities of 3D cellular models.  Therefore, in this case we denote with \texttt{C}, \texttt{F}, \texttt{E}, and \texttt{V}, the 3-cells and their faces, edges and vertices, respectively.
@@ -920,8 +951,8 @@ The other possible operators follow from a similer computational pattern.
 A high-level function \texttt{larIncidence} useful to compute the LAR representation of the incidence matrix (operator) and the incidence relations is given in the script below.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap26}
-\protect\makebox[0ex][r]{\NWtarget{nuweb16a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Some incidence operators\nobreak\ {\footnotesize 16a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap27}
+\protect\makebox[0ex][r]{\NWtarget{nuweb16}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Some incidence operators\nobreak\ {\footnotesize 16}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Some incidence operators """@\\
@@ -933,9 +964,9 @@ A high-level function \texttt{larIncidence} useful to compute the LAR representa
 \mbox{}\verb@      if val == 1: larCellFacet[i] += [j]@\\
 \mbox{}\verb@   return larCellFacet@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Cell-Face incidence operator\nobreak\ {\footnotesize \NWlink{nuweb16b}{16b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Cell-Edge incidence operator\nobreak\ {\footnotesize \NWlink{nuweb16c}{16c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Face-Edge incidence operator\nobreak\ {\footnotesize \NWlink{nuweb17a}{17a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Cell-Face incidence operator\nobreak\ {\footnotesize \NWlink{nuweb17a}{17a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Cell-Edge incidence operator\nobreak\ {\footnotesize \NWlink{nuweb17b}{17b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Face-Edge incidence operator\nobreak\ {\footnotesize \NWlink{nuweb17c}{17c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
@@ -950,8 +981,8 @@ A high-level function \texttt{larIncidence} useful to compute the LAR representa
 \paragraph{Cell-Face incidence}
 The \texttt{csrCellFaceIncidence} and \texttt{larCellFace} functions are given below, and exported to the \texttt{larcc} module.
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap27}
-\protect\makebox[0ex][r]{\NWtarget{nuweb16b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cell-Face incidence operator\nobreak\ {\footnotesize 16b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap28}
+\protect\makebox[0ex][r]{\NWtarget{nuweb17a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cell-Face incidence operator\nobreak\ {\footnotesize 17a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Cell-Face incidence operator """@\\
@@ -965,7 +996,7 @@ The \texttt{csrCellFaceIncidence} and \texttt{larCellFace} functions are given b
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb16a}{16a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb16}{16}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -974,8 +1005,8 @@ The \texttt{csrCellFaceIncidence} and \texttt{larCellFace} functions are given b
 Analogously, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} functions are given in the following script.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap28}
-\protect\makebox[0ex][r]{\NWtarget{nuweb16c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cell-Edge incidence operator\nobreak\ {\footnotesize 16c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap29}
+\protect\makebox[0ex][r]{\NWtarget{nuweb17b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Cell-Edge incidence operator\nobreak\ {\footnotesize 17b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Cell-Edge incidence operator """@\\
@@ -989,7 +1020,7 @@ Analogously, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} function
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb16a}{16a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb16}{16}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -998,8 +1029,8 @@ Analogously, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} function
 Finally, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} functions are provided below.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap29}
-\protect\makebox[0ex][r]{\NWtarget{nuweb17a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Face-Edge incidence operator\nobreak\ {\footnotesize 17a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap30}
+\protect\makebox[0ex][r]{\NWtarget{nuweb17c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Face-Edge incidence operator\nobreak\ {\footnotesize 17c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Face-Edge incidence operator """@\\
@@ -1013,7 +1044,7 @@ Finally, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} functions ar
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb16a}{16a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb16}{16}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1025,8 +1056,8 @@ The example below concerns a 3D cuboidal grid, by computing a full LAR stack of 
 some more useful binary relationships (\texttt{CF, CE, FE}), needed for example to compute the signed matrices of boundary operators.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap30}
-\protect\makebox[0ex][r]{\NWtarget{nuweb17b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test10.py"@\nobreak\ {\footnotesize 17b }$\equiv$
+\begin{flushleft} \small \label{scrap31}
+\protect\makebox[0ex][r]{\NWtarget{nuweb18a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test10.py"@\nobreak\ {\footnotesize 18a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" A mesh model and various incidence operators """@\\
@@ -1069,8 +1100,8 @@ The function \texttt{incidenceChain}, given below, returns the full stack of \te
 \texttt{[EV,FE,CF,...]}, i.e., \texttt{CF}$_k$ ($1\leq k\leq d$).
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap31}
-\protect\makebox[0ex][r]{\NWtarget{nuweb18a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Incidence chain computation\nobreak\ {\footnotesize 18a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap32}
+\protect\makebox[0ex][r]{\NWtarget{nuweb18b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Incidence chain computation\nobreak\ {\footnotesize 18b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Incidence chain computation """@\\
@@ -1091,8 +1122,8 @@ The function \texttt{incidenceChain}, given below, returns the full stack of \te
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap32}
-\protect\makebox[0ex][r]{\NWtarget{nuweb18b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test13.py"@\nobreak\ {\footnotesize 18b }$\equiv$
+\begin{flushleft} \small \label{scrap33}
+\protect\makebox[0ex][r]{\NWtarget{nuweb19}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test13.py"@\nobreak\ {\footnotesize 19 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Example of incidence chain computation """@\\
@@ -1135,8 +1166,8 @@ See Figure~\ref{incidenceChain} for this purpose.
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap33}
-\protect\makebox[0ex][r]{\NWtarget{nuweb18c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Incidence chain for a 3D cuboidal complex\nobreak\ {\footnotesize 18c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap34}
+\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Incidence chain for a 3D cuboidal complex\nobreak\ {\footnotesize 20a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@incidence CF = [[0,2,4,6,8,9],[1,3,5,7,9,10]]@\\
@@ -1168,8 +1199,8 @@ When computing the matrices of boundary and coboundary operators it may be usefu
 The \texttt{boundary} function below takes as parameters the \texttt{BRC} representations of $d$-cells and $(d-1)$-facets, and returns the \texttt{CSR} matrix of the boundary operator. Let us notice that such operator uses a mod 2 algebra, since it takes elements within the field $\Z_2=\{0,1\}$.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap34}
-\protect\makebox[0ex][r]{\NWtarget{nuweb19}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 19}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap35}
+\protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 20b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.0,0.0,0.0],[1.0,0.0,0.0],[0.0,1.0,0.0],[1.0,1.0,0.0],@\\
@@ -1197,8 +1228,8 @@ The \texttt{boundary} function below takes as parameters the \texttt{BRC} repres
 In the script below it is necessary to guarantee that both \texttt{csrFV} and \texttt{csrCV} are created with the same number of column. The initial steps have this purpose.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap35}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 20a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap36}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 21a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def boundary(cells,facets):@\\
@@ -1222,8 +1253,8 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \end{flushleft}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap36}
-\protect\makebox[0ex][r]{\NWtarget{nuweb20b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize 20b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap37}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize 21b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def totalChain(cells):@\\
@@ -1247,8 +1278,8 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \end{flushleft}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap37}
-\protect\makebox[0ex][r]{\NWtarget{nuweb21}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize 21}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap38}
+\protect\makebox[0ex][r]{\NWtarget{nuweb21c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize 21c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = boundaryCells(CV,FV)@\\
@@ -1290,8 +1321,8 @@ For each incidence pair \texttt{f,c}, the list \texttt{vertLists}  contains the 
 Finally, the $\pm 1$ (signed) incidence coefficients are computed and stored in the \texttt{faceSigns}, and then located in their actual positions within the \texttt{csrSignedBoundaryMat}. The sign of the incidence coefficient associated to the pair (facet,cell), also called (face,coface) in the implementation below, is computed as the sign of $(-1)^k$, where $k$ is the position index of the removed vertex in the facet $\langle v_0, \ldots, v_{k-1}, v_{k+1}, \ldots, v_d \rangle$. of the $\langle v_0, \ldots, v_d \rangle$ cell.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap38}
-\protect\makebox[0ex][r]{\NWtarget{nuweb22a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize 22a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap39}
+\protect\makebox[0ex][r]{\NWtarget{nuweb22}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize 22}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def signedSimplicialBoundary (CV,FV):@\\
@@ -1333,8 +1364,8 @@ with the matrices having per row the position vectors of vertices of a coface, i
 homogeneous coordinates. The list of signed face indices \texttt{orientedBoundaryCells} is returned by the function.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap39}
-\protect\makebox[0ex][r]{\NWtarget{nuweb22b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize 22b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap40}
+\protect\makebox[0ex][r]{\NWtarget{nuweb23}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize 23}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
@@ -1373,8 +1404,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \paragraph{Signed boundary matrix for polytopal complexes}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap40}
-\protect\makebox[0ex][r]{\NWtarget{nuweb23}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize 23}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap41}
+\protect\makebox[0ex][r]{\NWtarget{nuweb24a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize 24a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed boundary matrix for polytopal complexes """@\\
@@ -1414,8 +1445,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \paragraph{Oriented boundary cells for polytopal complexes}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap41}
-\protect\makebox[0ex][r]{\NWtarget{nuweb24a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize 24a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap42}
+\protect\makebox[0ex][r]{\NWtarget{nuweb24b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize 24b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed boundary cells for polytopal complexes """@\\
@@ -1446,8 +1477,8 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 The \texttt{larCuboids} function, when applied to a \texttt{shape} parameter and to the optional parameter \texttt{full=True}, returns both the intoger vertices \texttt{V} of the generated complex, and the list of \texttt{bases} of cells of dimension $k$ ($0\leq k\leq d$), where $d = \texttt{len(shape)}-1$.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap42}
-\protect\makebox[0ex][r]{\NWtarget{nuweb24b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test14.py"@\nobreak\ {\footnotesize 24b }$\equiv$
+\begin{flushleft} \small \label{scrap43}
+\protect\makebox[0ex][r]{\NWtarget{nuweb25}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test14.py"@\nobreak\ {\footnotesize 25 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary of a 2D cuboidal grid """@\\
@@ -1477,8 +1508,8 @@ In both cases the boundary matrix is computed by using the general polytopal app
 (Just notice that in the cuboidal version \texttt{pyplasm} makes a wrong rendering, to be fixed).
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap43}
-\protect\makebox[0ex][r]{\NWtarget{nuweb25a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test15.py"@\nobreak\ {\footnotesize 25a }$\equiv$
+\begin{flushleft} \small \label{scrap44}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test15.py"@\nobreak\ {\footnotesize 26a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented cuboidal and simplicial cells (same algorithm) """@\\
@@ -1509,8 +1540,8 @@ In both cases the boundary matrix is computed by using the general polytopal app
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap44}
-\protect\makebox[0ex][r]{\NWtarget{nuweb25b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test18.py"@\nobreak\ {\footnotesize 25b }$\equiv$
+\begin{flushleft} \small \label{scrap45}
+\protect\makebox[0ex][r]{\NWtarget{nuweb26b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test18.py"@\nobreak\ {\footnotesize 26b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented cuboidal cells """@\\
@@ -1558,8 +1589,8 @@ In both cases the boundary matrix is computed by using the general polytopal app
 \subsubsection{Boundary orientation of a random (2D) cubical complex}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap45}
-\protect\makebox[0ex][r]{\NWtarget{nuweb26}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test17.py"@\nobreak\ {\footnotesize 26 }$\equiv$
+\begin{flushleft} \small \label{scrap46}
+\protect\makebox[0ex][r]{\NWtarget{nuweb27}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test17.py"@\nobreak\ {\footnotesize 27 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary orientation of a random 2D cubical complex """@\\
@@ -1636,8 +1667,8 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Top-down implementation}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap46}
-\protect\makebox[0ex][r]{\NWtarget{nuweb27}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test16.py"@\nobreak\ {\footnotesize 27 }$\equiv$
+\begin{flushleft} \small \label{scrap47}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test16.py"@\nobreak\ {\footnotesize 28a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary orientation of a random 2D triangulation """@\\
@@ -1646,13 +1677,13 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \mbox{}\verb@from larcc import *@\\
 \mbox{}\verb@from random import random@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize \NWlink{nuweb29c}{29c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize \NWlink{nuweb29d}{29d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@   @\\
-\mbox{}\verb@@\hbox{$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb30c}{30c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize \NWlink{nuweb28b}{28b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize \NWlink{nuweb30c}{30c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize \NWlink{nuweb31a}{31a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb31b}{31b}}$\,\rangle$}\verb@   @\\
+\mbox{}\verb@@\hbox{$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb31c}{31c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -1661,8 +1692,8 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 
 \paragraph{Vertices V generated as random point in the unit circle}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap47}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap48}
+\protect\makebox[0ex][r]{\NWtarget{nuweb28b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize 28b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Vertices V generated as random point in the unit circle """@\\
@@ -1680,15 +1711,15 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27}{27}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28a}{28a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Delaunay triangulation of the whole set V of points}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap48}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap49}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Delaunay triangulation of the whole set V of points """@\\
@@ -1701,15 +1732,15 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27}{27}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28a}{28a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Fraction of triangles randomly discarded}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap49}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize 29c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap50}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Fraction of triangles randomly discarded """@\\
@@ -1722,15 +1753,15 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27}{27}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28a}{28a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Coherent orientation of input LAR model (V,FV)}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap50}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize 29d}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap51}
+\protect\makebox[0ex][r]{\NWtarget{nuweb30c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize 30c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Coherently orient the input LAR model (V,FV) """@\\
@@ -1749,15 +1780,15 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27}{27}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28a}{28a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Compute the 1-cell and 0-cell bases EV and VV}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap51}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap52}
+\protect\makebox[0ex][r]{\NWtarget{nuweb31a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize 31a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Compute the 1-cell and 0-cell bases EV and VV """@\\
@@ -1769,15 +1800,15 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27}{27}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28a}{28a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Signed boundary matrix [$\partial_2$] and signed boundary 1-chain}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap52}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap53}
+\protect\makebox[0ex][r]{\NWtarget{nuweb31b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize 31b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed 2-boundary matrix  and signed boundary 1-chain """@\\
@@ -1788,15 +1819,15 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27}{27}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28a}{28a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 \paragraph{Display the boundary 1-chain}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap53}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize 30c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap54}
+\protect\makebox[0ex][r]{\NWtarget{nuweb31c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize 31c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Display the boundary 1-chain """@\\
@@ -1809,7 +1840,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb27}{27}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb28a}{28a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1836,8 +1867,8 @@ The variables in the following script have the meaning specified below:
 {\tt unUsedIndices} : cell indices not moved to simplex.
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap54}
-\protect\makebox[0ex][r]{\NWtarget{nuweb31}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 31}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap55}
+\protect\makebox[0ex][r]{\NWtarget{nuweb32}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 32}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def pivotSimplices(V,CV,d=3):@\\
@@ -1901,8 +1932,8 @@ The variables in the following script have the meaning specified below:
 
 \subsection{MIT licence}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap55}
-\protect\makebox[0ex][r]{\NWtarget{nuweb32}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$The MIT Licence\nobreak\ {\footnotesize 32}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap56}
+\protect\makebox[0ex][r]{\NWtarget{nuweb33a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$The MIT Licence\nobreak\ {\footnotesize 33a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -1940,8 +1971,8 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 \subsection{Importing of modules or packages}
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap56}
-\protect\makebox[0ex][r]{\NWtarget{nuweb33}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize 33}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap57}
+\protect\makebox[0ex][r]{\NWtarget{nuweb33b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize 33b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from pyplasm import *@\\
@@ -1967,14 +1998,14 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap57}
+\begin{minipage}{\linewidth} \label{scrap58}
 \protect\makebox[0ex][r]{\NWtarget{nuweb34a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/larcc.py"@\nobreak\ {\footnotesize 34a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# -*- coding: utf-8 -*-@\\
 \mbox{}\verb@""" Basic LARCC library """@\\
-\mbox{}\verb@@\hbox{$\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWlink{nuweb32}{32}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWlink{nuweb33}{33}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWlink{nuweb33a}{33a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWlink{nuweb33b}{33b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$From list of triples to scipy.sparse\nobreak\ {\footnotesize \NWlink{nuweb3b}{3b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Brc to Coo transformation\nobreak\ {\footnotesize \NWlink{nuweb2}{2}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Coo to Csr transformation\nobreak\ {\footnotesize \NWlink{nuweb3c}{3c}}$\,\rangle$}\verb@@\\
@@ -1984,20 +2015,20 @@ The variables in the following script have the meaning specified below:
 \mbox{}\verb@@\hbox{$\langle\,$Matrix product and transposition\nobreak\ {\footnotesize \NWlink{nuweb6c}{6c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWlink{nuweb8}{8}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb20a}{20a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb22a}{22a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize \NWlink{nuweb22b}{22b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb21a}{21a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb21b}{21b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb22}{22}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize \NWlink{nuweb23}{23}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb10a}{10a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Some incidence operators\nobreak\ {\footnotesize \NWlink{nuweb16a}{16a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Some incidence operators\nobreak\ {\footnotesize \NWlink{nuweb16}{16}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Visualization of cell indices\nobreak\ {\footnotesize \NWlink{nuweb12a}{12a}, \ldots\ }$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Numbered visualization of a LAR model\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Drawing of oriented edges\nobreak\ {\footnotesize \NWlink{nuweb13a}{13a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Incidence chain computation\nobreak\ {\footnotesize \NWlink{nuweb18a}{18a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb23}{23}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb24a}{24a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb31}{31}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Incidence chain computation\nobreak\ {\footnotesize \NWlink{nuweb18b}{18b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb24a}{24a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb24b}{24b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb32}{32}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@if __name__ == "__main__": @\\
 \mbox{}\verb@   @\hbox{$\langle\,$Test examples\nobreak\ {\footnotesize \NWlink{nuweb34b}{34b}}$\,\rangle$}\verb@@\\
@@ -2012,7 +2043,7 @@ The variables in the following script have the meaning specified below:
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap58}
+\begin{flushleft} \small \label{scrap59}
 \protect\makebox[0ex][r]{\NWtarget{nuweb34b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples\nobreak\ {\footnotesize 34b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2024,8 +2055,8 @@ The variables in the following script have the meaning specified below:
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWlink{nuweb6b}{6b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb9c}{9c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb19}{19}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb21}{21}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb20b}{20b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb21c}{21c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb11b}{11b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb11a}{11a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
@@ -2041,7 +2072,7 @@ The variables in the following script have the meaning specified below:
 \paragraph{Comparing oriented and unoriented boundary}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap59}
+\begin{flushleft} \small \label{scrap60}
 \protect\makebox[0ex][r]{\NWtarget{nuweb35a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test09.py"@\nobreak\ {\footnotesize 35a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2067,7 +2098,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap60}
+\begin{flushleft} \small \label{scrap61}
 \protect\makebox[0ex][r]{\NWtarget{nuweb35b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test12.py"@\nobreak\ {\footnotesize 35b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2100,7 +2131,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap61}
+\begin{minipage}{\linewidth} \label{scrap62}
 \protect\makebox[0ex][r]{\NWtarget{nuweb36a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test01.py"@\nobreak\ {\footnotesize 36a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2126,7 +2157,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap62}
+\begin{flushleft} \small \label{scrap63}
 \protect\makebox[0ex][r]{\NWtarget{nuweb36b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize 36b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2146,7 +2177,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap63}
+\begin{flushleft} \small \label{scrap64}
 \protect\makebox[0ex][r]{\NWtarget{nuweb36c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$characteristic matrices\nobreak\ {\footnotesize 36c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2166,7 +2197,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap64}
+\begin{flushleft} \small \label{scrap65}
 \protect\makebox[0ex][r]{\NWtarget{nuweb36d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$incidence matrix\nobreak\ {\footnotesize 36d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2184,7 +2215,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap65}
+\begin{flushleft} \small \label{scrap66}
 \protect\makebox[0ex][r]{\NWtarget{nuweb37a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize 37a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2204,7 +2235,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap66}
+\begin{flushleft} \small \label{scrap67}
 \protect\makebox[0ex][r]{\NWtarget{nuweb37b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$product of cell complexes\nobreak\ {\footnotesize 37b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2229,7 +2260,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap67}
+\begin{flushleft} \small \label{scrap68}
 \protect\makebox[0ex][r]{\NWtarget{nuweb37c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize 37c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2254,7 +2285,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap68}
+\begin{flushleft} \small \label{scrap69}
 \protect\makebox[0ex][r]{\NWtarget{nuweb37d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize 37d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2279,7 +2310,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap69}
+\begin{flushleft} \small \label{scrap70}
 \protect\makebox[0ex][r]{\NWtarget{nuweb38a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$0-coboundary computation\nobreak\ {\footnotesize 38a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2303,7 +2334,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap70}
+\begin{flushleft} \small \label{scrap71}
 \protect\makebox[0ex][r]{\NWtarget{nuweb38b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-coboundary computation\nobreak\ {\footnotesize 38b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2323,7 +2354,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap71}
+\begin{flushleft} \small \label{scrap72}
 \protect\makebox[0ex][r]{\NWtarget{nuweb38c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-coboundary computation\nobreak\ {\footnotesize 38c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2344,7 +2375,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap72}
+\begin{flushleft} \small \label{scrap73}
 \protect\makebox[0ex][r]{\NWtarget{nuweb38d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize 38d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2368,7 +2399,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap73}
+\begin{minipage}{\linewidth} \label{scrap74}
 \protect\makebox[0ex][r]{\NWtarget{nuweb39a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test02.py"@\nobreak\ {\footnotesize 39a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2382,7 +2413,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap74}
+\begin{flushleft} \small \label{scrap75}
 \protect\makebox[0ex][r]{\NWtarget{nuweb39b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize 39b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2424,7 +2455,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap75}
+\begin{minipage}{\linewidth} \label{scrap76}
 \protect\makebox[0ex][r]{\NWtarget{nuweb39c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test03.py"@\nobreak\ {\footnotesize 39c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2441,7 +2472,7 @@ The variables in the following script have the meaning specified below:
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap76}
+\begin{flushleft} \small \label{scrap77}
 \protect\makebox[0ex][r]{\NWtarget{nuweb39d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing external modules\nobreak\ {\footnotesize 39d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2462,7 +2493,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap77}
+\begin{flushleft} \small \label{scrap78}
 \protect\makebox[0ex][r]{\NWtarget{nuweb40a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize 40a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2486,7 +2517,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap78}
+\begin{flushleft} \small \label{scrap79}
 \protect\makebox[0ex][r]{\NWtarget{nuweb40b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize 40b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2507,7 +2538,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap79}
+\begin{flushleft} \small \label{scrap80}
 \protect\makebox[0ex][r]{\NWtarget{nuweb40c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize 40c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2530,7 +2561,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap80}
+\begin{minipage}{\linewidth} \label{scrap81}
 \protect\makebox[0ex][r]{\NWtarget{nuweb40d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test04.py"@\nobreak\ {\footnotesize 40d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2546,7 +2577,7 @@ The variables in the following script have the meaning specified below:
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap81}
+\begin{flushleft} \small \label{scrap82}
 \protect\makebox[0ex][r]{\NWtarget{nuweb41a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize 41a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2566,7 +2597,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap82}
+\begin{flushleft} \small \label{scrap83}
 \protect\makebox[0ex][r]{\NWtarget{nuweb41b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize 41b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2584,7 +2615,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap83}
+\begin{flushleft} \small \label{scrap84}
 \protect\makebox[0ex][r]{\NWtarget{nuweb41c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize 41c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2609,7 +2640,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap84}
+\begin{minipage}{\linewidth} \label{scrap85}
 \protect\makebox[0ex][r]{\NWtarget{nuweb41d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test05.py"@\nobreak\ {\footnotesize 41d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2627,7 +2658,7 @@ The variables in the following script have the meaning specified below:
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap85}
+\begin{flushleft} \small \label{scrap86}
 \protect\makebox[0ex][r]{\NWtarget{nuweb41e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize 41e}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2650,7 +2681,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap86}
+\begin{flushleft} \small \label{scrap87}
 \protect\makebox[0ex][r]{\NWtarget{nuweb42a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize 42a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2672,7 +2703,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap87}
+\begin{flushleft} \small \label{scrap88}
 \protect\makebox[0ex][r]{\NWtarget{nuweb42b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize 42b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2695,7 +2726,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap88}
+\begin{minipage}{\linewidth} \label{scrap89}
 \protect\makebox[0ex][r]{\NWtarget{nuweb42c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test06.py"@\nobreak\ {\footnotesize 42c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2724,7 +2755,7 @@ The variables in the following script have the meaning specified below:
 \end{figure}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap89}
+\begin{flushleft} \small \label{scrap90}
 \protect\makebox[0ex][r]{\NWtarget{nuweb42d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize 42d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2746,7 +2777,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap90}
+\begin{flushleft} \small \label{scrap91}
 \protect\makebox[0ex][r]{\NWtarget{nuweb43a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize 43a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2770,7 +2801,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap91}
+\begin{flushleft} \small \label{scrap92}
 \protect\makebox[0ex][r]{\NWtarget{nuweb43b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize 43b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2789,7 +2820,7 @@ The variables in the following script have the meaning specified below:
 
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap92}
+\begin{flushleft} \small \label{scrap93}
 \protect\makebox[0ex][r]{\NWtarget{nuweb43c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Decompose a permutation into cycles\nobreak\ {\footnotesize 43c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2824,7 +2855,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap93}
+\begin{minipage}{\linewidth} \label{scrap94}
 \protect\makebox[0ex][r]{\NWtarget{nuweb44a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test07.py"@\nobreak\ {\footnotesize 44a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2851,7 +2882,7 @@ The variables in the following script have the meaning specified below:
 \end{figure}
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap94}
+\begin{flushleft} \small \label{scrap95}
 \protect\makebox[0ex][r]{\NWtarget{nuweb44b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize 44b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2870,7 +2901,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap95}
+\begin{flushleft} \small \label{scrap96}
 \protect\makebox[0ex][r]{\NWtarget{nuweb44c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 44c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
@@ -2890,7 +2921,7 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap96}
+\begin{flushleft} \small \label{scrap97}
 \protect\makebox[0ex][r]{\NWtarget{nuweb45}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 45}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item

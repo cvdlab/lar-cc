@@ -214,7 +214,7 @@ class Verts(scipy.ndarray): pass
 @{from myfont import *
 class Struct:
     """ The assembly type of the LAR package """
-    def __init__(self,data=None,name=None):
+    def __init__(self,data=None,name=None,category=None):
         if data==None or data==[]:
             self.body = []
         else:
@@ -224,8 +224,14 @@ class Struct:
             self.name = str(name)
         else:
             self.name = str(id(self))
+        if category != None: 
+            self.category = str(category)
+        else:
+            self.category = "feature"
     def __name__(self):
         return self.name
+    def __category__(self):
+        return self.category
     def __iter__(self):
         return iter(self.body)
     def __len__(self):
