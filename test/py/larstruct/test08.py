@@ -16,6 +16,6 @@ FV = [
 
 dwelling = larApply(t(3,0))(Model((V,FV)))
 print "\n dwelling =",dwelling
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS(dwelling)))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((dwelling.verts,dwelling.cells))))
 plan = Struct([dwelling,s(-1,1),dwelling])
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(evalStruct(plan)))))

@@ -631,15 +631,12 @@ Since faces in the space partition induced by overlaping 3-coverings are $(d-1)$
 \paragraph{Oriented cycle of vertices from a 1-cycle of unoriented edges}
 The below \texttt{edgeCycleOrientation} is used to transform a list of unoriented edges, know to correspond to a closed but unoriented 1-cycle, into a 0-cycle, to be easily transformed into an \emph{oriented 1-cycle} by taking pairwise every two adjacent nodes, included the lat and the first to close the cycle.
 
-
-arcs = [[1,2],[0,2],[1,5],[4,6],[7,8],[1,5],[0,5],[2,5],[4,7],[6,8]]
-
 %-------------------------------------------------------------------------------
 @D Oriented cycle of vertices from a 1-cycle of unoriented edges
 @{""" Oriented cycle of vertices from a 1-cycle of unoriented edges """
 def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
     previous_cb = cb
-    def theNext0(previous_edge,face):
+    def theNext0(previous_edge,face,faceOrientations):
         cbe = copy.copy(cb)
         edges = list(set(FE[face]).intersection(cbe)) #difference(cbe))
         if edges==[]: 
@@ -658,10 +655,51 @@ def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
         nextFaceBoundary = set(FE[nextFace])
         cbe = nextFaceBoundary.symmetric_difference(cbe)
         orientedEdges = boundaryCycles(list(cbe), EV)
-        return orientedEdges,nextFace,edge
+        print "orientedEdges =",orientedEdges
+        orientedFaceEdges = boundaryCycles(FE[nextFace],EV)
+        print "orientedFaceEdges =",orientedFaceEdges
+        print "nextFace =",nextFace
+        print "faceOrientations =",faceOrientations
+        
+        faceOrientations = checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges, faceOrientations,nextFace)
+
+        return orientedEdges,nextFace,edge,faceOrientations
     return theNext0
 @}
 %-------------------------------------------------------------------------------
+
+
+\paragraph{Check and store the orientation of faces}
+
+%-------------------------------------------------------------------------------
+@D Check and store the orientation of faces
+@{""" Check and store the orientation of faces """
+def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
+    list2 = CAT(orientedFaceEdges)
+    if orientedEdges != []:
+        list1 = CAT(orientedEdges)
+    else: list1 = CAT(previousOrientedEdges)
+    theList = set(list1).intersection(set(list2).union((lambda args:[-arg for arg in args])(list2)))
+    if theList==set() or orientedEdges==[]:
+        theList = set(CAT(orientedFaceEdges))
+    edge = list(theList)[0]
+    if theList.issubset(list1):  # equal signs
+        if faceOrientations[face][0] == None:
+            faceOrientations[face][0] = edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = edge
+        else: print "error: faceOrientations"
+    elif not theList.issubset(list1): # different signs
+        if faceOrientations[face][0] == None: 
+            faceOrientations[face][0] = -edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = -edge
+        else: print "error: faceOrientations"
+    else: print "error: checkOrientation"
+    return faceOrientations
+@}
+%-------------------------------------------------------------------------------
+
 
 \subsection{Progressive reconstruction of 3-cell boundaries}
 
@@ -716,16 +754,6 @@ def cycles2permutation(cycles):
 
 
 
-\paragraph{Composition of edge cycles}
-
-%-------------------------------------------------------------------------------
-@D Composition of edge cycles
-@{""" Composition of edge cycles """
-
-@}
-%-------------------------------------------------------------------------------
-
-
 
 
 \paragraph{The 3-cell traversal algorithm}
@@ -749,6 +777,7 @@ def firstSearch(visited,FE):
 def facesFromComponents(model):
     V,FV,EV = model
     CV,CF,CE = [],[],[]
+    faceOrientations = [[None,None] for k in range(len(FV))]
     EF_angle = faceSlopeOrdering(model)
     csrEF = ordered_csrEF(EF_angle)
     FE = crossRelation(FV,EV)
@@ -758,6 +787,8 @@ def facesFromComponents(model):
     cb = set(FE[face])
     previous_cb = set(FE[face])
     orientedEdges = boundaryCycles(list(cb),EV)
+    print "\norientedEdges,face,edge =",orientedEdges,face,edge
+    faceOrientations[face][0] = orientedEdges[0][0]
     ce = set([edge])
     cf = set([face])
     while True:
@@ -766,7 +797,10 @@ def facesFromComponents(model):
             #break
         elif cb != set():  
             previousOrientedEdges = orientedEdges
-            orientedEdges,face,edge = theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf)(edge,face)
+            orientedEdges,face,edge,faceOrientations = theNext(FE,EF_angle,EV, cb,previous_cb, previousOrientedEdges,cf)(edge,face,faceOrientations)
+            print "\norientedEdges,face,edge =",orientedEdges,face,edge
+            for k,orientation in enumerate(faceOrientations):
+                print k,orientation
 
             cv = cv.union(FV[face])
             edges = FE[face]
@@ -783,8 +817,26 @@ def facesFromComponents(model):
             CE += [ce] ## ERRORE
             face,edge,e = firstSearch(visitedFE,FE)
             cv,cb,ce, cf = set(FV[face]),set(FE[face]),set([edge]),set([face])
-            orientedEdges = boundaryCicles(list(cb),EV)
+            orientedEdges = boundaryCycles(list(cb),EV)
+            if faceOrientations[face][0] == orientedEdges[0][0]:
+                orientedEdges = reverseOrientation(orientedEdges)
+            faceOrientations[face][1] = orientedEdges[0][0]
     return V,CV,FV,EV
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Face orientations storage}
+
+In order to correctly accomplish the extraction of 3-cells from the 2-complex partition of the arguments' space, it is necessary to use twice every 2-face, belonging with opposite orientations to the boundaries of two adjacent 3-cells. The array \texttt{faceOrientations}, initializated to $n\times 2$ zeros, with $n$ equal to the number of 2-cells, is so used to store the orientations of faces considered as 2-cycles of edges. 
+
+In particular, the orientation of the 2-face is equivalent to the embedded orientation of one of its edges, corresponding either to the intrinsic orientation of this one, or to its opposite orientation. Hence, every time a face is used during the extraction of a 3-cell, (the elementary 1-chain of) one of its oriented edges is stored in \texttt{faceOrientations}, to remember its orientation, and eventually reverse the orientation of the face the next time it is used again. At the very end of the extraction algorithm, all the faces must be used twice, with opposite orientations. 
+
+%-------------------------------------------------------------------------------
+@D Face orientations storage
+@{""" Face orientations storage """
+def reverseOrientation(chain):
+    return [REVERSE([-cell for cell in cycle]) for cycle in chain]
 @}
 %-------------------------------------------------------------------------------
 
@@ -827,9 +879,11 @@ DEBUG = True
 @< Cells from $(d-1)$-dimensional LAR model @>
 @< Edge cycles associated to a closed chain of edges @>
 @< Permutation of edges defined by edge cycles @>
+@< Face orientations storage @>
+@< Check and store the orientation of faces @>
 @}
 %-------------------------------------------------------------------------------
-
+    
 %===============================================================================
 \section{Test examples}
 %===============================================================================

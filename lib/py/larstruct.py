@@ -72,7 +72,6 @@ def larEmbed(k):
 def larApply(affineMatrix):
     def larApply0(model):
         if isinstance(model,Model):
-            # V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
             V = scipy.dot(array([v+[1.0] for v in model.verts]), affineMatrix.T).tolist()
             V = [v[:-1] for v in V]
             CV = copy.copy(model.cells)
@@ -116,6 +115,8 @@ def checkStruct(lst):
     obj = lst[0]
     if (isinstance(obj,tuple) or isinstance(obj,list)):
         dim = len(obj[0][0])
+    elif isinstance(obj,Model): 
+        dim = obj.n    
     elif isinstance(obj,Mat): 
         dim = obj.shape[0]-1    
     elif isinstance(obj,Struct): 

@@ -367,7 +367,7 @@ def faceSlopeOrdering(model):
 """ Oriented cycle of vertices from a 1-cycle of unoriented edges """
 def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
     previous_cb = cb
-    def theNext0(previous_edge,face):
+    def theNext0(previous_edge,face,faceOrientations):
         cbe = copy.copy(cb)
         edges = list(set(FE[face]).intersection(cbe)) #difference(cbe))
         if edges==[]: 
@@ -386,7 +386,15 @@ def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
         nextFaceBoundary = set(FE[nextFace])
         cbe = nextFaceBoundary.symmetric_difference(cbe)
         orientedEdges = boundaryCycles(list(cbe), EV)
-        return orientedEdges,nextFace,edge
+        print "orientedEdges =",orientedEdges
+        orientedFaceEdges = boundaryCycles(FE[nextFace],EV)
+        print "orientedFaceEdges =",orientedFaceEdges
+        print "nextFace =",nextFace
+        print "faceOrientations =",faceOrientations
+        
+        faceOrientations = checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges, faceOrientations,nextFace)
+
+        return orientedEdges,nextFace,edge,faceOrientations
     return theNext0
 
 """ Ordered incidence relationship of edges and faces """
@@ -424,6 +432,7 @@ def firstSearch(visited,FE):
 def facesFromComponents(model):
     V,FV,EV = model
     CV,CF,CE = [],[],[]
+    faceOrientations = [[None,None] for k in range(len(FV))]
     EF_angle = faceSlopeOrdering(model)
     csrEF = ordered_csrEF(EF_angle)
     FE = crossRelation(FV,EV)
@@ -433,6 +442,8 @@ def facesFromComponents(model):
     cb = set(FE[face])
     previous_cb = set(FE[face])
     orientedEdges = boundaryCycles(list(cb),EV)
+    print "\norientedEdges,face,edge =",orientedEdges,face,edge
+    faceOrientations[face][0] = orientedEdges[0][0]
     ce = set([edge])
     cf = set([face])
     while True:
@@ -441,7 +452,10 @@ def facesFromComponents(model):
             #break
         elif cb != set():  
             previousOrientedEdges = orientedEdges
-            orientedEdges,face,edge = theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf)(edge,face)
+            orientedEdges,face,edge,faceOrientations = theNext(FE,EF_angle,EV, cb,previous_cb, previousOrientedEdges,cf)(edge,face,faceOrientations)
+            print "\norientedEdges,face,edge =",orientedEdges,face,edge
+            for k,orientation in enumerate(faceOrientations):
+                print k,orientation
 
             cv = cv.union(FV[face])
             edges = FE[face]
@@ -458,7 +472,10 @@ def facesFromComponents(model):
             CE += [ce] ## ERRORE
             face,edge,e = firstSearch(visitedFE,FE)
             cv,cb,ce, cf = set(FV[face]),set(FE[face]),set([edge]),set([face])
-            orientedEdges = boundaryCicles(list(cb),EV)
+            orientedEdges = boundaryCycles(list(cb),EV)
+            if faceOrientations[face][0] == orientedEdges[0][0]:
+                orientedEdges = reverseOrientation(orientedEdges)
+            faceOrientations[face][1] = orientedEdges[0][0]
     return V,CV,FV,EV
 
 """ Edge cycles associated to a closed chain of edges """
@@ -493,4 +510,33 @@ def cycles2permutation(cycles):
     next = dict(next)
     sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
     return sign,next
+
+""" Face orientations storage """
+def reverseOrientation(chain):
+    return [REVERSE([-cell for cell in cycle]) for cycle in chain]
+
+""" Check and store the orientation of faces """
+def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
+    list2 = CAT(orientedFaceEdges)
+    if orientedEdges != []:
+        list1 = CAT(orientedEdges)
+    else: list1 = CAT(previousOrientedEdges)
+    theList = set(list1).intersection(set(list2).union((lambda args:[-arg for arg in args])(list2)))
+    if theList==set() or orientedEdges==[]:
+        theList = set(CAT(orientedFaceEdges))
+    edge = list(theList)[0]
+    if theList.issubset(list1):  # equal signs
+        if faceOrientations[face][0] == None:
+            faceOrientations[face][0] = edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = edge
+        else: print "error: faceOrientations"
+    elif not theList.issubset(list1): # different signs
+        if faceOrientations[face][0] == None: 
+            faceOrientations[face][0] = -edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = -edge
+        else: print "error: faceOrientations"
+    else: print "error: checkOrientation"
+    return faceOrientations
 

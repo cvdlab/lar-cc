@@ -75,7 +75,6 @@ First we state the general rules that will be satisfied by the matrices used in 
 @{def larApply(affineMatrix):
     def larApply0(model):
         if isinstance(model,Model):
-            # V = scipy.dot([v.tolist()+[1.0] for v in model.verts], affineMatrix.T).tolist()
             V = scipy.dot(array([v+[1.0] for v in model.verts]), affineMatrix.T).tolist()
             V = [v[:-1] for v in V]
             CV = copy.copy(model.cells)
@@ -522,6 +521,8 @@ def checkStruct(lst):
     obj = lst[0]
     if (isinstance(obj,tuple) or isinstance(obj,list)):
         dim = len(obj[0][0])
+    elif isinstance(obj,Model): 
+        dim = obj.n    
     elif isinstance(obj,Mat): 
         dim = obj.shape[0]-1    
     elif isinstance(obj,Struct): 
@@ -718,7 +719,7 @@ import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 from larstruct import *
 square = larCuboids([1,1])
-square = Model(square)
+#square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
 chair = larApply( s(.35,.35) )(table)
 chair = larApply( t(.75, 0) )(chair)
@@ -738,7 +739,7 @@ import sys; sys.path.insert(0, 'lib/py/')
 from largrid import *
 from larstruct import *
 square = larCuboids([1,1])
-square = Model(square)
+#square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
 chair = Struct([ t(.75, 0), s(.35,.35), table ])
 struct = Struct( [t(2,1)] + [table] + 4*[r(PI/2), chair])
@@ -756,7 +757,7 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 @< Input of LAR architectural plan @>
 dwelling = larApply(t(3,0))(Model((V,FV)))
 print "\n dwelling =",dwelling
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS(dwelling)))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((dwelling.verts,dwelling.cells))))
 plan = Struct([dwelling,s(-1,1),dwelling])
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(evalStruct(plan)))))
 @}
