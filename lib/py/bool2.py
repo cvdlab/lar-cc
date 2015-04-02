@@ -367,13 +367,15 @@ def faceSlopeOrdering(model):
 """ Oriented cycle of vertices from a 1-cycle of unoriented edges """
 def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
     previous_cb = cb
-    def theNext0(previous_edge,face,faceOrientations):
+    def theNext0(previous_edge,face):
         cbe = copy.copy(cb)
         edges = list(set(FE[face]).intersection(cbe)) #difference(cbe))
         if edges==[]: 
             edges = list(cbe)
             face = list(set(EF_angle[edges[0]]).intersection(cf))[0]
-        signs,next = cycles2permutation(previousOrientedEdges)
+        if type(previousOrientedEdges[0])!=list:
+            signs,next = cycles2permutation([previousOrientedEdges])
+        else: signs,next = cycles2permutation(previousOrientedEdges)
         edge = edges[0]
         edgeOrientation = signs[edge]
         edgeFaces = EF_angle[edge]
@@ -383,18 +385,9 @@ def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
         elif edgeOrientation == -1:
             ind = (edgeFaces.index(face) - 1)%n
         nextFace = edgeFaces[ind]
-        nextFaceBoundary = set(FE[nextFace])
-        cbe = nextFaceBoundary.symmetric_difference(cbe)
-        orientedEdges = boundaryCycles(list(cbe), EV)
-        print "orientedEdges =",orientedEdges
-        orientedFaceEdges = boundaryCycles(FE[nextFace],EV)
-        print "orientedFaceEdges =",orientedFaceEdges
-        print "nextFace =",nextFace
-        print "faceOrientations =",faceOrientations
-        
-        faceOrientations = checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges, faceOrientations,nextFace)
-
-        return orientedEdges,nextFace,edge,faceOrientations
+        nextFaceBoundary = list(set(FE[nextFace]))
+        orientedEdges = cyclesOrientation(previousOrientedEdges,nextFaceBoundary,EV)
+        return orientedEdges,nextFace,edge
     return theNext0
 
 """ Ordered incidence relationship of edges and faces """
@@ -432,6 +425,7 @@ def firstSearch(visited,FE):
 def facesFromComponents(model):
     V,FV,EV = model
     CV,CF,CE = [],[],[]
+    orientedEdges = []
     faceOrientations = [[None,None] for k in range(len(FV))]
     EF_angle = faceSlopeOrdering(model)
     csrEF = ordered_csrEF(EF_angle)
@@ -441,9 +435,9 @@ def facesFromComponents(model):
     cv = set(FV[face])
     cb = set(FE[face])
     previous_cb = set(FE[face])
-    orientedEdges = boundaryCycles(list(cb),EV)
-    print "\norientedEdges,face,edge =",orientedEdges,face,edge
+    orientedEdges = boundaryCycles(orientedEdges,list(cb),EV,FE[face])
     faceOrientations[face][0] = orientedEdges[0][0]
+    print "\norientedEdges,face,edge =",orientedEdges,face,edge
     ce = set([edge])
     cf = set([face])
     while True:
@@ -452,11 +446,10 @@ def facesFromComponents(model):
             #break
         elif cb != set():  
             previousOrientedEdges = orientedEdges
-            orientedEdges,face,edge,faceOrientations = theNext(FE,EF_angle,EV, cb,previous_cb, previousOrientedEdges,cf)(edge,face,faceOrientations)
+            orientedEdges,face,edge = theNext(FE,EF_angle,EV, cb,previous_cb, previousOrientedEdges,cf)(edge,face)
             print "\norientedEdges,face,edge =",orientedEdges,face,edge
-            for k,orientation in enumerate(faceOrientations):
-                print k,orientation
-
+            faceOrientations = storeFaceEdge(orientedEdges,face,edge,faceOrientations)
+            print "\nfaceOrientations =",faceOrientations
             cv = cv.union(FV[face])
             edges = FE[face]
             cb_union = cb.union(edges)
@@ -472,14 +465,11 @@ def facesFromComponents(model):
             CE += [ce] ## ERRORE
             face,edge,e = firstSearch(visitedFE,FE)
             cv,cb,ce, cf = set(FV[face]),set(FE[face]),set([edge]),set([face])
-            orientedEdges = boundaryCycles(list(cb),EV)
-            if faceOrientations[face][0] == orientedEdges[0][0]:
-                orientedEdges = reverseOrientation(orientedEdges)
-            faceOrientations[face][1] = orientedEdges[0][0]
+            orientedEdges = boundaryCycles(orientedEdges,list(cb),EV,FE[face])
     return V,CV,FV,EV
 
 """ Edge cycles associated to a closed chain of edges """
-def boundaryCycles(edgeBoundary,EV):
+def boundaryCycles(orientedEdges,edgeBoundary,EV,nextFaceBoundary):
     verts2edges = defaultdict(list)
     for e in edgeBoundary:
         verts2edges[EV[e][0]] += [e]
@@ -511,9 +501,40 @@ def cycles2permutation(cycles):
     sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
     return sign,next
 
+""" Cycles orientation """
+def cyclesOrientation(pcycles,fcycle,EV):
+    ofcycle = boundaryCycles(fcycle,fcycle,EV,[])[0] # oriented 
+    fsign = dict(zip(AA(ABS)(ofcycle),AA(SIGN)(ofcycle)))
+    if type(pcycles[0])!=list: pcycles = [pcycles]
+    psign = dict(zip(AA(ABS)(CAT(pcycles)),AA(SIGN)(CAT(pcycles))))
+    pcycle = set(AA(ABS)(CAT(pcycles)))
+    intersectChain = list(pcycle.intersection(AA(abs)(ofcycle)))
+    if intersectChain[0] in CAT(pcycles): commonEdge = intersectChain[0]
+    else: commonEdge = -intersectChain[0]
+    if commonEdge in ofcycle: ofcycle = REVERSE(ofcycle)
+    outcycles = pcycles + [ofcycle]
+    xorChain = list(pcycle.symmetric_difference(AA(abs)(ofcycle)))
+    outChain = [fsign[e]*e if e in fsign else psign[e]*e  for e in xorChain]    
+    return outChain
+
+if __name__ == "__main__":
+    pcycles = [[-19, 13, 22, 23]]
+    fcycle = [30, 20, 18, 2, 26, 19]
+    cyclesOrientation(pcycles,fcycle)
+
 """ Face orientations storage """
 def reverseOrientation(chain):
     return [REVERSE([-cell for cell in cycle]) for cycle in chain]
+
+""" Storing the cell-face-edge relation """
+def storeFaceEdge(orientedEdges,face,edge,faceOrientations):
+    for k,e in enumerate(orientedEdges):
+        if e==edge or ABS(e)==edge: break
+        if faceOrientations[face][0]==None: 
+            faceOrientations[face][0] = e
+        else: faceOrientations[face][1] = e
+        break
+    return faceOrientations
 
 """ Check and store the orientation of faces """
 def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
