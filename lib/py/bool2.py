@@ -415,28 +415,31 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
 """ Cells from $(d-1)$-dimensional LAR model """
 
 def firstSearch(visited,FE):
-    for f,edges in enumerate(visited):
-        for e,edge in enumerate(edges):
-            if visited[f][e] == 0:
-                visited[f][e] = 1
-                return f,FE[f][e],e
+    for f in range(len(FE)):
+        face = FE[f]
+        e = face[0]
+        if visited[f][0] == None: 
+            visited[f][0] = e
+            return f,e
+        elif visited[f][1] == None: 
+            e = -e
+            visited[f][1] = e
+            return f,e
     return -1,-1
 
 def facesFromComponents(model):
     V,FV,EV = model
     CV,CF,CE = [],[],[]
     orientedEdges = []
-    faceOrientations = [[None,None] for k in range(len(FV))]
     EF_angle = faceSlopeOrdering(model)
     csrEF = ordered_csrEF(EF_angle)
     FE = crossRelation(FV,EV)
-    visitedFE = [[0 for edge in face] for face in FE]
-    face,edge,e = firstSearch(visitedFE,FE)
+    visitedCell = [[None,None] for k in range(len(FV))]
+    face,edge = firstSearch(visitedCell,FE)
     cv = set(FV[face])
     cb = set(FE[face])
     previous_cb = set(FE[face])
-    orientedEdges = boundaryCycles(orientedEdges,list(cb),EV,FE[face])
-    faceOrientations[face][0] = orientedEdges[0][0]
+    orientedEdges = boundaryCycles(list(cb),EV)
     print "\norientedEdges,face,edge =",orientedEdges,face,edge
     ce = set([edge])
     cf = set([face])
@@ -448,28 +451,45 @@ def facesFromComponents(model):
             previousOrientedEdges = orientedEdges
             orientedEdges,face,edge = theNext(FE,EF_angle,EV, cb,previous_cb, previousOrientedEdges,cf)(edge,face)
             print "\norientedEdges,face,edge =",orientedEdges,face,edge
-            faceOrientations = storeFaceEdge(orientedEdges,face,edge,faceOrientations)
-            print "\nfaceOrientations =",faceOrientations
             cv = cv.union(FV[face])
             edges = FE[face]
             cb_union = cb.union(edges)
             cb_intersection = cb.intersection(edges)
             previous_cb = cb
             cb = cb_union.difference(cb_intersection) 
-            visitedFE[face][e] = 1  # ???
+            edge = boundaryCycles(FE[face],EV)[0][0]
+            if visitedCell[face][0]==None: visitedCell[face][0] = edge
+            elif visitedCell[face][0]!=None: visitedCell[face][1] = -edge  
             ce = ce.union(edges)
             cf = cf.union([face])
         else:
             CV += [cv]
             CF += [cf]
             CE += [ce] ## ERRORE
-            face,edge,e = firstSearch(visitedFE,FE)
+            if orientedEdges==[]:
+                orientedEdges,face,edge = startCell(visitedCell,FE,EV)
+            #face,edge = firstSearch(visitedCell,FE)
             cv,cb,ce, cf = set(FV[face]),set(FE[face]),set([edge]),set([face])
-            orientedEdges = boundaryCycles(orientedEdges,list(cb),EV,FE[face])
+            #orientedEdges = boundaryCycles(list(cb),EV)
     return V,CV,FV,EV
 
+def startCell(visitedCell,FE,EV):
+    for face in range(len(visitedCell)):
+        if any([term==None for term in visitedCell[face]]): break
+    orientedEdges = CAT(boundaryCycles(FE[face],EV))
+    edge = orientedEdges[0]
+    if visitedCell[face][0] == None: 
+        visitedCell[face][0] = edge
+    else: 
+        previousOrientation = visitedCell[face][0]
+        if previousOrientation in orientedEdges:
+            orientedEdges = reverseOrientation([orientedEdges])[0]
+        edge = orientedEdges[0]
+        visitedCell[face][1] = edge
+    return orientedEdges, face, ABS(edge)
+
 """ Edge cycles associated to a closed chain of edges """
-def boundaryCycles(orientedEdges,edgeBoundary,EV,nextFaceBoundary):
+def boundaryCycles(edgeBoundary,EV):
     verts2edges = defaultdict(list)
     for e in edgeBoundary:
         verts2edges[EV[e][0]] += [e]
@@ -503,7 +523,7 @@ def cycles2permutation(cycles):
 
 """ Cycles orientation """
 def cyclesOrientation(pcycles,fcycle,EV):
-    ofcycle = boundaryCycles(fcycle,fcycle,EV,[])[0] # oriented 
+    ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
     fsign = dict(zip(AA(ABS)(ofcycle),AA(SIGN)(ofcycle)))
     if type(pcycles[0])!=list: pcycles = [pcycles]
     psign = dict(zip(AA(ABS)(CAT(pcycles)),AA(SIGN)(CAT(pcycles))))
@@ -525,16 +545,6 @@ if __name__ == "__main__":
 """ Face orientations storage """
 def reverseOrientation(chain):
     return [REVERSE([-cell for cell in cycle]) for cycle in chain]
-
-""" Storing the cell-face-edge relation """
-def storeFaceEdge(orientedEdges,face,edge,faceOrientations):
-    for k,e in enumerate(orientedEdges):
-        if e==edge or ABS(e)==edge: break
-        if faceOrientations[face][0]==None: 
-            faceOrientations[face][0] = e
-        else: faceOrientations[face][1] = e
-        break
-    return faceOrientations
 
 """ Check and store the orientation of faces """
 def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
