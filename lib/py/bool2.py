@@ -7,6 +7,7 @@ from inters import *
 DEBUG = True
 
 """ Coding utilities """
+global count
 """ Generation of a random 3D point """
 def rpoint():
     return eval( vcode([ random.random(), random.random(), random.random() ]) )
@@ -390,16 +391,6 @@ def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
         return orientedEdges,nextFace,edge
     return theNext0
 
-""" Ordered incidence relationship of edges and faces """
-def ordered_csrEF(EF_angle):
-    triples = []
-    for e,ef in enumerate(EF_angle):
-        n = len(ef)
-        for k,face in enumerate(ef):
-            triples += [[e, ef[k], ef[ (k+1)%n ]]]
-    csrEF = triples2mat(triples,shape="csr")
-    return csrEF
-
 """ Edge-triangles to Edge-faces incidence """
 def ET_to_EF_incidence(TW,FW, ET_angle):
     tableFT = [None for k in range(len(FW))]
@@ -409,48 +400,43 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
         t += len(trias)
     tableTF = invertRelation(tableFT)
     EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
-    assert( len(EF_angle) == 2*len(FW) )
+    #assert( len(EF_angle) == 2*len(FW) )
     return EF_angle
 
 """ Cells from $(d-1)$-dimensional LAR model """
 
-def firstSearch(visited,FE):
-    for f in range(len(FE)):
-        face = FE[f]
-        e = face[0]
-        if visited[f][0] == None: 
-            visited[f][0] = e
-            return f,e
-        elif visited[f][1] == None: 
-            e = -e
-            visited[f][1] = e
-            return f,e
-    return -1,-1
-
 def facesFromComponents(model):
+    debug = 1
     V,FV,EV = model
     CV,CF,CE = [],[],[]
     orientedEdges = []
     EF_angle = faceSlopeOrdering(model)
-    csrEF = ordered_csrEF(EF_angle)
     FE = crossRelation(FV,EV)
-    visitedCell = [[None,None] for k in range(len(FV))]
-    face,edge = firstSearch(visitedCell,FE)
+    visitedCell = [[None,None] for k in range(len(FV))]+[0]
+    print "$$$$ count =",visitedCell[-1],0,0,0
+
+    face = 0
+    orientedEdges = CAT(boundaryCycles(FE[face],EV))
+    visitedCell[face][0] = orientedEdges[0]
+    edge = ABS(orientedEdges[0])
+    
     cv = set(FV[face])
     cb = set(FE[face])
     previous_cb = set(FE[face])
-    orientedEdges = boundaryCycles(list(cb),EV)
-    print "\norientedEdges,face,edge =",orientedEdges,face,edge
+    print "\norientedEdges,face,edge,visitedCell[face] =",orientedEdges,face,edge,visitedCell[face]
     ce = set([edge])
     cf = set([face])
-    while True:
+    while debug<35:
+        print "\ncv,cb,ce, cf =",cv,cb,ce, cf
+        debug += 1
         if (face,edge) == (-1,-1):
             print "BREAK"
             #break
         elif cb != set():  
             previousOrientedEdges = orientedEdges
             orientedEdges,face,edge = theNext(FE,EF_angle,EV, cb,previous_cb, previousOrientedEdges,cf)(edge,face)
-            print "\norientedEdges,face,edge =",orientedEdges,face,edge
+            print "\norientedEdges,face,edge,visitedCell[face] =",orientedEdges,face,edge,visitedCell[face]
+            print ">>>> face =",face
             cv = cv.union(FV[face])
             edges = FE[face]
             cb_union = cb.union(edges)
@@ -458,35 +444,26 @@ def facesFromComponents(model):
             previous_cb = cb
             cb = cb_union.difference(cb_intersection) 
             edge = boundaryCycles(FE[face],EV)[0][0]
-            if visitedCell[face][0]==None: visitedCell[face][0] = edge
-            elif visitedCell[face][0]!=None: visitedCell[face][1] = -edge  
+            if visitedCell[face][0]==None: 
+                visitedCell[face][0] = edge
+                visitedCell[-1] += 1
+                print "$$$$ count =",visitedCell[-1],face,edge,0
+            elif visitedCell[face][0]!=None: 
+                visitedCell[face][1] = -edge  
+                visitedCell[-1] += 1
+                print "$$$$ count =",visitedCell[-1],face,-edge,1
+            print "\nvisitedCell =",visitedCell
             ce = ce.union(edges)
             cf = cf.union([face])
         else:
             CV += [cv]
             CF += [cf]
-            CE += [ce] ## ERRORE
+            CE += [ce] 
             if orientedEdges==[]:
-                orientedEdges,face,edge = startCell(visitedCell,FE,EV)
-            #face,edge = firstSearch(visitedCell,FE)
+                visitedCell,orientedEdges,face,edge = startCell(visitedCell,FE,EV)
+                print "\norientedEdges,face,edge,visitedCell[face] =",orientedEdges,face,edge,visitedCell[face]
             cv,cb,ce, cf = set(FV[face]),set(FE[face]),set([edge]),set([face])
-            #orientedEdges = boundaryCycles(list(cb),EV)
-    return V,CV,FV,EV
-
-def startCell(visitedCell,FE,EV):
-    for face in range(len(visitedCell)):
-        if any([term==None for term in visitedCell[face]]): break
-    orientedEdges = CAT(boundaryCycles(FE[face],EV))
-    edge = orientedEdges[0]
-    if visitedCell[face][0] == None: 
-        visitedCell[face][0] = edge
-    else: 
-        previousOrientation = visitedCell[face][0]
-        if previousOrientation in orientedEdges:
-            orientedEdges = reverseOrientation([orientedEdges])[0]
-        edge = orientedEdges[0]
-        visitedCell[face][1] = edge
-    return orientedEdges, face, ABS(edge)
+    return V,CV,FV,EV,CF,CE
 
 """ Edge cycles associated to a closed chain of edges """
 def boundaryCycles(edgeBoundary,EV):
@@ -523,24 +500,37 @@ def cycles2permutation(cycles):
 
 """ Cycles orientation """
 def cyclesOrientation(pcycles,fcycle,EV):
+    print "$$$$$ pcycles,fcycle =",pcycles,fcycle
     ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
-    fsign = dict(zip(AA(ABS)(ofcycle),AA(SIGN)(ofcycle)))
-    if type(pcycles[0])!=list: pcycles = [pcycles]
-    psign = dict(zip(AA(ABS)(CAT(pcycles)),AA(SIGN)(CAT(pcycles))))
-    pcycle = set(AA(ABS)(CAT(pcycles)))
-    intersectChain = list(pcycle.intersection(AA(abs)(ofcycle)))
-    if intersectChain[0] in CAT(pcycles): commonEdge = intersectChain[0]
-    else: commonEdge = -intersectChain[0]
-    if commonEdge in ofcycle: ofcycle = REVERSE(ofcycle)
-    outcycles = pcycles + [ofcycle]
-    xorChain = list(pcycle.symmetric_difference(AA(abs)(ofcycle)))
-    outChain = [fsign[e]*e if e in fsign else psign[e]*e  for e in xorChain]    
+    if type(pcycles[0])==list: opcycle = CAT(pcycles)
+    else: opcycle = pcycles
+    int = set(opcycle).intersection(ofcycle)
+    if int != set(): 
+        ofcycle = CAT(reverseOrientation([ofcycle]))
+    outChain = [e for e in ofcycle if not (-e in opcycle)] 
+    outChain += [e for e in opcycle if not (-e in ofcycle)] 
     return outChain
 
 if __name__ == "__main__":
     pcycles = [[-19, 13, 22, 23]]
     fcycle = [30, 20, 18, 2, 26, 19]
     cyclesOrientation(pcycles,fcycle)
+
+""" Start a new 3-cell """
+def startCell(visitedCell,FE,EV):
+    for face in range(len(visitedCell)):
+        if len([term for term in visitedCell[face] if term==None])==1: 
+            break
+    # visitedCell[face] now contains only one "None"
+    previousOrientation = visitedCell[face][0]
+    orientedEdges = CAT(boundaryCycles(FE[face],EV))
+    if previousOrientation in orientedEdges:
+        orientedEdges = reverseOrientation([orientedEdges])[0]
+    edge = -previousOrientation
+    visitedCell[face][1] = edge
+    visitedCell[-1] += 1
+    print "$$$$ count =",visitedCell[-1],face,edge,1
+    return visitedCell,orientedEdges, face, ABS(edge)
 
 """ Face orientations storage """
 def reverseOrientation(chain):
