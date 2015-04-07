@@ -1022,9 +1022,9 @@ glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 #twoCubes = Struct([cube1,t(-1,.5,1),cube1])     # other test example
-#twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
+twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
 #twoCubes = Struct([cube1,t(.5,.5,0),cube1])    # other test example
-twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
+#twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
 V,FV,EV = struct2lar(twoCubes)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 
@@ -1034,6 +1034,10 @@ hexas = AA(box2exa)(boxes)
 parts = boxBuckets(boxes)
 @}
 %-------------------------------------------------------------------------------
+
+
+def POLYGONS((V,FV)):
+
 
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
@@ -1205,12 +1209,23 @@ model = W,FW,EW
 EF_angle = faceSlopeOrdering(model)
 
 V,CV,FV,EV,CF,CE = facesFromComponents(model)
+triangleSets = boundaryTriangulation(V,FV)
+VIEW(EXPLODE(1.2,1.2,1.2)([STRUCT([MKPOL([tria,[[1,2,3,4]],None]) for tria in triangleSet]) for triangleSet in triangleSets]))
+
 CF = AA(list)(CF)
 CE = AA(list)(CE)
-VIEW(EXPLODE(2,2,2)(MKPOLS((V,[CAT([FV[c] for c in cell]) for cell in CF]))))
 
-VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[EV[c] for c in cell] for cell in [CE[-1]] ]])))  ))
-VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[FV[c] for c in cell] for cell in CF]])))  ))
+VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[EV[c] for c in cell] for cell in CE[:-1] ]])))  ))
+VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[FV[c] for c in cell] for cell in CF ]])))  ))
+
+models = DISTL([V,[[FV[c] for c in cell] for cell in CF ]])
+models = [boundaryTriangulation(*model) for model in models]
+
+def MKCELL(model): 
+	return STRUCT([ STRUCT([MKPOL([tria,[[1,2,3,4]],None]) for tria in triangleSet]) 
+			 for triangleSet in model ])
+
+VIEW(EXPLODE(1.5,1.5,1.5)(AA(MKCELL)([models[0],models[1],models[2]])))
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))

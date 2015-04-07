@@ -9,9 +9,9 @@ glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 #twoCubes = Struct([cube1,t(-1,.5,1),cube1])     # other test example
-#twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
+twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
 #twoCubes = Struct([cube1,t(.5,.5,0),cube1])    # other test example
-twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
+#twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
 V,FV,EV = struct2lar(twoCubes)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 
