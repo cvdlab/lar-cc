@@ -585,6 +585,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
         face = nextFace
     if visitedCell[face][0] == None: visitedCell[face][0] = edge
     else: visitedCell[face][1] = edge    
-    VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
+    if DEBUG:
+        VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
     return cf
 
