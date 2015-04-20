@@ -25,7 +25,7 @@ exec:
 	cp -R $(IDIR)images . 
 	cp $(IDIR)$(NAME).tex $(NAME).w
 	
-	nuweb $(NAME).w
+	nuweb -l $(NAME).w
 
 pdf: $(IDIR)$(NAME).tex
 	make exec

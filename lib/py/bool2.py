@@ -175,7 +175,12 @@ def faceTransformations(facet):
     newFacet = [ VECTDIFF([v,translVector]) for v in facet ]
     # linear transformation: boundaryFacet -> standard (d-1)-simplex
     d = len(facet[0])
-    transformMat = mat( newFacet[1:d] + [covector[1:]] ).T.I
+    m = mat( newFacet[1:d] + [covector[1:]] )
+    if det(m)==0.0:
+        for k in range(len(facet)-2):
+            m = mat( newFacet[1+k+1:d+k+1] + [covector[1:]] )
+            if det(m)!=0.0: break
+    transformMat = m.T.I
     # transformation in the subspace x_d = 0
     out = (transformMat * (mat(newFacet).T)).T.tolist()
     return transformMat
@@ -316,17 +321,6 @@ def orthoProject (e):
 """ Circular ordering of faces around edges """
 from bool1 import invertRelation
 
-def orientFace(v1,v2):
-    def orientFace0(faceVerts):
-        facet = list(faceVerts) + [list(faceVerts)[0]]
-        pairs = [[facet[k],facet[k+1]] for k in range(len(facet[:-1]))]
-        OK = False
-        for pair in pairs:
-            if [v1,v2] == pair: OK = True
-        if OK: return faceVerts
-        else: return REVERSE(faceVerts)
-    return orientFace0
-
 def planeProjection(normals):
     V = mat(normals)
     if all(V[:,0]==0): V = np.delete(V, 0, 1)
@@ -338,30 +332,43 @@ def faceSlopeOrdering(model):
     V,FV,EV = model
     triangleSet = boundaryTriangulation(V,FV)
     TV = triangleIndices(triangleSet,V)
-    TE = crossRelation(CAT(TV),EV)
+    triangleVertices = CAT(TV)
+    TE = crossRelation(triangleVertices,EV)
     ET,ET_angle = invertRelation(TE),[]
     for e,et in enumerate(ET):
         v1,v2 = EV[e]
-        E = UNITVECT(VECTDIFF([V[v2],V[v1]]))
-        refFace = ET[e][0]
+        v1v2 = set([v1,v2])
         et_angle = []
+        t0 = et[0]
+        tverts = [v1,v2] + list(set(triangleVertices[t0]).difference(v1v2))
+        e3 = UNITVECT(VECTDIFF([ V[tverts[1]], V[tverts[0]] ]))
+        e1 = UNITVECT(VECTDIFF([ V[tverts[2]], V[tverts[0]] ]))
+        e2 = cross(array(e1),e3).tolist()
+        basis = mat([e1,e2,e3]).T
+        transform = basis.I
         normals = []
+        Tvs = []
         for triangle in et:
-            theFace = orientFace(v1,v2)(CAT(TV)[triangle])
-            vect1 = array(V[theFace[1]])-V[theFace[0]]
-            vect2 = array(V[theFace[2]])-V[theFace[0]]
-            normals += [cross(vect1,vect2).tolist()]
-        w1,w2 = E,normals[0]
-        w3 = cross(array(w1),w2).tolist()
-        basis = [w1,w2,w3]
-        transform = mat(basis).I
-        mappedNormals = (transform * mat(normals).T).T
-        mappedNormals = planeProjection(mappedNormals)
+            verts = triangleVertices[triangle]
+            vertSet = set(verts).difference(v1v2)
+            tvs = [v1,v2] + list(vertSet)
+            Tvs += [tvs]
+            w1 = UNITVECT(VECTDIFF([ V[tvs[2]], V[tvs[0]] ]))
+            w2 = (transform * mat([w1]).T).T
+            w3 = cross(array([0,0,1]),w2).tolist()[0]
+            normals += [w3]
+        normals = mat(normals)
         for k,t in enumerate(et):
-            angle = math.atan2(mappedNormals[k,1],mappedNormals[k,0])
+            angle = math.atan2(normals[k,1],normals[k,0])
             et_angle += [angle]
-        pairs = sorted(zip(et_angle,et))
-        ET_angle += [[pair[1] for pair in pairs]]
+        pairs = sorted(zip(et_angle,et,Tvs))
+        sortedTrias = [pair[1] for pair in pairs]
+        triasVerts = [pair[2] for pair in pairs]
+        #print "triasVerts =",triasVerts
+        tetraVerts = triasVerts[0]+[triasVerts[1][2]]
+        print det(mat([V[v]+[1] for v in tetraVerts]))
+        #print "tetraVerts =",tetraVerts
+        ET_angle += [sortedTrias]
     EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
     return EF_angle
 
@@ -406,63 +413,41 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
 """ Cells from $(d-1)$-dimensional LAR model """
 
 def facesFromComponents(model):
-    debug = 1
+    # initialization
     V,FV,EV = model
-    CV,CF,CE = [],[],[]
-    orientedEdges = []
+    EV = [EV[0]]+EV
+    model = V,FV,EV
     EF_angle = faceSlopeOrdering(model)
     FE = crossRelation(FV,EV)
-    visitedCell = [[None,None] for k in range(len(FV))]+[0]
-    print "$$$$ count =",visitedCell[-1],0,0,0
-
+    # remove 0 indices from FE relation
+    FE = [[f for f in face if f!=0] for face in FE]
+    visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
-    orientedEdges = CAT(boundaryCycles(FE[face],EV))
-    visitedCell[face][0] = orientedEdges[0]
-    edge = ABS(orientedEdges[0])
+    boundaryLoop = boundaryCycles(FE[face],EV)[0]
+    firstEdge = boundaryLoop[0]
+    cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle)
+    print "cf = ",cf
+    cv,ce = set(),set()
+    cv = cv.union(CAT([FV[f] for f in cf]))
+    ce = ce.union(CAT([FE[f] for f in cf]))
+    CF,CV,CE = [cf],[list(cv)],[list(ce)]
     
-    cv = set(FV[face])
-    cb = set(FE[face])
-    previous_cb = set(FE[face])
-    print "\norientedEdges,face,edge,visitedCell[face] =",orientedEdges,face,edge,visitedCell[face]
-    ce = set([edge])
-    cf = set([face])
-    while debug<35:
-        print "\ncv,cb,ce, cf =",cv,cb,ce, cf
-        debug += 1
-        if (face,edge) == (-1,-1):
-            print "BREAK"
-            #break
-        elif cb != set():  
-            previousOrientedEdges = orientedEdges
-            orientedEdges,face,edge = theNext(FE,EF_angle,EV, cb,previous_cb, previousOrientedEdges,cf)(edge,face)
-            print "\norientedEdges,face,edge,visitedCell[face] =",orientedEdges,face,edge,visitedCell[face]
-            print ">>>> face =",face
-            cv = cv.union(FV[face])
-            edges = FE[face]
-            cb_union = cb.union(edges)
-            cb_intersection = cb.intersection(edges)
-            previous_cb = cb
-            cb = cb_union.difference(cb_intersection) 
-            edge = boundaryCycles(FE[face],EV)[0][0]
-            if visitedCell[face][0]==None: 
-                visitedCell[face][0] = edge
-                visitedCell[-1] += 1
-                print "$$$$ count =",visitedCell[-1],face,edge,0
-            elif visitedCell[face][0]!=None: 
-                visitedCell[face][1] = -edge  
-                visitedCell[-1] += 1
-                print "$$$$ count =",visitedCell[-1],face,-edge,1
-            print "\nvisitedCell =",visitedCell
-            ce = ce.union(edges)
-            cf = cf.union([face])
-        else:
-            CV += [cv]
-            CF += [cf]
-            CE += [ce] 
-            if orientedEdges==[]:
-                visitedCell,orientedEdges,face,edge = startCell(visitedCell,FE,EV)
-                print "\norientedEdges,face,edge,visitedCell[face] =",orientedEdges,face,edge,visitedCell[face]
-            cv,cb,ce, cf = set(FV[face]),set(FE[face]),set([edge]),set([face])
+    # main loop
+    while True:
+        face, edge = startCell(visitedCell,FE,EV)
+        visitedCell[face][1] = edge
+        if face == -1: break
+        boundaryLoop = boundaryCycles(FE[face],EV)[0]
+        if edge not in boundaryLoop:
+            boundaryLoop = reverseOrientation(boundaryLoop)
+        cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle)
+        print "cf = ",cf
+        CF += [cf]
+        cv,ce = set(),set()
+        cv = cv.union(CAT([FV[f] for f in cf]))
+        ce = ce.union(CAT([FE[f] for f in cf]))
+        CV += [list(cv)]
+        CE += [list(ce)]
     return V,CV,FV,EV,CF,CE
 
 """ Edge cycles associated to a closed chain of edges """
@@ -499,14 +484,14 @@ def cycles2permutation(cycles):
     return sign,next
 
 """ Cycles orientation """
-def cyclesOrientation(pcycles,fcycle,EV):
-    print "$$$$$ pcycles,fcycle =",pcycles,fcycle
+def cyclesOrient(pcycles,fcycle,EV):
+    if set(AA(ABS)(pcycles)).difference(fcycle)==set(): pass #return []
     ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
     if type(pcycles[0])==list: opcycle = CAT(pcycles)
     else: opcycle = pcycles
     int = set(opcycle).intersection(ofcycle)
     if int != set(): 
-        ofcycle = CAT(reverseOrientation([ofcycle]))
+        ofcycle = reverseOrientation(ofcycle)
     outChain = [e for e in ofcycle if not (-e in opcycle)] 
     outChain += [e for e in opcycle if not (-e in ofcycle)] 
     return outChain
@@ -518,23 +503,32 @@ if __name__ == "__main__":
 
 """ Start a new 3-cell """
 def startCell(visitedCell,FE,EV):
+    if len([term for cell in visitedCell for term in cell if term==None])==1: return -1,-1
     for face in range(len(visitedCell)):
-        if len([term for term in visitedCell[face] if term==None])==1: 
+        if len([term for term in visitedCell[face] if term==None])==1:
+            edge = visitedCell[face][0]
+            print "\nface,edge =",face,edge
             break
-    # visitedCell[face] now contains only one "None"
-    previousOrientation = visitedCell[face][0]
-    orientedEdges = CAT(boundaryCycles(FE[face],EV))
-    if previousOrientation in orientedEdges:
-        orientedEdges = reverseOrientation([orientedEdges])[0]
-    edge = -previousOrientation
-    visitedCell[face][1] = edge
-    visitedCell[-1] += 1
-    print "$$$$ count =",visitedCell[-1],face,edge,1
-    return visitedCell,orientedEdges, face, ABS(edge)
+        face,edge = -1,-1
+    return face,edge
 
 """ Face orientations storage """
 def reverseOrientation(chain):
-    return [REVERSE([-cell for cell in cycle]) for cycle in chain]
+    return REVERSE([-cell for cell in chain])
+
+def faceOrientation(boundaryLoop,face,FE,EV,cf):
+    theBoundary = set(AA(ABS)(boundaryLoop))
+    if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): 
+        coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
+        face = coboundaryFaces[0]            
+    faceLoop = boundaryCycles(FE[face],EV)[0]
+    commonEdges = set(faceLoop).intersection(boundaryLoop)
+    if commonEdges == set() or commonEdges == {0}: 
+        faceLoop = reverseOrientation(faceLoop)
+        commonEdges = set(faceLoop).intersection(boundaryLoop)
+    theEdge = list(commonEdges)[0]
+    if theEdge==0: theEdge = list(commonEdges)[1]
+    return -theEdge,face
 
 """ Check and store the orientation of faces """
 def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
@@ -560,4 +554,29 @@ def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceO
         else: print "error: faceOrientations"
     else: print "error: checkOrientation"
     return faceOrientations
+
+""" Get single solid cell """
+def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle):
+    cf = [face] 
+    while boundaryLoop != []:
+        edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
+        print "face,edge",face,edge
+        if visitedCell[face][0] == None: visitedCell[face][0] = edge
+        else: visitedCell[face][1] = edge
+        #if edge == 0: edge = boundaryLoop[1]
+        if edge == 0: edge = boundaryLoop[1]
+        if edge > 0: edgeFaces = EF_angle[edge]
+        elif edge < 0: edgeFaces = REVERSE(EF_angle[-edge])
+        e = ABS(edge)
+        n = len(edgeFaces)
+        ind = (edgeFaces.index(face)+1)%n
+        nextFace = edgeFaces[ind]
+        print "\nnextFace =",nextFace
+        boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
+        print "boundaryLoop =",boundaryLoop
+        cf += [nextFace] 
+        face = nextFace
+    if visitedCell[face][0] == None: visitedCell[face][0] = edge
+    else: visitedCell[face][1] = edge
+    return cf
 
