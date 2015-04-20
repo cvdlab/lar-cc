@@ -33,24 +33,9 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
 theModel = W,FW,EW
 V,CV,FV,EV,CF,CE = facesFromComponents(theModel)
 
-triangleSets = boundaryTriangulation(V,FV)
-VIEW(EXPLODE(1.2,1.2,1.2)([STRUCT([MKPOL([tria,[[1,2,3,4]],None]) for tria in triangleSet]) for triangleSet in triangleSets]))
-
-CF = AA(list)(CF)
-CE = AA(list)(CE)
-
-VIEW(STRUCT(AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[EV[c] for c in cell] for cell in CE[:-1] ]])))  ))
-VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[EV[c] for c in cell] for cell in [CE[-1]] ]])))  ))
-VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[FV[c] for c in cell] for cell in [CF[-1]] ]])))  ))
-
-models = DISTL([V,[[FV[c] for c in cell] for cell in CF ]])
-models = [boundaryTriangulation(*model) for model in models]
-
-def MKCELL(model): 
-    return STRUCT([ STRUCT([MKPOL([tria,[[1,2,3,4]],None]) for tria in triangleSet]) 
-             for triangleSet in model ])
-
-VIEW(EXPLODE(1.5,1.5,1.5)(AA(MKCELL)([model for model in models])))
+VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))
+VIEW(EXPLODE(2,2,2)([ STRUCT(MKTRIANGLES(V,[FV[f] for f in cf])) for cf in [CF[0],CF[1],CF[3]]  ]))
+VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in CF[2]]) ))
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))

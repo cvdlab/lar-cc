@@ -83,6 +83,13 @@ def centroid(boxes,coord):
         delta += (box[a] + box[b])/2
     return delta/n
 
+""" Generation of a list of HPCs from a LAR model with non-convex faces """
+def MKTRIANGLES(*model): 
+    V,FV = model
+    triangleSets = boundaryTriangulation(V,FV)
+    return [ STRUCT([MKPOL([verts,[[1,2,3,4]],None]) for verts in triangledFace]) 
+        for triangledFace in triangleSets ]
+
 
 """ Split the boxes between the below,above subsets """
 def splitOnThreshold(boxes,subset,coord):
@@ -425,7 +432,7 @@ def facesFromComponents(model):
     face = 0
     boundaryLoop = boundaryCycles(FE[face],EV)[0]
     firstEdge = boundaryLoop[0]
-    cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle)
+    cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
     print "cf = ",cf
     cv,ce = set(),set()
     cv = cv.union(CAT([FV[f] for f in cf]))
@@ -440,7 +447,7 @@ def facesFromComponents(model):
         boundaryLoop = boundaryCycles(FE[face],EV)[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
-        cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle)
+        cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
         print "cf = ",cf
         CF += [cf]
         cv,ce = set(),set()
@@ -556,7 +563,7 @@ def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceO
     return faceOrientations
 
 """ Get single solid cell """
-def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle):
+def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
     cf = [face] 
     while boundaryLoop != []:
         edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
@@ -577,6 +584,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle):
         cf += [nextFace] 
         face = nextFace
     if visitedCell[face][0] == None: visitedCell[face][0] = edge
-    else: visitedCell[face][1] = edge
+    else: visitedCell[face][1] = edge    
+    VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
     return cf
 

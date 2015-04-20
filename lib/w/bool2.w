@@ -741,7 +741,7 @@ def facesFromComponents(model):
     face = 0
     boundaryLoop = boundaryCycles(FE[face],EV)[0]
     firstEdge = boundaryLoop[0]
-    cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle)
+    cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
     print "cf = ",cf
     cv,ce = set(),set()
     cv = cv.union(CAT([FV[f] for f in cf]))
@@ -756,7 +756,7 @@ def facesFromComponents(model):
         boundaryLoop = boundaryCycles(FE[face],EV)[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
-        cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle)
+        cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
         print "cf = ",cf
         CF += [cf]
         cv,ce = set(),set()
@@ -820,7 +820,7 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
 %-------------------------------------------------------------------------------
 @D Get single solid cell
 @{""" Get single solid cell """
-def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle):
+def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
     cf = [face] 
     while boundaryLoop != []:
         edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
@@ -841,7 +841,8 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle):
         cf += [nextFace] 
         face = nextFace
     if visitedCell[face][0] == None: visitedCell[face][0] = edge
-    else: visitedCell[face][1] = edge
+    else: visitedCell[face][1] = edge    
+    VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
     return cf
 @}
 %-------------------------------------------------------------------------------
@@ -1277,24 +1278,9 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
 theModel = W,FW,EW
 V,CV,FV,EV,CF,CE = facesFromComponents(theModel)
 
-triangleSets = boundaryTriangulation(V,FV)
-VIEW(EXPLODE(1.2,1.2,1.2)([STRUCT([MKPOL([tria,[[1,2,3,4]],None]) for tria in triangleSet]) for triangleSet in triangleSets]))
-
-CF = AA(list)(CF)
-CE = AA(list)(CE)
-
-VIEW(STRUCT(AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[EV[c] for c in cell] for cell in CE[:-1] ]])))  ))
-VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[EV[c] for c in cell] for cell in [CE[-1]] ]])))  ))
-VIEW(EXPLODE(2,2,2) (AA(STRUCT)(AA(MKPOLS)( DISTL([V,[[FV[c] for c in cell] for cell in [CF[-1]] ]])))  ))
-
-models = DISTL([V,[[FV[c] for c in cell] for cell in CF ]])
-models = [boundaryTriangulation(*model) for model in models]
-
-def MKCELL(model): 
-    return STRUCT([ STRUCT([MKPOL([tria,[[1,2,3,4]],None]) for tria in triangleSet]) 
-             for triangleSet in model ])
-
-VIEW(EXPLODE(1.5,1.5,1.5)(AA(MKCELL)([model for model in models])))
+VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))
+VIEW(EXPLODE(2,2,2)([ STRUCT(MKTRIANGLES(V,[FV[f] for f in cf])) for cf in [CF[0],CF[1],CF[3]]  ]))
+VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in CF[2]]) ))
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))
@@ -1352,6 +1338,20 @@ global count
 @< Containment boxes @>
 @< Transformation of a 3D box into an hexahedron @>
 @< Computation of the 1D centroid of a list of 3D boxes @>
+@< Generation of a list of HPCs from a LAR model with non-convex faces @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Generation of a list of HPCs from a LAR model with non-convex faces}
+
+%-------------------------------------------------------------------------------
+@D Generation of a list of HPCs from a LAR model with non-convex faces
+@{""" Generation of a list of HPCs from a LAR model with non-convex faces """
+def MKTRIANGLES(*model): 
+    V,FV = model
+    triangleSets = boundaryTriangulation(V,FV)
+    return [ STRUCT([MKPOL([verts,[[1,2,3,4]],None]) for verts in triangledFace]) 
+        for triangledFace in triangleSets ]
 @}
 %-------------------------------------------------------------------------------
 
