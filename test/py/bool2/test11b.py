@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool2 import *
 
-V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct(3*[cube1,t(.5,.5,0)])
 
@@ -33,9 +33,13 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
 theModel = W,FW,EW
 V,CV,FV,EV,CF,CE = facesFromComponents(theModel)
 
+CF = list(AA(tuple)(sorted(AA(sorted)(CF))))
+boundaryPosition = CF.index(max(AA(len)(CF)))
+BF = CF[boundaryPosition]
+del CF[boundaryPosition]
 VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))
-VIEW(EXPLODE(2,2,2)([ STRUCT(MKTRIANGLES(V,[FV[f] for f in cf])) for cf in [CF[0],CF[1],CF[3]]  ]))
-VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in CF[2]]) ))
+VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF]) ))
+VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell]) for cell in CF]))
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))

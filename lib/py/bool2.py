@@ -83,12 +83,33 @@ def centroid(boxes,coord):
         delta += (box[a] + box[b])/2
     return delta/n
 
+""" Characteristic matrix transposition """
+def invertRelation(CV):
+   def myMax(List):
+      if List==[]:  return -1
+      else:  return max(List)
+         
+   columnNumber = max(AA(myMax)(CV))+1
+   VC = [[] for k in range(columnNumber)]
+   for k,cell in enumerate(CV):
+      for v in cell: VC[v] += [k]
+   return VC
+
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
 def MKTRIANGLES(*model): 
     V,FV = model
     triangleSets = boundaryTriangulation(V,FV)
-    return [ STRUCT([MKPOL([verts,[[1,2,3,4]],None]) for verts in triangledFace]) 
+    return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
+
+def MKSOLID(*model): 
+    V,FV = model
+    pivot = V[0]
+    VF = invertRelation(FV) 
+    faces = [face for face in FV if face not in VF[0]]
+    triangleSets = boundaryTriangulation(V,faces)
+    return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
+        for face in CAT(triangleSets) ])
 
 
 """ Split the boxes between the below,above subsets """
@@ -326,7 +347,6 @@ def orthoProject (e):
     return orthoProject0
 
 """ Circular ordering of faces around edges """
-from bool1 import invertRelation
 
 def planeProjection(normals):
     V = mat(normals)

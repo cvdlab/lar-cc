@@ -490,7 +490,6 @@ The \texttt{faceSlopeOrdering} function, given in the script below, return the l
 %-------------------------------------------------------------------------------
 @D Slope of edges
 @{""" Circular ordering of faces around edges """
-from bool1 import invertRelation
 
 def planeProjection(normals):
     V = mat(normals)
@@ -1251,7 +1250,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool2 import *
 
-V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct(3*[cube1,@1])
 
@@ -1279,9 +1278,14 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
 theModel = W,FW,EW
 V,CV,FV,EV,CF,CE = facesFromComponents(theModel)
 
+CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
+cellLengths = AA(len)(CF)
+boundaryPosition = cellLengths.index(max(cellLengths))
+BF = CF[boundaryPosition]
+del CF[boundaryPosition]
 VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))
-VIEW(EXPLODE(2,2,2)([ STRUCT(MKTRIANGLES(V,[FV[f] for f in cf])) for cf in [CF[0],CF[1],CF[3]]  ]))
-VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in CF[2]]) ))
+VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF]) ))
+VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell]) for cell in CF]))
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))
@@ -1289,6 +1293,20 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
 @}
 %-------------------------------------------------------------------------------
 
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11a1} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11a2} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11a3} 
+
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b1} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b2} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b3} 
+   \caption{Examples of 3-cell extraction of two simple Boolean 2-complex, and their boundaries. Notice the numbers of (solid) 3-cells.}
+   \label{fig:example}
+\end{figure}
 
 
 \paragraph{Generation of the edge permutation associated to the 1-boundary of a 2-chain}
@@ -1339,7 +1357,31 @@ global count
 @< Containment boxes @>
 @< Transformation of a 3D box into an hexahedron @>
 @< Computation of the 1D centroid of a list of 3D boxes @>
+@< Characteristic matrix transposition @>
 @< Generation of a list of HPCs from a LAR model with non-convex faces @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Relational inversion (characteristic matrix transposition)}
+
+The operation could be executed by simple matrix transposition of the CSR (Compressed Sparse Row) representation of the sparse characteristic matrix $M_d \equiv \texttt{CV}$.
+A simple relational inversion using Python lists is given here. The \texttt{invertRelation} function 
+is given here, linear in the size of the \texttt{CV} list, where the complexity of each cell is constant and 
+small in most cases.
+
+%-------------------------------------------------------------------------------
+@D Characteristic matrix transposition
+@{""" Characteristic matrix transposition """
+def invertRelation(CV):
+	def myMax(List):
+		if List==[]:  return -1
+		else:  return max(List)
+			
+	columnNumber = max(AA(myMax)(CV))+1
+	VC = [[] for k in range(columnNumber)]
+	for k,cell in enumerate(CV):
+		for v in cell: VC[v] += [k]
+	return VC
 @}
 %-------------------------------------------------------------------------------
 
@@ -1351,8 +1393,17 @@ global count
 def MKTRIANGLES(*model): 
     V,FV = model
     triangleSets = boundaryTriangulation(V,FV)
-    return [ STRUCT([MKPOL([verts,[[1,2,3,4]],None]) for verts in triangledFace]) 
+    return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
+
+def MKSOLID(*model): 
+    V,FV = model
+    pivot = V[0]
+    VF = invertRelation(FV) 
+    faces = [face for face in FV if face not in VF[0]]
+    triangleSets = boundaryTriangulation(V,faces)
+    return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
+        for face in CAT(triangleSets) ])
 @}
 %-------------------------------------------------------------------------------
 
