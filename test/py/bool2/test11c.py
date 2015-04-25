@@ -7,7 +7,7 @@ from bool2 import *
 
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
-twoCubes = Struct(3*[cube1,t(.5,0,0)])
+twoCubes = Struct(10*[cube1,t(.5,0,0)])
 
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
@@ -31,10 +31,13 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
 
 theModel = W,FW,EW
-V,CV,FV,EV,CF,CE = facesFromComponents(theModel)
+V,CV,FV,EV,CF,CE,COE = facesFromComponents(theModel)
 
-CF = list(AA(tuple)(sorted(AA(sorted)(CF))))
-boundaryPosition = CF.index(max(AA(len)(CF)))
+print ">> 10: CF",[(k,cf) for k,cf in enumerate(CF)]
+
+CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
+cellLengths = AA(len)(CF)
+boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]
 del CF[boundaryPosition]
 VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))

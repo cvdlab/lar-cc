@@ -650,7 +650,7 @@ passed through the \texttt{orientedEdges} variable. We can formalize the problem
 @D Cycles orientation
 @{""" Cycles orientation """
 def cyclesOrient(pcycles,fcycle,EV):
-    if set(AA(ABS)(pcycles)).difference(fcycle)==set(): pass #return []
+    if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
     ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
     if type(pcycles[0])==list: opcycle = CAT(pcycles)
     else: opcycle = pcycles
@@ -737,36 +737,46 @@ def facesFromComponents(model):
     # remove 0 indices from FE relation
     FE = [[f for f in face if f!=0] for face in FE]
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
+    print "\n>> 1: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     face = 0
     boundaryLoop = boundaryCycles(FE[face],EV)[0]
     firstEdge = boundaryLoop[0]
-    cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+    cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+    for face,edge in zip(cf,coe):
+        if visitedCell[face][0]==None: visitedCell[face][0] = edge
+        else: visitedCell[face][1] = edge
     print "cf = ",cf
+    print "coe = ",coe
     cv,ce = set(),set()
     cv = cv.union(CAT([FV[f] for f in cf]))
     ce = ce.union(CAT([FE[f] for f in cf]))
-    CF,CV,CE = [cf],[list(cv)],[list(ce)]
+    CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
     
     # main loop
     while True:
         face, edge = startCell(visitedCell,FE,EV)
-        visitedCell[face][1] = edge
         if face == -1: break
         boundaryLoop = boundaryCycles(FE[face],EV)[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
-        cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+        cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
         print "cf = ",cf
+        print "coe = ",coe
         CF += [cf]
+        COE += [coe]
+        for face,edge in zip(cf,coe):
+            if visitedCell[face][0]==None: visitedCell[face][0] = edge
+            else: visitedCell[face][1] = edge
+            
         cv,ce = set(),set()
         cv = cv.union(CAT([FV[f] for f in cf]))
         ce = ce.union(CAT([FE[f] for f in cf]))
         CV += [list(cv)]
         CE += [list(ce)]
-    return V,CV,FV,EV,CF,CE
+    return V,CV,FV,EV,CF,CE,COE
 @}
 %-------------------------------------------------------------------------------
-
+    
 
 \paragraph{Start a new 3-cell}
 The function \texttt{startCell} below is used to begin the extraction of a new 3-cell (after the first one was already extracted). Therefore its aim is to choose as first face one already previously extracted, in order to begin the current boundary with one cycle coherently oriented. This will is implemented by looking for a ``\texttt{face}'' position stored in \texttt{visitedCell} with just one \texttt{None} value in its row.
@@ -776,6 +786,7 @@ The function \texttt{startCell} below is used to begin the extraction of a new 3
 @{""" Start a new 3-cell """
 def startCell(visitedCell,FE,EV):
     if len([term for cell in visitedCell for term in cell if term==None])==1: return -1,-1
+    print "\n>> 3: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     for face in range(len(visitedCell)):
         if len([term for term in visitedCell[face] if term==None])==1:
             edge = visitedCell[face][0]
@@ -800,7 +811,7 @@ def reverseOrientation(chain):
 
 def faceOrientation(boundaryLoop,face,FE,EV,cf):
     theBoundary = set(AA(ABS)(boundaryLoop))
-    if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): 
+    if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
         coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
         face = coboundaryFaces[0]            
     faceLoop = boundaryCycles(FE[face],EV)[0]
@@ -809,7 +820,7 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
         faceLoop = reverseOrientation(faceLoop)
         commonEdges = set(faceLoop).intersection(boundaryLoop)
     theEdge = list(commonEdges)[0]
-    if theEdge==0: theEdge = list(commonEdges)[1]
+    #if theEdge==0: theEdge = list(commonEdges)[1]
     return -theEdge,face
 @}
 %-------------------------------------------------------------------------------
@@ -820,14 +831,16 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
 @D Get single solid cell
 @{""" Get single solid cell """
 def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
+
+    def orientFace(face,boundaryLoop): 
+        for e in boundaryLoop:
+            if ABS(e) in FE[face]: return -e
+            
+    coe = [orientFace(face,boundaryLoop)]
     cf = [face] 
     while boundaryLoop != []:
         edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
         print "face,edge",face,edge
-        if visitedCell[face][0] == None: visitedCell[face][0] = edge
-        else: visitedCell[face][1] = edge
-        #if edge == 0: edge = boundaryLoop[1]
-        if edge == 0: edge = boundaryLoop[1]
         if edge > 0: edgeFaces = EF_angle[edge]
         elif edge < 0: edgeFaces = REVERSE(EF_angle[-edge])
         e = ABS(edge)
@@ -835,15 +848,15 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
         ind = (edgeFaces.index(face)+1)%n
         nextFace = edgeFaces[ind]
         print "\nnextFace =",nextFace
+        coe += [-orientFace(nextFace,boundaryLoop)]
         boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
         print "boundaryLoop =",boundaryLoop
         cf += [nextFace] 
         face = nextFace
-    if visitedCell[face][0] == None: visitedCell[face][0] = edge
-    else: visitedCell[face][1] = edge    
+    print "\n>> 5: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     if DEBUG:
         VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
-    return cf
+    return cf,coe
 @}
 %-------------------------------------------------------------------------------
 
@@ -863,7 +876,7 @@ from pyplasm import *
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
-DEBUG = True
+DEBUG = False
 
 @< Coding utilities @>
 @< Split the boxes between the below,above subsets @>
@@ -1252,7 +1265,7 @@ from bool2 import *
 
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
-twoCubes = Struct(3*[cube1,@1])
+twoCubes = Struct(10*[cube1,@1])
 
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
@@ -1276,10 +1289,13 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
 
 theModel = W,FW,EW
-V,CV,FV,EV,CF,CE = facesFromComponents(theModel)
+V,CV,FV,EV,CF,CE,COE = facesFromComponents(theModel)
 
-CF = list(AA(tuple)(sorted(AA(sorted)(CF))))
-boundaryPosition = CF.index(max(AA(len)(CF)))
+print ">> 10: CF",[(k,cf) for k,cf in enumerate(CF)]
+
+CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
+cellLengths = AA(len)(CF)
+boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]
 del CF[boundaryPosition]
 VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))
@@ -1303,6 +1319,10 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
    \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b1} 
    \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b2} 
    \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b3} 
+
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11c1} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11c2} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11c3} 
    \caption{Examples of 3-cell extraction of two simple Boolean 2-complex, and their boundaries. Notice the numbers of (solid) 3-cells.}
    \label{fig:example}
 \end{figure}
@@ -1372,15 +1392,15 @@ small in most cases.
 @D Characteristic matrix transposition
 @{""" Characteristic matrix transposition """
 def invertRelation(CV):
-	def myMax(List):
-		if List==[]:  return -1
-		else:  return max(List)
-			
-	columnNumber = max(AA(myMax)(CV))+1
-	VC = [[] for k in range(columnNumber)]
-	for k,cell in enumerate(CV):
-		for v in cell: VC[v] += [k]
-	return VC
+    def myMax(List):
+        if List==[]:  return -1
+        else:  return max(List)
+            
+    columnNumber = max(AA(myMax)(CV))+1
+    VC = [[] for k in range(columnNumber)]
+    for k,cell in enumerate(CV):
+        for v in cell: VC[v] += [k]
+    return VC
 @}
 %-------------------------------------------------------------------------------
 

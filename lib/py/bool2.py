@@ -4,7 +4,7 @@ from pyplasm import *
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
-DEBUG = True
+DEBUG = False
 
 """ Coding utilities """
 global count
@@ -85,15 +85,15 @@ def centroid(boxes,coord):
 
 """ Characteristic matrix transposition """
 def invertRelation(CV):
-   def myMax(List):
-      if List==[]:  return -1
-      else:  return max(List)
-         
-   columnNumber = max(AA(myMax)(CV))+1
-   VC = [[] for k in range(columnNumber)]
-   for k,cell in enumerate(CV):
-      for v in cell: VC[v] += [k]
-   return VC
+    def myMax(List):
+        if List==[]:  return -1
+        else:  return max(List)
+            
+    columnNumber = max(AA(myMax)(CV))+1
+    VC = [[] for k in range(columnNumber)]
+    for k,cell in enumerate(CV):
+        for v in cell: VC[v] += [k]
+    return VC
 
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
 def MKTRIANGLES(*model): 
@@ -449,33 +449,43 @@ def facesFromComponents(model):
     # remove 0 indices from FE relation
     FE = [[f for f in face if f!=0] for face in FE]
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
+    print "\n>> 1: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     face = 0
     boundaryLoop = boundaryCycles(FE[face],EV)[0]
     firstEdge = boundaryLoop[0]
-    cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+    cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+    for face,edge in zip(cf,coe):
+        if visitedCell[face][0]==None: visitedCell[face][0] = edge
+        else: visitedCell[face][1] = edge
     print "cf = ",cf
+    print "coe = ",coe
     cv,ce = set(),set()
     cv = cv.union(CAT([FV[f] for f in cf]))
     ce = ce.union(CAT([FE[f] for f in cf]))
-    CF,CV,CE = [cf],[list(cv)],[list(ce)]
+    CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
     
     # main loop
     while True:
         face, edge = startCell(visitedCell,FE,EV)
-        visitedCell[face][1] = edge
         if face == -1: break
         boundaryLoop = boundaryCycles(FE[face],EV)[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
-        cf = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+        cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
         print "cf = ",cf
+        print "coe = ",coe
         CF += [cf]
+        COE += [coe]
+        for face,edge in zip(cf,coe):
+            if visitedCell[face][0]==None: visitedCell[face][0] = edge
+            else: visitedCell[face][1] = edge
+            
         cv,ce = set(),set()
         cv = cv.union(CAT([FV[f] for f in cf]))
         ce = ce.union(CAT([FE[f] for f in cf]))
         CV += [list(cv)]
         CE += [list(ce)]
-    return V,CV,FV,EV,CF,CE
+    return V,CV,FV,EV,CF,CE,COE
 
 """ Edge cycles associated to a closed chain of edges """
 def boundaryCycles(edgeBoundary,EV):
@@ -512,7 +522,7 @@ def cycles2permutation(cycles):
 
 """ Cycles orientation """
 def cyclesOrient(pcycles,fcycle,EV):
-    if set(AA(ABS)(pcycles)).difference(fcycle)==set(): pass #return []
+    if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
     ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
     if type(pcycles[0])==list: opcycle = CAT(pcycles)
     else: opcycle = pcycles
@@ -531,6 +541,7 @@ if __name__ == "__main__":
 """ Start a new 3-cell """
 def startCell(visitedCell,FE,EV):
     if len([term for cell in visitedCell for term in cell if term==None])==1: return -1,-1
+    print "\n>> 3: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     for face in range(len(visitedCell)):
         if len([term for term in visitedCell[face] if term==None])==1:
             edge = visitedCell[face][0]
@@ -545,7 +556,7 @@ def reverseOrientation(chain):
 
 def faceOrientation(boundaryLoop,face,FE,EV,cf):
     theBoundary = set(AA(ABS)(boundaryLoop))
-    if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): 
+    if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
         coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
         face = coboundaryFaces[0]            
     faceLoop = boundaryCycles(FE[face],EV)[0]
@@ -554,7 +565,7 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
         faceLoop = reverseOrientation(faceLoop)
         commonEdges = set(faceLoop).intersection(boundaryLoop)
     theEdge = list(commonEdges)[0]
-    if theEdge==0: theEdge = list(commonEdges)[1]
+    #if theEdge==0: theEdge = list(commonEdges)[1]
     return -theEdge,face
 
 """ Check and store the orientation of faces """
@@ -584,14 +595,16 @@ def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceO
 
 """ Get single solid cell """
 def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
+
+    def orientFace(face,boundaryLoop): 
+        for e in boundaryLoop:
+            if ABS(e) in FE[face]: return -e
+            
+    coe = [orientFace(face,boundaryLoop)]
     cf = [face] 
     while boundaryLoop != []:
         edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
         print "face,edge",face,edge
-        if visitedCell[face][0] == None: visitedCell[face][0] = edge
-        else: visitedCell[face][1] = edge
-        #if edge == 0: edge = boundaryLoop[1]
-        if edge == 0: edge = boundaryLoop[1]
         if edge > 0: edgeFaces = EF_angle[edge]
         elif edge < 0: edgeFaces = REVERSE(EF_angle[-edge])
         e = ABS(edge)
@@ -599,13 +612,13 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
         ind = (edgeFaces.index(face)+1)%n
         nextFace = edgeFaces[ind]
         print "\nnextFace =",nextFace
+        coe += [-orientFace(nextFace,boundaryLoop)]
         boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
         print "boundaryLoop =",boundaryLoop
         cf += [nextFace] 
         face = nextFace
-    if visitedCell[face][0] == None: visitedCell[face][0] = edge
-    else: visitedCell[face][1] = edge    
+    print "\n>> 5: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     if DEBUG:
         VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
-    return cf
+    return cf,coe
 
