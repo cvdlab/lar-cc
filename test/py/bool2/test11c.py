@@ -5,9 +5,9 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool2 import *
 
-V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
+V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
-twoCubes = Struct(10*[cube1,t(.5,0,0)])
+twoCubes = Struct(2*[cube1,t(.5,0,0)])
 
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 

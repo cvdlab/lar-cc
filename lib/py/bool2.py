@@ -300,11 +300,36 @@ def boundaryTriangulation(W,FW):
         pivotFace = [W[v] for v in face+(face[0],)]
         transform = submanifoldMapping(pivotFace)
         mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
-        facet = [point[:-2] for point in mappedVerts]
+        facet = [point[:-1] for point in mappedVerts]
+        print "\nfacet =",facet
+        
+        def preProcessVerts(facet):
+            vertDict,out = dict(),[facet[0]]
+            vertDict[vcode(facet[0])] = vcode(facet[0])
+            vertDict[vcode(facet[-1])] = vcode(facet[-1])
+            for vert in facet[1:-1]:
+                x_ = vert[0]+0.001*random.random()
+                y_ = vert[1]+0.001*random.random()
+                vert_ = vcode([x_,y_,vert[2]])
+                vertDict[vert_] = vcode(vert)
+                out += [eval(vert_)]
+            out += [facet[-1]] 
+            return out,vertDict
+        
+        facet,vertDict = preProcessVerts(facet)
+        print "\nfacet =",facet
+        print "\nvertDict =",vertDict
         pol = PolygonTessellator()
-        vertices = [ vertex.Vertex( (x,y,0) ) for (x,y) in facet  ]
+        vertices = [ vertex.Vertex( (x,y,z) ) for (x,y,z) in facet  ]
         verts = pol.tessellate(vertices)
         ps = [list(v.point) for v in verts]
+        print "\nps =",ps
+        
+        def postProcessVerts(vertDict,ps):
+            return [eval(vertDict[vcode(vert)]) for vert in ps]
+        
+        ps = postProcessVerts(vertDict,ps)
+        print "\nps =",ps
         trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
         mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
         points = [p[:-1] for p in mappedVerts]
@@ -314,7 +339,7 @@ def boundaryTriangulation(W,FW):
                                        array(points[k+2])-points[k])) != 0 ]
         triangleSet += [AA(orientTriangle)(trias)]
     return triangleSet
-
+    
 
 def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
@@ -345,6 +370,25 @@ def orthoProject (e):
     def orthoProject0 (v):  
         return VECTDIFF([ v, dirProject(UNITVECT(e))(v) ])
     return orthoProject0
+
+""" Check edge-face ordering """
+def checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model):
+    V,FV,EV = model
+    pairs = [(e,pair) for e,pair in enumerate(zip(EF,EF_angle)) if NEQ(AA(len)(pair))]
+    edges,incidentFaces = TRANS(pairs)
+    missingFaces = [list(set(pair[0]).difference(pair[1])) for pair in incidentFaces]
+    for edge,faces in zip(edges,missingFaces):
+        print "\nedge,faces =",edge,faces
+        for face in faces:
+            #print "face,triangleSet[face] =",face,triangleSet[face]
+            for triangle in triangleSet[face]:
+                trianglesides = [[triangle[k],triangle[k+1]] 
+                                for k,vertex in enumerate(triangle[:-1])]
+                #print "",edge,face,trianglesides
+                for v1,v2 in trianglesides:
+                    edgeVertices = [V[v] for v in EV[edge]]
+                    print "v1,v2,edgeVertices =",v1,v2,edgeVertices
+    return EF_angle
 
 """ Circular ordering of faces around edges """
 
@@ -397,6 +441,8 @@ def faceSlopeOrdering(model):
         #print "tetraVerts =",tetraVerts
         ET_angle += [sortedTrias]
     EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
+    #EF = crossRelation(EV,FV)
+    #EF_angle = checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model)
     return EF_angle
 
 """ Oriented cycle of vertices from a 1-cycle of unoriented edges """
@@ -445,6 +491,7 @@ def facesFromComponents(model):
     EV = [EV[0]]+EV
     model = V,FV,EV
     EF_angle = faceSlopeOrdering(model)
+    #EF_angle = AA(REVERSE)(EF_angle)
     FE = crossRelation(FV,EV)
     # remove 0 indices from FE relation
     FE = [[f for f in face if f!=0] for face in FE]
