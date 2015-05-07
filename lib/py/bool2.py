@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
 DEBUG = False
+import pdb
 
 """ Coding utilities """
 global count
@@ -82,18 +83,6 @@ def centroid(boxes,coord):
     for box in boxes:
         delta += (box[a] + box[b])/2
     return delta/n
-
-""" Characteristic matrix transposition """
-def invertRelation(CV):
-    def myMax(List):
-        if List==[]:  return -1
-        else:  return max(List)
-            
-    columnNumber = max(AA(myMax)(CV))+1
-    VC = [[] for k in range(columnNumber)]
-    for k,cell in enumerate(CV):
-        for v in cell: VC[v] += [k]
-    return VC
 
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
 def MKTRIANGLES(*model): 
@@ -295,6 +284,7 @@ def orientTriangle(pointTriple):
     else: return pointTriple
 
 def boundaryTriangulation(W,FW):
+    import numpy; numpy.random.rand(0)
     triangleSet = []
     for face in FW:
         pivotFace = [W[v] for v in face+(face[0],)]
@@ -308,8 +298,8 @@ def boundaryTriangulation(W,FW):
             vertDict[vcode(facet[0])] = vcode(facet[0])
             vertDict[vcode(facet[-1])] = vcode(facet[-1])
             for vert in facet[1:-1]:
-                x_ = vert[0]+0.001*random.random()
-                y_ = vert[1]+0.001*random.random()
+                x_ = vert[0]+0.002*numpy.random.rand()
+                y_ = vert[1]+0.002*numpy.random.rand()
                 vert_ = vcode([x_,y_,vert[2]])
                 vertDict[vert_] = vcode(vert)
                 out += [eval(vert_)]
@@ -488,7 +478,7 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
 def facesFromComponents(model):
     # initialization
     V,FV,EV = model
-    EV = [EV[0]]+EV
+    if EV[0] != EV[1]: EV = [EV[0]]+EV
     model = V,FV,EV
     EF_angle = faceSlopeOrdering(model)
     #EF_angle = AA(REVERSE)(EF_angle)
@@ -513,11 +503,14 @@ def facesFromComponents(model):
     
     # main loop
     while True:
+        #pdb.set_trace()
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
         boundaryLoop = boundaryCycles(FE[face],EV)[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
+            print "\n> edge in boundaryLoop =", edge in boundaryLoop
+            #pdb.set_trace()
         cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
         print "cf = ",cf
         print "coe = ",coe

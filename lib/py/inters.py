@@ -291,7 +291,7 @@ def outputComp(stack,u,v):
 """ Circular ordering of edges around vertices """
 def edgeSlopeOrdering(model):
     V,EV = model
-    from bool1 import invertRelation
+    #from bool1 import invertRelation
     VE,VE_angle = invertRelation(EV),[]
     for v,ve in enumerate(VE):
         ve_angle = []

@@ -400,6 +400,7 @@ def orientTriangle(pointTriple):
     else: return pointTriple
 
 def boundaryTriangulation(W,FW):
+    import numpy; numpy.random.rand(0)
     triangleSet = []
     for face in FW:
         pivotFace = [W[v] for v in face+(face[0],)]
@@ -413,8 +414,8 @@ def boundaryTriangulation(W,FW):
             vertDict[vcode(facet[0])] = vcode(facet[0])
             vertDict[vcode(facet[-1])] = vcode(facet[-1])
             for vert in facet[1:-1]:
-                x_ = vert[0]+0.001*random.random()
-                y_ = vert[1]+0.001*random.random()
+                x_ = vert[0]+0.002*numpy.random.rand()
+                y_ = vert[1]+0.002*numpy.random.rand()
                 vert_ = vcode([x_,y_,vert[2]])
                 vertDict[vert_] = vcode(vert)
                 out += [eval(vert_)]
@@ -787,7 +788,7 @@ The test for completeness of the extraction is done by computing the current bou
 def facesFromComponents(model):
     # initialization
     V,FV,EV = model
-    EV = [EV[0]]+EV
+    if EV[0] != EV[1]: EV = [EV[0]]+EV
     model = V,FV,EV
     EF_angle = faceSlopeOrdering(model)
     #EF_angle = AA(REVERSE)(EF_angle)
@@ -812,11 +813,14 @@ def facesFromComponents(model):
     
     # main loop
     while True:
+        #pdb.set_trace()
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
         boundaryLoop = boundaryCycles(FE[face],EV)[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
+            print "\n> edge in boundaryLoop =", edge in boundaryLoop
+            #pdb.set_trace()
         cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
         print "cf = ",cf
         print "coe = ",coe
@@ -935,6 +939,7 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
 DEBUG = False
+import pdb
 
 @< Coding utilities @>
 @< Split the boxes between the below,above subsets @>
@@ -1318,13 +1323,16 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
 %-------------------------------------------------------------------------------
 @D testing example @{
 """ Visualization of indices of the boundary triangulation """
+import numpy
+numpy.random.seed(0)
+
 import sys
 sys.path.insert(0, 'lib/py/')
 from bool2 import *
 
 V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
-twoCubes = Struct(2*[cube1,@1])
+twoCubes = Struct(3*[cube1,@1])
 
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
@@ -1341,16 +1349,18 @@ hexas = AA(box2exa)(boxes)
 parts = boxBuckets(boxes)
 
 W,FW,EW = spacePartition(V,FV,EV, parts)
+
 WW = AA(LIST)(range(len(W)))
 submodel = STRUCT(MKPOLS((W,EW)))
 VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
-
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
+#VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
 
 theModel = W,FW,EW
-V,CV,FV,EV,CF,CE,COE = facesFromComponents(theModel)
+pdb.set_trace()
 
+V,CV,FV,EV,CF,CE,COE = facesFromComponents(theModel)
 print ">> 10: CF",[(k,cf) for k,cf in enumerate(CF)]
+#pdb.set_trace()
 
 CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
 cellLengths = AA(len)(CF)
@@ -1360,10 +1370,12 @@ del CF[boundaryPosition]
 VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))
 VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF]) ))
 VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell]) for cell in CF]))
+VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in CE[1:]]))
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))
 VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
+
 @}
 %-------------------------------------------------------------------------------
 
@@ -1435,33 +1447,10 @@ global count
 @< Containment boxes @>
 @< Transformation of a 3D box into an hexahedron @>
 @< Computation of the 1D centroid of a list of 3D boxes @>
-@< Characteristic matrix transposition @>
 @< Generation of a list of HPCs from a LAR model with non-convex faces @>
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Relational inversion (characteristic matrix transposition)}
-
-The operation could be executed by simple matrix transposition of the CSR (Compressed Sparse Row) representation of the sparse characteristic matrix $M_d \equiv \texttt{CV}$.
-A simple relational inversion using Python lists is given here. The \texttt{invertRelation} function 
-is given here, linear in the size of the \texttt{CV} list, where the complexity of each cell is constant and 
-small in most cases.
-
-%-------------------------------------------------------------------------------
-@D Characteristic matrix transposition
-@{""" Characteristic matrix transposition """
-def invertRelation(CV):
-    def myMax(List):
-        if List==[]:  return -1
-        else:  return max(List)
-            
-    columnNumber = max(AA(myMax)(CV))+1
-    VC = [[] for k in range(columnNumber)]
-    for k,cell in enumerate(CV):
-        for v in cell: VC[v] += [k]
-    return VC
-@}
-%-------------------------------------------------------------------------------
 
 \paragraph{Generation of a list of HPCs from a LAR model with non-convex faces}
 

@@ -106,6 +106,21 @@ def csrPredFilter(CSRm, pred):
    CSRm = scipy.sparse.coo_matrix((data,(i,j)),CSRm.shape).tocsr()
    return CSRm
 
+""" Characteristic matrix transposition """
+def invertRelation(CV):
+    print ">invertRelation"
+    
+    def myMax(List):
+        if List==[]:  return -1
+        else:  return max(List)
+            
+    columnNumber = max(AA(myMax)(CV))+1
+    VC = [[] for k in range(columnNumber)]
+    for k,cell in enumerate(CV):
+        for v in cell: VC[v] += [k]
+    print "<invertRelation"
+    return VC
+
 def boundary(cells,facets):
    lenV = max(max(cells),max(facets))
    csrCV = csrCreate(cells,lenV)

@@ -415,6 +415,34 @@ print "\nccsrPredFilter(csrFE) =\n", csr2DenseMatrix(CSRm)
 %-------------------------------------------------------------------------------
 
 
+
+\paragraph{Relational inversion (characteristic matrix transposition)}
+
+The operation could be executed by simple matrix transposition of the CSR (Compressed Sparse Row) representation of the sparse characteristic matrix $M_d \equiv \texttt{CV}$.
+A simple relational inversion using Python lists is given here. The \texttt{invertRelation} function 
+is given here, linear in the size of the \texttt{CV} list, where the complexity of each cell is constant and 
+small in most cases.
+
+%-------------------------------------------------------------------------------
+@D Characteristic matrix transposition
+@{""" Characteristic matrix transposition """
+def invertRelation(CV):
+    print ">invertRelation"
+    
+    def myMax(List):
+        if List==[]:  return -1
+        else:  return max(List)
+            
+    columnNumber = max(AA(myMax)(CV))+1
+    VC = [[] for k in range(columnNumber)]
+    for k,cell in enumerate(CV):
+        for v in cell: VC[v] += [k]
+    print "<invertRelation"
+    return VC
+@}
+%-------------------------------------------------------------------------------
+
+
 \subsection{Computation of lower-dimensional skeletons}
 
 In most cases, in particular when the cellular complex is made by convex cells, the only cells of maximal dimension must be entered to gain a complete knowledge of the whole complex.
@@ -1456,6 +1484,7 @@ from sysml import *
 @< Matrix product and transposition @>
 @< Matrix filtering to produce the boundary matrix @>
 @< Matrix filtering via a generic predicate @>
+@< Characteristic matrix transposition @>
 @< From cells and facets to boundary operator @>
 @< From cells and facets to boundary cells @>
 @< Signed boundary matrix for simplicial models @>
