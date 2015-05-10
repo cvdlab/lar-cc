@@ -2,7 +2,7 @@
 """ Visualization of of incidence between edges and 3D triangles """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 sys.path.insert(0, 'test/py/bool/')
 from test08 import *
 

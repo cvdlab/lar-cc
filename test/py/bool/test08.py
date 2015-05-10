@@ -1,7 +1,7 @@
 
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 sys.path.insert(0, 'test/py/bool/')
 from test06 import *
 

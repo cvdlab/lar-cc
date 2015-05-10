@@ -3,7 +3,7 @@
 
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct([cube1,t(.5,.5,.5),cube1])

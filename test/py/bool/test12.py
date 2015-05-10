@@ -1,7 +1,7 @@
 
 """ Generation of the edge permutation associated to the 1-boundary of a 2-chain """
 import sys;sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 sys.path.insert(0, 'test/py/larcc/')
 from test11 import *
 

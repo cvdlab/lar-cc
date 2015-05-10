@@ -560,32 +560,6 @@ def faceSlopeOrdering(model,FE):
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Check edge-face ordering}
-
-%-------------------------------------------------------------------------------
-@D Check edge-face ordering
-@{""" Check edge-face ordering """
-def checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model):
-    V,FV,EV = model
-    pairs = [(e,pair) for e,pair in enumerate(zip(EF,EF_angle)) if NEQ(AA(len)(pair))]
-    edges,incidentFaces = TRANS(pairs)
-    missingFaces = [list(set(pair[0]).difference(pair[1])) for pair in incidentFaces]
-    for edge,faces in zip(edges,missingFaces):
-        for face in faces:
-            for triangle in triangleSet[face]:
-                trianglesides = [[triangle[k],triangle[k+1]] 
-                                for k,vertex in enumerate(triangle[:-1])]
-                for v1,v2 in trianglesides:
-                    edgeVertices = [V[v] for v in EV[edge]]
-    return EF_angle
-@}
-%-------------------------------------------------------------------------------
-
-
-FT = crossRelation(FV,CAT(TV))
-EdgeTriangle = [set(CAT([FT[f] for f in ef])) for ef in EF]
-
-
 
 
 \paragraph{Edge-triangles to Edge-faces incidence}
@@ -611,72 +585,6 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
 
 \paragraph{Cells from $(d-1)$-dimensional LAR model}
 Since faces in the space partition induced by overlaping 3-coverings are $(d-1)$-cells, they are located on the boundary of \emph{two} $d$-cells of the partition. Hence, the traversal algorithm of the data structure storing the relevant information may be driven by signing the two cofaces of each face as being either already visited or not.
-
-
-\paragraph{Oriented cycle of vertices from a 1-cycle of unoriented edges}
-The below \texttt{edgeCycleOrientation} is used to transform a list of unoriented edges, know to correspond to a closed but unoriented 1-cycle, into a 0-cycle, to be easily transformed into an \emph{oriented 1-cycle} by taking pairwise every two adjacent nodes, included the lat and the first to close the cycle.
-
-%-------------------------------------------------------------------------------
-@D Oriented cycle of vertices from a 1-cycle of unoriented edges
-@{""" Oriented cycle of vertices from a 1-cycle of unoriented edges """
-def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
-    previous_cb = cb
-    def theNext0(previous_edge,face):
-        cbe = copy.copy(cb)
-        edges = list(set(FE[face]).intersection(cbe)) #difference(cbe))
-        if edges==[]: 
-            edges = list(cbe)
-            face = list(set(EF_angle[edges[0]]).intersection(cf))[0]
-        if type(previousOrientedEdges[0])!=list:
-            signs,next = cycles2permutation([previousOrientedEdges])
-        else: signs,next = cycles2permutation(previousOrientedEdges)
-        edge = edges[0]
-        edgeOrientation = signs[edge]
-        edgeFaces = EF_angle[edge]
-        n = len(edgeFaces)
-        if edgeOrientation == 1: 
-            ind = (edgeFaces.index(face) + 1)%n
-        elif edgeOrientation == -1:
-            ind = (edgeFaces.index(face) - 1)%n
-        nextFace = edgeFaces[ind]
-        nextFaceBoundary = list(set(FE[nextFace]))
-        orientedEdges = cyclesOrientation(previousOrientedEdges,nextFaceBoundary,EV)
-        return orientedEdges,nextFace,edge
-    return theNext0
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Check and store the orientation of faces}
-
-%-------------------------------------------------------------------------------
-@D Check and store the orientation of faces
-@{""" Check and store the orientation of faces """
-def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
-    list2 = CAT(orientedFaceEdges)
-    if orientedEdges != []:
-        list1 = CAT(orientedEdges)
-    else: list1 = CAT(previousOrientedEdges)
-    theList = set(list1).intersection(set(list2).union((lambda args:[-arg for arg in args])(list2)))
-    if theList==set() or orientedEdges==[]:
-        theList = set(CAT(orientedFaceEdges))
-    edge = list(theList)[0]
-    if theList.issubset(list1):  # equal signs
-        if faceOrientations[face][0] == None:
-            faceOrientations[face][0] = edge
-        elif faceOrientations[face][1] == None:
-            faceOrientations[face][1] = edge
-        else: print "error: faceOrientations"
-    elif not theList.issubset(list1): # different signs
-        if faceOrientations[face][0] == None: 
-            faceOrientations[face][0] = -edge
-        elif faceOrientations[face][1] == None:
-            faceOrientations[face][1] = -edge
-        else: print "error: faceOrientations"
-    else: print "error: checkOrientation"
-    return faceOrientations
-@}
-%-------------------------------------------------------------------------------
 
 
 \subsection{Progressive reconstruction of 3-cell boundaries}
@@ -737,24 +645,6 @@ def boundaryCycles(edgeBoundary,EV):
     return cycles
 @}
 %-------------------------------------------------------------------------------
-
-
-
-\paragraph{Permutation of edges defined by edge cycles}
-   
-%-------------------------------------------------------------------------------
-@D Permutation of edges defined by edge cycles
-@{""" Permutation of edges defined by edge cycles """
-def cycles2permutation(cycles):
-    next = []
-    for cycle in cycles:
-        next += zip(AA(ABS)(cycle),AA(ABS)(cycle[1:]+[cycle[0]]))
-    next = dict(next)
-    sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
-    return sign,next
-@}
-%-------------------------------------------------------------------------------
-
 
 
 
@@ -921,7 +811,7 @@ def partition(W,FW,EW):
 %===============================================================================
 
 %-------------------------------------------------------------------------------
-@O lib/py/bool2.py
+@O lib/py/bool.py
 @{""" Module for Boolean computations between geometric objects """
 from pyplasm import *
 """ import modules from larcc/lib """
@@ -974,7 +864,7 @@ DEBUG = False
 @{""" Generation of random triangles and their boxes """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
 randomTriaArray = randomTriangles(10,0.99)
@@ -995,7 +885,7 @@ VIEW(STRUCT([cyan,yellow]))
 @{""" Generation of random quadrilaterals and their boxes """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
 randomQuadArray = randomQuads(10,1)
@@ -1079,7 +969,7 @@ from pyplasm import *
 """ import modules from larcc/lib """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 
 randomQuadArray = randomQuads(30,0.8)
 VIEW(STRUCT(AA(MKPOL)([[verts, [[1,2,3,4]], None] for verts in randomQuadArray])))
@@ -1113,7 +1003,7 @@ for k,part in enumerate(parts):
 
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
@@ -1198,7 +1088,7 @@ LAR model is generated. Then the unique polygonal face in \texttt{FV} is embedde
 @{""" 2D polygon triangulation """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 
 filename = "test/py/bool/interior.svg"
 lines = svg2lines(filename)    
@@ -1225,7 +1115,7 @@ VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))
 @O test/py/bool/test08.py @{
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 sys.path.insert(0, 'test/py/bool/')
 from test06 import *
 
@@ -1246,7 +1136,7 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
 """ Visualization of of incidence between edges and 3D triangles """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 sys.path.insert(0, 'test/py/bool/')
 from test08 import *
 
@@ -1276,7 +1166,7 @@ VIEW(STRUCT(MKPOLS((V,EV))))
 @O test/py/bool/test10.py @{
 """ Visualization of indices of the boundary triangulation """
 import sys; sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 sys.path.insert(0, 'test/py/bool/')
 from test09 import *
 
@@ -1319,7 +1209,7 @@ numpy.random.seed(0)
 
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 
 V,[VV,EV,FV,CV] = larCuboids([3,3,1],True)
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
@@ -1329,7 +1219,6 @@ V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 V,CV,FV,EV,CF,CE,COE,FE = partition(V,FV,EV)
 
-CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
 cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
@@ -1359,31 +1248,6 @@ VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in
    \caption{Examples of 3-cell extraction of two simple Boolean 2-complex, and their boundaries. Notice the numbers of (solid) 3-cells.}
    \label{fig:example}
 \end{figure}
-
-
-\paragraph{Generation of the edge permutation associated to the 1-boundary of a 2-chain}
-
-%-------------------------------------------------------------------------------
-@O test/py/bool/test12.py @{
-""" Generation of the edge permutation associated to the 1-boundary of a 2-chain """
-import sys;sys.path.insert(0, 'lib/py/')
-from bool2 import *
-sys.path.insert(0, 'test/py/larcc/')
-from test11 import *
-
-C2 = csr_matrix((len(FV),1))
-for i in [21,16,23,22, 2,3,4, 9,28,5]: C2[i,0] = 1
-BD = boundary(FV,EV)
-C1 = BD * C2
-C_1 = [i for i in range(len(EV)) if ABS(C1[i,0]) == 1 ]
-C_2 = [i for i in range(len(FV)) if C2[i,0] == 1 ]
-
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[EV[k] for k in C_1] + [FV[k] for k in C_2]))))
-
-sign,next = cycles2permutation(boundaryCicles(C_1, EV))
-@}
-%-------------------------------------------------------------------------------
-
 
 
 

@@ -1,7 +1,7 @@
 """ Generation of random quadrilaterals and their boxes """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
 randomQuadArray = randomQuads(10,1)

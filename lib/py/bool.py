@@ -5,7 +5,6 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
 DEBUG = False
-import pdb
 
 """ Coding utilities """
 global count
@@ -284,53 +283,6 @@ def orientTriangle(pointTriple):
     v2 = array(pointTriple[2])-pointTriple[0]
     if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
     else: return pointTriple
-
-def boundaryTriangulation(W,FW):
-    import numpy; numpy.random.rand(0)
-    triangleSet = []
-    for face in FW:
-        pivotFace = [W[v] for v in face+(face[0],)]
-        transform = submanifoldMapping(pivotFace)
-        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
-        facet = [point[:-1] for point in mappedVerts]
-        print "\nfacet =",facet
-        
-        def preProcessVerts(facet):
-            vertDict,out = dict(),[facet[0]]
-            vertDict[vcode(facet[0])] = vcode(facet[0])
-            vertDict[vcode(facet[-1])] = vcode(facet[-1])
-            for vert in facet[1:-1]:
-                x_ = vert[0]+0.002*numpy.random.rand()
-                y_ = vert[1]+0.002*numpy.random.rand()
-                vert_ = vcode([x_,y_,vert[2]])
-                vertDict[vert_] = vcode(vert)
-                out += [eval(vert_)]
-            out += [facet[-1]] 
-            return out,vertDict
-        
-        facet,vertDict = preProcessVerts(facet)
-        print "\nfacet =",facet
-        print "\nvertDict =",vertDict
-        pol = PolygonTessellator()
-        vertices = [ vertex.Vertex( (x,y,z) ) for (x,y,z) in facet  ]
-        verts = pol.tessellate(vertices)
-        ps = [list(v.point) for v in verts]
-        print "\nps =",ps
-        
-        def postProcessVerts(vertDict,ps):
-            return [eval(vertDict[vcode(vert)]) for vert in ps]
-        
-        ps = postProcessVerts(vertDict,ps)
-        print "\nps =",ps
-        trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
-        mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
-        points = [p[:-1] for p in mappedVerts]
-        trias = [[points[k],points[k+1],points[k+2],points[k]] 
-            for k in range(0,len(points),3) 
-            if scipy.linalg.norm(cross(array(points[k+1])-points[k], 
-                                       array(points[k+2])-points[k])) != 0 ]
-        triangleSet += [AA(orientTriangle)(trias)]
-    return triangleSet
     
 from triangle import *
 from integr import *
@@ -373,7 +325,6 @@ def boundaryTriangulation(W,FW,EW,FE):
         triangleSet += [AA(orientTriangle)(trias)]
     return triangleSet
 
-
 def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
     for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
@@ -404,24 +355,6 @@ def orthoProject (e):
         return VECTDIFF([ v, dirProject(UNITVECT(e))(v) ])
     return orthoProject0
 
-""" Check edge-face ordering """
-def checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model):
-    V,FV,EV = model
-    pairs = [(e,pair) for e,pair in enumerate(zip(EF,EF_angle)) if NEQ(AA(len)(pair))]
-    edges,incidentFaces = TRANS(pairs)
-    missingFaces = [list(set(pair[0]).difference(pair[1])) for pair in incidentFaces]
-    for edge,faces in zip(edges,missingFaces):
-        print "\nedge,faces =",edge,faces
-        for face in faces:
-            #print "face,triangleSet[face] =",face,triangleSet[face]
-            for triangle in triangleSet[face]:
-                trianglesides = [[triangle[k],triangle[k+1]] 
-                                for k,vertex in enumerate(triangle[:-1])]
-                #print "",edge,face,trianglesides
-                for v1,v2 in trianglesides:
-                    edgeVertices = [V[v] for v in EV[edge]]
-                    print "v1,v2,edgeVertices =",v1,v2,edgeVertices
-    return EF_angle
 
 """ Circular ordering of faces around edges """
 
@@ -468,41 +401,11 @@ def faceSlopeOrdering(model,FE):
         pairs = sorted(zip(et_angle,et,Tvs))
         sortedTrias = [pair[1] for pair in pairs]
         triasVerts = [pair[2] for pair in pairs]
-        #print "triasVerts =",triasVerts
         tetraVerts = triasVerts[0]+[triasVerts[1][2]]
-        print det(mat([V[v]+[1] for v in tetraVerts]))
-        #print "tetraVerts =",tetraVerts
         ET_angle += [sortedTrias]
     EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
-    #EF = crossRelation(EV,FV)
-    #EF_angle = checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model)
     return EF_angle
 
-""" Oriented cycle of vertices from a 1-cycle of unoriented edges """
-def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
-    previous_cb = cb
-    def theNext0(previous_edge,face):
-        cbe = copy.copy(cb)
-        edges = list(set(FE[face]).intersection(cbe)) #difference(cbe))
-        if edges==[]: 
-            edges = list(cbe)
-            face = list(set(EF_angle[edges[0]]).intersection(cf))[0]
-        if type(previousOrientedEdges[0])!=list:
-            signs,next = cycles2permutation([previousOrientedEdges])
-        else: signs,next = cycles2permutation(previousOrientedEdges)
-        edge = edges[0]
-        edgeOrientation = signs[edge]
-        edgeFaces = EF_angle[edge]
-        n = len(edgeFaces)
-        if edgeOrientation == 1: 
-            ind = (edgeFaces.index(face) + 1)%n
-        elif edgeOrientation == -1:
-            ind = (edgeFaces.index(face) - 1)%n
-        nextFace = edgeFaces[ind]
-        nextFaceBoundary = list(set(FE[nextFace]))
-        orientedEdges = cyclesOrientation(previousOrientedEdges,nextFaceBoundary,EV)
-        return orientedEdges,nextFace,edge
-    return theNext0
 
 """ Edge-triangles to Edge-faces incidence """
 def ET_to_EF_incidence(TW,FW, ET_angle):
@@ -522,7 +425,6 @@ def facesFromComponents(model,FE,EF_angle):
     # initialization
     V,FV,EV = model
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
-    print "\n>> 1: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     face = 0
     boundaryLoop = boundaryCycles(FE[face],EV)[0]
     firstEdge = boundaryLoop[0]
@@ -530,8 +432,6 @@ def facesFromComponents(model,FE,EF_angle):
     for face,edge in zip(cf,coe):
         if visitedCell[face][0]==None: visitedCell[face][0] = edge
         else: visitedCell[face][1] = edge
-    print "cf = ",cf
-    print "coe = ",coe
     cv,ce = set(),set()
     cv = cv.union(CAT([FV[f] for f in cf]))
     ce = ce.union(CAT([FE[f] for f in cf]))
@@ -539,17 +439,12 @@ def facesFromComponents(model,FE,EF_angle):
     
     # main loop
     while True:
-        #pdb.set_trace()
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
         boundaryLoop = boundaryCycles(FE[face],EV)[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
-            print "\n> edge in boundaryLoop =", edge in boundaryLoop
-            #pdb.set_trace()
         cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
-        print "cf = ",cf
-        print "coe = ",coe
         CF += [cf]
         COE += [coe]
         for face,edge in zip(cf,coe):
@@ -565,7 +460,6 @@ def facesFromComponents(model,FE,EF_angle):
 
 """ Edge cycles associated to a closed chain of edges """
 def boundaryCycles(edgeBoundary,EV):
-    print "\n>>> edgeBoundary =",edgeBoundary
     verts2edges = defaultdict(list)
     for e in edgeBoundary:
         verts2edges[EV[e][0]] += [e]
@@ -588,14 +482,6 @@ def boundaryCycles(edgeBoundary,EV):
             for k,(e,v) in enumerate(cycle)]]
     return cycles
 
-""" Permutation of edges defined by edge cycles """
-def cycles2permutation(cycles):
-    next = []
-    for cycle in cycles:
-        next += zip(AA(ABS)(cycle),AA(ABS)(cycle[1:]+[cycle[0]]))
-    next = dict(next)
-    sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
-    return sign,next
 
 """ Cycles orientation """
 def cyclesOrient(pcycles,fcycle,EV):
@@ -618,11 +504,9 @@ if __name__ == "__main__":
 """ Start a new 3-cell """
 def startCell(visitedCell,FE,EV):
     if len([term for cell in visitedCell for term in cell if term==None])==1: return -1,-1
-    print "\n>> 3: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     for face in range(len(visitedCell)):
         if len([term for term in visitedCell[face] if term==None])==1:
             edge = visitedCell[face][0]
-            print "\nface,edge =",face,edge
             break
         face,edge = -1,-1
     return face,edge
@@ -645,30 +529,6 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
     #if theEdge==0: theEdge = list(commonEdges)[1]
     return -theEdge,face
 
-""" Check and store the orientation of faces """
-def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
-    list2 = CAT(orientedFaceEdges)
-    if orientedEdges != []:
-        list1 = CAT(orientedEdges)
-    else: list1 = CAT(previousOrientedEdges)
-    theList = set(list1).intersection(set(list2).union((lambda args:[-arg for arg in args])(list2)))
-    if theList==set() or orientedEdges==[]:
-        theList = set(CAT(orientedFaceEdges))
-    edge = list(theList)[0]
-    if theList.issubset(list1):  # equal signs
-        if faceOrientations[face][0] == None:
-            faceOrientations[face][0] = edge
-        elif faceOrientations[face][1] == None:
-            faceOrientations[face][1] = edge
-        else: print "error: faceOrientations"
-    elif not theList.issubset(list1): # different signs
-        if faceOrientations[face][0] == None: 
-            faceOrientations[face][0] = -edge
-        elif faceOrientations[face][1] == None:
-            faceOrientations[face][1] = -edge
-        else: print "error: faceOrientations"
-    else: print "error: checkOrientation"
-    return faceOrientations
 
 """ Get single solid cell """
 def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
@@ -681,20 +541,16 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
     cf = [face] 
     while boundaryLoop != []:
         edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
-        print "face,edge",face,edge
         if edge > 0: edgeFaces = EF_angle[edge]
         elif edge < 0: edgeFaces = REVERSE(EF_angle[-edge])
         e = ABS(edge)
         n = len(edgeFaces)
         ind = (edgeFaces.index(face)+1)%n
         nextFace = edgeFaces[ind]
-        print "\nnextFace =",nextFace
         coe += [-orientFace(nextFace,boundaryLoop)]
         boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
-        print "boundaryLoop =",boundaryLoop
         cf += [nextFace] 
         face = nextFace
-    print "\n>> 5: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     if DEBUG:
         VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
     return cf,coe

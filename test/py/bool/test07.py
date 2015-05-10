@@ -1,7 +1,7 @@
 """ 2D polygon triangulation """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 
 filename = "test/py/bool/interior.svg"
 lines = svg2lines(filename)    

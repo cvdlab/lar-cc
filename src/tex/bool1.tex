@@ -193,20 +193,6 @@ def larBool1():
 \subsubsection{Detail functions}
 
 
-%-------------------------------------------------------------------------------
-@D Compute model boundaries of complex of convex cells
-@{""" Compute model boundaries of complex of convex cells """
-
-def larFacetsOfPolytopalComplex(vertDict,cells,facets):
-	if TRACE: global tracing;tracing = mytrace(tracing+1,">larFacetsOfPolytopalComplex")
-
-	(V1,CV1),(V2,CV2) = model1,model2
-	for cell in CV1:
-		Vcell = [V1[v] for v in cell]
-
-@}
-%-------------------------------------------------------------------------------
-
 
 %-------------------------------------------------------------------------------
 @D Merge two dictionaries with keys the point locations

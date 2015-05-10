@@ -1,7 +1,7 @@
 """ Generation of random triangles and their boxes """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
 randomTriaArray = randomTriangles(10,0.99)

@@ -6,7 +6,7 @@ numpy.random.seed(0)
 
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool2 import *
+from bool import *
 
 V,[VV,EV,FV,CV] = larCuboids([3,3,1],True)
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
@@ -16,7 +16,6 @@ V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 V,CV,FV,EV,CF,CE,COE,FE = partition(V,FV,EV)
 
-CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
 cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
