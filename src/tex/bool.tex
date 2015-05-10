@@ -1,18 +1,16 @@
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb}
-\usepackage{amsmath}
 \usepackage[colorlinks]{hyperref}
 
 %----macros begin---------------------------------------------------------------
 \usepackage{color}
 \usepackage{amsthm}
-\usepackage{amsmath}
 
 \def\conv{\mbox{\textrm{conv}\,}}
 \def\aff{\mbox{\textrm{aff}\,}}
@@ -38,1734 +36,1532 @@
 
 %----macros end-----------------------------------------------------------------
 
-\title{Boolean combinations of cellular complexes as chain operations
+\title{Boolean chains
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{Alberto Paoluzzi}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
-\tableofcontents
 \nonstopmode
 
+\begin{abstract}
+A novel algorithm for computation of Boolean operations between cellular complexes is given in this module.
+It is based on bucketing of possibly interacting geometry using a box-extension of kd-trees, normally used for  point proximity queries. 
+Such kd-tree representation of containment boxes of cells, allow us to compute a number of independent buckets of data to be used for local intersection, followed by elimination of duplicated data.
+Actually we reduce the intersection of boundaries in 3D to the independent intersections of the buckets of (transformed) faces with the 2D subspace $z=0$, in order to reconstruct each splitted facet of boolean arguments, suitably transformed ther together with the bucket of indent facets.
+A final tagging of cells as either belonging or not to each operand follows, allowing for fast extraction of Boolean results between any pair of chains (subsets of cells).
+This Boolean algorithm can be considered of a \emph{Map-Reduce} kind, and hence suitable of a distributed implementation over big datasets. The actual engineered implementation will follow the present prototype, using some distributed NoSQL database, like MongoDB or Riak. 
+\end{abstract}
+
+\tableofcontents
+
+%===============================================================================
 \section{Introduction}
-
-In this module a novel approach to Boolean operations of cellular complexes is defined and implemented. The novel algorithm may be summarised as follows. 
-
-First we compute the CDC (Common Delaunay Complex) of the input LAR complexes $A$ and $B$, to get a LAR of the \emph{simplicial} CDC.
-
-Then, we split the cells intersecting the boundary faces of the input complexes, getting the final \emph{polytopal} SCDC  
-(Split Common Delaunay Complex), whose cells  provide the  basis for the linear coordinate representation of both input 
-complexes, upon the same space decomposition.
-
-Finally, every Boolean result is computed by bitwise operations, between the coordinate representations of the transformed 
-$A$ and $B$ input.
+%===============================================================================
 
 
+%===============================================================================
+\section{Preview of the algorithm}
+%===============================================================================
 
-\subsection{Preview of the Boolean algorithm}
+The whole Boolean algorithm is composed by four stages in sequence, denoted in the following as \emph{Unification}, \emph{Bucketing}, \emph{Intersection}, and \emph{Reconstruction}. The algorithm described here is both multidimensional and variadic. Multidimensional means that the arguments are solid in Euclidean space of dimension $d$, with $d$ small integer.
+The \emph{arity}  of a function or operation is the number of arguments or operands the function or operation accepts. 
+In computer science, a function accepting a variable number of arguments is called \emph{variadic}.
 
-The goal is the computation of $A \diamond B$, with $\diamond\in \{\cup, \cap, -\}$, where a LAR representation of both $A$ and $B$ is given. The Boolean algorithm works as follows.
+\subsection{Unification}
+%===============================================================================
 
-\begin{enumerate}
-\item 
-Embed both cellular complexes $A$ and $B$ in the same space (say, identify their common vertices) by $V_{ab} = V_a \cup V_b$.
-\item 
-Build their CDC  (Common Delaunay Complex) as the LAR of \emph{Delaunay triangulation} of the vertex set $V_{ab}$.
-\item 
-Split the (highest-dimensional) cells of CDC crossed by $\partial A$ or $\partial B$. Their lower dimensional faces remain partitioned accordingly. We name the resulting complex SCDC (Split Common Delaunay Complex).
-\item 
-With respect to the SCDC basis of $d$-cells $C_d$, compute two coordinate chains $\alpha,\beta: C_d \to \{0,1\}$, such that: 
-\begin{align}
-	\alpha(cell) &= 1  \quad\mbox{if\ } |cell| \subset A;  \quad\mbox{else\ } \alpha(cell) = 0, \nonumber\\
-	\beta(cell) &= 1  \quad\mbox{if\ } |cell| \subset B;  \quad\mbox{else\ } \beta(cell) = 0. \nonumber
-\end{align}
-\item 
-Extract accordingly the SCDC chain corresponding to $A \diamond B$, with $\diamond\in \{\cup, \cap, -\}$.
-\end{enumerate}
+In this first step the boundaries of the $n$ Boolean arguments are computed and merged together as a set of chains defined in the discrete set $\texttt{V}$ made by the union of their vertices, and possibly by a discrete set of points generated by intersection of cells of complementary dimension, i.e. whose dimensions add up to the dimension of the ambient space.
+Actually, only the (\emph{oriented}) boundaries \texttt{V,FV$_i$} $(1\leq i\leq n)$ of the varius arguments are retained here, and used by the following steps of the algorithm.
 
+\subsection{Bucketing}
+%===============================================================================
 
-\subsubsection{Remarks}
-You may  make an analogy between the SCDC (\emph{Split} CDC) and a CDT (Constrained Delaunay Triangulation).  In part they coincide, but in general, the SCDC is a polytopal complex, and is not a simplicial complex as the CDC.
+The bounding boxes of facets \texttt{FV$_i$} are computed, and their \emph{box-kd-tree} is worked-out, so providing a group of buckets of close cells, that can be elaborated independently, and possibly in parallel, to compute the intersections of the boundary cells. 
 
-The more complex algorithmic step is the cell splitting.  
-Every time, a single $d$-cell  $c$  is split by a single hyperplane (cutting its interior)  giving either two splitted cells $c_1$ and $c_2$, or just one output cell (if the hyperplane is the affine hull of the CDC facet)
-whatever the input cell dimension $d$.  After every splitting of the cell interior, the row $c$ is substituted (within the \texttt{CV} matrix) by $c_1$, and $c_2$ is 
-added to the end of the \texttt{CV} matrix, as a new row.
+\subsection{Intersection}
+%===============================================================================
 
-The splitting process is started by ``splitting seeds" generated by $(d-1)$-faces of both operand boundaries.
-In fact, every such face, say $f$, has vertices on CDC and \emph{may} split some incident CDC $d$-cell.  In particular, starting from its vertices,
-$f$ must split the CDC cells in whose interior it passes though.
+For each facet $f$ of one of Boolean arguments, the subset $F(f)$ of incident or intersecting facets of boundaries of the other arguments were computed in the previous \emph{bucketing} step. So, each $F$ is transformed by the affine map that sends $f$ into the $z=0$ subspace, and there is intersected with this subspace, generating a subset $E(f)$ of coplanar edges.
+This one is projected in 2D, and the \emph{regularized} cellular 2-complex $G(f)$ induced by it is computed, and mapped back to the original space position and orientation of $f$ (providing a partition of it induced by the other boundaries).
 
-So, a dynamic data structure is set-up, storing for each boundary face $f$ the list of cells it must cut, and, for every CDC $d$-cell with interior traversed
-by some such $f$, the list of cutting faces.  This data structure is continuously updated during the splitting process, using the 
-adjacent cells of the split ones, who are to be split in turn.  Every split cell may add some adjacent cell to be split, and after the split,
-the used pair (\texttt{cell,face}) is removed.  The splitting process continues until the data structure becomes empty.
+\subsection{Reconstruction}
+%===============================================================================
 
-Every time a cell is split, it is characterized as either internal (1) or external (0) to the used (oriented) boundary facet f, so that the two 
-resulting subcells $c_1$ and $c_2$  receive two opposite characterization (with respect to the considered boundary).
-
-At the very end, every (polytopal) SCDC $d$-cell has two bits of information (one for argument $A$ and one for argument $B$), telling whether it is internal  (1) or external (0) or unknown (-1) with respect to every Boolean argument.
-
-A final recursive traversal of the SCDC, based on cell adjacencies, transforms every $-1$ into either 0 or 1, providing the two final chains to be bitwise operated, depending on the Boolean operation to execute.
+Like for in the reconstruction of 2D solid cells using the angular ordering of edges around the vertices, the coincident edges are identified in 3D , and used to sort the incident faces sing vhe falues of solid angles given with one reference face.
+The 3D space partition induced by $\cup_f G(f)$ is finally reconstructed, possibly in parallel, by traversing the adjacent sets of facets on the boundary of each solid cell.
 
 
-\section{Merging arguments}
 
+%===============================================================================
+\section{Implementation}
+%===============================================================================
+
+\subsection{Box-kd-tree}
+%===============================================================================
+
+
+\paragraph{Split the boxes between the (below,above) subsets}
 %-------------------------------------------------------------------------------
-\subsection{Reordering of vertex coordinates}
-%-------------------------------------------------------------------------------
-A global reordering of vertex coordinates is executed as the first step of the Boolean algorithm, in order to eliminate the duplicate vertices, by substituting duplicate vertex copies (coming from two close points) with a single instance. 
-
-Two dictionaries are created, then merged in a single dictionary, and finally split into three subsets of (vertex,index) pairs, with the aim of rebuilding the input representations, by making use of a novel and more useful vertex indexing.
-
-The union set of vertices is finally reordered using the three subsets of vertices belonging (a) only to the first argument, (b) only to the second argument and (c) to both, respectively denoted as $V_1, V_2, V_{12}$. A top-down description of this initial computational step is provided by the set of macros discussed in this section.
-
-%-------------------------------------------------------------------------------
-@D Place the vertices of Boolean arguments in a common space
-@{""" First step of Boolean Algorithm """
-@< Initial indexing of vertex positions @>
-@< Merge two dictionaries with keys the point locations @>
-@< Filter the common dictionary into three subsets @>
-@< Compute an inverted index to reorder the vertices of Boolean arguments @>
-@< Return the single reordered pointset and the two $d$-cell arrays @>
+@D Split the boxes between the below,above subsets
+@{""" Split the boxes between the below,above subsets """
+def splitOnThreshold(boxes,subset,coord):
+    theBoxes = [boxes[k] for k in subset]
+    threshold = centroid(theBoxes,coord)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
+    below,above = [],[]
+    for k in subset:
+        if boxes[k][a] <= threshold: below += [k]
+    for k in subset:
+        if boxes[k][b] >= threshold: above += [k]
+    return below,above
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Test if bucket OK or append to splitting stack}
 %-------------------------------------------------------------------------------
-\subsubsection{Re-indexing of vertices}
-%-------------------------------------------------------------------------------
-
-\paragraph{Initial indexing of vertex positions}
-The input LAR models are located in a common space by (implicitly) joining \texttt{V1} and \texttt{V2} in a same array, and (explicitly) shifting the vertex indices in \texttt{CV2} by the length of \texttt{V1}.
-%-------------------------------------------------------------------------------
-@D Initial indexing of vertex positions
-@{from collections import defaultdict, OrderedDict
-
-""" TODO: change defaultdict to OrderedDefaultdict """
-
-class OrderedDefaultdict(collections.OrderedDict):
-	def __init__(self, *args, **kwargs):
-		if not args:
-			self.default_factory = None
-		else:
-			if not (args[0] is None or callable(args[0])):
-				raise TypeError('first argument must be callable or None')
-			self.default_factory = args[0]
-			args = args[1:]
-		super(OrderedDefaultdict, self).__init__(*args, **kwargs)
-
-	def __missing__ (self, key):
-		if self.default_factory is None:
-			raise KeyError(key)
-		self[key] = default = self.default_factory()
-		return default
-
-	def __reduce__(self):  # optional, for pickle support
-		args = (self.default_factory,) if self.default_factory else tuple()
-		return self.__class__, args, None, None, self.iteritems()
-
-
-def vertexSieve(model1, model2):
-	from lar2psm import larModelBreak
-	V1,CV1 = larModelBreak(model1) 
-	V2,CV2 = larModelBreak(model2)
-	n = len(V1); m = len(V2)
-	def shift(CV, n): 
-		return [[v+n for v in cell] for cell in CV]
-	CV2 = shift(CV2,n)
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Merge two dictionaries with point location as keys}
-Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger than their initial sets 
-\texttt{V1} and \texttt{V2}, we re-index the set $\texttt{V1} \cup \texttt{V2}$ using a Python \texttt{defaultdict} dictionary, in order to avoid errors of ``missing key". As dictionary keys, we use the string representation of the vertex position vector, with a given fixed floating-point approximation, as provided by the \texttt{vcode} function discussed in the in the Appendix of this document.
-%-------------------------------------------------------------------------------
-@D Merge two dictionaries with keys the point locations
-@{	
-	vdict1 = defaultdict(list)
-	for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
-	vdict2 = defaultdict(list)
-	for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
-	
-	vertdict = defaultdict(list)
-	for point in vdict1.keys(): vertdict[point] += vdict1[point]
-	for point in vdict2.keys(): vertdict[point] += vdict2[point]
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Example of string coding of a vertex position}
-The position vector of a point of real coordinates is provided by the function \texttt{vcode}.
-An example of coding is given below. The \emph{precision} of the string representation can be tuned at will.
-{\small
-\begin{verbatim}
->>> vcode([-0.011660381062724849, 0.297350056848685860])
-'[-0.0116604, 0.2973501]'
-\end{verbatim}}
-
-
-
-\paragraph{Filter the common dictionary into three subsets}
-\texttt{Vertdict}, dictionary of vertices, uses as key the position vectors of vertices coded as string, and as values the list of integer indices of vertices on the given position. If the point position belongs either to the first or to second argument only, it is stored in \texttt{case1} or \texttt{case2} lists respectively. If the position (\texttt{item.key}) is shared between two vertices, it is stored in \texttt{case12}.
-The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of vertices respectively stored in each repository.
-%-------------------------------------------------------------------------------
-@D Filter the common dictionary into three subsets
-@{	
-	case1, case12, case2 = [],[],[]
-	for item in vertdict.items():
-		key,val = item
-		if len(val)==2:  case12 += [item]
-		elif val[0] < n: case1 += [item]
-		else: case2 += [item]
-	n1 = len(case1); n2 = len(case12); n3 = len(case2)
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Compute an inverted index to reorder the vertices of Boolean arguments}
-The new indices of vertices are computed according with their position within the storage repositories \texttt{case1}, \texttt{case2}, and \texttt{case12}. Notice that every \texttt{item[1]} stored in \texttt{case1} or \texttt{case2} is a list with only one integer member. Two such values are conversely stored in each \texttt{item[1]} within \texttt{case12}.
-%-------------------------------------------------------------------------------
-@D Compute an inverted index to reorder the vertices of Boolean arguments 
-@{
-	invertedindex = list(0 for k in range(n+m))
-	for k,item in enumerate(case1):
-		invertedindex[item[1][0]] = k
-	for k,item in enumerate(case12):
-		invertedindex[item[1][0]] = k+n1
-		invertedindex[item[1][1]] = k+n1
-	for k,item in enumerate(case2):
-		invertedindex[item[1][0]] = k+n1+n2
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-\subsubsection{Re-indexing of d-cells}
-%-------------------------------------------------------------------------------
-
-\paragraph{Return the single reordered pointset and the two $d$-cell arrays}
-We are now finally ready to return two reordered LAR models defined over the same set \texttt{V} of vertices, and where (a) the vertex array \texttt{V} can be written as the union of three disjoint sets of points $C_1,C_{12},C_2$; (b) the $d$-cell array \texttt{CV1} is indexed over $C_1\cup C_{12}$; (b) the $d$-cell array \texttt{CV2} is indexed over $C_{12}\cup C_{2}$. 
-
-The \texttt{vertexSieve} function will return the new reordered vertex set $V = (V_1 \cup V_2) \setminus (V_1 \cap V_2)$, the two renumbered $s$-cell sets \texttt{CV1} and \texttt{CV2}, and the size \texttt{len(case12)} of $V_1 \cap V_2$.
-%-------------------------------------------------------------------------------
-@D Return the single reordered pointset and the two $d$-cell arrays
-@{
-	V = [eval(p[0]) for p in case1] + [eval(p[0]) for p in case12] + [eval(
-				p[0]) for p in case2]
-	CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]
-	CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]
-	return V, CV1, CV2, len(case12)
+@D Test if bucket OK or append to splitting stack
+@{""" Test if bucket OK or append to splitting stack """
+def splitting(bucket,below,above, finalBuckets,splittingStack):
+    if (len(below)<4 and len(above)<4) or len(set(bucket).difference(below))<7 \
+        or len(set(bucket).difference(above))<7: 
+        finalBuckets.append(below)
+        finalBuckets.append(above)
+    else: 
+        splittingStack.append(below)
+        splittingStack.append(above)
 @}
 %-------------------------------------------------------------------------------
 
 
-\subsubsection{Example of input with some coincident vertices}
-In this example we give two very simple LAR representations of 2D cell complexes, with some coincident vertices, and go ahead to re-index the vertices, according to the method implemented by the function \texttt{vertexSieve}.
-
+\paragraph{Remove subsets from bucket list}
 %-------------------------------------------------------------------------------
-@o test/py/bool/test02.py
-@{@< Initial import of modules @>
-from bool import *
-V1 = [[1,1],[3,3],[3,1],[2,3],[2,1],[1,3]]
-V2 = [[1,1],[1,3],[2,3],[2,2],[3,2],[0,1],[0,0],[2,0],[3,0]]
-CV1 = [[0,3,4,5],[1,2,3,4]]
-CV2 = [[3,4,7,8],[0,1,2,3,5,6,7]]
-model1 = V1,CV1; model2 = V2,CV2
-VIEW(STRUCT([ 
-	COLOR(CYAN)(SKEL_1(STRUCT(MKPOLS(model1)))), 
-	COLOR(RED)(SKEL_1(STRUCT(MKPOLS(model2)))) ]))
+@D Remove subsets from bucket list @{
+""" Remove subsets from bucket list """
+def removeSubsets(buckets):
+    n = len(buckets)
+    A = zeros((n,n))
+    for i,bucket in enumerate(buckets):
+        for j,bucket1 in enumerate(buckets):
+            if set(bucket).issubset(set(bucket1)):
+                A[i,j] = 1
+    B = AA(sum)(A.tolist())
+    out = [bucket for i,bucket in enumerate(buckets) if B[i]==1]
+    return out
+
+def geomPartitionate(boxes,buckets):
+    geomInters = [set() for h in range(len(boxes))]
+    for bucket in buckets:
+        for k in bucket:
+            geomInters[k] = geomInters[k].union(bucket)
+    for h,inters in enumerate(geomInters):
+        geomInters[h] = geomInters[h].difference([h])
+    return AA(list)(geomInters)
 @}
 %-------------------------------------------------------------------------------
-
-\paragraph{Example discussion} 
-The aim of the \texttt{vertexSieve} function is twofold: (a) eliminate vertex duplicates before entering the main part of the Boolean algorithm; (b) reorder the input representations so that it becomes less expensive to check whether a 0-cell can be shared by both the arguments of a Boolean expression, so that its coboundaries must be eventually split. Remind that for any set it is:
-\[
-|A\cup B| = |A|+|B|-|A\cap B|.
-\]
-Let us notice that in the previous example
-\[
-|V| = |V_1 \cup V_2| = 12 \leq |V_1|+|V_2| = 6+9 = 15,
-\]
-and that 
-\[
-|V_1|+|V_2| - |V_1 \cup V_2| = 15 - 12 = 3 = |C_{12}| = |V_1 \cap V_2|,
-\]
-where $C_{12}$ is the subset of vertices with duplicated instances.
-%-------------------------------------------------------------------------------
-@D Output from \texttt{test/py/boolean/test02.py}
-@{V   = [[3.0,1.0],[2.0,1.0],[3.0,3.0],[1.0,1.0],[1.0,3.0],[2.0,3.0],
-		 [3.0,2.0],[2.0,0.0],[2.0,2.0],[0.0,0.0],[3.0,0.0],[0.0,1.0]]
-CV1 = [[3,5,1,4],[2,0,5,1]]
-CV2 = [[8,6,7,10],[3,4,5,8,11,9,7]]
-@}
-%-------------------------------------------------------------------------------
-Notice also that \texttt{V} has been reordered in three consecutive subsets $C_{1},C_{12},C_{2}$ such that \texttt{CV1} is indexed within $C_{1}\cup C_{12}$, whereas \texttt{CV2} is indexed within $C_{12}\cup C_{2}$. In our example we have  $C_{12}=\{\texttt{3,4,5}\}$: 
-%-------------------------------------------------------------------------------
-@D Reordering of vertex indexing of cells
-@{
->>> sorted(CAT(CV1))
-[0, 1, 1, 2, 3, 4, 5, 5]
->>> sorted(CAT(CV2))
-[3, 4, 5, 6, 7, 7, 8, 8, 9, 10, 11]
-@}
-%-------------------------------------------------------------------------------
-\paragraph{Cost analysis} 
-Of course, this reordering after elimination of duplicate vertices will allow to perform a cheap $O(n)$ discovering of (Delaunay) cells whose vertices belong both to \texttt{V1} \emph{and} to \texttt{V2}. 
-Actually, the \emph{same test} can be now used both when the vertices of the input arguments are all different, \emph{and} when they have some coincident vertices.
-The total cost of such pre-processing, executed using dictionaries, is $O(n\ln n)$.
-
-%-------------------------------------------------------------------------------
-
-\subsubsection{Example}
-
-\paragraph{Building a covering of Common Delaunay Complex}
-
-%-------------------------------------------------------------------------------
-@D Building a covering of Common Delaunay Complex
-@{def covering(model1,model2,dim=2,emptyCellNumber=1):
-	V, CV1, CV2, n12 = vertexSieve(model1,model2)
-	_,EEV1 = larFacets((V,CV1),dim,emptyCellNumber)
-	_,EEV2 = larFacets((V,CV2),dim,emptyCellNumber)
-	if emptyCellNumber !=0: CV1 = CV1[:-emptyCellNumber]
-	if emptyCellNumber !=0: CV2 = CV2[:-emptyCellNumber]
-	VV = AA(LIST)(range(len(V)))
-	return V,[VV,EEV1,EEV2,CV1,CV2],n12
-@}
-%-------------------------------------------------------------------------------
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.6\linewidth]{images/covering} 
-   \caption{Set covering of the two Boolean arguments.}
-   \label{fig:example}
-\end{figure}
-
-
-
-
-\section{Selecting cells to split}
-
-The aim of this section is to provide some fast method to select a subset of CDC cells where to start the 
-splitting of the CDC along the $(d-1)$ boundary facets of operand complexes. Of course,  a lot of useful information is provided  by the incidence relation \texttt{VC} between CDC vertices and $d$-cells. 
-
-Two dictionaries are used in order to split the CDC and compute the SCDC. The dictionary \texttt{dict\_fc} is used with key a boundary $(d-1)$-face and value the (dynamic) list of CDC $d$-cells crossed (and later split) by it. Conversely, the  \texttt{dict\_cf} dictionary is used with key a CDC $d$-cell and with value the list of boundary $(d-1)$-faces crossing it.
-
-Two different strategies may be used for boundary facets terminating by crossing the interior of some CDC cell, and for facets sharing the tangent space of the boundary of such cells.
-Alternatively to what initially implemented, all the boundary $(d-1)$-faces must be considered as ``splitting seeds", and tracked against the current state of the SCDC.
-
-
-\paragraph{Relational inversion (characteristic matrix transposition)}
-
-The operation could be executed by simple matrix transposition of the CSR (Compressed Sparse Row) representation of the sparse characteristic matrix $M_d \equiv \texttt{CV}$.
-A simple relational inversion using Python lists is given here. The \texttt{invertRelation} function 
-is given here, linear in the size of the \texttt{CV} list, where the complexity of each cell is constant and 
-small in most cases.
-
-%-------------------------------------------------------------------------------
-@D Characteristic matrix transposition
-@{""" Characteristic matrix transposition """
-def invertRelation(dim,CV):
-	inverse = [[] for k in range(dim)]
-	for k,cell in enumerate(CV):
-		for v in cell:
-			inverse[v] += [k]
-	return inverse
-@}
-%-------------------------------------------------------------------------------
-
-
-\subsection{Computing the boundary hyperplanes (BHs)}
-
-For each boundary $(d-1)$-face the affine hull is computed, producing a set of pairs (\texttt{face, covector}).
-
-%-------------------------------------------------------------------------------
-@D New implementation of splitting dictionaries
-@{""" New implementation of splitting dictionaries """
-VC = invertRelation(len(V),CV)
-
-covectors = []
-for faceVerts in BC:
-	points = [V[v] for v in faceVerts]
-	"""
-	dim = len(points[0])
-	theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
-	covector1 = [(-1)**(col)*theMat.minor(0,col).determinant() 
-						for col in range(dim+1)]
-	"""
-	covector = COVECTOR(points)
-	covector2 = covector[1:]+[covector[0]] 
-	print "covector =",covector2
-	covectors += [covector2]
-
-@< Association of covectors to d-cells @>
-@< Initialization of splitting dictionaries @>
-@}
-%-------------------------------------------------------------------------------
-
-
-
-\subsection{Association of BHs to $d$-cells of CDC}
-
-Every pair (\texttt{face, covector}) is associated uniquely to a single $d$-cell of CDC, producing a set of triples (\texttt{face, covector, cell}). Two cases are possible: (a) the face hyperplane crosses the interior of the cell; (b) the face hyperplane contains the face, so that the cell is left on the interior subspace of the (oriented) face covector.
-
-For this purpose, it is checked that at least one of the face vertices, transformed into the common-vertex-based coordinate frame, have all positive coordinates. This fact guarantees the existence of a non trivial intersection between the $(d-1)$-face and the $d$-cell.
-
-
-%-------------------------------------------------------------------------------
-@D Association of covectors to d-cells
-@{""" to compute a single d-cell associated to (face,covector) """
-def covectorCell(face,faceVerts,covector,CV,VC):
-	incidentCells = VC[faceVerts[0]]
-	for cell in incidentCells:
-		cellVerts = CV[cell]
-		v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-		transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
-		vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
-					if v != v0]).T)).T.tolist()
-		if any([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
-			return [face,cell,covector]
-	print "error: found no face,cell,covector","\n"
-@}
-%-------------------------------------------------------------------------------
-
-
-
-
-\subsection{Initialization of splitting dictionaries}
-The triples (\texttt{face, cell, covector}), computed by the \texttt{covectorCell} function, is suitably accommodated into two dictionaries denoted as \texttt{dict\_fc} (for \emph{face, cell}) and \texttt{dict\_cf} (for \emph{cell, face}), respectively.
-
-
-%-------------------------------------------------------------------------------
-@D Initialization of splitting dictionaries
-@{""" Initialization of splitting dictionaries """
-tasks = []
-for face,covector in zip(range(len(BC)),covectors):
-	tasks += [covectorCell(face,BC[face],covector,CV,VC)]
-
-dict_fc,dict_cf = initTasks(tasks)
-print "\ndict_fc =",dict_fc
-print "dict_cf =",dict_cf,"\n"
-@}
-%-------------------------------------------------------------------------------
-
-
-
-\section{Splitting cells traversing the boundaries}
-\label{sec:crossing}
-In the previous section we computed a set of "split seeds", each made by a boundary facet and by a Delaunay cell to be split by the facet's affine hull. Here we show how to partition ate each such cells into two cells, according to Figure~\ref{fig:splitting}, where the boundary facets of the two boolean arguments are shown in yellow color.
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.6\linewidth]{images/splitting} 
-   \caption{example caption}
-   \label{fig:splitting}
-\end{figure}
-
-In the example in Figure~\ref{fig:splitting}, the set of pairs \texttt{(facet,cell)} to be used as split seeds are given below.
-{\small
-\begin{verbatim}
-[[25, 3], [1, 3], [29, 18], [20, 22], [1, 19], [25, 10], [20, 10], [29, 22]]
-\end{verbatim}}
-
-\subsection{Cell splitting}
-
-A cell will be split by pyplasm intersection with a suitable rotated and translated instance of a (large) $d$-cuboid with the superior face embedded in the hyperplane $z=0$.
-
-\paragraph{Splitting a cell with an hyperplane}
-The macro below defines a function \texttt{cellSplitting}, with input the index of the \texttt{face}, the index of the \texttt{cell} to be bisected, the \texttt{covector} giving the coefficients of the splitting hyperplane, i.e.~the affine hull of the splitting \texttt{face}, and the arrays \texttt{V}, \texttt{EEV}, \texttt{CV}, giving the coordinates of vertices, the (accumulated) facet to vertices relation (on the input models), and the cell to vertices relation (on the Delaunay model), respectively. 
-
-The actual subdivision of the input \texttt{cell} onto the two output cells \texttt{cell1} and \texttt{cell2} is performed by using the \texttt{pyplasm} Boolean operations of intersection and difference of the input with a solid simulation of the needed hyperspace, provided by the \texttt{rototranslSubspace} variable. Of course, such pyplasm operators return two Hpc values, whose vertices will then extracted using the \texttt{UKPOL} primitive.
-
-%-------------------------------------------------------------------------------
-@D Cell splitting
-@{""" Cell splitting in two cells """
-def cellSplitting(face,cell,covector,V,EEV,CV):
-	plane = COVECTOR([V[v] for v in EEV[face]])
-	theCell = [V[v] for v in CV[cell]]
-	[below,equal,above] = SPLITCELL(plane,theCell)
-	cell1 = AA(vcode)(below)
-	cell2 = AA(vcode)(above)
-	return cell1,cell2
-@}
-%-------------------------------------------------------------------------------
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.6\linewidth]{images/seeds} 
-   \caption{example caption}
-   \label{fig:example}
-\end{figure}
-
-
-\subsection{Cross-building of two task dictionaries}
-
-The correct and efficient splitting of the Common Delaunay Complex (CDC) with the  (closed and orientable) boundaries of two Boolean arguments, requires the use of two special dictionaries, respectively named \texttt{dict\_fc} (for \emph{face-cell}), and \texttt{dict\_cf} (for \emph{cell-face}).
- 
-On one side, for each splitting facet ($(d-1)$-face), used as key, we store in \texttt{dict\_fc} the list of traversed $d$-cells of CDC, starting in 2D with the two cells containing the two extreme vertices of the cutting edge, and in higher dimensions, with all the $d$-cells containing one of vertices of the splitting $(d-1)$-face.
-
-On the other side, for each $d$-cell to be split, used as key, we store in \texttt{dict\_cf} the list of cutting $(d-1)$-cells, since a single $d$-cell may be traversed and split by more than one facet. 
-
-
-\paragraph{Init face-cell and cell-face dictionaries}
-
-%-------------------------------------------------------------------------------
-@D Init face-cell and cell-face dictionaries
-@{""" Init face-cell and cell-face dictionaries """
-def initTasks(tasks):
-	dict_fc = defaultdict(list)
-	dict_cf = defaultdict(list)
-	for task in tasks:
-		face,cell,covector = task
-		dict_fc[face] += [(cell,covector)] 
-		dict_cf[cell] += [(face,covector)] 
-	return dict_fc,dict_cf
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Example of face-cell and cell-face dictionaries}
-
-%-------------------------------------------------------------------------------
-@D Example of face-cell and cell-face dictionaries
-@{""" Example of face-cell and cell-face dictionaries """
-tasks (face,cell) = [
- [0, 4, [-10.0, 2.0, 110.0]],
- [31, 5, [3.0, -14.0, 112.0]],
- [17, 18, [10.0, 2.0, -30.0]],
- [22, 3, [-1.0, -14.0, 42.0]],
- [17, 19, [10.0, 2.0, -30.0]],
- [31, 18, [3.0, -14.0, 112.0]],
- [22, 19, [-1.0, -14.0, 42.0]],
- [0, 3, [-10.0, 2.0, 110.0]]]
-
-tasks (dict_fc) = defaultdict(<type 'list'>, {
-  0: [(4, [-10.0, 2.0, 110.0]), (3, [-10.0, 2.0, 110.0])],
- 17: [(18, [10.0, 2.0, -30.0]), (19, [10.0, 2.0, -30.0])],
- 22: [(3, [-1.0, -14.0, 42.0]), (19, [-1.0, -14.0, 42.0])],
- 31: [(5, [3.0, -14.0, 112.0]), (18, [3.0, -14.0, 112.0])]  })
-
-tasks (dict_cf) = defaultdict(<type 'list'>, {
- 19: [(17, [10.0, 2.0, -30.0]), (22, [-1.0, -14.0, 42.0])],
- 18: [(17, [10.0, 2.0, -30.0]), (31, [3.0, -14.0, 112.0])],
-  3: [(22, [-1.0, -14.0, 42.0]), (0, [-10.0, 2.0, 110.0])],
-  4: [(0, [-10.0, 2.0, 110.0])],
-  5: [(31, [3.0, -14.0, 112.0])]  })
-@}
-%-------------------------------------------------------------------------------
-
-
-\subsection{Updating the vertex set and dictionary}
-\label{sec:updating}
-
-In any dimension, the split of a $d$-cell with an hyperplane (crossing its interior) produces two $d$-cells and some new vertices living upon the splitting hyperplane.
-
-When the $d$-cell $c$ is contained in only one seed of the CDC decomposition, i.e.~when \texttt{dict\_cf[c]} has cardinality one (in other words: it is crossed only by one boundary facet), the two generated cells \texttt{vcell1,vcell2} can be safely output, and accommodated in two slots of the \texttt{CV} list.
-
-Conversely, when more than one facet crosses $c$, much more care must be taken to guarantee the correct fragmentation of this cell.
-
-
-\paragraph{Managing the splitting dictionaries}
-The function \texttt{splittingControl} takes care of cells that must be split several times, as crossed by several boundary faces. 
-
-If the dictionary item \texttt{dict\_cf[cell]} has \emph{length} one (i.e.~is crossed  \emph{only} by one face) the \texttt{CV} list is updated and the function returns, in order to update the \texttt{dict\_fc} dictionary.
-
-Otherwise, the function subdivides the facets cutting \texttt{cell} between those to be associated to \texttt{vcell1} and to \texttt{vcell2}. 
-For each pair \texttt{aface,covector} in \texttt{dict\_cf[cell]} \emph{and} in position following \texttt{face} in the list of pairs, check if either \texttt{vcell1} or \texttt{vcell2} or both, have intersection with the subset of vertices shared between \texttt{cell} and \texttt{aface}, and respectively put in \texttt{alist1}, in \texttt{alist2}, or in both.
-Finally, store \texttt{vcell1} and \texttt{vcell2} in \texttt{CV}, and \texttt{alist1}, \texttt{alist2} in \texttt{dict\_cf}.
-
-%-------------------------------------------------------------------------------
-@D Managing the splitting dictionaries
-@{""" Managing the splitting dictionaries """
-def splittingControl(face,cell,covector,vcell,vcell1,vcell2,
-		dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1,splitBoundaryFacets,splittingCovectors):
-
-	boundaryFacet = BC[face]
-	translVector = V[boundaryFacet[0]]
-	tcovector = [cv+tv*covector[-1] for (cv,tv) in zip(
-					covector[:-1],translVector) ]+[0.0]
-
-	c1,c2 = cell,cell
-	if not haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,
-								translVector,tcovector,covector,
-								V,splitBoundaryFacets,splittingCovectors) :
-								
-		print "1.1> cell,vcell,face,covector =",cell,vcell,face,covector
-
-		# only one facet covector crossing the cell
-		cellVerts = CV[cell]
-		CV[cell] = vcell1
-		CV += [vcell2]
-		CVbits += [list(copy(CVbits[cell]))]
-		c1,c2 = cell,len(CV)-1
-		
-		newFacet = list(set(vcell1).intersection(vcell2))
-		splitBoundaryFacets += [newFacet]  ## CAUTION: to verify
-		splittingCovectors[c1] += [(face,covector,newFacet)]
-		splittingCovectors[c2] = splittingCovectors[c1]
-		
-		print "1.1.1> c1,c2,CVbits[c1],CVbits[c2] =",c1,c2,CVbits[c1],CVbits[c2]
-		
-		dict_fc[face].remove((cell,covector))	# remove the split cell
-		dict_cf[cell].remove((face,covector))	# remove the splitting face
-				
-		# more than one facet covectors crossing the cell
-		alist1,alist2 = list(),list()
-		for aface,covector in dict_cf[cell]:
-			if cuttingTest(covector,CV[cell],V):
-		
-    			# for each facet crossing the cell
-    			# compute the intersection between the facet and the cell
-    			faceVerts = BC[aface]
-    			commonVerts = list(set(faceVerts).intersection(cellVerts))
-    			
-    			# and attribute the intersection to the split subcells
-    			if set(vcell1).intersection(commonVerts) != set():
-    				alist1.append((aface,covector))
-    			else: dict_fc[aface].remove((cell,covector)) 
-    					
-    			if set(vcell2).intersection(commonVerts) != set():
-    				alist2.append((aface,covector))
-    				dict_fc[aface] += [(len(CV)-1,covector)]
-    		
-    			print "1.1.1.1> aface,dict_fc[aface] =",aface,dict_fc[aface]
-			
-		dict_cf[cell] = alist1  
-		dict_cf[len(CV)-1] = alist2
-		
-		print "1.1.2> cell,dict_cf[cell] =",cell,dict_cf[cell]
-		print "1.1.3> len(CV)-1,dict_cf[len(CV)-1] =",len(CV)-1,dict_cf[len(CV)-1]
-		
-	else:
-	
-		print "1.2> cell,vcell,face,covector =",cell,vcell,face,covector
-		
-		dict_fc[face].remove((cell,covector))	# remove the split cell
-		dict_cf[cell].remove((face,covector))	# remove the splitting face	
-		
-	return V,CV,CVbits, dict_cf, dict_fc,[c1,c2]
-@}
-%-------------------------------------------------------------------------------
-
-
-\subsection{Updating the split cell and the queues of seeds}
-
-When a $d$-cell of the Common Delaunay Complex (CDC) is split into two $d$-cells, the first task to perform is to update its representation as vertex list, and to update the list of $d$-cells. In particular, as \texttt{cell}, and \texttt{cell1}, \texttt{cell2} are the input $d$-cell and the two output $d$-cells, respectively, we go to substitute \texttt{cell} with \texttt{cell1}, and to add the \texttt{cell2} as a new row of the \texttt{CSR}$(M_d)$ matrix, i.e.~as the new terminal element of the \texttt{CV} array. Of course, the reverse relation \texttt{VC} must be updated too.
-
-\paragraph{Updating the split cell} 
-First of all notice that, whereas \texttt{cell} is given as an integer index to a \texttt{CV} row,
-\texttt{cell1}, \texttt{cell2} are returned by the \texttt{cellSplitting} function as lists of lists of coordinates (of vertices). Therefore such vectors must be suitably transformed into dictionary keys, in order to return the corresponding vertex indices. When transformed into two lists of vector indices, \texttt{cell1}, \texttt{cell2} will be in the form needed to update the \texttt{CV} and \texttt{VC} relations.
-
-\paragraph{Updating the vertex set of split cells}
-The code in the macro below provides the splitting of the CDC along the boundaries of the two Boolean arguments.
-This function, and the ones called by its, provide the dynamic update of the two main data structures, i.e.~of the LAR model \texttt{(V,CV)}.
-
-
-%-------------------------------------------------------------------------------
-@D Updating the vertex set  of split cells
-@{""" Updating the vertex set of split cells """
-
-@< Computation of bits of split cells @>
-
-def tangentTest(face,polytope,V,BC):
-	faceVerts = BC[face]
-	cellVerts = polytope
-	commonVerts = list(set(faceVerts).intersection(cellVerts))
-	if commonVerts != []:
-		v0 = commonVerts[0] # v0 = common vertex (TODO more general)
-		transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
-		vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
-					if v != v0]).T)).T.tolist()
-		if all([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
-			return True
-	else: return False
-
-from collections import defaultdict
-
-def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
-	DEBUG = False
-	splitBoundaryFacets = []; splittingCovectors = defaultdict(list)
-	CVbits = [[-1,-1] for k in range(len(CV))] 
-	nverts = len(V); cellPairs = []; twoCellIndices = []; 
-	while any([tasks != [] for face,tasks in dict_fc.items()]) : 
-		for face,tasks in dict_fc.items():
-			for task in tasks:
-				cell,covector = task
-				vcell = CV[cell]
-				if (cell,vcell,face) == (29, [24, 1, 4], 3): break
-				print "\n1> cell,vcell,face,covector =",cell,vcell,face,covector
-
-				cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
-				if cuttingTest(covector,vcell,V):
-					if cell1 == [] or cell2 == []:
-						pass
-					else:
-						adjCells = adjacencyQuery(V,CV)(cell)
-												
-						vcell1 = []
-						for k in cell1:
-							if vertdict[k]==[]: 
-								vertdict[k] += [nverts]
-								V += [eval(k)]
-								nverts += 1
-							vcell1 += [vertdict[k]]
-						
-						vcell1 = CAT(vcell1)
-						vcell2 = CAT([vertdict[k] for k in cell2])							
-															
-						V,CV,CVbits, dict_cf, dict_fc,twoCells = splittingControl(
-							face,cell,covector,vcell,vcell1,vcell2, dict_fc,dict_cf,V,BC,CV,VC,
-							CVbits,lenBC1,splitBoundaryFacets,splittingCovectors)
-						if twoCells[0] != twoCells[1]:
-
-							print "2> cell,adjCells =",cell,adjCells
-							
-							for adjCell in adjCells:
-								if cuttingTest(covector,CV[adjCell],V):
-    								dict_fc[face] += [(adjCell,covector)]     								
-    								dict_cf[adjCell] += [(face,covector)] 
-    								print "2.1> face,dict_fc[face] =",face,dict_fc[face]
-    								print "2.2> adjCell,dict_cf[adjCell] =",adjCell,dict_cf[adjCell]
-
-								cellPairs += [[vcell1, vcell2]]
-								twoCellIndices += [[twoCells]]
-												
-					if DEBUG: showSplitting("c",twoCells[1],V,cellPairs,BC,CV)
-
-				elif tangentTest(face,vcell,V,BC):										
-					newFacet = [ v for v in vcell if 
-						verySmall(INNERPROD([covector,V[v]+[1.0]])) ]
-					splitBoundaryFacets += [newFacet]
-					splittingCovectors[cell] += [(face,covector,newFacet)]
-					
-					dict_fc[face].remove((cell,covector))   # remove the split cell
-					dict_cf[cell].remove((face,covector))   # remove the splitting face
-
-				else: 
-					dict_fc[face].remove((cell,covector))   # remove the split cell
-					# dict_cf[cell].remove((face,covector))   # remove the splitting face
-				if DEBUG: showSplitting("b",cell,V,cellPairs,BC,CV)
-			if DEBUG: showSplitting("a",cell,V,cellPairs,BC,CV)
-	splitBoundaryFacets = sorted(list(AA(list)(set(AA(tuple)(AA(sorted)(splitBoundaryFacets))))))
-	return CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Test for split halting along a boundary facet}
-
-The cell splitting is operated by the facet's hyperplane $H(f)$, that we call \emph{covector},  and the splitting with it may continues outside $f$ ... !!
-
-This fact may induce some local errors in the decision procedure (attributing either 0 or 1 to each split cell pair).
-So, when splitting a pair \texttt{(cell,face)} --- better: \texttt{(cell,covector) }--- already stored in the data structure, and then computing its adjacent  pairs,
-we should check if the common facet $f_{12}$ between $c_1$ and $c_2$ is (or is not) at least partially internal  to $f$.  
-
-If this fact is not true, and hence $f_{12}$ is $out(f)$  in the induced topology of the $H(f)$ hyperplane, the split process on that pair must be halted:  $c_1$ and $c_2$ are not stored, and their adjacent cells not split.
-
-
-%-------------------------------------------------------------------------------
-@D Test for split halting along a boundary facet
-@{""" Test for split halting along a boundary facet """
-def haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,covector,
-						V,splitBoundaryFacets,splittingCovectors):
-	newFacet = list(set(vcell1).intersection(vcell2))
-	
-	# translation 
-	newFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in newFacet ]
-	boundaryFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in boundaryFacet ]
-	
-	# linear transformation: newFacet -> standard (d-1)-simplex
-	transformMat = mat( boundaryFacet[1:] + [tcovector[:-1]] ).T.I
-	
-	# transformation in the subspace x_d = 0
-	newFacet = AA(COMP([eval,vcode]))((transformMat * (mat(newFacet).T)).T.tolist())
-	boundaryFacet = AA(COMP([eval,vcode]))((transformMat * (mat(boundaryFacet).T)).T.tolist())
-	
-	# projection in E^{d-1} space and Boolean test
-	newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
-	boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
-	verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
-	
-	if verts == []: return True
-	else: return False
-@}
-%-------------------------------------------------------------------------------
-
-
-
-\subsection{Updating the cells adjacent to the split cell}
-
-Once the list of $d$-cells has been updated with respect to the results of a split operation, it is necessary to consider the possible update of all the cells that are adjacent to the split one.  It particular we need to update their lists of vertices, by introducing the new vertices produced by the split, and by updating the dictionaries of tasks, by introducing the new (adjacent) splitting seeds.
-
-\paragraph{Computing the adjacent cells of a given cell}
-To perform this task we make only use of the \texttt{CV} list. In a more efficient implementation we should make direct use of the sparse adjacency matrix, to be dynamically updated together with the \texttt{CV} list.
-The computation of the adjacent $d$-cells of a single $d$-cell is given here by extracting a column of the $\texttt{CSR}(M_d\, M_d^t)$. This can be done by multiplying $\texttt{CSR}(M_d)$ by its transposed row corresponding to the query $d$-cell. 
-
-%-------------------------------------------------------------------------------
-@D Computing the adjacent cells of a given cell
-@{""" Computing the adjacent cells of a given cell """
-def adjacencyQuery (V,CV):
-	dim = len(V[0])
-	def adjacencyQuery0 (cell):
-		nverts = len(CV[cell])
-		csrCV =  csrCreate(CV)
-		csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
-		cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
-		return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
-	return adjacencyQuery0
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Updating the adjacency matrix}
-At every step of the CDC splitting, generating two output cells \texttt{cell1} and  \texttt{cell2} from the input  \texttt{cell}, the element of such index in the list \texttt{CV} is restored with the \texttt{cell1} vertices, and a new (last) element is created in \texttt{CV}, to store the \texttt{cell2} vertices.
-Therefore the row of index \texttt{cell} of the symmetric  adjacency matrix must be recomputed, being the \texttt{cell} column updated consequently. Also, a new last row (and column) must be added to the matrix. 
-
-%-------------------------------------------------------------------------------
-@D Updating the adjacency matrix
-@{""" Updating the adjacency matrix """
-pass
-@}
-%-------------------------------------------------------------------------------
-
-
-
-\paragraph{Computation of bits of split cells}
-
-In order to compute, in the simplest and more general way, whether each of the two split $d$-cells is internal or external to the splitting boundary $d-1$-facet, it is necessary to consider the oriented covector $\phi$ (or one-form) canonically associated to the facet $f$ by the covector representation theorem, i.e.~the corresponding oriented hyperplane. In this case, the internal/external attribute of the split cell will be computed by evaluating the pairing $<v,\phi>$.
-
-%-------------------------------------------------------------------------------
-@D Computation of bits of split cells
-@{""" Computation of bits of split cells """
-def testingSubspace(V,covector):
-	def testingSubspace0(vcell):
-		inout = SIGN(sum([INNERPROD([V[v]+[1.],covector]) for v in vcell]))
-		return inout
-	return testingSubspace0
-	
-def cuttingTest(covector,polytope,V):
-	signs = [INNERPROD([covector, V[v]+[1.]]) for v in polytope]
-	signs = eval(vcode(signs))
-	return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
-@}
-%-------------------------------------------------------------------------------
-
-
-
-\paragraph{Accumulation of split boundary facets of the SCDC}
-
-%-------------------------------------------------------------------------------
-@D Accumulation of split boundary facets of the SCDC
-@{""" Accumulation of split boundary facets of the SCDC """
-
-@}
-%-------------------------------------------------------------------------------
-
-
-
-\subsection{The Boolean algorithm flow}
-
-
-\paragraph{Show the process of CDC splitting}
-
-%-------------------------------------------------------------------------------
-@D Show the process of CDC splitting
-@{""" Show the process of CDC splitting """
-def showSplitting(step,theCell,V,cellPairs,BC,CV):
-	VV = AA(LIST)(range(len(V)))
-	boundaries = COLOR(RED)(SKEL_1(STRUCT(MKPOLS((V,BC)))))
-	submodel = COLOR(CYAN)(STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ]))
-	if cellPairs != []:
-		cells1,cells2 = TRANS(cellPairs)
-		out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
-				COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
-		VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2), 
-			S([1,2])([0.1,0.1])(TEXT(str(theCell)+step)) ]))
-	else:
-		VIEW(STRUCT([ larModelNumbering(V,[VV,BC,CV],submodel,2),
-			S([1,2])([0.1,0.1])(TEXT(str(theCell)+step)) ]))
-@}
-%-------------------------------------------------------------------------------
-
-
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/SCDC1} 
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/SCDC2} 
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/SCDC3} 
-   \caption{Transformation from Boolean input (two 2D single-cell complexes) to CDC (Common Delaunay Complex) to SCDC (Split Common Delaunay Complex).}
-   \label{fig:example}
-\end{figure}
-
-
-
-
-\section{Reconstruction of results}
-
-Once the SCDC has been constructed, some of its $d$-cells are fully characterized, using two bits of information, as either internal (1) or external (0) to one or both the cellular spaces of Boolean arguments $A$ and $B$. 
-
-In particular, when a CDC cell was split, the two resulting subcells were both labeled: one as internal, and the other as external to the oriented hyperplane of the splitting facet. Conversely, when such hyperplane was the support (i.e.~the affine hull) of one $(d-1)$-face of the CDC cell, just this cell was characterised as either internal or external to such support hyperplane.
-
-A third value (-1) was used for the initial characterisation of all the SCDC cells, so that at the end of the SCDC construction, every $d$-cell is tagged with two values from the set $\{-1,0,1\}$. A recursive traversal of the cells reachable from every cell already tagged with either 0 or 1, will allow to extend the cell tag to those tagged as -1 (which stands for ``unknown position").
-
-
-
-
-\subsection{Computing the coboundary of SCDC space}
-\label{sec:coboundary}
-
-The first algorithm prototype has shown that the previous tagging strategy works well in several cases, but is not sufficient in others, because the recursive extension of tags is not always correctly blocked at the boundaries of $A$ and $B$, as---of course---embedded in the SCDC. 
-
-In this section we develop a stronger characterisation of the boundaries, by fully tagging in SCDC the internal coboundary of boundaries of $A$ and $B$. This novel strategy should allow the recursive tagging extension to work correctly in all cases.
-
-As we know, the  coboundary operators $\delta_{k-1}: C_{k-1} \to C_k$ are the transpose of the boundary operators $\partial_k: C_k \to C_{k-1}$ ($1\leq k\leq d$). We therefore proceed to the construction of the operator $\delta_{d-1}$, according to the procedure illustrated in~\cite{}. For this purpose we need to use both the $C_d$ and the $C_{d-1}$ bases of SCDC. The first basis is generated as \texttt{CV} array during the splitting. The second basis will be built from $C_d$ using the proper $d$-adjacency algorithm from~\cite{}. 
-
-Let us remember that a (co)boundary operator may be applied to \emph{any} chain from the linear space of chains defined upon a cellular complex. 
-In our case we have already generated the $(d-1)$-chains $\partial A$ and $\partial B$ while building the SCDC, by accumulating, in the course of the splitting phase, the $(d-1)$-facets discovered while tracking the boundaries of $A$ and $B$. We just need now to tag (a subset of) $\delta_{d-1}\partial_d A$ and $\delta_{d-1}\partial_d B$.
-
-\paragraph{Boundary triangulation of a convex hull}
-
-The dimension-independent computation of the simplicial complex partitioning the boundary of a Delaunay triangulation is given here, using the set of \texttt{simplices} and \texttt{neighbors} provided by the \texttt{scipy.spatial} Python library using the \texttt{qhull} implementation.
-It may be worth noting that the \texttt{neighbors} technique to denote the $d$-adjacencies of the simplices of a multidimensional triangulation was introduced in~\cite{DBLP:journals/cad/FerruciP91,Paoluzzi:1993:DMS:169728.169719} and in previous research reports. 
-
-%-------------------------------------------------------------------------------
-@D Boundary triangulation of a convex hull
-@{""" Boundary triangulation of a convex hull """
-"""
-def qhullBoundary(V):
-	dim = len(V[0])
-	triangulation = Delaunay(array(V))
-	CV = triangulation.simplices.tolist()
-	Ad = triangulation.neighbors.tolist()
-	wingedRep = zip(CV,Ad)
-	boundaryCofaces = [simplex for simplex in wingedRep if any([ad==-1 for ad in simplex[1]])]
-	wingedPairs = [zip(*coface) for coface in boundaryCofaces]
-	out = [[v for v,ad in pairs if ad!=-1] for pairs in wingedPairs]
-	return sorted(out)
-"""
-from scipy.spatial import ConvexHull
-def qhullBoundary(V):
-	points = array(V)
-	hull = ConvexHull(points)
-	out = hull.simplices.tolist()
-	return sorted(out)
-	
-if __name__=="__main__":
-	BV = qhullBoundary(V)
-	VIEW(STRUCT(MKPOLS((V,BV))))
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Extracting a $(d-1)$-basis of SCDC}
-
-This set of $(d-1)$-cells is needed to compute the $\partial_d$ boundary operator upon the SCDC cellular space.
-Since the SCDC is a \emph{solid} complex, its intrinsic dimension equates the number of coordinates of vertices.
-hence \texttt{dim = len(V[0])}. The dimension-independent algorithm implemented by the \texttt{larFacets} function
-returns only the \emph{interior} $(d-1)$-cells, if the LAR of the \emph{exterior} cell(s) is not given as the last cell(s) of the \texttt{CV} array. 
-
-Of course, for a convex complex like the SCDC, the LAR of the exterior cell coincides with that of the boundary, so that we have two possibilities: (a) compute the indices of boundary vertices (including eventually the \emph{coplanar}) using \texttt{scipy.spatial} and include their list after \texttt{CV[-1]}; (b) directly compute the $(d-1)$-cells of the boundary using the function \texttt{qhullBoundary} given below ad add them to the \texttt{larFacets} output. 
-
-We have chosen the second option  for the sake of efficiency in the current prototype implementation. The first option will be preferred when making actual use of efficient sparse matrix techniques.
-
-%-------------------------------------------------------------------------------
-@D Extracting a $(d-1)$-basis of SCDC
-@{""" Extracting a $(d-1)$-basis of SCDC """
-def larConvexFacets (V,CV):
-	dim = len(V[0])
-	model = V,CV
-	V,FV = larFacets(model,dim)
-	FV = sorted(FV + qhullBoundary(V))
-	return FV
-	
-if __name__=="__main__":
-	V = [[0.0,10.0],[0.0,0.0],[10.0,10.0],[10.0,0.0],[12.5,2.5],[2.5,2.5],[2.5,12.5],
-		 [12.5,12.5],[10.0,2.5],[2.5,10.0]]
-	CV = [[0,1,5],[9,0,5],[9,0,6],[1,3,5],[8,4,3],[8,5,3],[2,4,7],[2,6,7],
-		  [8,2,5],[8,4,2],[9,2,6],[9,2,5]]
-	VV = AA(LIST)(range(len(V)))
-	FV = larConvexFacets (V,CV)
-	submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
-	VIEW(larModelNumbering(V,[VV,FV,CV],submodel,4))
-@}
-%-------------------------------------------------------------------------------
-
-
-\subsection{Searching for the fragmented boundaries within the SCDC}
-
-As we already know, in order to make a partial tagging of $d$-cells of SCDC, needed for computing---using the traversal algorithm given in Section~\ref{sec:traversal}---the complete and correct tagging of all its  $d$-cells, we need to compute: (a) the matrix representation of the coboundary operator in the SCDC basis; (b) the coordinate representation, in the SCDC basis, of the split Boolean arguments. The first one is assessed in Section~\ref{sec:coboundary}; the second one is computed here.
-
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/boundaryFacets1} 
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/boundaryFacets2} 
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/boundaryFacets3} 
-   \caption{The transformation of the boundaries of two 2D Boolean arguments: (a) the $(d-1)$-cells of the input boundaries; (b) such $(d-1)$-cells accumulated during the splitting, i.e.~in intermediate phases of the SCDC construction; (c) the whole set of $(d-1)$-cells (i.e. the $(d-1)$-skeleton) of the final SCDC.}
-   \label{fig:boundaryFacets}
-\end{figure}
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[height=0.26\linewidth,width=0.325\linewidth]{images/splitfacets0} 
-   \includegraphics[height=0.26\linewidth,width=0.325\linewidth]{images/splitfacets1} 
-   \includegraphics[height=0.26\linewidth,width=0.325\linewidth]{images/splitfacets2} 
-   \caption{The transformation of the boundaries of two 2D Boolean arguments: (a) input boundaries; (b) $(d-1)$-cells accumulated during the splitting; (c) $(d-1)$-skeleton of the final SCDC. In yellow the boundary facets accumulated during the splitting, that yet need later splits.}
-   \label{fig:splitfacets}
-\end{figure}
-
-
-\paragraph{Building a dictionary of SCDC $(d-1)$-cells}
-At the end of the splitting phase, the LAR model \texttt{(V,CV)} of the SCDC is built, together with a $(d-1)$-complex of accumulated split boundary cells, named \texttt{splitBoundaryFacets} in Section~\ref{sec:updating}.
-
-%-------------------------------------------------------------------------------
-@D Building a dictionary of SCDC $(d-1)$-cells
-@{""" Building a dictionary of SCDC $(d-1)$-cells """
-def facetBasisDict(model):
-	V,CV = model
-	FV = larConvexFacets (V,CV)
-	values = range(len(FV))
-	keys = AA(tuple)(FV)
-	dict_facets = dict(zip(keys,values))
-	return dict_facets
-	
-@< Searching for the split boundary facets in the dictionary @>
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Searching for the split boundary facets in the dictionary}
-When performing a search---within the dictionary \texttt{dict\_facets}---of cells of the  \texttt{splitBoundaryFacets} list, accumulated during the construction of the SCDC, some
-will not found, because they were stored before that subsequent splits of their coboundary cells
-happened (in some later time instant of the splitting process). Such cells that are not retrieved within the $(d-1)$-skeleton of the SCDC are shown in yellow in the Figures~\ref{fig:boundaryFacets}b and~\ref{fig:splitfacets}b.
-
-%-------------------------------------------------------------------------------
-@D Searching for the split boundary facets in the dictionary
-@{""" Searching for the split boundary facets in the dictionary """
-if __name__=="__main__":
-	model = V,CV
-	dict_facets = facetBasisDict(model)
-	for cell in splitBoundaryFacets: 
-		if cell in dict_facets:
-			print dict_facets[cell]
-		else: print cell
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Improving the splitting of boundary facets}
-In order to get a record of Split Boundary Facets (SBFs) that coincides with a subset of $(d-1)$-skeleton of SCDC, we need an additional data structure (once again a dictionary, named \texttt{splittingCovectors}), with \emph{key} the split $d$-cells, and \emph{values} the list of pairs, made by (a) the splitting hyperplane used during its generation, i.e.~the minimal affine support of a SBF contained on its boundary, and (b) the LAR (list of vertices) of the split facet. At the end of the splitting we will reconstruct the correct and complete chain of SBFs using the coordinates of the SCDC basis.
-
-
-
-
-\paragraph{Coboundary of split boundary facets}
-
-Here we compute the matrix representation of the coboundary operator in the SCDC basis.
-
-%-------------------------------------------------------------------------------
-@D Boundary-Coboundary operators in the SCDC basis
-@{""" Boundary-Coboundary operators in the SCDC basis """
-dim = len(V[0])
-FV = larConvexFacets (V,CV)
-_,EV = larFacets((V,FV), dim=2)
-
-VV = AA(LIST)(range(len(V)))
-if dim == 3: bases = [VV,EV,FV,CV]
-elif dim == 2: bases = [VV,FV,CV]
-else: print "\nerror: not implemented\n"
-
-coBoundaryMat = signedCellularBoundary(V,bases).T
-@< Boundaries in SCDC coordinates @>
-@< Coboundary of boundaries @>
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Boundaries in SCDC coordinates}
-The \texttt{splitBoundaries} function given here takes as input the needed information, and returns two dictionaries of boundary facets of the Boolean arguments. The \emph{keys} are the indices of boundary faces as listed by the input lists \texttt{BC1} and \texttt{BC2} (which stand for \emph{boundary cells} 1 and 2) the \emph{values} are the lists of boundary facets in SCDC, i.e.~with respect to the SCDC cell basis.
-
-%-------------------------------------------------------------------------------
-@D Boundaries in SCDC coordinates
-@{""" Boundaries in SCDC coordinates """
-
-def removeDuplicates(dictOfLists):
-	values = AA(COMP([sorted,list,set,AA(abs)]))(dictOfLists.values())
-	keys = dictOfLists.keys()
-	return dict(zip(keys,values))
-
-def splitBoundaries(CV,FV,n_bf1,n_bf2,splittingCovectors,coBoundaryMat):
-	bucket1,bucket2 = defaultdict(list),defaultdict(list) 
-	for k,cell in enumerate(CV):
-		if splittingCovectors[k] != []:
-			facets = list(coBoundaryMat[k].tocoo().col)
-			signs = list(coBoundaryMat[k].tocoo().data)
-			orientedFacets = AA(prod)(zip(facets,signs))
-			for facet in orientedFacets:
-				for face,covector,verts in splittingCovectors[k]:
-					if all([ verySmall(INNERPROD([covector,V[v]+[1.0]])) 
-								for v in FV[abs(facet)] ]):
-						if face<n_bf1: bucket1[face] += [facet]
-						elif face<n_bf1+n_bf2: bucket2[face] += [facet]
-						else: print "error: separation of argument boundaries"
-						break		
-	facets1 = removeDuplicates(bucket1)
-	facets2 = removeDuplicates(bucket2)
-	return facets1,facets2
-@}
-%-------------------------------------------------------------------------------
-
-With respect to the SCDC complex generated by splitting the two 2D cuboidal complexes given by the example \texttt{test/py/bool/test03.py}, and shown in Figure~\ref{fig:test03}, the \texttt{facets1} and \texttt{facets2} data structure are the following:
-
-%-------------------------------------------------------------------------------
-@D From example test/py/bool/test03.py
-@{
->>> boundary1,boundary2 = splitBoundaries(CV,FV,
-							n_bf1,n_bf2,splittingCovectors,coBoundaryMat)
->>> boundary1
-{0: [10], 1: [4, 14], 2: [5, 9], 3: [6]}
->>> boundary2
-{4: [16, 19], 5: [15], 6: [17], 7: [18, 20]}
-@}
-%-------------------------------------------------------------------------------
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.5\linewidth]{images/boundaryfacets} 
-   \caption{The SCDC of example \texttt{test/py/bool/test03.py}}
-   \label{fig:test03}
-\end{figure}
-
-
-\paragraph{Coboundary of boundaries}
-When the boundaries of Boolean arguments $A$ and $B$, as embedded in SCDC, are known, we can compute the coboundaries of each such $(d-1)$-cell, and assign to each coboundary $d$-cell the proper in/out tag.
-
-%-------------------------------------------------------------------------------
-@D Coboundary of boundaries
-@{""" Coboundary of boundaries """
-
-FV = larConvexFacets (V,CV)
-boundary1,boundary2 = splitBoundaries(CV,FV,n_bf1,n_bf2,splittingCovectors,
-										coBoundaryMat)
-facets1 = [FV[facet] for face in boundary1 for facet in boundary1[face]]
-facets2 = [FV[facet] for face in boundary2 for facet in boundary2[face]]
-if len(V[0])==2:
-    submodel1 = mkSignedEdges((V,facets1))
-    submodel2 = mkSignedEdges((V,facets2))
-    VIEW(STRUCT([submodel1,submodel2]))
-    VIEW(STRUCT([ COLOR(YELLOW)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets1)))), 
-    		COLOR(GREEN)(EXPLODE(1.2,1.2,1)(MKPOLS((V,facets2)))) ]))
-		
-boundaryMat = coBoundaryMat.T
-
-def cellTagging(boundaryDict,boundaryMat,CV,FV,V,BC,CVbits,arg):
-	dim = len(V[0])
-	for face in boundaryDict:
-		for facet in boundaryDict[face]:
-			cofaces = list(boundaryMat[facet].tocoo().col)
-			cosigns = list(boundaryMat[facet].tocoo().data)
-			if len(cofaces) == 1: 
-				CVbits[cofaces[0]][arg] = 1
-			elif len(cofaces) == 2:
-				v0 = list(set(CV[cofaces[0]]).difference(FV[facet]))[0]
-				v1 = list(set(CV[cofaces[1]]).difference(FV[facet]))[0]
-				# take d affinely independent vertices in face (TODO: use pivotSimplices() 
-				simplex0 = BC[face][:dim] + [v0]
-				simplex1 = BC[face][:dim] + [v1]
-				sign0 = sign(det([V[v]+[1] for v in simplex0]))
-				sign1 = sign(det([V[v]+[1] for v in simplex1]))
-				
-				if sign0 == 1: CVbits[cofaces[0]][arg] = 1
-				elif sign0 == -1: CVbits[cofaces[0]][arg] = 0
-				if sign1 == 1: CVbits[cofaces[1]][arg] = 1
-				elif sign1 == -1: CVbits[cofaces[1]][arg] = 0
-			else: 
-				print "error: too many cofaces of boundary facets"
-	return CVbits
-	
-CVbits = cellTagging(boundary1,boundaryMat,CV,FV,V,BC,CVbits,0)
-CVbits = cellTagging(boundary2,boundaryMat,CV,FV,V,BC,CVbits,1)
-@}
-%-------------------------------------------------------------------------------
-
-
-
-
-\paragraph{Tagging the coboundary}
-
-
-\subsection{Final traversal of the SCDC}
-\label{sec:traversal}
-
-Several cells of the split CDC are tagged as either internal or external to the Boolean arguments $A$ and $B$ according to the splitting process. Such characterisation is stored within the \texttt{CVbits} array of pairs of values in $\{ -1,0,1\}$, where \texttt{CVbits[k][h]}, with $\texttt{k}\in\texttt{range(len(}C_d\texttt{))}$ and $\texttt{h}\in \texttt{range(}2\texttt{)}$, has the following meanings: 
-\[
-\texttt{CVbits[k][h]} = 
-\begin{array}{rcl}
--1, &\quad & \mbox{if position of\ } c_k\in C_d \mbox{\ is \emph{unknown} w.r.t.~complex\ }K_h \\ 
-0, &\quad & \mbox{if cell\ }c_k\in C_d \mbox{\ is \emph{external} w.r.t.~complex\ }K_h \\ 
-1,  &\quad & \mbox{if cell\ }c_k\in C_d \mbox{\ is \emph{internal} w.r.t.~complex\ }K_h 
-\end{array}
-\]
-Therefore, a double $d$-cell visit of CDC must be executed, starting from some $d$-cell interior to either $A$ or $B$, and traversing from a cell to its untraversed adjacent cells, but without crossing the complex boundary, until all cells have been visited. 
-
-\paragraph{The initial computation of chains of Boolean arguments}
-
-The initial setting of \texttt{CVbits[k][h]} values is done within the splitting process by the \texttt{splitCellsCreateVertices} function, and mainly by the \texttt{splittingControl} function.
-
-\paragraph{The traversal of Boolean arguments}
-Let us remember that the adjacency matrix between $d$-cells is computed via SpMSpM multiplication by the double application 
-\[
-\texttt{adjacencyQuery(V,CV)(cell)}, 
-\] 
-where the first application \texttt{adjacencyQuery(V,CV)}
-returns a partial function with bufferization of the adjacentcy matrix, and the second application to \texttt{cell} returns the list of adjacent $d$-cells sharing with it a $(d-1)$-dimensional facet.
-
-\paragraph{Traversing a Boolean argument within the CDC}
-A recursive function \texttt{booleanChainTraverse} is given in the script below, where 
-
-%-------------------------------------------------------------------------------
-@D Traversing a Boolean argument within the CDC
-@{""" Traversing a Boolean argument within the CDC """
-def booleanChainTraverse(h,cell,V,CV,CVbits,value):
-	adjCells = adjacencyQuery(V,CV)(cell)
-	for adjCell in adjCells: 
-		if CVbits[adjCell][h] == -1:
-			CVbits[adjCell][h] = value
-			CVbits = booleanChainTraverse(h,adjCell,V,CV,CVbits,value)
-	return CVbits
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Input and CDC visualisation}
-
-%-------------------------------------------------------------------------------
-@D Input and CDC visualisation
-@{""" Input and CDC visualisation """
-dim = len(V[0])
-if dim == 2:
-    submodel1 = mkSignedEdges((V1,BC1))
-    submodel2 = mkSignedEdges((V2,BC2))
-    VIEW(STRUCT([submodel1,submodel2]))
-submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
-VIEW(larModelNumbering(V,[VV,[],CV],submodel,4))
-submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
-VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
-@}
-%-------------------------------------------------------------------------------
-
-\paragraph{Numerical instability of vertices curation}
-
-%-------------------------------------------------------------------------------
-@D Numerical instability of vertices curation
-@{""" Numerical instability of vertices curation """
-dim = len(V[0])
-if dim == 2:
-    x,y = TRANS(V)
-    tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel()))
-elif dim == 3:
-    x,y,z = TRANS(V)
-    tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel(), array(z).ravel()))
-closestVertexPairs = AA(list)(tree.query(tree.data,2)[1])
-distances = sorted([[VECTNORM(VECTDIFF([V[v],V[w]])),v,w] for v,w in closestVertexPairs])
-coincidentVertexPairs = [[v,w] for k,(dist,v,w) in enumerate(distances) if dist < 10**-PRECISION]
-
-# remove w from CV (v <- w)
-if coincidentVertexPairs != []:
-	coincidentVertexPairs = list(set(AA(tuple)(AA(sorted)(coincidentVertexPairs))))
-	toChange = TRANS(coincidentVertexPairs)[1]
-	mapping = dict(AA(REVERSE)(coincidentVertexPairs))
-	CV_ = [[v  if v not in toChange else mapping[v] for v in cell] for cell in CV]
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,larConvexFacets (V,CV_)))))
-	CV = CV_
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Boolean fragmentation and classification of CDC}
-
-%-------------------------------------------------------------------------------
-@D Boolean fragmentation and classification of CDC
-@{""" Boolean fragmentation and classification of CDC """
-
-def booleanChains(arg1,arg2):
-	(V1,basis1), (V2,basis2) = arg1,arg2
-	model1, model2 = (V1,basis1[-1]), (V2,basis2[-1])
-	V,[VV,_,_,CV1,CV2],n12 = covering(model1,model2,2,0)
-	CV = sorted(AA(sorted)(Delaunay(array(V)).simplices))
-	vertdict = defaultdict(list)
-	for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-	
-	BC1 = signedCellularBoundaryCells(V1,basis1)
-	BC2 = signedCellularBoundaryCells(V2,basis2)
-	n_bf1,n_bf2 = len(BC1),len(BC2)
-	BC = [[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
-			[ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2]
-	BV = list(set(CAT([v for v in BC])))
-	VV = AA(LIST)(range(len(V)))
-	
-	if DEBUG: 
-		@< Input and CDC visualisation @>
-		
-	@< New implementation of splitting dictionaries @>
-	
-	CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors = \
-		splitCellsCreateVertices( vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1) )
-	showSplitting("z",len(CV),V,cellPairs,BC,CV)
-	
-	@< Numerical instability of vertices curation @>
-
-	print "\ndict_fc =",dict_fc
-	print "dict_cf =",dict_cf,"\n"
-
-	@< Building a dictionary of SCDC $(d-1)$-cells @>
-	dict_facets = facetBasisDict((V,CV))
-	for cell in AA(tuple)(splitBoundaryFacets): 
-		if cell in dict_facets:
-			print dict_facets[cell]
-		else: print cell
-		
-	VV = AA(LIST)(range(len(V)))	
-	submodel = STRUCT(MKPOLS((V,larConvexFacets (V,CV))))
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,larConvexFacets (V,CV)))))
-	
-	return V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2
-@}
-%-------------------------------------------------------------------------------
-
-
-
-
-\section{Final aggregation of polytopes}
-
-The final step of the Boolean algorithm based on LAR is the greedy aggregation of adjacent cells, to return a minimal set of polytopes. The algorithm works on every maximal chain with a given fixed configuration of status bits, and returns a minimal decomposition of its support point-set with polytopal cells.
-
-
-\subsection{Boolean classification of SCDC}
-
-First, the LAR representation of the Split Common Delaunay Complex, completely provided by the current value of the \texttt{CV} array, is reordered into adjacent portions with same value of the Boolean status, represented by the bit values stored within the \texttt{CVbits} array. This operation is performed by a simple sort of the zipped pair \texttt{(CVbits,CV)}. 
-
-\paragraph{Extraction of LAR reps of common Boolean status}
-Several LARs of space subsets are returned by the \texttt{larBooleanPartition} function, given below.
-The input is the pair \texttt{CVbits,CV}. The output is a Python \texttt{defaultdict(list)} 
-
-%-------------------------------------------------------------------------------
-@D Extraction of CV subsets with common Boolean status
-@{""" Extraction of LAR reps of common Boolean status """
-def larBooleanPartition(CVbits,CV):
-	ordCV = sorted(zip(CVbits,CV))
-	out = defaultdict(list)
-	for status,cell in ordCV:
-		out[tuple(status)] += [cell]
-	return out
-@}
-%-------------------------------------------------------------------------------
-
-
-\subsection{Greedy polytopal decomposition of SCDC space}
-
-
-
-
-
-\section{Exporting the library}
-
-
-%-------------------------------------------------------------------------------
-@O lib/py/bool.py
-@{""" Module for Boolean ops with LAR """
-@< Initial import of modules @>
-DEBUG = True
-from matrix import *
-from splitcell import *
-@< Symbolic utility to represent points as strings @>
-@< Place the vertices of Boolean arguments in a common space @>
-@< Building a covering of Common Delaunay Complex @>
-@< Building a partition of Common Delaunay Complex of vertices @>
-@< Characteristic matrix transposition @>
-@< Look for cells in Delaunay, with vertices in both operands @>
-@< Look for cells in cells12, with vertices on boundaries @>
-@< Build intersection tasks @>
-@< Trivial intersection filtering @>
-@< Cell splitting @>
-@< Init face-cell and cell-face dictionaries @>
-@< Updating the split cell @>
-@< Updating the vertex set  of split cells @>
-@< Managing the splitting dictionaries @>
-@< Test for split halting along a boundary facet @>
-@< Computing the adjacent cells of a given cell @>
-@< Show the process of CDC splitting @>
-@< Boundary triangulation of a convex hull @>
-@< Extracting a $(d-1)$-basis of SCDC @>
-@< Traversing a Boolean argument within the CDC @>
-@< Boolean fragmentation and classification of CDC @>
-@< Extraction of CV subsets with common Boolean status @>
-@}
-%-------------------------------------------------------------------------------
-
-\section{Tests}
-
-
-
-\subsection{2D examples}
-
-\subsubsection{First examples}
-
-Three sets of input 2D data are prepared here, ranging from very simple to a small instance of the hardest kind of dataset, known to produce an output of size $O(n^2)$.
-
-
-%-------------------------------------------------------------------------------
-@D First set of 2D data: Fork-0 input
-@{""" Definition of Boolean arguments """
-V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
-	[8,4], [10,3]]
-FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8], [2,3,11],
-	[3,4,10], [5,6,9], [6,7,8]]
-EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,3],[2,11],[3,4],[3,10],[3,11],[4,5],[4,10],[5,6],[5,9],[6,7],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
-VV1 = AA(LIST)(range(len(V1)))
-
-V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
-FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
-EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
-VV2 = AA(LIST)(range(len(V2)))
-@}
-%-------------------------------------------------------------------------------
-
-
-%-------------------------------------------------------------------------------
-@D First set of 2D data: Fork-1 input
-@{""" Definition of Boolean arguments """
-V1 = [[3,0],[11,0], [13,10], [10,11], [8,11], [6,11], [4,11], [1,10], [4,3], [6,4], 
-	[8,4], [10,3]]
-	
-FV1 = [[0,1,8,9,10,11],[1,2,11], [3,10,11], [4,5,9,10], [6,8,9], [0,7,8]]
-EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
-VV1 = AA(LIST)(range(len(V1)))
-
-V2 = [[0,3],[14,2], [14,5], [14,7], [14,11], [0,8], [3,7], [3,5]]
-FV2 =[[0,5,6,7], [0,1,7], [4,5,6], [2,3,6,7], [1,2,7], [3,4,6]]
-EV2 = [[0,1],[0,5],[0,7],[1,2],[1,7],[2,3],[2,7],[3,4],[3,6],[4,5],[4,6],[5,6],[6,7]]
-VV2 = AA(LIST)(range(len(V2)))
-@}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Input and visualisation of Boolean arguments}
-
-%-------------------------------------------------------------------------------
-@D Computation of lower-dimensional cells
-@{""" Computation of edges an input visualisation """
-dim = len(V1[0])
-assert len(V1[0]) == len(V2[0])
-if dim==2:
-    model1 = V1,FV1
-    model2 = V2,FV2
-    basis1 = [VV1,EV1,FV1]
-    basis2 = [VV2,EV2,FV2]
-elif dim==3:
-    model1 = V1,CV1
-    model2 = V2,CV2
-    basis1 = [VV1,EV1,FV1,CV1]
-    basis2 = [VV2,EV2,FV2,CV2]
     
-submodel12 = STRUCT(MKPOLS((V1,EV1))+MKPOLS((V2,EV2)))
-VIEW(larModelNumbering(V1,basis1,submodel12,4))
-VIEW(larModelNumbering(V2,basis2,submodel12,4))
+
+
+\paragraph{Iterate the splitting until \texttt{splittingStack} is empty}
+%-------------------------------------------------------------------------------
+@D Iterate the splitting until splittingStack is empty
+@{""" Iterate the splitting until \texttt{splittingStack} is empty """
+def boxTest(boxes,h,k):
+    B1,B2,B3,B4,B5,B6,_ = boxes[k]
+    b1,b2,b3,b4,b5,b6,_ = boxes[h]
+    return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
+
+def boxBuckets(boxes):
+    bucket = range(len(boxes))
+    splittingStack = [bucket]
+    finalBuckets = []
+    while splittingStack != []:
+        bucket = splittingStack.pop()
+        below,above = splitOnThreshold(boxes,bucket,1)
+        below1,above1 = splitOnThreshold(boxes,above,2)
+        below2,above2 = splitOnThreshold(boxes,below,2) 
+               
+        below11,above11 = splitOnThreshold(boxes,above1,3)
+        below21,above21 = splitOnThreshold(boxes,below1,3)        
+        below12,above12 = splitOnThreshold(boxes,above2,3)
+        below22,above22 = splitOnThreshold(boxes,below2,3)  
+              
+        splitting(above1,below11,above11, finalBuckets,splittingStack)
+        splitting(below1,below21,above21, finalBuckets,splittingStack)
+        splitting(above2,below12,above12, finalBuckets,splittingStack)
+        splitting(below2,below22,above22, finalBuckets,splittingStack)
+        
+        finalBuckets = list(set(AA(tuple)(finalBuckets)))
+    parts = geomPartitionate(boxes,finalBuckets)
+    parts = [[h for h in part if boxTest(boxes,h,k)] for k,part in enumerate(parts)]
+    return AA(sorted)(parts)
 @}
 %-------------------------------------------------------------------------------
 
-\subsection{Bulk of Boolean task computation}
-
+\paragraph{aaaaaa}
 %-------------------------------------------------------------------------------
-@D Bulk of Boolean task computation
-@{""" Bulk of Boolean task computation """
-@< Computation of lower-dimensional cells @>
+@D aaaaaa
+@{""" aaaaa """
 
-V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2 = \
-	booleanChains((V1,basis1), (V2,basis2))
-	
-@< Boundary-Coboundary operators in the SCDC basis @>
-
-for cell in range(len(CV)):
-	if CVbits[cell][0] == 1:
-		CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,1)		
-	if CVbits[cell][0] == 0:
-		CVbits = booleanChainTraverse(0,cell,V,CV,CVbits,0)
-	if CVbits[cell][1] == 1:
-		CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,1)
-	if CVbits[cell][1] == 0:
-		CVbits = booleanChainTraverse(1,cell,V,CV,CVbits,0)
-
-VV = AA(LIST)(range(len(V)))
-FV = larConvexFacets (V,CV)
-submodel = STRUCT(MKPOLS((V,FV)))
-VIEW(larModelNumbering(V,[VV,FV,CV],submodel,3))
-
-chain1,chain2 = TRANS(CVbits)
-
-if DEBUG:
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain1) if c==1] ))))
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c in zip(CV,chain2) if c==1] ))))
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1*c2==1] ))))
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2==1] ))))
-	VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for cell,c1,c2 in zip(CV,chain1,chain2) if c1+c2>=1] ))))
-	
-CVs = larBooleanPartition(CVbits,CV)
-colours = [RED,GREEN,BLUE,YELLOW]
-partitions = []
-for k,(bits,cells) in enumerate(CVs.items()):
-	index = int("".join(AA(str)(bits)),2)
-	partitions += [COLOR(colours[index])(EXPLODE(1.1,1.1,1)(MKPOLS((V,cells))))]
-VIEW(EXPLODE(1.3,1.3,1)(partitions))
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Exporting test file}
 
+\subsection{Merging the boundaries}
+%===============================================================================
+
+\subsection{Elementary splitting}
+%===============================================================================
+
+In this section we implement the splitting of $(d-1)$-faces, stored in \texttt{FV}, induced by the buckets of $(d-1)$-faces, stored in \texttt{parts}, and one-to-one associated to them. Of course, (a) both such arrays have the same number of elements, and (b) whereas \texttt{FV} contains the indices of incident vertices for each face, \texttt{parts}  contains the indices of adjacent faces for each face, with the further constraint that $i \not\in \texttt{parts}(i)$.
+
+\paragraph{Computation of topological relations} 
+The function \texttt{crossRelation} is used here to compute a topological relation starting from two characteristic matrices \texttt{XV} and \texttt{YV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively.
+The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sparse Row) format is used.
+
+%-------------------------------------------------------------------------------
+@D Computation of topological relation
+@{""" Computation of topological relation """
+def crossRelation(XV,YV):
+    csrXV = csrCreate(XV)
+    csrYV = csrCreate(YV)
+    csrXY = matrixProduct(csrXV, csrYV.T)
+    XY = [None for k in range(len(XV))]
+    for k,face in enumerate(XV):
+        data = csrXY[k].data
+        col = csrXY[k].indices
+        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+        # NOTE: val depends on the relation under consideration ...
+    return XY
+@}
+%-------------------------------------------------------------------------------
+    
+\paragraph{Submanifold mapping computation}
+The $4\times 4$ (affine) scipy matrix \texttt{transform} of type \texttt{mat} is computed by the function \texttt{submanifoldMapping}, using as input the array \texttt{pivotFace} that contains the vertices of the so-called \emph{pivot} face, i.e.~of the face to be mapped to the coordinate subspace $z=0$ (in 3D).
+
+%-------------------------------------------------------------------------------
+@D Submanifold mapping computation
+@{""" Submanifold mapping computation """
+def submanifoldMapping(pivotFace):
+    tx,ty,tz = pivotFace[0]
+    transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
+    facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
+    m = faceTransformations(facet)
+    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],
+                    m[2,1],m[2,2],0],[0,0,0,1]])
+    transform = mapping * transl
+    return transform
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Set of line segments partitioning a facet}
+The more important function of this section is the higher level \texttt{intersection} function, that accepts as input the \texttt{LAR} model \texttt{(V,FV,EV)} to be partitioned, and the pair \texttt{(k,bundledFaces)}, where \texttt{k} is the index of the pivot face (to be transformed to the $z=0$ subspace) and where \texttt{bundledFaces} is an array of indices of faces that are guarantee to share points with face $k$. Such shared points may be either boundary edges of $k$ or a segment that is internal both to face $k$ and to some face in  \texttt{bundledFaces}.
+
+%-------------------------------------------------------------------------------
+@D Set of line segments partitioning a facet
+@{""" Set of line segments partitioning a facet """
+def intersection(V,FV,EV):
+    def intersection0(k,bundledFaces):
+        FE = crossRelation(FV,EV)
+        pivotFace = [V[v] for v in FV[k]]
+        transform = submanifoldMapping(pivotFace)  # submanifold transformation
+        transformedCells,edges,faces = [],[],[]
+        for face in bundledFaces:
+            edge = set(FE[k]).intersection(FE[face])  # common edge index
+            if edge == set():
+                candidateEdges = FE[face]
+                facet = []
+                for e in candidateEdges:
+                    cell = [V[v]+[1.0] for v in EV[e]]  # verts of incident face
+                    transformedCell = (transform * (mat(cell).T)).T.tolist()  
+                    # vertices in local frame
+                    facet += [[point[:-1] for point in transformedCell]]
+                faces += [facet]
+            else:  # boundary edges of face k
+                e, = edge
+                vs = [V[v]+[1.0] for v in EV[e]]
+                ws = (transform * (mat(vs).T)).T.tolist()
+                edges += [[p[:-1] for p in ws]]
+        return edges,faces,transform
+    return intersection0    
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Computation of face transformations}
+The faces in every $\texttt{parts}(i)$ must be affinely transformed into the subspace $x_d=0$, in order to compute the intersection of its elements with this subspace, that are submanifolds of dimension $d-2$.
+
+%-------------------------------------------------------------------------------
+@D Computation of face transformations
+@{""" Computation of affine face transformations """
+def COVECTOR(points):
+    pointdim = len(points[0])
+    plane = Planef.bestFittingPlane(pointdim,
+                    [item for sublist in points for item in sublist])
+    return [plane.get(I) for I in range(0,pointdim+1)]
+
+def faceTransformations(facet):
+    covector = COVECTOR(facet)
+    translVector = facet[0]
+    # translation 
+    newFacet = [ VECTDIFF([v,translVector]) for v in facet ]
+    # linear transformation: boundaryFacet -> standard (d-1)-simplex
+    d = len(facet[0])
+    m = mat( newFacet[1:d] + [covector[1:]] )
+    if det(m)==0.0:
+        for k in range(len(facet)-2):
+            m = mat( newFacet[1+k+1:d+k+1] + [covector[1:]] )
+            if det(m)!=0.0: break
+    transformMat = m.T.I
+    # transformation in the subspace x_d = 0
+    out = (transformMat * (mat(newFacet).T)).T.tolist()
+    return transformMat
+@}
+%-------------------------------------------------------------------------------
+    
+    
+
+\paragraph{Space partitioning via submanifold mapping}
+
+the function \texttt{spacePartition}, given in the below script, takes as input a \emph{non-valid} (with the meaning used in solid modeling field --- see~\cite{Requicha:1980:RRS:356827.356833}) \texttt{LAR} model of dimension $d-1$, i.e.~a triple \texttt{(V,FV,EV)}, and an array \texttt{parts} indexed on faces, and containing the subset of faces with greatest probability of intersecting each indexing face, respectively. The \texttt{spacePartition} function returns the \emph{valid} \texttt{LAR} boundary model \texttt{(W,FW,EW)} of the space partition induced by \texttt{FV}.
+ 
+%-------------------------------------------------------------------------------
+@D Space partitioning via submanifold mapping
+@{""" Space partitioning via submanifold mapping """
+def spacePartition(V,FV,EV, parts):
+    transfFaces = []
+    for k,bundledFaces in enumerate(parts):
+        edges,faces,transform = intersection(V,FV,EV)(k,bundledFaces)
+        for face in faces:
+            line = []
+            for edge in face:
+                (x1,y1,z1),(x2,y2,z2) = edge
+                if not verySmall(z2-z1):
+                    x = (x2-x1)/(z2-z1) + x1
+                    y = (y2-y1)/(z2-z1) + y1
+                    p = [x,y,0]
+                    line += [eval(vcode(p))]
+            if line!=[]: edges += [line]
+        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])    
+        if len(fv)>1: fv = fv[:-1]
+        lar = [w+[0.0] for w in v],fv,ev
+        transfFaces += [Struct([ larApply(transform.I)(lar) ])]
+    W,FW,EW = struct2lar(Struct(transfFaces))
+    return W,FW,EW
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Circular ordering of faces around edges}
+
+
+\paragraph{Directional and orthogonal projection operators}
+
+In order to sort circularly the faces incident on each edge, we need of course to compute the relation EF, and for each face $f$ incident on $e = (v_1,v_2)$, to project a vector $w_f = (v_1,v_f)$, non parallel to $(v_1,v_2)$, on the subspace ortogonal to $e$. This may be done by mapping $w_f$ with the tensor $I-e \otimes e$. Finally, the angles between vectors $a,b$ in this orthogonal space to $e$ may be computed by using the \texttt{atan2} function, that combines both the $sin$ and the $cos$ of the angle:
+\[
+angle = atan2(norm(cross(a,b)),dot(a,b)).
+\]
+Let us just remember that, by definition, $(e \otimes e)v = (e \cdot v)e$, where $e,v$ are vectors.
+%-------------------------------------------------------------------------------
+@D Directional and orthogonal projection operators
+@{""" Directional and orthogonal projection operators """
+def dirProject (e):
+    def dirProject0 (v):
+        return SCALARVECTPROD([ INNERPROD([ UNITVECT(e), v ]), UNITVECT(e) ])
+    return dirProject0
+
+def orthoProject (e):
+    def orthoProject0 (v):  
+        return VECTDIFF([ v, dirProject(UNITVECT(e))(v) ])
+    return orthoProject0
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+\paragraph{3D boundary triangulation of the space partition}
+The function \texttt{boundaryTriangu\-la\-tion} given below is used to guarantee that there is a unique (simple) facet incident to an edge and contained in one LAR facet. More clearly, the Boolean decompositions generated by LAR allow for non convex cells, and in particular for nonconvex boundary facets of $d$-cells. This fact may induce errors in the computation of circularly sorted faces around edges. Conversely, by decomposing the faces into triangles, such ordering problems cannot appear.  
+We also note that whereas every $(d-1)$-facet is made by coherently oriented triangles, it is not possible to give---a priori---a coherently orientation to all the facets, since the object interior and exterior are not defined (for now).
+
+%-------------------------------------------------------------------------------
+@D 3D boundary triangulation of the space partition 
+@{from support import PolygonTessellator,vertex
+
+def orientTriangle(pointTriple):
+    v1 = array(pointTriple[1])-pointTriple[0]
+    v2 = array(pointTriple[2])-pointTriple[0]
+    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
+    else: return pointTriple
+    
+from triangle import *
+from integr import *
+from copy import copy
+def boundaryTriangulation(W,FW,EW,FE):
+    triangleSet = []
+    for f,face in enumerate(FW):
+        signedEdgesLoop = boundaryCycles(FE[f],EW)[0]
+        vertexLoop = [EW[ABS(e)][0] if e<0 else EW[e][1]  for e in signedEdgesLoop]
+
+        pivotFace = [W[v] for v in face]
+        transform = submanifoldMapping(pivotFace)
+        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
+        verts2D = [point[:-2] for point in mappedVerts]  
+
+        n = len(verts2D)
+        triples = [[(k-1)%n,k,(k+1)%n] for k,vert in enumerate(verts2D)]
+        vects = array(verts2D)
+        angles = [cross(vects[k2]-vects[k1],vects[k0]-vects[k1]) for k0,k1,k2 in triples] 
+
+        Verts = [v+[0.0] for v in verts2D]
+        tria = range(n)
+        trias = AA(C(AL)(0))(TRANS([tria[1:-1],tria[2:]]))
+        P = Verts,trias
+        area = Surface(P,signed=True)
+        if area<0: angles = AA(C(DIFF)(0))(angles)
+
+        pts = array(verts2D)
+        n = len(verts2D)
+        holes = [triples[k] for k,angle in enumerate(angles) if angle<0]
+        EdgeVerts = AA(list)(zip(range(n),range(1,n)+[0]))
+        
+        tri = {	'vertices': pts, 'segments': EdgeVerts }
+        triangles = triangulate(tri)['triangles'].tolist()
+        FaceVerts = [face for face in triangles if not any([set(face)==set(hole) for hole in holes])]
+
+        points = (transform.I * (mat([p+[1.0] for p in Verts]).T)).T.tolist()
+        trias = [[points[k][:-1] for k in face]+[points[face[0]][:-1]] for face in FaceVerts]
+
+        triangleSet += [AA(orientTriangle)(trias)]
+    return triangleSet
+
+def triangleIndices(triangleSet,W):
+    vertDict,out = defaultdict(),[]
+    for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
+    for h,faceSetOfTriangles in enumerate(triangleSet):
+        out += [[[vertDict[vcode(p)] for p in triangle[:-1]] 
+                    for triangle in faceSetOfTriangles]]
+    return out
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Computation of incidence between edges and 3D triangles}
+%-------------------------------------------------------------------------------
+@D Computation of incidence between edges and 3D triangles @{
+def edgesTriangles(EF, FW, TW, EW):
+    ET = [None for k in range(len(EF))]
+    for e,edgeFaces in enumerate(EF):
+        ET[e] = []
+        for f in edgeFaces:
+            for t in TW[f]:
+                if set(EW[e]).intersection(t)==set(EW[e]):
+                    ET[e] += [t]
+    return ET
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/3Dtriangulation} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/3Dtriangulation2} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/3Dtriangulation3} 
+   \caption{The triangulated boundaries of the space partition induced by two cubes (one is variously translated).}
+   \label{fig:3Dtriangulation}
+\end{figure}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/edgeTriangles1} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/edgeTriangles} 
+   \caption{The triangles around an edge: \texttt{VIEW(STRUCT(MKPOLS((W,ET[35]))))}.}
+   \label{fig:3Dtriangulation}
+\end{figure}
+
+\paragraph{Example}
+
+{\small
+\begin{verbatim}
+In [2]: ET[35]
+Out[2]: [[19, 7, 8], [6, 8, 7], [8, 7, 16], [4, 7, 8]]
+
+In [3]: EF[35]
+Out[3]: [4, 10, 11, 14]
+
+In [4]: [FW[f] for f in  EF[35]]
+Out[4]: [(19, 7, 8, 12), (6, 10, 8, 7), (12, 8, 7, 16, 1, 2), (4, 5, 6, 7, 8, 9)]
+
+In [5]: EW[35]
+Out[5]: (7, 8)
+\end{verbatim}}
+
+
+
+\paragraph{Slope of edges}
+
+The \texttt{faceSlopeOrdering} function, given in the script below, return the list \texttt{EF\_angle} of lists of faces incident to the model edges, counterclockwise ordered with respect to the orientation of the edge. Let us remember that the edges are naturally oriented from the vertex of lesser index to that of greater index.
+
+%-------------------------------------------------------------------------------
+@D Slope of edges
+@{""" Circular ordering of faces around edges """
+
+def planeProjection(normals):
+    V = mat(normals)
+    if all(V[:,0]==0): V = np.delete(V, 0, 1)
+    elif all(V[:,1]==0): V = np.delete(V, 1, 1)
+    elif all(V[:,2]==0): V = np.delete(V, 2, 1)
+    return V
+
+def faceSlopeOrdering(model,FE):
+    V,FV,EV = model
+    triangleSet = boundaryTriangulation(V,FV,EV,FE)
+    TV = triangleIndices(triangleSet,V)
+    triangleVertices = CAT(TV)
+    TE = crossRelation(triangleVertices,EV)
+    ET,ET_angle = invertRelation(TE),[]
+    for e,et in enumerate(ET):
+        v1,v2 = EV[e]
+        v1v2 = set([v1,v2])
+        et_angle = []
+        t0 = et[0]
+        tverts = [v1,v2] + list(set(triangleVertices[t0]).difference(v1v2))
+        e3 = UNITVECT(VECTDIFF([ V[tverts[1]], V[tverts[0]] ]))
+        e1 = UNITVECT(VECTDIFF([ V[tverts[2]], V[tverts[0]] ]))
+        e2 = cross(array(e1),e3).tolist()
+        basis = mat([e1,e2,e3]).T
+        transform = basis.I
+        normals = []
+        Tvs = []
+        for triangle in et:
+            verts = triangleVertices[triangle]
+            vertSet = set(verts).difference(v1v2)
+            tvs = [v1,v2] + list(vertSet)
+            Tvs += [tvs]
+            w1 = UNITVECT(VECTDIFF([ V[tvs[2]], V[tvs[0]] ]))
+            w2 = (transform * mat([w1]).T).T
+            w3 = cross(array([0,0,1]),w2).tolist()[0]
+            normals += [w3]
+        normals = mat(normals)
+        for k,t in enumerate(et):
+            angle = math.atan2(normals[k,1],normals[k,0])
+            et_angle += [angle]
+        pairs = sorted(zip(et_angle,et,Tvs))
+        sortedTrias = [pair[1] for pair in pairs]
+        triasVerts = [pair[2] for pair in pairs]
+        tetraVerts = triasVerts[0]+[triasVerts[1][2]]
+        ET_angle += [sortedTrias]
+    EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
+    return EF_angle
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Check edge-face ordering}
+
+%-------------------------------------------------------------------------------
+@D Check edge-face ordering
+@{""" Check edge-face ordering """
+def checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model):
+    V,FV,EV = model
+    pairs = [(e,pair) for e,pair in enumerate(zip(EF,EF_angle)) if NEQ(AA(len)(pair))]
+    edges,incidentFaces = TRANS(pairs)
+    missingFaces = [list(set(pair[0]).difference(pair[1])) for pair in incidentFaces]
+    for edge,faces in zip(edges,missingFaces):
+        for face in faces:
+            for triangle in triangleSet[face]:
+                trianglesides = [[triangle[k],triangle[k+1]] 
+                                for k,vertex in enumerate(triangle[:-1])]
+                for v1,v2 in trianglesides:
+                    edgeVertices = [V[v] for v in EV[edge]]
+    return EF_angle
+@}
+%-------------------------------------------------------------------------------
+
+
+FT = crossRelation(FV,CAT(TV))
+EdgeTriangle = [set(CAT([FT[f] for f in ef])) for ef in EF]
+
+
+
+
+\paragraph{Edge-triangles to Edge-faces incidence}
+
+In the function \texttt{ET\_to\_EF\_incidence} below, we convert the Edge-triangles incidence table \texttt{ET\_angle} to a Edge-faces incidence table \texttt{EF\_angle}. The input data to the algoritm are the relations \texttt{TW,FW}, and, of course, the incidence \texttt{ET\_angle}. It works by computing two translationa tables \texttt{tableFT} and \texttt{tableTF} from face indices to triangle indices and viceversa. Of course, \texttt{assert( len(EF\_angle) == 2*len(FW) )} must be \texttt{True}.
+
+%-------------------------------------------------------------------------------
+@D Edge-triangles to Edge-faces incidence
+@{""" Edge-triangles to Edge-faces incidence """
+def ET_to_EF_incidence(TW,FW, ET_angle):
+    tableFT = [None for k in range(len(FW))]
+    t = 0
+    for f,trias in enumerate(TW):
+        tableFT[f] = range(t,t+len(trias))
+        t += len(trias)
+    tableTF = invertRelation(tableFT)
+    EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
+    #assert( len(EF_angle) == 2*len(FW) )
+    return EF_angle
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Cells from $(d-1)$-dimensional LAR model}
+Since faces in the space partition induced by overlaping 3-coverings are $(d-1)$-cells, they are located on the boundary of \emph{two} $d$-cells of the partition. Hence, the traversal algorithm of the data structure storing the relevant information may be driven by signing the two cofaces of each face as being either already visited or not.
+
+
+\paragraph{Oriented cycle of vertices from a 1-cycle of unoriented edges}
+The below \texttt{edgeCycleOrientation} is used to transform a list of unoriented edges, know to correspond to a closed but unoriented 1-cycle, into a 0-cycle, to be easily transformed into an \emph{oriented 1-cycle} by taking pairwise every two adjacent nodes, included the lat and the first to close the cycle.
+
+%-------------------------------------------------------------------------------
+@D Oriented cycle of vertices from a 1-cycle of unoriented edges
+@{""" Oriented cycle of vertices from a 1-cycle of unoriented edges """
+def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
+    previous_cb = cb
+    def theNext0(previous_edge,face):
+        cbe = copy.copy(cb)
+        edges = list(set(FE[face]).intersection(cbe)) #difference(cbe))
+        if edges==[]: 
+            edges = list(cbe)
+            face = list(set(EF_angle[edges[0]]).intersection(cf))[0]
+        if type(previousOrientedEdges[0])!=list:
+            signs,next = cycles2permutation([previousOrientedEdges])
+        else: signs,next = cycles2permutation(previousOrientedEdges)
+        edge = edges[0]
+        edgeOrientation = signs[edge]
+        edgeFaces = EF_angle[edge]
+        n = len(edgeFaces)
+        if edgeOrientation == 1: 
+            ind = (edgeFaces.index(face) + 1)%n
+        elif edgeOrientation == -1:
+            ind = (edgeFaces.index(face) - 1)%n
+        nextFace = edgeFaces[ind]
+        nextFaceBoundary = list(set(FE[nextFace]))
+        orientedEdges = cyclesOrientation(previousOrientedEdges,nextFaceBoundary,EV)
+        return orientedEdges,nextFace,edge
+    return theNext0
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Check and store the orientation of faces}
+
+%-------------------------------------------------------------------------------
+@D Check and store the orientation of faces
+@{""" Check and store the orientation of faces """
+def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
+    list2 = CAT(orientedFaceEdges)
+    if orientedEdges != []:
+        list1 = CAT(orientedEdges)
+    else: list1 = CAT(previousOrientedEdges)
+    theList = set(list1).intersection(set(list2).union((lambda args:[-arg for arg in args])(list2)))
+    if theList==set() or orientedEdges==[]:
+        theList = set(CAT(orientedFaceEdges))
+    edge = list(theList)[0]
+    if theList.issubset(list1):  # equal signs
+        if faceOrientations[face][0] == None:
+            faceOrientations[face][0] = edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = edge
+        else: print "error: faceOrientations"
+    elif not theList.issubset(list1): # different signs
+        if faceOrientations[face][0] == None: 
+            faceOrientations[face][0] = -edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = -edge
+        else: print "error: faceOrientations"
+    else: print "error: checkOrientation"
+    return faceOrientations
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Progressive reconstruction of 3-cell boundaries}
+
+The input to this stage is a 2-complex embedded in 3D, with 2-cells non necessarily convex. The output is the 3-space partition defined by the cellular 3-complex, whose 2-skeleton is the inpiut complex. In other words, we mu reconstruct the 3-cells induced by the 2-cells of the input complex. This is done reconstructing the 3-cells stepwise. Each 3-cell reconstruction is done starting from one \texttt{face} two-dimensional previously taken into account no more than one single time, so that every 2-face is used at most exacly twice. An example of use of the functions implemented in this section is given in example \texttt{test12.py}
+
+\paragraph{Edge cycles associated to a closed chain of edges}
+
+The problem here is to conserve in the new \texttt{cycles} the same orientation of the previous ones,
+passed through the \texttt{orientedEdges} variable. We can formalize the problem as follows. Let call \texttt{pcycles} (for ``previous cycles'') and \texttt{fcycle} (for ``face cycle'') the algorithm input. the output is the \emph{coherently oriented} \texttt{outcycles}. First, an orientation is given to \texttt{fcycle}; then this one is compared with the \texttt{pcycles} orientation, and it is possibly reversed, in order to get them coherently oriented. Finally, the direct sum of \texttt{pcycles} and \texttt{fcycle} is executed, giving the \texttt{outcycles}.
+
+%-------------------------------------------------------------------------------
+@D Cycles orientation
+@{""" Cycles orientation """
+def cyclesOrient(pcycles,fcycle,EV):
+    if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
+    ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
+    if type(pcycles[0])==list: opcycle = CAT(pcycles)
+    else: opcycle = pcycles
+    int = set(opcycle).intersection(ofcycle)
+    if int != set(): 
+        ofcycle = reverseOrientation(ofcycle)
+    outChain = [e for e in ofcycle if not (-e in opcycle)] 
+    outChain += [e for e in opcycle if not (-e in ofcycle)] 
+    return outChain
+
+if __name__ == "__main__":
+    pcycles = [[-19, 13, 22, 23]]
+    fcycle = [30, 20, 18, 2, 26, 19]
+    cyclesOrientation(pcycles,fcycle)
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Edge cycles associated to a closed chain of edges
+@{""" Edge cycles associated to a closed chain of edges """
+def boundaryCycles(edgeBoundary,EV):
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    cbe = copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Permutation of edges defined by edge cycles}
+   
+%-------------------------------------------------------------------------------
+@D Permutation of edges defined by edge cycles
+@{""" Permutation of edges defined by edge cycles """
+def cycles2permutation(cycles):
+    next = []
+    for cycle in cycles:
+        next += zip(AA(ABS)(cycle),AA(ABS)(cycle[1:]+[cycle[0]]))
+    next = dict(next)
+    sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
+    return sign,next
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+
+\paragraph{The 3-cell traversal algorithm}
+Initially, the list of counterclockwise ordered faces around the oriented edges are computed, and stored as indexed by edges in the \texttt{EF\_angle} list of lists. This information is stored in the compressed sparse row matrix \texttt{csrEF}, whose element $(e,f)$ provides the \emph{next} face index  incident on edge $e$, after $f$. 
+
+Also, a list of list of zeros is stored in the \texttt{visitedFE} variable, in order to memorize the visited pairs $(f,e)$ by writing one in their corresponding positions. The \texttt{firstSearch} function will so retrieve the first non visited pair, in order to start the extraction of a new 3-cell. The \texttt{cv} variable accumulates the vertex indices of the current 3-cell. When the 3-cell is completely extracted (how-to test?), will be stored as a new row in the \texttt{CV} relation. 
+
+The test for completeness of the extraction is done by computing the current boundary of the cell as a set of edges of faces, by python \texttt{XOR} of the edges of every accumulated face-edge relation. When this set it becomes empty, the 3-cell extraction is completed.
+%-------------------------------------------------------------------------------
+@D Cells from $(d-1)$-dimensional LAR model
+@{""" Cells from $(d-1)$-dimensional LAR model """
+
+def facesFromComponents(model,FE,EF_angle):
+    # initialization
+    V,FV,EV = model
+    visitedCell = [[ None, None ] for k in range(len(FV)) ]
+    face = 0
+    boundaryLoop = boundaryCycles(FE[face],EV)[0]
+    firstEdge = boundaryLoop[0]
+    cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+    for face,edge in zip(cf,coe):
+        if visitedCell[face][0]==None: visitedCell[face][0] = edge
+        else: visitedCell[face][1] = edge
+    cv,ce = set(),set()
+    cv = cv.union(CAT([FV[f] for f in cf]))
+    ce = ce.union(CAT([FE[f] for f in cf]))
+    CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
+    
+    # main loop
+    while True:
+        face, edge = startCell(visitedCell,FE,EV)
+        if face == -1: break
+        boundaryLoop = boundaryCycles(FE[face],EV)[0]
+        if edge not in boundaryLoop:
+            boundaryLoop = reverseOrientation(boundaryLoop)
+        cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+        CF += [cf]
+        COE += [coe]
+        for face,edge in zip(cf,coe):
+            if visitedCell[face][0]==None: visitedCell[face][0] = edge
+            else: visitedCell[face][1] = edge
+            
+        cv,ce = set(),set()
+        cv = cv.union(CAT([FV[f] for f in cf]))
+        ce = ce.union(CAT([FE[f] for f in cf]))
+        CV += [list(cv)]
+        CE += [list(ce)]
+    return V,CV,FV,EV,CF,CE,COE
+@}
+%-------------------------------------------------------------------------------
+    
+
+\paragraph{Start a new 3-cell}
+The function \texttt{startCell} below is used to begin the extraction of a new 3-cell (after the first one was already extracted). Therefore its aim is to choose as first face one already previously extracted, in order to begin the current boundary with one cycle coherently oriented. This will is implemented by looking for a ``\texttt{face}'' position stored in \texttt{visitedCell} with just one \texttt{None} value in its row.
+
+%-------------------------------------------------------------------------------
+@D Start a new 3-cell
+@{""" Start a new 3-cell """
+def startCell(visitedCell,FE,EV):
+    if len([term for cell in visitedCell for term in cell if term==None])==1: return -1,-1
+    for face in range(len(visitedCell)):
+        if len([term for term in visitedCell[face] if term==None])==1:
+            edge = visitedCell[face][0]
+            break
+        face,edge = -1,-1
+    return face,edge
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Face orientations storage}
+
+In order to correctly accomplish the extraction of 3-cells from the 2-complex partition of the arguments' space, it is necessary to use twice every 2-face, belonging with opposite orientations to the boundaries of two adjacent 3-cells. The array \texttt{faceOrientations}, initializated to $n\times 2$ zeros, with $n$ equal to the number of 2-cells, is so used to store the orientations of faces considered as 2-cycles of edges. 
+
+In particular, the orientation of the 2-face is equivalent to the embedded orientation of one of its edges, corresponding either to the intrinsic orientation of this one, or to its opposite orientation. Hence, every time a face is used during the extraction of a 3-cell, (the elementary 1-chain of) one of its oriented edges is stored in \texttt{faceOrientations}, to remember its orientation, and eventually reverse the orientation of the face the next time it is used again. At the very end of the extraction algorithm, all the faces must be used twice, with opposite orientations. 
+
+%-------------------------------------------------------------------------------
+@D Face orientations storage
+@{""" Face orientations storage """
+def reverseOrientation(chain):
+    return REVERSE([-cell for cell in chain])
+
+def faceOrientation(boundaryLoop,face,FE,EV,cf):
+    theBoundary = set(AA(ABS)(boundaryLoop))
+    if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
+        coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
+        face = coboundaryFaces[0]            
+    faceLoop = boundaryCycles(FE[face],EV)[0]
+    commonEdges = set(faceLoop).intersection(boundaryLoop)
+    if commonEdges == set() or commonEdges == {0}: 
+        faceLoop = reverseOrientation(faceLoop)
+        commonEdges = set(faceLoop).intersection(boundaryLoop)
+    theEdge = list(commonEdges)[0]
+    #if theEdge==0: theEdge = list(commonEdges)[1]
+    return -theEdge,face
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Get single solid cell}
+
+%-------------------------------------------------------------------------------
+@D Get single solid cell
+@{""" Get single solid cell """
+def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
+
+    def orientFace(face,boundaryLoop): 
+        for e in boundaryLoop:
+            if ABS(e) in FE[face]: return -e
+            
+    coe = [orientFace(face,boundaryLoop)]
+    cf = [face] 
+    while boundaryLoop != []:
+        edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
+        if edge > 0: edgeFaces = EF_angle[edge]
+        elif edge < 0: edgeFaces = REVERSE(EF_angle[-edge])
+        e = ABS(edge)
+        n = len(edgeFaces)
+        ind = (edgeFaces.index(face)+1)%n
+        nextFace = edgeFaces[ind]
+        coe += [-orientFace(nextFace,boundaryLoop)]
+        boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
+        cf += [nextFace] 
+        face = nextFace
+    if DEBUG:
+        VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
+    return cf,coe
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+\subsubsection{Main procedure of arrangement partitioning}
+
+%-------------------------------------------------------------------------------
+@D Main procedure of arrangement partitioning
+@{""" Main procedure of arrangement partitioning """
+def partition(W,FW,EW):
+    quadArray = [[W[v] for v in face] for face in FW]
+    parts = boxBuckets(containmentBoxes(quadArray))
+    Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+    ZZ = AA(LIST)(range(len(Z)))
+    submodel = STRUCT(MKPOLS((Z,EZ)))
+    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
+    EZ = [EZ[0]]+EZ
+    model = Z,FZ,EZ
+    FE = crossRelation(FZ,EZ)
+    # remove 0 indices from FE relation
+    FE = [[f for f in face if f!=0] for face in FE]
+    EF_angle = faceSlopeOrdering(model,FE)
+    V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
+    return V,CV,FV,EV,CF,CE,COE,FE
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsection{Boolean chains}
+%===============================================================================
+
+%===============================================================================
+\section{Esporting the Library}
+%===============================================================================
+
+%-------------------------------------------------------------------------------
+@O lib/py/bool2.py
+@{""" Module for Boolean computations between geometric objects """
+from pyplasm import *
+""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from inters import *
+DEBUG = False
+
+@< Coding utilities @>
+@< Split the boxes between the below,above subsets @>
+@< Test if bucket OK or append to splitting stack @>
+@< Remove subsets from bucket list @>
+@< Iterate the splitting until splittingStack is empty @>
+@< Computation of face transformations @>
+@< Computation of affine face transformations @>
+@< Computation of topological relation @>
+@< Submanifold mapping computation @>
+@< Set of line segments partitioning a facet @>
+@< Space partitioning via submanifold mapping @>
+@< 3D boundary triangulation of the space partition @>
+@< Computation of incidence between edges and 3D triangles @>
+@< Directional and orthogonal projection operators @>
+@< Check edge-face ordering @>
+@< Slope of edges @>
+@< Oriented cycle of vertices from a 1-cycle of unoriented edges @>
+@< Edge-triangles to Edge-faces incidence @>
+@< Cells from $(d-1)$-dimensional LAR model @>
+@< Edge cycles associated to a closed chain of edges @>
+@< Permutation of edges defined by edge cycles @>
+@< Cycles orientation @>
+@< Start a new 3-cell @>
+@< Face orientations storage @>
+@< Check and store the orientation of faces @>
+@< Get single solid cell @>
+@< Main procedure of arrangement partitioning @>
+@}
+%-------------------------------------------------------------------------------
+    
+%===============================================================================
+\section{Test examples}
+%===============================================================================
+
+\subsection{Random triangles}
+%===============================================================================
+
+
+\paragraph{Generation of random triangles and their boxes}
 %-------------------------------------------------------------------------------
 @O test/py/bool/test01.py
-@{
+@{""" Generation of random triangles and their boxes """
 import sys
-""" import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-from bool import *
-@< First set of 2D data: Fork-0 input @>
-@< Bulk of Boolean task computation @>
+from bool2 import *
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+
+randomTriaArray = randomTriangles(10,0.99)
+VIEW(STRUCT(AA(MKPOL)([[verts, [[1,2,3]], None] for verts in randomTriaArray])))
+
+boxes = containmentBoxes(randomTriaArray)
+hexas = AA(box2exa)(boxes)
+cyan = COLOR(CYAN)(STRUCT(AA(MKPOL)([[verts, [[1,2,3]], None] for verts in randomTriaArray])))
+yellow = STRUCT(AA(glass)(AA(MKPOL)([hex for hex,qualifier in hexas])))
+VIEW(STRUCT([cyan,yellow]))
 @}
 %-------------------------------------------------------------------------------
 
+
+\paragraph{Generation of random quadrilaterals and their boxes}
 %-------------------------------------------------------------------------------
 @O test/py/bool/test02.py
-@{
+@{""" Generation of random quadrilaterals and their boxes """
 import sys
+sys.path.insert(0, 'lib/py/')
+from bool2 import *
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+
+randomQuadArray = randomQuads(10,1)
+VIEW(STRUCT(AA(MKPOL)([[verts, [[1,2,3,4]], None] for verts in randomQuadArray])))
+
+boxes = containmentBoxes(randomQuadArray)
+hexas = AA(box2exa)(boxes)
+cyan = COLOR(CYAN)(STRUCT(AA(MKPOL)([[verts, [[1,2,3,4]], None] for verts in randomQuadArray])))
+yellow = STRUCT(AA(glass)(AA(MKPOL)([hex for hex,qualifier in hexas])))
+VIEW(STRUCT([cyan,yellow]))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.2\linewidth,width=0.2425\linewidth]{images/fork1} 
+   \includegraphics[height=0.2\linewidth,width=0.2425\linewidth]{images/fork2} 
+   \includegraphics[height=0.2\linewidth,width=0.2425\linewidth]{images/fork3} 
+   \includegraphics[height=0.2\linewidth,width=0.2425\linewidth]{images/fork4} 
+   \caption{\texttt{LAR} complex from two polygons. (a) the input polygons; (b) the intersection of boundary lines; (c) the extracted \emph{regularized} 2-complex; (d) the boundary \texttt{LAR}.}
+   \label{fig:ortho}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test03.py
+@{""" Boolean complex generated by boundaries of two complexes """
+import sys
+sys.path.insert(0, 'lib/py/')
+from inters import *
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+
+V1 = [[3,0],[11,0],[13,10],[10,11],[8,11],[6,11],[4,11],[1,10],[4,3],[6,4],
+        [8,4],[10,3]]
+FV1 = [[0,1,8,9,10,11],[1,2,11],[3,10,11],[4,5,9,10],[6,8,9],[0,7,8]]
+EV1 = [[0,1],[0,7],[0,8],[1,2],[1,11],[2,11],[3,10],[3,11],[4,5],[4,10],[5,
+        9],[6,8],[6,9],[7,8],[8,9],[9,10],[10,11]]
+BE1 = boundaryCells(FV1,EV1)
+lines1 = [[V1[v] for v in EV1[edge]] for edge in BE1]
+
+V2 = [[0,3],[14,2],[14,5],[14,7],[14,11],[0,8],[3,7],[3,5]]
+FV2 = [[0,5,6,7],[0,1,7],[4,5,6],[2,3,6,7]]
+EV2 = [[0,1],[0,5],[0,7],[1,7],[2,3],[2,7],[3,6],[4,5],[4,6],[5,6],[6,7]]
+BE2 = boundaryCells(FV2,EV2)
+lines2 = [[V2[v] for v in EV2[edge]] for edge in BE2]
+
+VIEW(STRUCT([ glass(STRUCT(MKPOLS((V1,FV1)))), glass(STRUCT(MKPOLS((V2,FV2)))) ]))
+lines = lines1 + lines2
+VIEW(STRUCT(AA(POLYLINE)(lines)))
+
+global precision
+PRECISION += 2
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,1))
+
+polylines = [[V[v] for v in face+[face[0]]] for face in FV[:-1]]
+colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GREEN, GRAY, ORANGE, BLACK, BLUE, PURPLE, BROWN]
+sets = [COLOR(colors[k%12])(FAN(pol)) for k,pol in enumerate(polylines)]
+VIEW(STRUCT([ T(3)(0.02)(STRUCT(AA(POLYLINE)(lines))), STRUCT(sets)]))
+
+VIEW(EXPLODE(1.2,1.2,1)((AA(POLYLINE)(polylines))))
+polylines = [ [V[v] for v in FV[-1]+[FV[-1][0]]] ]
+VIEW(EXPLODE(1.2,1.2,1)((AA(POLYLINE)(polylines))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsection{Testing the box-kd-trees}
+%===============================================================================
+
+
+\paragraph{Visualizing with different colors the buckets of box-kd-tree}
+%-------------------------------------------------------------------------------
+@O test/py/bool/test04.py @{
+""" Visualizing with different colors the buckets of box-kd-tree """
+from pyplasm import *
 """ import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from bool import *
-@< First set of 2D data: Fork-1 input @>
-@< Bulk of Boolean task computation @>
-@}
-%-------------------------------------------------------------------------------
-
-
-\subsubsection{Two squares}
-
-
-
-
-%-------------------------------------------------------------------------------
-@o test/py/bool/test03.py
-@{""" import modules from larcc/lib """
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool import *
+from bool2 import *
 
-V1 = [[0,0],[10,0],[10,10],[0,10]]
-FV1 = [range(4)]
-EV1 = [[0,1],[1,2],[2,3],[0,3]]
-VV1 = AA(LIST)(range(len(V1)))
+randomQuadArray = randomQuads(30,0.8)
+VIEW(STRUCT(AA(MKPOL)([[verts, [[1,2,3,4]], None] for verts in randomQuadArray])))
 
-V2 = [[2.5,2.5],[12.5,2.5],[12.5,12.5],[2.5,12.5]]
-FV2 = [range(4)]
-EV2 = [[0,1],[1,2],[2,3],[0,3]]
-VV2 = AA(LIST)(range(len(V2)))
-@< Bulk of Boolean task computation @>
+boxes = containmentBoxes(randomQuadArray)
+hexas = AA(box2exa)(boxes)
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+yellow = STRUCT(AA(glass)(AA(MKPOL)([hex for hex,data in hexas])))
+VIEW(STRUCT([#cyan,
+    yellow]))
+
+parts = boxBuckets(boxes)
+for k,part in enumerate(parts):
+    bunch = [glass(STRUCT( [MKPOL(hexas[h][0]) for h in part]))]
+    bunch += [COLOR(RED)(MKPOL(hexas[k][0]))]
+    VIEW(STRUCT(bunch))
 @}
 %-------------------------------------------------------------------------------
 
+
+\subsection{Intersection of geometry subsets}
+%===============================================================================
+
+
+
+
+\paragraph{Two unit cubes}
 %-------------------------------------------------------------------------------
-@o test/py/bool/test033.py
-@{""" import modules from larcc/lib """
+@D Two unit cubes 
+@{""" Two unit cubes """
+
 import sys
 sys.path.insert(0, 'lib/py/')
-from bool import *
+from bool2 import *
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
+cube1 = Struct([(V,FV,EV)],"cube1")
+twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
 
-V1 = [[0,0,0],[10,0,0],[10,10,0],[0,10,0],[0,0,10],[10,0,10],[10,10,10],[0,10,10]]
-V1,[VV1,EV1,FV1,CV1] = larCuboids((1,1,1),True)
-V1 = [SCALARVECTPROD([5,v]) for v in V1]
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 
-V2 = [SUM([v,[2.5,2.5,2.5]]) for v in V1]
-[VV2,EV2,FV2,CV2] = [VV1,EV1,FV1,CV1]
+#twoCubes = Struct([cube1,t(-1,.5,1),cube1])     # other test example
+#twoCubes = Struct([cube1,t(.5,.5,0),cube1])    # other test example
+#twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
 
-@< Bulk of Boolean task computation @>
+V,FV,EV = struct2lar(twoCubes)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
+
+quadArray = [[V[v] for v in face] for face in FV]
+boxes = containmentBoxes(quadArray)
+hexas = AA(box2exa)(boxes)
+parts = boxBuckets(boxes)
 @}
 %-------------------------------------------------------------------------------
 
 
-%-------------------------------------------------------------------------------
-@o test/py/bool/test04.py
-@{""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
+def POLYGONS((V,FV)):
 
-V1 = [[0,0],[10,0],[10,10],[0,10]]
-FV1 = [range(4)]
-EV1 = [[0,1],[1,2],[2,3],[0,3]]
-VV1 = AA(LIST)(range(len(V1)))
-
-V2 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]
-FV2 = [range(4)]
-EV2 = [[0,1],[1,2],[2,3],[0,3]]
-VV2 = AA(LIST)(range(len(V2)))
-@< Bulk of Boolean task computation @>
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@o test/py/bool/test044.py
-@{""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
-
-n = 24
-V1 = [[5*cos(angle*2*PI/n)+2.5, 5*sin(angle*2*PI/n)+2.5] for angle in range(n)]
-FV1 = [range(n)]
-EV1 = TRANS([range(n),range(1,n+1)]); EV1[-1] = [0,n-1]
-VV1 = AA(LIST)(range(len(V1)))
-
-V2 = [[4*cos(angle*2*PI/n), 4*sin(angle*2*PI/n)] for angle in range(n)]
-FV2 = [range(n)]
-EV2 = EV1
-VV2 = AA(LIST)(range(len(V2)))
-@< Bulk of Boolean task computation @>
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@o test/py/bool/test05.py
-@{""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
-
-V1 = [[2.5,2.5],[7.5,2.5],[7.5,7.5],[2.5,7.5]]
-FV1 = [range(4)]
-EV1 = [[0,1],[1,2],[2,3],[0,3]]
-VV1 = AA(LIST)(range(len(V1)))
-
-V2 = [[5,2.5],[10,2.5],[10,7.5],[5,7.5]]
-FV2 = [range(4)]
-EV2 = [[0,1],[1,2],[2,3],[0,3]]
-VV2 = AA(LIST)(range(len(V2)))
-@< Bulk of Boolean task computation @>
-@}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-@o test/py/bool/test06.py
-@{""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
-
-V1 = [[0,0],[15,0],[15,14],[0,14]]
-FV1 = [range(4)]
-EV1 = [[0,1],[1,2],[2,3],[0,3]]
-VV1 = AA(LIST)(range(len(V1)))
-
-V2 = [[1,1],[7,1],[7,6],[1,6], [8,1],[14,1],[14,7],[8,7], [1,7],[7,7],[7,13],[1,13], [8,8],[14,8],[14,13],[8,13]]
-FV2 = [range(4),range(4,8),range(8,12),range(12,16)]
-EV2 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11], [12,13],[13,14],[14,15],[12,15]]
-VV2 = AA(LIST)(range(len(V2)))
-
-@< Bulk of Boolean task computation @>
-
-VIEW(STRUCT(MKPOLS((V,CVs[(1,0)]))))
-
-V3 = V
-FV3 = CV
-B12 = CAT(boundary1.values() + boundary2.values())
-EV = larConvexFacets (V,CV)
-EV3 = [EV[e] for e in B12]
-VV3 = AA(LIST)(range(len(V3)))
-
-V1,FV1,EV1,VV1 = V3,FV3,EV3,VV3
-
-V3 = [[3,0],[5,0],[5,15],[3,15], [6,3],[9,3],[9,5],[6,5], [6,9],[9,9],[9,11],[6,11]]
-FV3 = [range(4),range(4,8),range(8,12)]
-EV3 = [[0,1],[1,2],[2,3],[0,3], [4,5],[5,6],[6,7],[4,7], [8,9],[9,10],[10,11],[8,11]]
-VV3 = AA(LIST)(range(len(V3)))
-
-V2,FV2,EV2,VV2 = V3,FV3,EV3,VV3
-
-@< Bulk of Boolean task computation @>
-
-@}
-%-------------------------------------------------------------------------------
 
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
-   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares1} 
-   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares2} 
-   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares3} 
-   \includegraphics[height=0.244\linewidth,width=0.244\linewidth]{images/twosquares4} 
-   \caption{Partitioning of the CDC (Common Delaunay Complex): (a) the two Boolean arguments merged in a single covering; (b) the CDC together with the two (yellow) boundaries; (c) the split CDC cells; (d) the exploded CDC partition.}
-   \label{fig:example}
-\vspace{5mm}
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes1} 
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes2} 
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes3} 
+   \includegraphics[height=0.245\linewidth,width=0.243\linewidth]{images/twocubes4} 
+   \caption{\texttt{LAR} complex of the space decomposition generated by two cubes in special positions. (a) translation on one coordinate; (b) translation on two coordinates;  (c) translation on three coordinates; (d) non-manifold position along an edge.}
+   \label{fig:twocubes}
+\end{figure}
+
+
+\paragraph{Face (and incident faces) transformation}
+%-------------------------------------------------------------------------------
+@O test/py/bool/test05.py
+@{""" non-valid -> valid solid representation of a space partition """
+
+@< Two unit cubes @>
+    
+W,FW,EW = spacePartition(V,FV,EV, parts)
+
+from architectural import *
+polylines = lar2polylines((W,FW))
+VIEW(EXPLODE(1.2,1.2,1.2)(AA(POLYLINE)(polylines)))
+
+WW = AA(LIST)(range(len(W)))
+submodel = STRUCT(MKPOLS((W,EW)))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.5))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+\paragraph{3-cell reconstruction from LAR space partition}
+%-------------------------------------------------------------------------------
+@O test/py/bool/test06.py
+@{""" 3-cell reconstruction from LAR space partition """
+@< Two unit cubes @>
+W,FW,EW = spacePartition(V,FV,EV, parts)
+WW = AA(LIST)(range(len(W)))
+submodel = STRUCT(MKPOLS((W,EW)))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{2D polygon triangulation}
+Here a 2D polygon is imported from an SVG file made of boundary lines, and the \texttt{V,FV,EV}
+LAR model is generated. Then the unique polygonal face in \texttt{FV} is embedded in 3D ($z=0$), and triangulated using the tassellation algorithm extracted from pyOpenGL and pyGLContext, stored in the \texttt{lib/py/support.py} file. The generated triangles are finally coherently oriented, by testing the $z$-component of their normal vector.
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test07.py
+@{""" 2D polygon triangulation """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool2 import *
+
+filename = "test/py/bool/interior.svg"
+lines = svg2lines(filename)    
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
+
+pivotFace = [V[v] for v in FV[0]+[FV[0][0]]]
+pol = PolygonTessellator()
+vertices = [ vertex.Vertex( (x,y,0) ) for (x,y) in pivotFace  ]
+verts = pol.tessellate(vertices)
+ps = [list(v.point) for v in verts]
+trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
+VIEW(STRUCT(AA(POLYLINE)(trias)))
+
+triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
+VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{From triples of points to LAR model of boundary triangulation}
+    
+%-------------------------------------------------------------------------------
+@O test/py/bool/test08.py @{
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool2 import *
+sys.path.insert(0, 'test/py/bool/')
+from test06 import *
+
+""" From triples of points to LAR model """
+FE = crossRelation(FW,EW)
+triangleSet = boundaryTriangulation(W,FW,EW,FE)
+TW = triangleIndices(triangleSet,W)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Visualization of of incidence between edges and 3D triangles}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test09.py @{
+""" Visualization of of incidence between edges and 3D triangles """
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool2 import *
+sys.path.insert(0, 'test/py/bool/')
+from test08 import *
+
+model = W,FW,EW
+FE = crossRelation(FW,EW)
+EF = invertRelation(FE)
+
+triangleSet = boundaryTriangulation(W,FW,EW,FE)
+TW = triangleIndices(triangleSet,W)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
+
+ET = edgesTriangles(EF,FW,TW,EW)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(ET)))))
+VIEW(STRUCT(MKPOLS((W,ET[35]))))
+
+from iot3d import polyline2lar
+V,FV,EV = polyline2lar([[W[v] for v in FW[f]] for f in EF[35]] )
+VIEW(STRUCT(MKPOLS((V,EV))))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Visualization of indices of the boundary triangulation}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test10.py @{
+""" Visualization of indices of the boundary triangulation """
+import sys; sys.path.insert(0, 'lib/py/')
+from bool2 import *
+sys.path.insert(0, 'test/py/bool/')
+from test09 import *
+
+model = W,FW,EW
+FE = crossRelation(FW,EW)
+EF_angle = faceSlopeOrdering(model,FE)
+
+WW = AA(LIST)(range(len(W)))
+submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Visualization after sorted edge-faces incidence computation}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test11a.py @{
+@< testing example @(t(.5,.5,.5)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test11b.py @{
+@< testing example @(t(.5,.5,0)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test11c.py @{
+@< testing example @(t(.5,0,0)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D testing example @{
+""" Visualization of indices of the boundary triangulation """
+import numpy
+numpy.random.seed(0)
+
+import sys
+sys.path.insert(0, 'lib/py/')
+from bool2 import *
+
+V,[VV,EV,FV,CV] = larCuboids([3,3,1],True)
+cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+cubeGrids = Struct(3*[cubeGrid,@1])
+
+V,FV,EV = struct2lar(cubeGrids)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
+V,CV,FV,EV,CF,CE,COE,FE = partition(V,FV,EV)
+
+CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
+cellLengths = AA(len)(CF)
+boundaryPosition = cellLengths.index(max(cellLengths))
+BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
+BE = list({e for f in BF for e in FE[f]})
+
+VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF],[EV[e] for e in BE]) ))
+VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell],[EV[e] for e in set(CAT([FE[f] for f in cell]))]) for cell in CF]))
+VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in CE]))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks01} 
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks02} 
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks03} 
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks04} 
-   \caption{Partitioning of the CDC (Common Delaunay Complex): (a) the two Boolean arguments merged in a single covering; (b) the CDC together with the two (yellow) boundaries; (c) the split CDC cells; (d) the XOR of Boolean arguments.}
-   \label{fig:example}
-\vspace{5mm}
-   \centering
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks05} 
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks06} 
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks07} 
-   \includegraphics[height=0.2\linewidth,width=0.244\linewidth]{images/forks08} 
-   \caption{Some chains defined on the CDC (Common Delaunay Complex): (a) the first Boolean argument; (b) the second Boolean argument; (c) the intersection chain; (d) the union chain.}
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11a1} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11a2} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11a3} 
+
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b1} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b2} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11b3} 
+
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11c1} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11c2} 
+   \includegraphics[height=0.332\textwidth,width=0.32\textwidth]{images/test11c3} 
+   \caption{Examples of 3-cell extraction of two simple Boolean 2-complex, and their boundaries. Notice the numbers of (solid) 3-cells.}
    \label{fig:example}
 \end{figure}
 
 
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+\paragraph{Generation of the edge permutation associated to the 1-boundary of a 2-chain}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test12.py @{
+""" Generation of the edge permutation associated to the 1-boundary of a 2-chain """
+import sys;sys.path.insert(0, 'lib/py/')
+from bool2 import *
+sys.path.insert(0, 'test/py/larcc/')
+from test11 import *
+
+C2 = csr_matrix((len(FV),1))
+for i in [21,16,23,22, 2,3,4, 9,28,5]: C2[i,0] = 1
+BD = boundary(FV,EV)
+C1 = BD * C2
+C_1 = [i for i in range(len(EV)) if ABS(C1[i,0]) == 1 ]
+C_2 = [i for i in range(len(FV)) if C2[i,0] == 1 ]
+
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[EV[k] for k in C_1] + [FV[k] for k in C_2]))))
+
+sign,next = cycles2permutation(boundaryCicles(C_1, EV))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
 \appendix
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+%===============================================================================
+\section{Code utilities}
+%===============================================================================
+
+\paragraph{Coding utilities}
+
+Some utility fuctions used by the module are collected in this appendix. Their macro names can be seen in the below script.
+
 %-------------------------------------------------------------------------------
-\section{Appendix: utility functions}
+@D Coding utilities
+@{""" Coding utilities """
+global count
+@< Generation of a random 3D point @>
+@< Generation of random 3D triangles @>
+@< Generation of random 3D quadrilaterals @>
+@< Generation of a single random triangle @>
+@< Containment boxes @>
+@< Transformation of a 3D box into an hexahedron @>
+@< Computation of the 1D centroid of a list of 3D boxes @>
+@< Generation of a list of HPCs from a LAR model with non-convex faces @>
+@}
 %-------------------------------------------------------------------------------
-@D Initial import of modules
-@{from pyplasm import *
-from scipy import *
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from simplexn import *
-from larcc import *
-from largrid import *
-from myfont import *
-from mapper import *
+
+
+\paragraph{Generation of a list of HPCs from a LAR model with non-convex faces}
+
+%-------------------------------------------------------------------------------
+@D Generation of a list of HPCs from a LAR model with non-convex faces
+@{""" Generation of a list of HPCs from a LAR model with non-convex faces """
+def MKTRIANGLES(*model): 
+    V,FV,EV = model
+    FE = crossRelation(FV,EV)
+    triangleSets = boundaryTriangulation(V,FV,EV,FE)
+    return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
+        for triangledFace in triangleSets ]
+
+def MKSOLID(*model): 
+    V,FV,EV = model
+    FE = crossRelation(FV,EV)
+    pivot = V[0]
+    VF = invertRelation(FV) 
+    faces = [face for face in FV if face not in VF[0]]
+    triangleSets = boundaryTriangulation(V,faces,EV,FE)
+    return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
+        for face in CAT(triangleSets) ])
 @}
-%------------------------------------------------------------------
-\subsection{Numeric utilities}
+%-------------------------------------------------------------------------------
 
-A small set of utility functions is used to transform a \emph{point} representation, given as array of coordinates, into a string of fixed format to be used as point key into python dictionaries.
 
-%------------------------------------------------------------------
-@D Symbolic utility to represent points as strings
-@{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
-global PRECISION
-PRECISION = 4.95
+\paragraph{Generation of random triangles}
+The function \texttt{randomTriangles} returns the array \texttt{randomTriaArray} with a given number of triangles generated within the unit 3D interval. The \texttt{scaling} parameter is used to scale every such triangle, generated by three randow points, that could be possibly located to far from each other, even at the distance of the diagonal of the unit cube.
 
-def verySmall(number): return abs(number) < 10**-(PRECISION/1.15)
+The arrays \texttt{xs}, \texttt{ys} and \texttt{zs}, that contain the $x,y,z$ coordinates of triangle points, are used to compute the minimal translation \texttt{v} needed to transport the entire set of data within the positive octant of the 3D space. 
 
-def prepKey (args): return "["+", ".join(args)+"]"
-
-def fixedPrec(value):
-	out = round(value*10**(PRECISION*1.1))/10**(PRECISION*1.1)
-	if out == -0.0: out = 0.0
-	return str(out)
-	
-def vcode (vect): 
-	"""
-	To generate a string representation of a number array.
-	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
-	"""
-	return prepKey(AA(fixedPrec)(vect))
+%-------------------------------------------------------------------------------
+@D Generation of random 3D triangles
+@{""" Generation of random triangles """
+def randomTriangles(numberOfTriangles=400,scaling=0.3):
+    randomTriaArray = [rtriangle(scaling) for k in range(numberOfTriangles)]
+    [xs,ys,zs] = TRANS(CAT(randomTriaArray))
+    xmin, ymin, zmin = min(xs), min(ys), min(zs)
+    v = array([-xmin,-ymin, -zmin])
+    randomTriaArray = [[list(v1+v), list(v2+v), list(v3+v)] for v1,v2,v3 in randomTriaArray]
+    return randomTriaArray
 @}
-%------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 
+\paragraph{Generation of random 3D quadrilaterals}
+
+%-------------------------------------------------------------------------------
+@D Generation of random 3D quadrilaterals
+@{""" Generation of random 3D quadrilaterals """
+def randomQuads(numberOfQuads=400,scaling=0.3):
+    randomTriaArray = [rtriangle(scaling) for k in range(numberOfQuads)]
+    [xs,ys,zs] = TRANS(CAT(randomTriaArray))
+    xmin, ymin, zmin = min(xs), min(ys), min(zs)
+    v = array([-xmin,-ymin, -zmin])
+    randomQuadArray = [AA(list)([ v1+v, v2+v, v3+v, v+v2-v1+v3 ]) for v1,v2,v3 in randomTriaArray]
+    return randomQuadArray
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Generation of a random 3D point}
+A single random point, codified in floating point format, and with a fixed (quite small) number of digits, is returned by the \texttt{rpoint()} function, with no input parameters.
+%-------------------------------------------------------------------------------
+@D Generation of a random 3D point
+@{""" Generation of a random 3D point """
+def rpoint():
+    return eval( vcode([ random.random(), random.random(), random.random() ]) )
+@}
+%-------------------------------------------------------------------------------
+    
+\paragraph{Generation of a single random triangle}
+A single random triangle, scaled about its centroid by the \texttt{scaling} parameter, is returned by the \texttt{rtriangle()} function, as a tuple ot two random points in the unit square.
+%-------------------------------------------------------------------------------
+@D Generation of a single random triangle
+@{""" Generation of a single random triangle """
+def rtriangle(scaling):
+    v1,v2,v3 = array(rpoint()), array(rpoint()), array(rpoint())
+    c = (v1+v2+v3)/3
+    pos = rpoint()
+    v1 = (v1-c)*scaling + pos
+    v2 = (v2-c)*scaling + pos
+    v3 = (v3-c)*scaling + pos
+    return tuple(eval(vcode(v1))), tuple(eval(vcode(v2))), tuple(eval(vcode(v3)))
+@}
+%-------------------------------------------------------------------------------
+    
+
+\paragraph{Containment boxes}
+
+Given as input a list \texttt{randomTriaArray} of pairs of 2D points, the function \texttt{containmentBoxes} returns, in the same order, the list of \emph{containment boxes} of the input lines. A \emph{containment box} of a geometric object of dimension $d$ is defined as the minimal $d$-cuboid, equioriented with the reference frame, that contains the object. For a 2D line it is given by the tuple $(x1,y1,x2,y2)$, where $(x1,y1)$ is the point of minimal coordinates, and $(x2,y2)$ is the point of maximal  coordinates.
+
+%-------------------------------------------------------------------------------
+@D Containment boxes
+@{""" Containment boxes """
+def containmentBoxes(randomPointArray,qualifier=0):
+    if len(randomPointArray[0])==2:
+        boxes = [eval(vcode([min(x1,x2), min(y1,y2), min(z1,z2), 
+                             max(x1,x2), max(y1,y2), max(z1,z2)]))+[qualifier]
+                for ((x1,y1,z1),(x2,y2,z2)) in randomPointArray]
+    elif len(randomPointArray[0])==3:
+        boxes = [eval(vcode([min(x1,x2,x3), min(y1,y2,y3), min(z1,z2,z3), 
+                             max(x1,x2,x3), max(y1,y2,y3), max(z1,z2,z3)]))+[qualifier]
+                for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3)) in randomPointArray]
+    elif len(randomPointArray[0])==4:
+        boxes = [eval(vcode([min(x1,x2,x3,x4), min(y1,y2,y3,y4), min(z1,z2,z3,z4), 
+                             max(x1,x2,x3,x4), max(y1,y2,y3,y4), max(z1,z2,z3,z4)]))+[qualifier]
+                for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3),(x4,y4,z4)) in randomPointArray]
+    return boxes
+@}
+%-------------------------------------------------------------------------------
+
+    
+\paragraph{Transformation of a 3D box into an hexahedron}
+The transformation of a 2D box into a closed rectangular polyline, given as an ordered sequwncw of 2D points, is produced by the function \texttt{box2exa}
+%-------------------------------------------------------------------------------
+@D Transformation of a 3D box into an hexahedron
+@{""" Transformation of a 3D box into an hexahedron """    
+def box2exa(box):
+    x1,y1,z1,x2,y2,z2,type = box
+    verts = [[x1,y1,z1], [x1,y1,z2], [x1,y2,z1], [x1,y2,z2], [x2,y1,z1], [x2,y1,z2], [x2,y2,z1], [x2,y2,z2]]
+    cell = [range(1,len(verts)+1)]
+    return [verts,cell,None],type
+
+def lar2boxes(model,qualifier=0):
+    V,CV = model
+    boxes = []
+    for k,cell in enumerate(CV):
+        verts = [V[v] for v in cell]
+        x1,y1,z1 = [min(coord) for coord in TRANS(verts)]
+        x2,y2,z2 = [max(coord) for coord in TRANS(verts)]
+        boxes += [eval(vcode([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))+[(qualifier,k)]]
+    return boxes
+@}
+%-------------------------------------------------------------------------------
+    
+\paragraph{Computation of the 1D centroid of a list of 3D boxes}
+The 1D \texttt{centroid} of a list of 3D boxes is computed by the function given below.
+The direction of computation (either $x,y$ or $z$) is chosen depending on the value of the \texttt{coord} parameter. 
+%-------------------------------------------------------------------------------
+@D Computation of the 1D centroid of a list of 3D boxes
+@{""" Computation of the 1D centroid of a list of 3D boxes """    
+def centroid(boxes,coord):
+    delta,n = 0,len(boxes)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
+    for box in boxes:
+        delta += (box[a] + box[b])/2
+    return delta/n
+@}
+%-------------------------------------------------------------------------------
 
 \bibliographystyle{amsalpha}
 \bibliography{bool}

@@ -446,6 +446,47 @@ def boundaryTriangulation(W,FW):
         triangleSet += [AA(orientTriangle)(trias)]
     return triangleSet
     
+from triangle import *
+from integr import *
+from copy import copy
+def boundaryTriangulation(W,FW,EW,FE):
+    triangleSet = []
+    for f,face in enumerate(FW):
+        signedEdgesLoop = boundaryCycles(FE[f],EW)[0]
+        vertexLoop = [EW[ABS(e)][0] if e<0 else EW[e][1]  for e in signedEdgesLoop]
+
+        pivotFace = [W[v] for v in face]
+        transform = submanifoldMapping(pivotFace)
+        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
+        verts2D = [point[:-2] for point in mappedVerts]  
+
+        n = len(verts2D)
+        triples = [[(k-1)%n,k,(k+1)%n] for k,vert in enumerate(verts2D)]
+        vects = array(verts2D)
+        angles = [cross(vects[k2]-vects[k1],vects[k0]-vects[k1]) for k0,k1,k2 in triples] 
+
+        Verts = [v+[0.0] for v in verts2D]
+        tria = range(n)
+        trias = AA(C(AL)(0))(TRANS([tria[1:-1],tria[2:]]))
+        P = Verts,trias
+        area = Surface(P,signed=True)
+        if area<0: angles = AA(C(DIFF)(0))(angles)
+
+        pts = array(verts2D)
+        n = len(verts2D)
+        holes = [triples[k] for k,angle in enumerate(angles) if angle<0]
+        EdgeVerts = AA(list)(zip(range(n),range(1,n)+[0]))
+        
+        tri = {	'vertices': pts, 'segments': EdgeVerts }
+        triangles = triangulate(tri)['triangles'].tolist()
+        FaceVerts = [face for face in triangles if not any([set(face)==set(hole) for hole in holes])]
+
+        points = (transform.I * (mat([p+[1.0] for p in Verts]).T)).T.tolist()
+        trias = [[points[k][:-1] for k in face]+[points[face[0]][:-1]] for face in FaceVerts]
+
+        triangleSet += [AA(orientTriangle)(trias)]
+    return triangleSet
+
 
 def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
@@ -524,9 +565,9 @@ def planeProjection(normals):
     elif all(V[:,2]==0): V = np.delete(V, 2, 1)
     return V
 
-def faceSlopeOrdering(model):
+def faceSlopeOrdering(model,FE):
     V,FV,EV = model
-    triangleSet = boundaryTriangulation(V,FV)
+    triangleSet = boundaryTriangulation(V,FV,EV,FE)
     TV = triangleIndices(triangleSet,V)
     triangleVertices = CAT(TV)
     TE = crossRelation(triangleVertices,EV)
@@ -730,12 +771,13 @@ if __name__ == "__main__":
 @D Edge cycles associated to a closed chain of edges
 @{""" Edge cycles associated to a closed chain of edges """
 def boundaryCycles(edgeBoundary,EV):
+    print "\n>>> edgeBoundary =",edgeBoundary
     verts2edges = defaultdict(list)
     for e in edgeBoundary:
         verts2edges[EV[e][0]] += [e]
         verts2edges[EV[e][1]] += [e]
     cycles = []
-    cbe = copy.copy(edgeBoundary)
+    cbe = copy(edgeBoundary)
     while cbe != []:
         e = cbe[0]
         v = EV[e][0]
@@ -785,16 +827,9 @@ The test for completeness of the extraction is done by computing the current bou
 @D Cells from $(d-1)$-dimensional LAR model
 @{""" Cells from $(d-1)$-dimensional LAR model """
 
-def facesFromComponents(model):
+def facesFromComponents(model,FE,EF_angle):
     # initialization
     V,FV,EV = model
-    if EV[0] != EV[1]: EV = [EV[0]]+EV
-    model = V,FV,EV
-    EF_angle = faceSlopeOrdering(model)
-    #EF_angle = AA(REVERSE)(EF_angle)
-    FE = crossRelation(FV,EV)
-    # remove 0 indices from FE relation
-    FE = [[f for f in face if f!=0] for face in FE]
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     print "\n>> 1: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
     face = 0
@@ -923,6 +958,33 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
 %-------------------------------------------------------------------------------
 
 
+
+
+\subsubsection{Main procedure of arrangement partitioning}
+
+%-------------------------------------------------------------------------------
+@D Main procedure of arrangement partitioning
+@{""" Main procedure of arrangement partitioning """
+def partition(W,FW,EW):
+    quadArray = [[W[v] for v in face] for face in FW]
+    parts = boxBuckets(containmentBoxes(quadArray))
+    Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+    ZZ = AA(LIST)(range(len(Z)))
+    submodel = STRUCT(MKPOLS((Z,EZ)))
+    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
+    EZ = [EZ[0]]+EZ
+    model = Z,FZ,EZ
+    FE = crossRelation(FZ,EZ)
+    # remove 0 indices from FE relation
+    FE = [[f for f in face if f!=0] for face in FE]
+    EF_angle = faceSlopeOrdering(model,FE)
+    V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
+    return V,CV,FV,EV,CF,CE,COE,FE
+@}
+%-------------------------------------------------------------------------------
+
+
+
 \subsection{Boolean chains}
 %===============================================================================
 
@@ -967,6 +1029,7 @@ import pdb
 @< Face orientations storage @>
 @< Check and store the orientation of faces @>
 @< Get single solid cell @>
+@< Main procedure of arrangement partitioning @>
 @}
 %-------------------------------------------------------------------------------
     
@@ -1240,8 +1303,8 @@ sys.path.insert(0, 'test/py/bool2/')
 from test06 import *
 
 """ From triples of points to LAR model """
-
-triangleSet = boundaryTriangulation(W,FW)
+FE = crossRelation(FW,EW)
+triangleSet = boundaryTriangulation(W,FW,EW,FE)
 TW = triangleIndices(triangleSet,W)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
 @}
@@ -1264,7 +1327,7 @@ model = W,FW,EW
 FE = crossRelation(FW,EW)
 EF = invertRelation(FE)
 
-triangleSet = boundaryTriangulation(W,FW)
+triangleSet = boundaryTriangulation(W,FW,EW,FE)
 TW = triangleIndices(triangleSet,W)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
 
@@ -1291,7 +1354,8 @@ sys.path.insert(0, 'test/py/bool2/')
 from test09 import *
 
 model = W,FW,EW
-EF_angle = faceSlopeOrdering(model)
+FE = crossRelation(FW,EW)
+EF_angle = faceSlopeOrdering(model,FE)
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))
@@ -1330,52 +1394,23 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool2 import *
 
-V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
-cube1 = Struct([(V,FV,EV)],"cube1")
-twoCubes = Struct(3*[cube1,@1])
+V,[VV,EV,FV,CV] = larCuboids([3,3,1],True)
+cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+cubeGrids = Struct(3*[cubeGrid,@1])
 
-glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
-
-#twoCubes = Struct([cube1,t(-1,.5,1),cube1])     # other test example
-#twoCubes = Struct([cube1,t(.5,.5,0),cube1])    # other test example
-#twoCubes = Struct([cube1,t(.5,0,0),cube1])        # other test example
-
-V,FV,EV = struct2lar(twoCubes)
+V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
-
-quadArray = [[V[v] for v in face] for face in FV]
-boxes = containmentBoxes(quadArray)
-hexas = AA(box2exa)(boxes)
-parts = boxBuckets(boxes)
-
-W,FW,EW = spacePartition(V,FV,EV, parts)
-
-WW = AA(LIST)(range(len(W)))
-submodel = STRUCT(MKPOLS((W,EW)))
-VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
-#VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW)))))
-
-theModel = W,FW,EW
-pdb.set_trace()
-
-V,CV,FV,EV,CF,CE,COE = facesFromComponents(theModel)
-print ">> 10: CF",[(k,cf) for k,cf in enumerate(CF)]
-#pdb.set_trace()
+V,CV,FV,EV,CF,CE,COE,FE = partition(V,FV,EV)
 
 CF = sorted(list(set(AA(tuple)(AA(sorted)(CF)))))
 cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))
-BF = CF[boundaryPosition]
-del CF[boundaryPosition]
-VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(W,FW) ))
-VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF]) ))
-VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell]) for cell in CF]))
-VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in CE[1:]]))
+BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
+BE = list({e for f in BF for e in FE[f]})
 
-WW = AA(LIST)(range(len(W)))
-submodel = SKEL_1(STRUCT(MKPOLS((W,EW))))
-VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
-
+VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF],[EV[e] for e in BE]) ))
+VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell],[EV[e] for e in set(CAT([FE[f] for f in cell]))]) for cell in CF]))
+VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in CE]))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1458,17 +1493,19 @@ global count
 @D Generation of a list of HPCs from a LAR model with non-convex faces
 @{""" Generation of a list of HPCs from a LAR model with non-convex faces """
 def MKTRIANGLES(*model): 
-    V,FV = model
-    triangleSets = boundaryTriangulation(V,FV)
+    V,FV,EV = model
+    FE = crossRelation(FV,EV)
+    triangleSets = boundaryTriangulation(V,FV,EV,FE)
     return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
 
 def MKSOLID(*model): 
-    V,FV = model
+    V,FV,EV = model
+    FE = crossRelation(FV,EV)
     pivot = V[0]
     VF = invertRelation(FV) 
     faces = [face for face in FV if face not in VF[0]]
-    triangleSets = boundaryTriangulation(V,faces)
+    triangleSets = boundaryTriangulation(V,faces,EV,FE)
     return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
         for face in CAT(triangleSets) ])
 @}

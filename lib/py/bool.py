@@ -1,558 +1,718 @@
-""" Module for Boolean ops with LAR """
+""" Module for Boolean computations between geometric objects """
 from pyplasm import *
-from scipy import *
-import sys
 """ import modules from larcc/lib """
+import sys
 sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from simplexn import *
-from larcc import *
-from largrid import *
-from myfont import *
-from mapper import *
+from inters import *
+DEBUG = False
+import pdb
 
-DEBUG = True
-from matrix import *
-from splitcell import *
-""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
-global PRECISION
-PRECISION = 4.95
+""" Coding utilities """
+global count
+""" Generation of a random 3D point """
+def rpoint():
+    return eval( vcode([ random.random(), random.random(), random.random() ]) )
 
-def verySmall(number): return abs(number) < 10**-(PRECISION/1.15)
+""" Generation of random triangles """
+def randomTriangles(numberOfTriangles=400,scaling=0.3):
+    randomTriaArray = [rtriangle(scaling) for k in range(numberOfTriangles)]
+    [xs,ys,zs] = TRANS(CAT(randomTriaArray))
+    xmin, ymin, zmin = min(xs), min(ys), min(zs)
+    v = array([-xmin,-ymin, -zmin])
+    randomTriaArray = [[list(v1+v), list(v2+v), list(v3+v)] for v1,v2,v3 in randomTriaArray]
+    return randomTriaArray
 
-def prepKey (args): return "["+", ".join(args)+"]"
+""" Generation of random 3D quadrilaterals """
+def randomQuads(numberOfQuads=400,scaling=0.3):
+    randomTriaArray = [rtriangle(scaling) for k in range(numberOfQuads)]
+    [xs,ys,zs] = TRANS(CAT(randomTriaArray))
+    xmin, ymin, zmin = min(xs), min(ys), min(zs)
+    v = array([-xmin,-ymin, -zmin])
+    randomQuadArray = [AA(list)([ v1+v, v2+v, v3+v, v+v2-v1+v3 ]) for v1,v2,v3 in randomTriaArray]
+    return randomQuadArray
 
-def fixedPrec(value):
-   out = round(value*10**(PRECISION*1.1))/10**(PRECISION*1.1)
-   if out == -0.0: out = 0.0
-   return str(out)
-   
-def vcode (vect): 
-   """
-   To generate a string representation of a number array.
-   Used to generate the vertex keys in PointSet dictionary, and other similar operations.
-   """
-   return prepKey(AA(fixedPrec)(vect))
+""" Generation of a single random triangle """
+def rtriangle(scaling):
+    v1,v2,v3 = array(rpoint()), array(rpoint()), array(rpoint())
+    c = (v1+v2+v3)/3
+    pos = rpoint()
+    v1 = (v1-c)*scaling + pos
+    v2 = (v2-c)*scaling + pos
+    v3 = (v3-c)*scaling + pos
+    return tuple(eval(vcode(v1))), tuple(eval(vcode(v2))), tuple(eval(vcode(v3)))
 
-""" First step of Boolean Algorithm """
-from collections import defaultdict, OrderedDict
+""" Containment boxes """
+def containmentBoxes(randomPointArray,qualifier=0):
+    if len(randomPointArray[0])==2:
+        boxes = [eval(vcode([min(x1,x2), min(y1,y2), min(z1,z2), 
+                             max(x1,x2), max(y1,y2), max(z1,z2)]))+[qualifier]
+                for ((x1,y1,z1),(x2,y2,z2)) in randomPointArray]
+    elif len(randomPointArray[0])==3:
+        boxes = [eval(vcode([min(x1,x2,x3), min(y1,y2,y3), min(z1,z2,z3), 
+                             max(x1,x2,x3), max(y1,y2,y3), max(z1,z2,z3)]))+[qualifier]
+                for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3)) in randomPointArray]
+    elif len(randomPointArray[0])==4:
+        boxes = [eval(vcode([min(x1,x2,x3,x4), min(y1,y2,y3,y4), min(z1,z2,z3,z4), 
+                             max(x1,x2,x3,x4), max(y1,y2,y3,y4), max(z1,z2,z3,z4)]))+[qualifier]
+                for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3),(x4,y4,z4)) in randomPointArray]
+    return boxes
 
-""" TODO: change defaultdict to OrderedDefaultdict """
+""" Transformation of a 3D box into an hexahedron """    
+def box2exa(box):
+    x1,y1,z1,x2,y2,z2,type = box
+    verts = [[x1,y1,z1], [x1,y1,z2], [x1,y2,z1], [x1,y2,z2], [x2,y1,z1], [x2,y1,z2], [x2,y2,z1], [x2,y2,z2]]
+    cell = [range(1,len(verts)+1)]
+    return [verts,cell,None],type
 
-class OrderedDefaultdict(collections.OrderedDict):
-   def __init__(self, *args, **kwargs):
-      if not args:
-         self.default_factory = None
-      else:
-         if not (args[0] is None or callable(args[0])):
-            raise TypeError('first argument must be callable or None')
-         self.default_factory = args[0]
-         args = args[1:]
-      super(OrderedDefaultdict, self).__init__(*args, **kwargs)
+def lar2boxes(model,qualifier=0):
+    V,CV = model
+    boxes = []
+    for k,cell in enumerate(CV):
+        verts = [V[v] for v in cell]
+        x1,y1,z1 = [min(coord) for coord in TRANS(verts)]
+        x2,y2,z2 = [max(coord) for coord in TRANS(verts)]
+        boxes += [eval(vcode([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))+[(qualifier,k)]]
+    return boxes
 
-   def __missing__ (self, key):
-      if self.default_factory is None:
-         raise KeyError(key)
-      self[key] = default = self.default_factory()
-      return default
+""" Computation of the 1D centroid of a list of 3D boxes """    
+def centroid(boxes,coord):
+    delta,n = 0,len(boxes)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
+    for box in boxes:
+        delta += (box[a] + box[b])/2
+    return delta/n
 
-   def __reduce__(self):  # optional, for pickle support
-      args = (self.default_factory,) if self.default_factory else tuple()
-      return self.__class__, args, None, None, self.iteritems()
+""" Generation of a list of HPCs from a LAR model with non-convex faces """
+def MKTRIANGLES(*model): 
+    V,FV,EV = model
+    FE = crossRelation(FV,EV)
+    triangleSets = boundaryTriangulation(V,FV,EV,FE)
+    return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
+        for triangledFace in triangleSets ]
 
-
-def vertexSieve(model1, model2):
-   from lar2psm import larModelBreak
-   V1,CV1 = larModelBreak(model1) 
-   V2,CV2 = larModelBreak(model2)
-   n = len(V1); m = len(V2)
-   def shift(CV, n): 
-      return [[v+n for v in cell] for cell in CV]
-   CV2 = shift(CV2,n)
-
-   
-   vdict1 = defaultdict(list)
-   for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
-   vdict2 = defaultdict(list)
-   for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
-   
-   vertdict = defaultdict(list)
-   for point in vdict1.keys(): vertdict[point] += vdict1[point]
-   for point in vdict2.keys(): vertdict[point] += vdict2[point]
-
-   
-   case1, case12, case2 = [],[],[]
-   for item in vertdict.items():
-      key,val = item
-      if len(val)==2:  case12 += [item]
-      elif val[0] < n: case1 += [item]
-      else: case2 += [item]
-   n1 = len(case1); n2 = len(case12); n3 = len(case2)
-
-
-   invertedindex = list(0 for k in range(n+m))
-   for k,item in enumerate(case1):
-      invertedindex[item[1][0]] = k
-   for k,item in enumerate(case12):
-      invertedindex[item[1][0]] = k+n1
-      invertedindex[item[1][1]] = k+n1
-   for k,item in enumerate(case2):
-      invertedindex[item[1][0]] = k+n1+n2
-
-
-   V = [eval(p[0]) for p in case1] + [eval(p[0]) for p in case12] + [eval(
-            p[0]) for p in case2]
-   CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]
-   CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]
-   return V, CV1, CV2, len(case12)
+def MKSOLID(*model): 
+    V,FV,EV = model
+    FE = crossRelation(FV,EV)
+    pivot = V[0]
+    VF = invertRelation(FV) 
+    faces = [face for face in FV if face not in VF[0]]
+    triangleSets = boundaryTriangulation(V,faces,EV,FE)
+    return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
+        for face in CAT(triangleSets) ])
 
 
-def covering(model1,model2,dim=2,emptyCellNumber=1):
-   V, CV1, CV2, n12 = vertexSieve(model1,model2)
-   _,EEV1 = larFacets((V,CV1),dim,emptyCellNumber)
-   _,EEV2 = larFacets((V,CV2),dim,emptyCellNumber)
-   if emptyCellNumber !=0: CV1 = CV1[:-emptyCellNumber]
-   if emptyCellNumber !=0: CV2 = CV2[:-emptyCellNumber]
-   VV = AA(LIST)(range(len(V)))
-   return V,[VV,EEV1,EEV2,CV1,CV2],n12
+""" Split the boxes between the below,above subsets """
+def splitOnThreshold(boxes,subset,coord):
+    theBoxes = [boxes[k] for k in subset]
+    threshold = centroid(theBoxes,coord)
+    ncoords = len(boxes[0])/2
+    a = coord%ncoords
+    b = a+ncoords
+    below,above = [],[]
+    for k in subset:
+        if boxes[k][a] <= threshold: below += [k]
+    for k in subset:
+        if boxes[k][b] >= threshold: above += [k]
+    return below,above
+
+""" Test if bucket OK or append to splitting stack """
+def splitting(bucket,below,above, finalBuckets,splittingStack):
+    if (len(below)<4 and len(above)<4) or len(set(bucket).difference(below))<7 \
+        or len(set(bucket).difference(above))<7: 
+        finalBuckets.append(below)
+        finalBuckets.append(above)
+    else: 
+        splittingStack.append(below)
+        splittingStack.append(above)
 
 
-""" Characteristic matrix transposition """
-def invertRelation(dim,CV):
-   inverse = [[] for k in range(dim)]
-   for k,cell in enumerate(CV):
-      for v in cell:
-         inverse[v] += [k]
-   return inverse
+""" Remove subsets from bucket list """
+def removeSubsets(buckets):
+    n = len(buckets)
+    A = zeros((n,n))
+    for i,bucket in enumerate(buckets):
+        for j,bucket1 in enumerate(buckets):
+            if set(bucket).issubset(set(bucket1)):
+                A[i,j] = 1
+    B = AA(sum)(A.tolist())
+    out = [bucket for i,bucket in enumerate(buckets) if B[i]==1]
+    return out
 
+def geomPartitionate(boxes,buckets):
+    geomInters = [set() for h in range(len(boxes))]
+    for bucket in buckets:
+        for k in bucket:
+            geomInters[k] = geomInters[k].union(bucket)
+    for h,inters in enumerate(geomInters):
+        geomInters[h] = geomInters[h].difference([h])
+    return AA(list)(geomInters)
 
+""" Iterate the splitting until \texttt{splittingStack} is empty """
+def boxTest(boxes,h,k):
+    B1,B2,B3,B4,B5,B6,_ = boxes[k]
+    b1,b2,b3,b4,b5,b6,_ = boxes[h]
+    return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
 
-
-
-""" Cell splitting in two cells """
-def cellSplitting(face,cell,covector,V,EEV,CV):
-   plane = COVECTOR([V[v] for v in EEV[face]])
-   theCell = [V[v] for v in CV[cell]]
-   [below,equal,above] = SPLITCELL(plane,theCell)
-   cell1 = AA(vcode)(below)
-   cell2 = AA(vcode)(above)
-   return cell1,cell2
-
-""" Init face-cell and cell-face dictionaries """
-def initTasks(tasks):
-   dict_fc = defaultdict(list)
-   dict_cf = defaultdict(list)
-   for task in tasks:
-      face,cell,covector = task
-      dict_fc[face] += [(cell,covector)] 
-      dict_cf[cell] += [(face,covector)] 
-   return dict_fc,dict_cf
-
-
-""" Updating the vertex set of split cells """
-
-""" Computation of bits of split cells """
-def testingSubspace(V,covector):
-   def testingSubspace0(vcell):
-      inout = SIGN(sum([INNERPROD([V[v]+[1.],covector]) for v in vcell]))
-      return inout
-   return testingSubspace0
-   
-def cuttingTest(covector,polytope,V):
-   signs = [INNERPROD([covector, V[v]+[1.]]) for v in polytope]
-   signs = eval(vcode(signs))
-   return any([value<-0.001 for value in signs]) and any([value>0.001 for value in signs])
-
-
-def tangentTest(face,polytope,V,BC):
-   faceVerts = BC[face]
-   cellVerts = polytope
-   commonVerts = list(set(faceVerts).intersection(cellVerts))
-   if commonVerts != []:
-      v0 = commonVerts[0] # v0 = common vertex (TODO more general)
-      transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
-      vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
-               if v != v0]).T)).T.tolist()
-      if all([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
-         return True
-   else: return False
-
-from collections import defaultdict
-
-def splitCellsCreateVertices(vertdict,dict_fc,dict_cf,V,BC,CV,VC,lenBC1):
-   DEBUG = False
-   splitBoundaryFacets = []; splittingCovectors = defaultdict(list)
-   CVbits = [[-1,-1] for k in range(len(CV))] 
-   nverts = len(V); cellPairs = []; twoCellIndices = []; 
-   while any([tasks != [] for face,tasks in dict_fc.items()]) : 
-      for face,tasks in dict_fc.items():
-         for task in tasks:
-            cell,covector = task
-            vcell = CV[cell]
-            if (cell,vcell,face) == (29, [24, 1, 4], 3): break
-            print "\n1> cell,vcell,face,covector =",cell,vcell,face,covector
-
-            cell1,cell2 = cellSplitting(face,cell,covector,V,BC,CV)
-            if cuttingTest(covector,vcell,V):
-               if cell1 == [] or cell2 == []:
-                  pass
-               else:
-                  adjCells = adjacencyQuery(V,CV)(cell)
-                                    
-                  vcell1 = []
-                  for k in cell1:
-                     if vertdict[k]==[]: 
-                        vertdict[k] += [nverts]
-                        V += [eval(k)]
-                        nverts += 1
-                     vcell1 += [vertdict[k]]
-                  
-                  vcell1 = CAT(vcell1)
-                  vcell2 = CAT([vertdict[k] for k in cell2])                     
-                                             
-                  V,CV,CVbits, dict_cf, dict_fc,twoCells = splittingControl(
-                     face,cell,covector,vcell,vcell1,vcell2, dict_fc,dict_cf,V,BC,CV,VC,
-                     CVbits,lenBC1,splitBoundaryFacets,splittingCovectors)
-                  if twoCells[0] != twoCells[1]:
-
-                     print "2> cell,adjCells =",cell,adjCells
-                     
-                     for adjCell in adjCells:
-                        if cuttingTest(covector,CV[adjCell],V):
-                           dict_fc[face] += [(adjCell,covector)]                             
-                           dict_cf[adjCell] += [(face,covector)] 
-                           print "2.1> face,dict_fc[face] =",face,dict_fc[face]
-                           print "2.2> adjCell,dict_cf[adjCell] =",adjCell,dict_cf[adjCell]
-
-                        cellPairs += [[vcell1, vcell2]]
-                        twoCellIndices += [[twoCells]]
-                                    
-               if DEBUG: showSplitting("c",twoCells[1],V,cellPairs,BC,CV)
-
-            elif tangentTest(face,vcell,V,BC):                             
-               newFacet = [ v for v in vcell if 
-                  verySmall(INNERPROD([covector,V[v]+[1.0]])) ]
-               splitBoundaryFacets += [newFacet]
-               splittingCovectors[cell] += [(face,covector,newFacet)]
+def boxBuckets(boxes):
+    bucket = range(len(boxes))
+    splittingStack = [bucket]
+    finalBuckets = []
+    while splittingStack != []:
+        bucket = splittingStack.pop()
+        below,above = splitOnThreshold(boxes,bucket,1)
+        below1,above1 = splitOnThreshold(boxes,above,2)
+        below2,above2 = splitOnThreshold(boxes,below,2) 
                
-               dict_fc[face].remove((cell,covector))   # remove the split cell
-               dict_cf[cell].remove((face,covector))   # remove the splitting face
+        below11,above11 = splitOnThreshold(boxes,above1,3)
+        below21,above21 = splitOnThreshold(boxes,below1,3)        
+        below12,above12 = splitOnThreshold(boxes,above2,3)
+        below22,above22 = splitOnThreshold(boxes,below2,3)  
+              
+        splitting(above1,below11,above11, finalBuckets,splittingStack)
+        splitting(below1,below21,above21, finalBuckets,splittingStack)
+        splitting(above2,below12,above12, finalBuckets,splittingStack)
+        splitting(below2,below22,above22, finalBuckets,splittingStack)
+        
+        finalBuckets = list(set(AA(tuple)(finalBuckets)))
+    parts = geomPartitionate(boxes,finalBuckets)
+    parts = [[h for h in part if boxTest(boxes,h,k)] for k,part in enumerate(parts)]
+    return AA(sorted)(parts)
 
-            else: 
-               dict_fc[face].remove((cell,covector))   # remove the split cell
-               # dict_cf[cell].remove((face,covector))   # remove the splitting face
-            if DEBUG: showSplitting("b",cell,V,cellPairs,BC,CV)
-         if DEBUG: showSplitting("a",cell,V,cellPairs,BC,CV)
-   splitBoundaryFacets = sorted(list(AA(list)(set(AA(tuple)(AA(sorted)(splitBoundaryFacets))))))
-   return CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors
+""" Computation of affine face transformations """
+def COVECTOR(points):
+    pointdim = len(points[0])
+    plane = Planef.bestFittingPlane(pointdim,
+                    [item for sublist in points for item in sublist])
+    return [plane.get(I) for I in range(0,pointdim+1)]
 
-""" Managing the splitting dictionaries """
-def splittingControl(face,cell,covector,vcell,vcell1,vcell2,
-      dict_fc,dict_cf,V,BC,CV,VC,CVbits,lenBC1,splitBoundaryFacets,splittingCovectors):
+def faceTransformations(facet):
+    covector = COVECTOR(facet)
+    translVector = facet[0]
+    # translation 
+    newFacet = [ VECTDIFF([v,translVector]) for v in facet ]
+    # linear transformation: boundaryFacet -> standard (d-1)-simplex
+    d = len(facet[0])
+    m = mat( newFacet[1:d] + [covector[1:]] )
+    if det(m)==0.0:
+        for k in range(len(facet)-2):
+            m = mat( newFacet[1+k+1:d+k+1] + [covector[1:]] )
+            if det(m)!=0.0: break
+    transformMat = m.T.I
+    # transformation in the subspace x_d = 0
+    out = (transformMat * (mat(newFacet).T)).T.tolist()
+    return transformMat
 
-   boundaryFacet = BC[face]
-   translVector = V[boundaryFacet[0]]
-   tcovector = [cv+tv*covector[-1] for (cv,tv) in zip(
-               covector[:-1],translVector) ]+[0.0]
 
-   c1,c2 = cell,cell
-   if not haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,
-                        translVector,tcovector,covector,
-                        V,splitBoundaryFacets,splittingCovectors) :
-                        
-      print "1.1> cell,vcell,face,covector =",cell,vcell,face,covector
+""" Computation of topological relation """
+def crossRelation(XV,YV):
+    csrXV = csrCreate(XV)
+    csrYV = csrCreate(YV)
+    csrXY = matrixProduct(csrXV, csrYV.T)
+    XY = [None for k in range(len(XV))]
+    for k,face in enumerate(XV):
+        data = csrXY[k].data
+        col = csrXY[k].indices
+        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+        # NOTE: val depends on the relation under consideration ...
+    return XY
 
-      # only one facet covector crossing the cell
-      cellVerts = CV[cell]
-      CV[cell] = vcell1
-      CV += [vcell2]
-      CVbits += [list(copy(CVbits[cell]))]
-      c1,c2 = cell,len(CV)-1
-      
-      newFacet = list(set(vcell1).intersection(vcell2))
-      splitBoundaryFacets += [newFacet]  ## CAUTION: to verify
-      splittingCovectors[c1] += [(face,covector,newFacet)]
-      splittingCovectors[c2] = splittingCovectors[c1]
-      
-      print "1.1.1> c1,c2,CVbits[c1],CVbits[c2] =",c1,c2,CVbits[c1],CVbits[c2]
-      
-      dict_fc[face].remove((cell,covector))  # remove the split cell
-      dict_cf[cell].remove((face,covector))  # remove the splitting face
+""" Submanifold mapping computation """
+def submanifoldMapping(pivotFace):
+    tx,ty,tz = pivotFace[0]
+    transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
+    facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
+    m = faceTransformations(facet)
+    mapping = mat([[m[0,0],m[0,1],m[0,2],0],[m[1,0],m[1,1],m[1,2],0],[m[2,0],
+                    m[2,1],m[2,2],0],[0,0,0,1]])
+    transform = mapping * transl
+    return transform
+
+""" Set of line segments partitioning a facet """
+def intersection(V,FV,EV):
+    def intersection0(k,bundledFaces):
+        FE = crossRelation(FV,EV)
+        pivotFace = [V[v] for v in FV[k]]
+        transform = submanifoldMapping(pivotFace)  # submanifold transformation
+        transformedCells,edges,faces = [],[],[]
+        for face in bundledFaces:
+            edge = set(FE[k]).intersection(FE[face])  # common edge index
+            if edge == set():
+                candidateEdges = FE[face]
+                facet = []
+                for e in candidateEdges:
+                    cell = [V[v]+[1.0] for v in EV[e]]  # verts of incident face
+                    transformedCell = (transform * (mat(cell).T)).T.tolist()  
+                    # vertices in local frame
+                    facet += [[point[:-1] for point in transformedCell]]
+                faces += [facet]
+            else:  # boundary edges of face k
+                e, = edge
+                vs = [V[v]+[1.0] for v in EV[e]]
+                ws = (transform * (mat(vs).T)).T.tolist()
+                edges += [[p[:-1] for p in ws]]
+        return edges,faces,transform
+    return intersection0    
+
+""" Space partitioning via submanifold mapping """
+def spacePartition(V,FV,EV, parts):
+    transfFaces = []
+    for k,bundledFaces in enumerate(parts):
+        edges,faces,transform = intersection(V,FV,EV)(k,bundledFaces)
+        for face in faces:
+            line = []
+            for edge in face:
+                (x1,y1,z1),(x2,y2,z2) = edge
+                if not verySmall(z2-z1):
+                    x = (x2-x1)/(z2-z1) + x1
+                    y = (y2-y1)/(z2-z1) + y1
+                    p = [x,y,0]
+                    line += [eval(vcode(p))]
+            if line!=[]: edges += [line]
+        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])    
+        if len(fv)>1: fv = fv[:-1]
+        lar = [w+[0.0] for w in v],fv,ev
+        transfFaces += [Struct([ larApply(transform.I)(lar) ])]
+    W,FW,EW = struct2lar(Struct(transfFaces))
+    return W,FW,EW
+
+from support import PolygonTessellator,vertex
+
+def orientTriangle(pointTriple):
+    v1 = array(pointTriple[1])-pointTriple[0]
+    v2 = array(pointTriple[2])-pointTriple[0]
+    if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
+    else: return pointTriple
+
+def boundaryTriangulation(W,FW):
+    import numpy; numpy.random.rand(0)
+    triangleSet = []
+    for face in FW:
+        pivotFace = [W[v] for v in face+(face[0],)]
+        transform = submanifoldMapping(pivotFace)
+        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
+        facet = [point[:-1] for point in mappedVerts]
+        print "\nfacet =",facet
+        
+        def preProcessVerts(facet):
+            vertDict,out = dict(),[facet[0]]
+            vertDict[vcode(facet[0])] = vcode(facet[0])
+            vertDict[vcode(facet[-1])] = vcode(facet[-1])
+            for vert in facet[1:-1]:
+                x_ = vert[0]+0.002*numpy.random.rand()
+                y_ = vert[1]+0.002*numpy.random.rand()
+                vert_ = vcode([x_,y_,vert[2]])
+                vertDict[vert_] = vcode(vert)
+                out += [eval(vert_)]
+            out += [facet[-1]] 
+            return out,vertDict
+        
+        facet,vertDict = preProcessVerts(facet)
+        print "\nfacet =",facet
+        print "\nvertDict =",vertDict
+        pol = PolygonTessellator()
+        vertices = [ vertex.Vertex( (x,y,z) ) for (x,y,z) in facet  ]
+        verts = pol.tessellate(vertices)
+        ps = [list(v.point) for v in verts]
+        print "\nps =",ps
+        
+        def postProcessVerts(vertDict,ps):
+            return [eval(vertDict[vcode(vert)]) for vert in ps]
+        
+        ps = postProcessVerts(vertDict,ps)
+        print "\nps =",ps
+        trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
+        mappedVerts = (transform.I * (mat([p+[1.0] for p in ps]).T)).T.tolist()
+        points = [p[:-1] for p in mappedVerts]
+        trias = [[points[k],points[k+1],points[k+2],points[k]] 
+            for k in range(0,len(points),3) 
+            if scipy.linalg.norm(cross(array(points[k+1])-points[k], 
+                                       array(points[k+2])-points[k])) != 0 ]
+        triangleSet += [AA(orientTriangle)(trias)]
+    return triangleSet
+    
+from triangle import *
+from integr import *
+from copy import copy
+def boundaryTriangulation(W,FW,EW,FE):
+    triangleSet = []
+    for f,face in enumerate(FW):
+        signedEdgesLoop = boundaryCycles(FE[f],EW)[0]
+        vertexLoop = [EW[ABS(e)][0] if e<0 else EW[e][1]  for e in signedEdgesLoop]
+
+        pivotFace = [W[v] for v in face]
+        transform = submanifoldMapping(pivotFace)
+        mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
+        verts2D = [point[:-2] for point in mappedVerts]  
+
+        n = len(verts2D)
+        triples = [[(k-1)%n,k,(k+1)%n] for k,vert in enumerate(verts2D)]
+        vects = array(verts2D)
+        angles = [cross(vects[k2]-vects[k1],vects[k0]-vects[k1]) for k0,k1,k2 in triples] 
+
+        Verts = [v+[0.0] for v in verts2D]
+        tria = range(n)
+        trias = AA(C(AL)(0))(TRANS([tria[1:-1],tria[2:]]))
+        P = Verts,trias
+        area = Surface(P,signed=True)
+        if area<0: angles = AA(C(DIFF)(0))(angles)
+
+        pts = array(verts2D)
+        n = len(verts2D)
+        holes = [triples[k] for k,angle in enumerate(angles) if angle<0]
+        EdgeVerts = AA(list)(zip(range(n),range(1,n)+[0]))
+        
+        tri = {   'vertices': pts, 'segments': EdgeVerts }
+        triangles = triangulate(tri)['triangles'].tolist()
+        FaceVerts = [face for face in triangles if not any([set(face)==set(hole) for hole in holes])]
+
+        points = (transform.I * (mat([p+[1.0] for p in Verts]).T)).T.tolist()
+        trias = [[points[k][:-1] for k in face]+[points[face[0]][:-1]] for face in FaceVerts]
+
+        triangleSet += [AA(orientTriangle)(trias)]
+    return triangleSet
+
+
+def triangleIndices(triangleSet,W):
+    vertDict,out = defaultdict(),[]
+    for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
+    for h,faceSetOfTriangles in enumerate(triangleSet):
+        out += [[[vertDict[vcode(p)] for p in triangle[:-1]] 
+                    for triangle in faceSetOfTriangles]]
+    return out
+
+
+def edgesTriangles(EF, FW, TW, EW):
+    ET = [None for k in range(len(EF))]
+    for e,edgeFaces in enumerate(EF):
+        ET[e] = []
+        for f in edgeFaces:
+            for t in TW[f]:
+                if set(EW[e]).intersection(t)==set(EW[e]):
+                    ET[e] += [t]
+    return ET
+
+""" Directional and orthogonal projection operators """
+def dirProject (e):
+    def dirProject0 (v):
+        return SCALARVECTPROD([ INNERPROD([ UNITVECT(e), v ]), UNITVECT(e) ])
+    return dirProject0
+
+def orthoProject (e):
+    def orthoProject0 (v):  
+        return VECTDIFF([ v, dirProject(UNITVECT(e))(v) ])
+    return orthoProject0
+
+""" Check edge-face ordering """
+def checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model):
+    V,FV,EV = model
+    pairs = [(e,pair) for e,pair in enumerate(zip(EF,EF_angle)) if NEQ(AA(len)(pair))]
+    edges,incidentFaces = TRANS(pairs)
+    missingFaces = [list(set(pair[0]).difference(pair[1])) for pair in incidentFaces]
+    for edge,faces in zip(edges,missingFaces):
+        print "\nedge,faces =",edge,faces
+        for face in faces:
+            #print "face,triangleSet[face] =",face,triangleSet[face]
+            for triangle in triangleSet[face]:
+                trianglesides = [[triangle[k],triangle[k+1]] 
+                                for k,vertex in enumerate(triangle[:-1])]
+                #print "",edge,face,trianglesides
+                for v1,v2 in trianglesides:
+                    edgeVertices = [V[v] for v in EV[edge]]
+                    print "v1,v2,edgeVertices =",v1,v2,edgeVertices
+    return EF_angle
+
+""" Circular ordering of faces around edges """
+
+def planeProjection(normals):
+    V = mat(normals)
+    if all(V[:,0]==0): V = np.delete(V, 0, 1)
+    elif all(V[:,1]==0): V = np.delete(V, 1, 1)
+    elif all(V[:,2]==0): V = np.delete(V, 2, 1)
+    return V
+
+def faceSlopeOrdering(model,FE):
+    V,FV,EV = model
+    triangleSet = boundaryTriangulation(V,FV,EV,FE)
+    TV = triangleIndices(triangleSet,V)
+    triangleVertices = CAT(TV)
+    TE = crossRelation(triangleVertices,EV)
+    ET,ET_angle = invertRelation(TE),[]
+    for e,et in enumerate(ET):
+        v1,v2 = EV[e]
+        v1v2 = set([v1,v2])
+        et_angle = []
+        t0 = et[0]
+        tverts = [v1,v2] + list(set(triangleVertices[t0]).difference(v1v2))
+        e3 = UNITVECT(VECTDIFF([ V[tverts[1]], V[tverts[0]] ]))
+        e1 = UNITVECT(VECTDIFF([ V[tverts[2]], V[tverts[0]] ]))
+        e2 = cross(array(e1),e3).tolist()
+        basis = mat([e1,e2,e3]).T
+        transform = basis.I
+        normals = []
+        Tvs = []
+        for triangle in et:
+            verts = triangleVertices[triangle]
+            vertSet = set(verts).difference(v1v2)
+            tvs = [v1,v2] + list(vertSet)
+            Tvs += [tvs]
+            w1 = UNITVECT(VECTDIFF([ V[tvs[2]], V[tvs[0]] ]))
+            w2 = (transform * mat([w1]).T).T
+            w3 = cross(array([0,0,1]),w2).tolist()[0]
+            normals += [w3]
+        normals = mat(normals)
+        for k,t in enumerate(et):
+            angle = math.atan2(normals[k,1],normals[k,0])
+            et_angle += [angle]
+        pairs = sorted(zip(et_angle,et,Tvs))
+        sortedTrias = [pair[1] for pair in pairs]
+        triasVerts = [pair[2] for pair in pairs]
+        #print "triasVerts =",triasVerts
+        tetraVerts = triasVerts[0]+[triasVerts[1][2]]
+        print det(mat([V[v]+[1] for v in tetraVerts]))
+        #print "tetraVerts =",tetraVerts
+        ET_angle += [sortedTrias]
+    EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
+    #EF = crossRelation(EV,FV)
+    #EF_angle = checkEdgeFaceOrdering(EF,triangleSet,EF_angle,model)
+    return EF_angle
+
+""" Oriented cycle of vertices from a 1-cycle of unoriented edges """
+def theNext(FE,EF_angle,EV,cb,previous_cb,previousOrientedEdges,cf):
+    previous_cb = cb
+    def theNext0(previous_edge,face):
+        cbe = copy.copy(cb)
+        edges = list(set(FE[face]).intersection(cbe)) #difference(cbe))
+        if edges==[]: 
+            edges = list(cbe)
+            face = list(set(EF_angle[edges[0]]).intersection(cf))[0]
+        if type(previousOrientedEdges[0])!=list:
+            signs,next = cycles2permutation([previousOrientedEdges])
+        else: signs,next = cycles2permutation(previousOrientedEdges)
+        edge = edges[0]
+        edgeOrientation = signs[edge]
+        edgeFaces = EF_angle[edge]
+        n = len(edgeFaces)
+        if edgeOrientation == 1: 
+            ind = (edgeFaces.index(face) + 1)%n
+        elif edgeOrientation == -1:
+            ind = (edgeFaces.index(face) - 1)%n
+        nextFace = edgeFaces[ind]
+        nextFaceBoundary = list(set(FE[nextFace]))
+        orientedEdges = cyclesOrientation(previousOrientedEdges,nextFaceBoundary,EV)
+        return orientedEdges,nextFace,edge
+    return theNext0
+
+""" Edge-triangles to Edge-faces incidence """
+def ET_to_EF_incidence(TW,FW, ET_angle):
+    tableFT = [None for k in range(len(FW))]
+    t = 0
+    for f,trias in enumerate(TW):
+        tableFT[f] = range(t,t+len(trias))
+        t += len(trias)
+    tableTF = invertRelation(tableFT)
+    EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
+    #assert( len(EF_angle) == 2*len(FW) )
+    return EF_angle
+
+""" Cells from $(d-1)$-dimensional LAR model """
+
+def facesFromComponents(model,FE,EF_angle):
+    # initialization
+    V,FV,EV = model
+    visitedCell = [[ None, None ] for k in range(len(FV)) ]
+    print "\n>> 1: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
+    face = 0
+    boundaryLoop = boundaryCycles(FE[face],EV)[0]
+    firstEdge = boundaryLoop[0]
+    cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+    for face,edge in zip(cf,coe):
+        if visitedCell[face][0]==None: visitedCell[face][0] = edge
+        else: visitedCell[face][1] = edge
+    print "cf = ",cf
+    print "coe = ",coe
+    cv,ce = set(),set()
+    cv = cv.union(CAT([FV[f] for f in cf]))
+    ce = ce.union(CAT([FE[f] for f in cf]))
+    CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
+    
+    # main loop
+    while True:
+        #pdb.set_trace()
+        face, edge = startCell(visitedCell,FE,EV)
+        if face == -1: break
+        boundaryLoop = boundaryCycles(FE[face],EV)[0]
+        if edge not in boundaryLoop:
+            boundaryLoop = reverseOrientation(boundaryLoop)
+            print "\n> edge in boundaryLoop =", edge in boundaryLoop
+            #pdb.set_trace()
+        cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
+        print "cf = ",cf
+        print "coe = ",coe
+        CF += [cf]
+        COE += [coe]
+        for face,edge in zip(cf,coe):
+            if visitedCell[face][0]==None: visitedCell[face][0] = edge
+            else: visitedCell[face][1] = edge
             
-      # more than one facet covectors crossing the cell
-      alist1,alist2 = list(),list()
-      for aface,covector in dict_cf[cell]:
-         if cuttingTest(covector,CV[cell],V):
-      
-            # for each facet crossing the cell
-            # compute the intersection between the facet and the cell
-            faceVerts = BC[aface]
-            commonVerts = list(set(faceVerts).intersection(cellVerts))
+        cv,ce = set(),set()
+        cv = cv.union(CAT([FV[f] for f in cf]))
+        ce = ce.union(CAT([FE[f] for f in cf]))
+        CV += [list(cv)]
+        CE += [list(ce)]
+    return V,CV,FV,EV,CF,CE,COE
+
+""" Edge cycles associated to a closed chain of edges """
+def boundaryCycles(edgeBoundary,EV):
+    print "\n>>> edgeBoundary =",edgeBoundary
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    cbe = copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
+
+""" Permutation of edges defined by edge cycles """
+def cycles2permutation(cycles):
+    next = []
+    for cycle in cycles:
+        next += zip(AA(ABS)(cycle),AA(ABS)(cycle[1:]+[cycle[0]]))
+    next = dict(next)
+    sign = dict([[ABS(edge),SIGN(edge)] for cycle in cycles for edge in cycle])
+    return sign,next
+
+""" Cycles orientation """
+def cyclesOrient(pcycles,fcycle,EV):
+    if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
+    ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
+    if type(pcycles[0])==list: opcycle = CAT(pcycles)
+    else: opcycle = pcycles
+    int = set(opcycle).intersection(ofcycle)
+    if int != set(): 
+        ofcycle = reverseOrientation(ofcycle)
+    outChain = [e for e in ofcycle if not (-e in opcycle)] 
+    outChain += [e for e in opcycle if not (-e in ofcycle)] 
+    return outChain
+
+if __name__ == "__main__":
+    pcycles = [[-19, 13, 22, 23]]
+    fcycle = [30, 20, 18, 2, 26, 19]
+    cyclesOrientation(pcycles,fcycle)
+
+""" Start a new 3-cell """
+def startCell(visitedCell,FE,EV):
+    if len([term for cell in visitedCell for term in cell if term==None])==1: return -1,-1
+    print "\n>> 3: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
+    for face in range(len(visitedCell)):
+        if len([term for term in visitedCell[face] if term==None])==1:
+            edge = visitedCell[face][0]
+            print "\nface,edge =",face,edge
+            break
+        face,edge = -1,-1
+    return face,edge
+
+""" Face orientations storage """
+def reverseOrientation(chain):
+    return REVERSE([-cell for cell in chain])
+
+def faceOrientation(boundaryLoop,face,FE,EV,cf):
+    theBoundary = set(AA(ABS)(boundaryLoop))
+    if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
+        coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
+        face = coboundaryFaces[0]            
+    faceLoop = boundaryCycles(FE[face],EV)[0]
+    commonEdges = set(faceLoop).intersection(boundaryLoop)
+    if commonEdges == set() or commonEdges == {0}: 
+        faceLoop = reverseOrientation(faceLoop)
+        commonEdges = set(faceLoop).intersection(boundaryLoop)
+    theEdge = list(commonEdges)[0]
+    #if theEdge==0: theEdge = list(commonEdges)[1]
+    return -theEdge,face
+
+""" Check and store the orientation of faces """
+def checkOrientation(previousOrientedEdges,orientedEdges,orientedFaceEdges,faceOrientations,face):
+    list2 = CAT(orientedFaceEdges)
+    if orientedEdges != []:
+        list1 = CAT(orientedEdges)
+    else: list1 = CAT(previousOrientedEdges)
+    theList = set(list1).intersection(set(list2).union((lambda args:[-arg for arg in args])(list2)))
+    if theList==set() or orientedEdges==[]:
+        theList = set(CAT(orientedFaceEdges))
+    edge = list(theList)[0]
+    if theList.issubset(list1):  # equal signs
+        if faceOrientations[face][0] == None:
+            faceOrientations[face][0] = edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = edge
+        else: print "error: faceOrientations"
+    elif not theList.issubset(list1): # different signs
+        if faceOrientations[face][0] == None: 
+            faceOrientations[face][0] = -edge
+        elif faceOrientations[face][1] == None:
+            faceOrientations[face][1] = -edge
+        else: print "error: faceOrientations"
+    else: print "error: checkOrientation"
+    return faceOrientations
+
+""" Get single solid cell """
+def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
+
+    def orientFace(face,boundaryLoop): 
+        for e in boundaryLoop:
+            if ABS(e) in FE[face]: return -e
             
-            # and attribute the intersection to the split subcells
-            if set(vcell1).intersection(commonVerts) != set():
-               alist1.append((aface,covector))
-            else: dict_fc[aface].remove((cell,covector)) 
-                  
-            if set(vcell2).intersection(commonVerts) != set():
-               alist2.append((aface,covector))
-               dict_fc[aface] += [(len(CV)-1,covector)]
-         
-            print "1.1.1.1> aface,dict_fc[aface] =",aface,dict_fc[aface]
-         
-      dict_cf[cell] = alist1  
-      dict_cf[len(CV)-1] = alist2
-      
-      print "1.1.2> cell,dict_cf[cell] =",cell,dict_cf[cell]
-      print "1.1.3> len(CV)-1,dict_cf[len(CV)-1] =",len(CV)-1,dict_cf[len(CV)-1]
-      
-   else:
-   
-      print "1.2> cell,vcell,face,covector =",cell,vcell,face,covector
-      
-      dict_fc[face].remove((cell,covector))  # remove the split cell
-      dict_cf[cell].remove((face,covector))  # remove the splitting face   
-      
-   return V,CV,CVbits, dict_cf, dict_fc,[c1,c2]
+    coe = [orientFace(face,boundaryLoop)]
+    cf = [face] 
+    while boundaryLoop != []:
+        edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
+        print "face,edge",face,edge
+        if edge > 0: edgeFaces = EF_angle[edge]
+        elif edge < 0: edgeFaces = REVERSE(EF_angle[-edge])
+        e = ABS(edge)
+        n = len(edgeFaces)
+        ind = (edgeFaces.index(face)+1)%n
+        nextFace = edgeFaces[ind]
+        print "\nnextFace =",nextFace
+        coe += [-orientFace(nextFace,boundaryLoop)]
+        boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
+        print "boundaryLoop =",boundaryLoop
+        cf += [nextFace] 
+        face = nextFace
+    print "\n>> 5: visitedCell =",[[k,row] for k,row in enumerate(visitedCell)]
+    if DEBUG:
+        VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
+    return cf,coe
 
-""" Test for split halting along a boundary facet """
-def haltingSplitTest(face,cell,vcell,vcell1,vcell2,boundaryFacet,translVector,tcovector,covector,
-                  V,splitBoundaryFacets,splittingCovectors):
-   newFacet = list(set(vcell1).intersection(vcell2))
-   
-   # translation 
-   newFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in newFacet ]
-   boundaryFacet = [ eval(vcode(VECTDIFF([V[v],translVector]))) for v in boundaryFacet ]
-   
-   # linear transformation: newFacet -> standard (d-1)-simplex
-   transformMat = mat( boundaryFacet[1:] + [tcovector[:-1]] ).T.I
-   
-   # transformation in the subspace x_d = 0
-   newFacet = AA(COMP([eval,vcode]))((transformMat * (mat(newFacet).T)).T.tolist())
-   boundaryFacet = AA(COMP([eval,vcode]))((transformMat * (mat(boundaryFacet).T)).T.tolist())
-   
-   # projection in E^{d-1} space and Boolean test
-   newFacet = MKPOL([ AA(lambda v: v[:-1])(newFacet), [range(1,len(newFacet)+1)], None ])
-   boundaryFacet = MKPOL([ AA(lambda v: v[:-1])(boundaryFacet), [range(1,len(boundaryFacet)+1)], None ])
-   verts,cells,pols = UKPOL(INTERSECTION([newFacet,boundaryFacet]))
-   
-   if verts == []: return True
-   else: return False
-
-""" Computing the adjacent cells of a given cell """
-def adjacencyQuery (V,CV):
-   dim = len(V[0])
-   def adjacencyQuery0 (cell):
-      nverts = len(CV[cell])
-      csrCV =  csrCreate(CV)
-      csrAdj = matrixProduct(csrCV,csrTranspose(csrCV))
-      cellAdjacencies = csrAdj.indices[csrAdj.indptr[cell]:csrAdj.indptr[cell+1]]
-      return [acell for acell in cellAdjacencies if dim <= csrAdj[cell,acell] < nverts]
-   return adjacencyQuery0
-
-""" Show the process of CDC splitting """
-def showSplitting(step,theCell,V,cellPairs,BC,CV):
-   VV = AA(LIST)(range(len(V)))
-   boundaries = COLOR(RED)(SKEL_1(STRUCT(MKPOLS((V,BC)))))
-   submodel = COLOR(CYAN)(STRUCT([ SKEL_1(STRUCT(MKPOLS((V,CV)))), boundaries ]))
-   if cellPairs != []:
-      cells1,cells2 = TRANS(cellPairs)
-      out = [COLOR(WHITE)(MKPOL([V,[[v+1 for v in cell] for cell in cells1],None])), 
-            COLOR(MAGENTA)(MKPOL([V,[[v+1 for v in cell] for cell in cells2],None]))]
-      VIEW(STRUCT([ STRUCT(out),larModelNumbering(V,[VV,BC,CV],submodel,2), 
-         S([1,2])([0.1,0.1])(TEXT(str(theCell)+step)) ]))
-   else:
-      VIEW(STRUCT([ larModelNumbering(V,[VV,BC,CV],submodel,2),
-         S([1,2])([0.1,0.1])(TEXT(str(theCell)+step)) ]))
-
-""" Boundary triangulation of a convex hull """
-"""
-def qhullBoundary(V):
-   dim = len(V[0])
-   triangulation = Delaunay(array(V))
-   CV = triangulation.simplices.tolist()
-   Ad = triangulation.neighbors.tolist()
-   wingedRep = zip(CV,Ad)
-   boundaryCofaces = [simplex for simplex in wingedRep if any([ad==-1 for ad in simplex[1]])]
-   wingedPairs = [zip(*coface) for coface in boundaryCofaces]
-   out = [[v for v,ad in pairs if ad!=-1] for pairs in wingedPairs]
-   return sorted(out)
-"""
-from scipy.spatial import ConvexHull
-def qhullBoundary(V):
-   points = array(V)
-   hull = ConvexHull(points)
-   out = hull.simplices.tolist()
-   return sorted(out)
-   
-if __name__=="__main__":
-   BV = qhullBoundary(V)
-   VIEW(STRUCT(MKPOLS((V,BV))))
-
-""" Extracting a $(d-1)$-basis of SCDC """
-def larConvexFacets (V,CV):
-   dim = len(V[0])
-   model = V,CV
-   V,FV = larFacets(model,dim)
-   FV = sorted(FV + qhullBoundary(V))
-   return FV
-   
-if __name__=="__main__":
-   V = [[0.0,10.0],[0.0,0.0],[10.0,10.0],[10.0,0.0],[12.5,2.5],[2.5,2.5],[2.5,12.5],
-       [12.5,12.5],[10.0,2.5],[2.5,10.0]]
-   CV = [[0,1,5],[9,0,5],[9,0,6],[1,3,5],[8,4,3],[8,5,3],[2,4,7],[2,6,7],
-        [8,2,5],[8,4,2],[9,2,6],[9,2,5]]
-   VV = AA(LIST)(range(len(V)))
-   FV = larConvexFacets (V,CV)
-   submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
-   VIEW(larModelNumbering(V,[VV,FV,CV],submodel,4))
-
-""" Traversing a Boolean argument within the CDC """
-def booleanChainTraverse(h,cell,V,CV,CVbits,value):
-   adjCells = adjacencyQuery(V,CV)(cell)
-   for adjCell in adjCells: 
-      if CVbits[adjCell][h] == -1:
-         CVbits[adjCell][h] = value
-         CVbits = booleanChainTraverse(h,adjCell,V,CV,CVbits,value)
-   return CVbits
-
-""" Boolean fragmentation and classification of CDC """
-
-def booleanChains(arg1,arg2):
-   (V1,basis1), (V2,basis2) = arg1,arg2
-   model1, model2 = (V1,basis1[-1]), (V2,basis2[-1])
-   V,[VV,_,_,CV1,CV2],n12 = covering(model1,model2,2,0)
-   CV = sorted(AA(sorted)(Delaunay(array(V)).simplices))
-   vertdict = defaultdict(list)
-   for k,v in enumerate(V): vertdict[vcode(v)] += [k]
-   
-   BC1 = signedCellularBoundaryCells(V1,basis1)
-   BC2 = signedCellularBoundaryCells(V2,basis2)
-   n_bf1,n_bf2 = len(BC1),len(BC2)
-   BC = [[ vertdict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
-         [ vertdict[vcode(V2[v])][0] for v in cell] for cell in BC2]
-   BV = list(set(CAT([v for v in BC])))
-   VV = AA(LIST)(range(len(V)))
-   
-   if DEBUG: 
-      """ Input and CDC visualisation """
-      dim = len(V[0])
-      if dim == 2:
-          submodel1 = mkSignedEdges((V1,BC1))
-          submodel2 = mkSignedEdges((V2,BC2))
-          VIEW(STRUCT([submodel1,submodel2]))
-      submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
-      VIEW(larModelNumbering(V,[VV,[],CV],submodel,4))
-      submodel = STRUCT([SKEL_1(STRUCT(MKPOLS((V,CV)))), COLOR(RED)(STRUCT(MKPOLS((V,BC))))])
-      VIEW(larModelNumbering(V,[VV,BC,CV],submodel,4))
-      
-      
-   """ New implementation of splitting dictionaries """
-   VC = invertRelation(len(V),CV)
-   
-   covectors = []
-   for faceVerts in BC:
-      points = [V[v] for v in faceVerts]
-      """
-      dim = len(points[0])
-      theMat = Matrix( [(dim+1)*[1.]] + [p+[1.] for p in points] )
-      covector1 = [(-1)**(col)*theMat.minor(0,col).determinant() 
-                     for col in range(dim+1)]
-      """
-      covector = COVECTOR(points)
-      covector2 = covector[1:]+[covector[0]] 
-      print "covector =",covector2
-      covectors += [covector2]
-   
-   """ to compute a single d-cell associated to (face,covector) """
-   def covectorCell(face,faceVerts,covector,CV,VC):
-      incidentCells = VC[faceVerts[0]]
-      for cell in incidentCells:
-         cellVerts = CV[cell]
-         v0 = list(set(faceVerts).intersection(cellVerts))[0] # v0 = common vertex
-         transformMat = mat([DIFF([V[v],V[v0]]) for v in cellVerts if v != v0]).T.I
-         vects = (transformMat * (mat([DIFF([V[v],V[v0]]) for v in faceVerts 
-                  if v != v0]).T)).T.tolist()
-         if any([all([x>=-0.0001 for x in list(vect)]) for vect in vects]): 
-            return [face,cell,covector]
-      print "error: found no face,cell,covector","\n"
-   
-   """ Initialization of splitting dictionaries """
-   tasks = []
-   for face,covector in zip(range(len(BC)),covectors):
-      tasks += [covectorCell(face,BC[face],covector,CV,VC)]
-   
-   dict_fc,dict_cf = initTasks(tasks)
-   print "\ndict_fc =",dict_fc
-   print "dict_cf =",dict_cf,"\n"
-   
-   
-   
-   CVbits,cellPairs,twoCellIndices,splitBoundaryFacets,splittingCovectors = \
-      splitCellsCreateVertices( vertdict,dict_fc,dict_cf,V,BC,CV,VC,len(BC1) )
-   showSplitting("z",len(CV),V,cellPairs,BC,CV)
-   
-   """ Numerical instability of vertices curation """
-   dim = len(V[0])
-   if dim == 2:
-       x,y = TRANS(V)
-       tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel()))
-   elif dim == 3:
-       x,y,z = TRANS(V)
-       tree = scipy.spatial.KDTree(zip(array(x).ravel(), array(y).ravel(), array(z).ravel()))
-   closestVertexPairs = AA(list)(tree.query(tree.data,2)[1])
-   distances = sorted([[VECTNORM(VECTDIFF([V[v],V[w]])),v,w] for v,w in closestVertexPairs])
-   coincidentVertexPairs = [[v,w] for k,(dist,v,w) in enumerate(distances) if dist < 10**-PRECISION]
-   
-   # remove w from CV (v <- w)
-   if coincidentVertexPairs != []:
-      coincidentVertexPairs = list(set(AA(tuple)(AA(sorted)(coincidentVertexPairs))))
-      toChange = TRANS(coincidentVertexPairs)[1]
-      mapping = dict(AA(REVERSE)(coincidentVertexPairs))
-      CV_ = [[v  if v not in toChange else mapping[v] for v in cell] for cell in CV]
-      VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,larConvexFacets (V,CV_)))))
-      CV = CV_
-   
-
-   print "\ndict_fc =",dict_fc
-   print "dict_cf =",dict_cf,"\n"
-
-   """ Building a dictionary of SCDC $(d-1)$-cells """
-   def facetBasisDict(model):
-      V,CV = model
-      FV = larConvexFacets (V,CV)
-      values = range(len(FV))
-      keys = AA(tuple)(FV)
-      dict_facets = dict(zip(keys,values))
-      return dict_facets
-      
-   """ Searching for the split boundary facets in the dictionary """
-   if __name__=="__main__":
-      model = V,CV
-      dict_facets = facetBasisDict(model)
-      for cell in splitBoundaryFacets: 
-         if cell in dict_facets:
-            print dict_facets[cell]
-         else: print cell
-   
-   
-   dict_facets = facetBasisDict((V,CV))
-   for cell in AA(tuple)(splitBoundaryFacets): 
-      if cell in dict_facets:
-         print dict_facets[cell]
-      else: print cell
-      
-   VV = AA(LIST)(range(len(V)))  
-   submodel = STRUCT(MKPOLS((V,larConvexFacets (V,CV))))
-   VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,larConvexFacets (V,CV)))))
-   
-   return V,CV,BC,CVbits,vertdict,dict_facets,splittingCovectors,n_bf1,n_bf2
-
-""" Extraction of LAR reps of common Boolean status """
-def larBooleanPartition(CVbits,CV):
-   ordCV = sorted(zip(CVbits,CV))
-   out = defaultdict(list)
-   for status,cell in ordCV:
-      out[tuple(status)] += [cell]
-   return out
+""" Main procedure of arrangement partitioning """
+def partition(W,FW,EW):
+    quadArray = [[W[v] for v in face] for face in FW]
+    parts = boxBuckets(containmentBoxes(quadArray))
+    Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+    ZZ = AA(LIST)(range(len(Z)))
+    submodel = STRUCT(MKPOLS((Z,EZ)))
+    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
+    EZ = [EZ[0]]+EZ
+    model = Z,FZ,EZ
+    FE = crossRelation(FZ,EZ)
+    # remove 0 indices from FE relation
+    FE = [[f for f in face if f!=0] for face in FE]
+    EF_angle = faceSlopeOrdering(model,FE)
+    V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
+    return V,CV,FV,EV,CF,CE,COE,FE
 
