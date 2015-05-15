@@ -230,6 +230,9 @@ def submanifoldMapping(pivotFace):
 
 """ Set of line segments partitioning a facet """
 def intersection(V,FV,EV):
+    global PRECISION
+    PRECISION -= 1
+
     def intersection0(k,bundledFaces):
         FE = crossRelation(FV,EV)
         pivotFace = [V[v] for v in FV[k]]
@@ -259,6 +262,10 @@ def spacePartition(V,FV,EV, parts):
     transfFaces = []
     for k,bundledFaces in enumerate(parts):
         edges,faces,transform = intersection(V,FV,EV)(k,bundledFaces)
+        print "\nk,bundledFaces =",k,bundledFaces
+        print "edges =",edges
+        print "faces =",faces
+        print "transform =",transform
         for face in faces:
             line = []
             for edge in face:
@@ -269,8 +276,9 @@ def spacePartition(V,FV,EV, parts):
                     p = [x,y,0]
                     line += [eval(vcode(p))]
             if line!=[]: edges += [line]
-        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])    
-        if len(fv)>1: fv = fv[:-1]
+        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])   
+        print "k,v,fv,ev =",k,v,fv,ev 
+        if len(fv)>1: fv = fv[:-1]   ## ??
         lar = [w+[0.0] for w in v],fv,ev
         transfFaces += [Struct([ larApply(transform.I)(lar) ])]
     W,FW,EW = struct2lar(Struct(transfFaces))
@@ -508,6 +516,7 @@ def startCell(visitedCell,FE,EV):
         if len([term for term in visitedCell[face] if term==None])==1:
             edge = visitedCell[face][0]
             break
+        else: pass  #TODO: implement search for isolated shells
         face,edge = -1,-1
     return face,edge
 
@@ -569,6 +578,7 @@ def partition(W,FW,EW):
     # remove 0 indices from FE relation
     FE = [[f for f in face if f!=0] for face in FE]
     EF_angle = faceSlopeOrdering(model,FE)
+    import pdb; pdb.set_trace()
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE
 

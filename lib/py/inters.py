@@ -409,6 +409,55 @@ def svg2lines(filename):
     lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
     return lines
 
+def svg2lines(filename):
+
+    stringLines = [line.strip() for line in open(filename)]   
+        
+    lines = [string.strip() for string in stringLines if re.match("<line ",string)!=None]   
+    outLines = ""   
+    for line in lines:
+        searchObj = re.search( r'(<line )(.+)(" x1=")(.+)(" y1=")(.+)(" x2=")(.+)(" y2=")(.+)("/>)', line)
+        if searchObj:
+            outLines += "[["+searchObj.group(4)+","+searchObj.group(6)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
+    if lines != []:
+        lines = list(eval(outLines))
+              
+    rects = [string.strip() for string in stringLines if re.match("<rect ",string)!=None]   
+    outRects,searchObj = "",False 
+    for rect in rects:
+        searchObj = re.search( r'(<rect x=")(.+)(" y=")(.+)(" fill)(.*?)( width=")(.+)(" height=")(.+)("/>)', rect)
+        if searchObj:
+            outRects += "[["+searchObj.group(2)+","+searchObj.group(4)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
+    
+    if rects != []:
+        rects = list(eval(outRects))
+        lines += CAT([[[[x,y],[x+w,y]],[[x+w,y],[x+w,y+h]],[[x+w,y+h],[x,y+h]],[[x,y+h],[x,y]]] for [x,y],[w,h] in rects])
+    for line in lines: print line
+    
+    # window-viewport transformation
+    xs,ys = TRANS(CAT(lines))
+    box = [min(xs), min(ys), max(xs), max(ys)]
+    
+    # viewport aspect-ratio checking, setting a computed-viewport 'b'
+    b = [None for k in range(4)]
+    if (box[2]-box[0])/(box[3]-box[1]) > 1:  
+        b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
+    else: 
+        b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
+    
+    # isomorphic 'box -> b' transform to standard unit square
+    lines = [[[ 
+    ((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
+    ((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
+    ((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
+    ((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
+          for [[x1,y1],[x2,y2]] in lines]
+    
+    # line vertices set to fixed resolution
+    lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
+    return lines
+
+
 
 """ Transformation of an array of lines in a 2D LAR complex """
 from bool1 import larRemoveVertices

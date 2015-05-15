@@ -265,6 +265,9 @@ The more important function of this section is the higher level \texttt{intersec
 @D Set of line segments partitioning a facet
 @{""" Set of line segments partitioning a facet """
 def intersection(V,FV,EV):
+    global PRECISION
+    PRECISION -= 1
+
     def intersection0(k,bundledFaces):
         FE = crossRelation(FV,EV)
         pivotFace = [V[v] for v in FV[k]]
@@ -337,6 +340,10 @@ def spacePartition(V,FV,EV, parts):
     transfFaces = []
     for k,bundledFaces in enumerate(parts):
         edges,faces,transform = intersection(V,FV,EV)(k,bundledFaces)
+        print "\nk,bundledFaces =",k,bundledFaces
+        print "edges =",edges
+        print "faces =",faces
+        print "transform =",transform
         for face in faces:
             line = []
             for edge in face:
@@ -347,14 +354,16 @@ def spacePartition(V,FV,EV, parts):
                     p = [x,y,0]
                     line += [eval(vcode(p))]
             if line!=[]: edges += [line]
-        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])    
-        if len(fv)>1: fv = fv[:-1]
+        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])   
+        print "k,v,fv,ev =",k,v,fv,ev 
+        if len(fv)>1: fv = fv[:-1]   ## ??
         lar = [w+[0.0] for w in v],fv,ev
         transfFaces += [Struct([ larApply(transform.I)(lar) ])]
     W,FW,EW = struct2lar(Struct(transfFaces))
     return W,FW,EW
 @}
 %-------------------------------------------------------------------------------
+
 
 
 \subsection{Circular ordering of faces around edges}
@@ -711,6 +720,7 @@ def startCell(visitedCell,FE,EV):
         if len([term for term in visitedCell[face] if term==None])==1:
             edge = visitedCell[face][0]
             break
+        else: pass  #TODO: implement search for isolated shells
         face,edge = -1,-1
     return face,edge
 @}
@@ -796,6 +806,7 @@ def partition(W,FW,EW):
     # remove 0 indices from FE relation
     FE = [[f for f in face if f!=0] for face in FE]
     EF_angle = faceSlopeOrdering(model,FE)
+    import pdb; pdb.set_trace()
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE
 @}
@@ -974,7 +985,23 @@ from bool import *
 randomQuadArray = randomQuads(30,0.8)
 VIEW(STRUCT(AA(MKPOL)([[verts, [[1,2,3,4]], None] for verts in randomQuadArray])))
 
-boxes = containmentBoxes(randomQuadArray)
+
+V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+cubeGrids = Struct(2*[cubeGrid,s(.5,.5,.5)])
+V,FV,EV = struct2lar(cubeGrids)
+boxes = containmentBoxes([[V[v] for v in f] for f in FV])
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.6)) 
+parts = boxBuckets(boxes)
+V,FV,EV = spacePartition(V,FV,EV, parts)
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.6)) 
+
+
+#boxes = containmentBoxes(randomQuadArray)
 hexas = AA(box2exa)(boxes)
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
 yellow = STRUCT(AA(glass)(AA(MKPOL)([hex for hex,data in hexas])))
@@ -985,7 +1012,7 @@ parts = boxBuckets(boxes)
 for k,part in enumerate(parts):
     bunch = [glass(STRUCT( [MKPOL(hexas[h][0]) for h in part]))]
     bunch += [COLOR(RED)(MKPOL(hexas[k][0]))]
-    VIEW(STRUCT(bunch))
+    if k==30: VIEW(STRUCT(bunch))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1202,6 +1229,30 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
+@O test/py/bool/test11d.py @{
+@< testing example @(t(0,0,0)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test11e.py @{
+@< testing example @(s(.5,.5,.5)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test11f.py @{
+@< testing example @(t(.25,.25,.25),s(.5,.5,.5)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test11g.py @{
+@< testing example @(t(1.5,1.5,1.5)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
 @D testing example @{
 """ Visualization of indices of the boundary triangulation """
 import numpy
@@ -1211,9 +1262,9 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from bool import *
 
-V,[VV,EV,FV,CV] = larCuboids([3,3,1],True)
+V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
-cubeGrids = Struct(3*[cubeGrid,@1])
+cubeGrids = Struct(2*[cubeGrid,@1])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
