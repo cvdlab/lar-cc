@@ -953,47 +953,9 @@ from larcc import *
 import re # regular expression
 
 def svg2lines(filename):
-
-    lines = [line.strip() for line in open(filename) if re.match("<line ",line)!=None]   
-    for line in lines: print line
-        
-    out = ""    
-    for line in lines:
-        #searchObj = re.search( r'([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)(.*?)([0-9]*\.[0-9]*)', line)
-        searchObj = re.search( r'(<line )(.+)(" x1=")(.+)(" y1=")(.+)(" x2=")(.+)(" y2=")(.+)("/>)', line)
-        if searchObj:
-            #out += "[["+searchObj.group(1)+","+searchObj.group(3)+"], ["+searchObj.group(5)+","+searchObj.group(7)+"]],"
-            out += "[["+searchObj.group(4)+","+searchObj.group(6)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
-    
-    lines = list(eval(out))
-    
-    # window-viewport transformation
-    xs,ys = TRANS(CAT(lines))
-    box = [min(xs), min(ys), max(xs), max(ys)]
-    
-    # viewport aspect-ratio checking, setting a computed-viewport 'b'
-    b = [None for k in range(4)]
-    if (box[2]-box[0])/(box[3]-box[1]) > 1:  
-        b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
-    else: 
-        b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
-    
-    # isomorphic 'box -> b' transform to standard unit square
-    lines = [[[ 
-    ((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
-    ((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
-    ((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
-    ((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
-          for [[x1,y1],[x2,y2]] in lines]
-    
-    # line vertices set to fixed resolution
-    lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
-    return lines
-
-def svg2lines(filename):
-
     stringLines = [line.strip() for line in open(filename)]   
-        
+    
+    # SVG <line> primitives
     lines = [string.strip() for string in stringLines if re.match("<line ",string)!=None]   
     outLines = ""   
     for line in lines:
@@ -1003,6 +965,7 @@ def svg2lines(filename):
     if lines != []:
         lines = list(eval(outLines))
               
+    # SVG <rect> primitives
     rects = [string.strip() for string in stringLines if re.match("<rect ",string)!=None]   
     outRects,searchObj = "",False 
     for rect in rects:
@@ -1015,29 +978,40 @@ def svg2lines(filename):
         lines += CAT([[[[x,y],[x+w,y]],[[x+w,y],[x+w,y+h]],[[x+w,y+h],[x,y+h]],[[x,y+h],[x,y]]] for [x,y],[w,h] in rects])
     for line in lines: print line
     
-    # window-viewport transformation
-    xs,ys = TRANS(CAT(lines))
-    box = [min(xs), min(ys), max(xs), max(ys)]
+    @< SVG input normalization transformation @>
     
-    # viewport aspect-ratio checking, setting a computed-viewport 'b'
-    b = [None for k in range(4)]
-    if (box[2]-box[0])/(box[3]-box[1]) > 1:  
-        b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
-    else: 
-        b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
-    
-    # isomorphic 'box -> b' transform to standard unit square
-    lines = [[[ 
-    ((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
-    ((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
-    ((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
-    ((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
-          for [[x1,y1],[x2,y2]] in lines]
-    
-    # line vertices set to fixed resolution
-    lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
     return lines
+@}
+%-------------------------------------------------------------------------------
+    
+    
+\paragraph{SVG input normalization transformation}
+The normalization transformation maps the input \texttt{lines} to the $[0,1]^2$ viewport, i.e. to the standard unit square.
 
+%-------------------------------------------------------------------------------
+@D SVG input normalization transformation
+@{""" SVG input normalization transformation """
+# window-viewport transformation
+xs,ys = TRANS(CAT(lines))
+box = [min(xs), min(ys), max(xs), max(ys)]
+
+# viewport aspect-ratio checking, setting a computed-viewport 'b'
+b = [None for k in range(4)]
+if (box[2]-box[0])/(box[3]-box[1]) > 1:  
+    b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
+else: 
+    b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
+
+# isomorphic 'box -> b' transform to standard unit square
+lines = [[[ 
+((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
+((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
+((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
+((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
+      for [[x1,y1],[x2,y2]] in lines]
+
+# line vertices set to fixed resolution
+lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
 @}
 %-------------------------------------------------------------------------------
 
