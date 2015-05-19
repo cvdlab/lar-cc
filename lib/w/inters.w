@@ -188,7 +188,7 @@ def segmentIntersect(boxes,lineArray,pointStorage):
                     m_inv = mat([[d,-b],[-c,a]])*(1./det)
                     alpha, beta = (v*m_inv).tolist()[0]
                     #alpha, beta = (v*m.I).tolist()[0]
-                    if 0<=alpha<=1 and 0<=beta<=1:
+                    if -0.0<=alpha<=1 and -0.0<=beta<=1:
                         pointStorage[line1] += [alpha]
                         pointStorage[line2] += [beta]
                         return list(array(p1)+alpha*(array(p2)-array(p1)))
@@ -308,6 +308,8 @@ def lines2lar(lineArray):
     return V,EV
 @}
 %-------------------------------------------------------------------------------
+
+
 
 \subsection{Biconnected components of a 1-complex}
 %===============================================================================
@@ -449,7 +451,6 @@ after being sorted on their angles $\alpha$, and associated with the angle diffe
 @{""" Circular ordering of edges around vertices """
 def edgeSlopeOrdering(model):
     V,EV = model
-    #from bool1 import invertRelation
     VE,VE_angle = invertRelation(EV),[]
     for v,ve in enumerate(VE):
         ve_angle = []
@@ -985,8 +986,9 @@ def svg2lines(filename):
 %-------------------------------------------------------------------------------
     
     
-    
 \paragraph{SVG input normalization transformation}
+The normalization transformation maps the input \texttt{lines} to the $[0,1]^2$ viewport, i.e. to the standard unit square.
+
 %-------------------------------------------------------------------------------
 @D SVG input normalization transformation
 @{""" SVG input normalization transformation """

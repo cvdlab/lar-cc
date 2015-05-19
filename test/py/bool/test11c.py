@@ -2,15 +2,20 @@
 
 """ Visualization of indices of the boundary triangulation """
 import numpy
-numpy.random.seed(0)
-
 import sys
 sys.path.insert(0, 'lib/py/')
 from bool import *
 
 V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+"""
+BF = [FV[f] for f in boundaryCells(CV,FV)]
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BF))))
+_,BE = larFacets((V,BF),dim=2)
+cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
+"""
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
 cubeGrids = Struct(2*[cubeGrid,t(.5,0,0)])
+#cubeGrids = Struct(2*[cubeGrid,t(.25,.25,.25),s(.5,.5,.5)])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))

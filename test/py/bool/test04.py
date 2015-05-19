@@ -36,4 +36,4 @@ parts = boxBuckets(boxes)
 for k,part in enumerate(parts):
     bunch = [glass(STRUCT( [MKPOL(hexas[h][0]) for h in part]))]
     bunch += [COLOR(RED)(MKPOL(hexas[k][0]))]
-    VIEW(STRUCT(bunch))
+    if k==30: VIEW(STRUCT(bunch))

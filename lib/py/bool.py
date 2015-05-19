@@ -230,11 +230,12 @@ def submanifoldMapping(pivotFace):
 
 """ Set of line segments partitioning a facet """
 def intersection(V,FV,EV):
-    global PRECISION
-    PRECISION -= 1
+    #global PRECISION
+    #PRECISION += 5
+    FE = crossRelation(FV,EV)
+    print "eccomi 1"
 
     def intersection0(k,bundledFaces):
-        FE = crossRelation(FV,EV)
         pivotFace = [V[v] for v in FV[k]]
         transform = submanifoldMapping(pivotFace)  # submanifold transformation
         transformedCells,edges,faces = [],[],[]
@@ -257,15 +258,48 @@ def intersection(V,FV,EV):
         return edges,faces,transform
     return intersection0    
 
+""" Check for superimposing edges """
+def edgeCheck(V,FV,EV):
+    VE = invertRelation(EV)
+    EF = crossRelation(EV,FV)
+    tripleVerts2e = defaultdict(list)
+    for e,(v1,v2) in enumerate(EV):
+        V1 = set(CAT([EV[edge] for edge in VE[v1]])) 
+        V2 = set(CAT([EV[edge] for edge in VE[v2]])) 
+        commonVerts = V1.intersection(V2)
+        tripleVerts2e[tuple(sorted(commonVerts))] += [e]
+    EW = []
+    for verts,edges in tripleVerts2e.items():
+        print verts,edges
+        if len(edges)==1:  EW += [verts]
+        elif len(edges)==3: 
+            sizes = [VECTNORM(VECTDIFF([V[v] for v in EV[e]])) for e in edges]
+            _,theEdge = max(zip(sizes,edges))
+            addedVert = list(set(verts).difference(EV[theEdge]))[0]
+            for face in EF[theEdge]:
+                if addedVert not in FV[face]:  
+                    newList = list(FV[face])+[addedVert]
+                    FV[face] = tuple(newList)
+            if sizes[0] == ABS(sizes[1]-sizes[2]): EW += [EV[edges[0]]]
+            if sizes[1] == ABS(sizes[2]-sizes[0]): EW += [EV[edges[1]]]
+            if sizes[2] == ABS(sizes[0]-sizes[1]): EW += [EV[edges[2]]]
+        else: print "error: in edgeCheck"
+    return FV,EW
+
 """ Space partitioning via submanifold mapping """
 def spacePartition(V,FV,EV, parts):
     transfFaces = []
+    splitting = intersection(V,FV,EV)
     for k,bundledFaces in enumerate(parts):
-        edges,faces,transform = intersection(V,FV,EV)(k,bundledFaces)
-        print "\nk,bundledFaces =",k,bundledFaces
-        print "edges =",edges
-        print "faces =",faces
-        print "transform =",transform
+        edges,faces,transform = splitting(k,bundledFaces)
+        if DEBUG:
+            print "\nk,bundledFaces =",k,",",bundledFaces
+            print "edges =",edges
+            print "faces =",faces
+            print "transform =",transform
+            VV = AA(LIST)(range(len(V)))
+            submodel = STRUCT(MKPOLS((V,EV)))
+            VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.6)) 
         for face in faces:
             line = []
             for edge in face:
@@ -276,12 +310,15 @@ def spacePartition(V,FV,EV, parts):
                     p = [x,y,0]
                     line += [eval(vcode(p))]
             if line!=[]: edges += [line]
-        v,fv,ev = larFromLines([[point[:-1] for point in edge] for edge in edges])   
-        print "k,v,fv,ev =",k,v,fv,ev 
+        edges = [[point[:-1] for point in edge] for edge in edges]
+        edges = AA(AA(eval))(AA(AA(vcode))(edges))
+        v,fv,ev = larFromLines(edges)   
+        if DEBUG: print "k,v,fv,ev =",k,v,fv,ev 
         if len(fv)>1: fv = fv[:-1]   ## ??
         lar = [w+[0.0] for w in v],fv,ev
         transfFaces += [Struct([ larApply(transform.I)(lar) ])]
     W,FW,EW = struct2lar(Struct(transfFaces))
+    #FW,EW = edgeCheck(W,FW,EW)
     return W,FW,EW
 
 from support import PolygonTessellator,vertex
@@ -560,25 +597,31 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
         boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
         cf += [nextFace] 
         face = nextFace
-    if DEBUG:
-        VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
+    if DEBUG: pass
+        #VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
     return cf,coe
 
 """ Main procedure of arrangement partitioning """
 def partition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets(containmentBoxes(quadArray))
+    print "W =",W
+    print "FW =",FW
+    print "EW =",EW
+    #import pdb; pdb.set_trace()
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
     ZZ = AA(LIST)(range(len(Z)))
     submodel = STRUCT(MKPOLS((Z,EZ)))
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
+    #import pdb; pdb.set_trace()
+    
     EZ = [EZ[0]]+EZ
     model = Z,FZ,EZ
     FE = crossRelation(FZ,EZ)
     # remove 0 indices from FE relation
     FE = [[f for f in face if f!=0] for face in FE]
     EF_angle = faceSlopeOrdering(model,FE)
-    import pdb; pdb.set_trace()
+    
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE
 
