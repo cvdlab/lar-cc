@@ -628,7 +628,7 @@ print Centroid(P)
 \paragraph{Integrals on a non-convex 2D polyline}
 
 Some problem appear when using the integration method~\cite{CattaniP-BIL1990} on 2D models.
-In fact, the basic integration formulas refer to the three-variate monomial $x^\alpha y^\beta z^gamma$, 
+In fact, the basic integration formulas refer to the three-variate monomial $x^\alpha y^\beta z^\gamma$, 
 and work even for the integration over 2D domains embedded in 3D, but of course in this case they do not return
 the integral values as \emph{signed} real numbers, but as positive numbers, since a positive orientation for a open 2D domain in 3D may be defined only locally.
 
@@ -671,6 +671,10 @@ triangles = AA(C(AL)(0))(TRANS([tria[1:-1],tria[2:]]))
 V = [v+[0.0] for v in V]
 P = V,triangles
 
+area = Surface(P,signed=True)
+print "area =",area
+
+P = V, AA(REVERSE)(triangles)
 area = Surface(P,signed=True)
 print "area =",area
 @}

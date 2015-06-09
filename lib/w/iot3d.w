@@ -180,6 +180,7 @@ def printStruct2GeoJson(path,struct):
     dim = checkStruct(struct.body)
     CTM, stack = scipy.identity(dim+1), []
     fathers = [filename]
+    #import pdb; pdb.set_trace()
     scene,fathers = printTraversal(theFile, CTM, stack, struct, [], 0, fathers,filename) 
     theFile.close()
     @< Exporting to JSON via YML @>
@@ -262,13 +263,13 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
             name = father+'-'+ str(id(obj[i]))
          else: 
             name = father+'-'+ str(obj[i].__name__())
-         printModelObject(theFile,tabs, i,name,obj[i].__category__(),verts,cells,father)
+         printModelObject(theFile,tabs, i,name,None,verts,cells,father)
          scene += [larApply(CTM)(obj[i])]
          fathers += [father]
       elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
          verts,cells = obj[i]
          name = father+'-'+ str(id(obj[i]))
-         printModelObject(theFile,tabs, i,name,obj[i].__category__(),verts,cells,father)
+         printModelObject(theFile,tabs, i,name,None,verts,cells,father)
          scene += [larApply(CTM)(obj[i])]
          fathers += [father]
       elif isinstance(obj[i],Mat): 
@@ -279,7 +280,9 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
             name = father+'-'+ str(id(obj[i]))
          else: 
             name = father+'-'+ str(obj[i].__name__())
+            
          box = obj[i].box
+         
          printStructObject(theFile,tabs, i,name,obj[i].__category__(),box,father)
          stack.append(CTM) 
          level += 1
@@ -366,7 +369,10 @@ ALA_A = EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(Ala_A)))
 VIEW(EXPLODE(1.2,1.2,1.2)([ ALA_A, COLOR(BLUE)(SKEL_1(ALA_A)) ]))
 
 Edificio = Struct([ Ala_A, Ali_B_C_D ],"Edificio")
-V,FV = struct2lar(Edificio)
+out = struct2lar(Edificio)
+if len(out)==2: V,FV = out
+else: V,FV,EV = out
+
 EDIFICIO = STRUCT(MKPOLS((V,FV)))
 VIEW(STRUCT([ EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
 

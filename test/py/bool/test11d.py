@@ -15,7 +15,6 @@ cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
 """
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
 cubeGrids = Struct(2*[cubeGrid,t(0,0,0)])
-#cubeGrids = Struct(2*[cubeGrid,t(.25,.25,.25),s(.5,.5,.5)])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
@@ -25,6 +24,8 @@ cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
 BE = list({e for f in BF for e in FE[f]})
+
+Volume((V,[FV[f] for f in CF[0]]))
 
 VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF],[EV[e] for e in BE]) ))
 VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell],[EV[e] for e in set(CAT([FE[f] for f in cell]))]) for cell in CF]))

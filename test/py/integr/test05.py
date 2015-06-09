@@ -11,3 +11,7 @@ P = V,triangles
 
 area = Surface(P,signed=True)
 print "area =",area
+
+P = V, AA(REVERSE)(triangles)
+area = Surface(P,signed=True)
+print "area =",area

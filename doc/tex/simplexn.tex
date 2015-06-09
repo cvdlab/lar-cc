@@ -267,11 +267,11 @@ to define a predefinite constant \texttt{VOID}.
 \mbox{}\verb@VIEW(EXPLODE(1,1,1.2)(MKPOLS(model)))@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@# example 2@\\
-\mbox{}\verb@model = larExtrude1( VOID, 6*[1] )@\\
+\mbox{}\verb@model = larExtrude1( VOID, 10*[1] )@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))@\\
-\mbox{}\verb@model = larExtrude1( model, 6*[1] )@\\
+\mbox{}\verb@model = larExtrude1( model, 10*[1] )@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))@\\
-\mbox{}\verb@model = larExtrude1( model, 6*[1] )@\\
+\mbox{}\verb@model = larExtrude1( model, 10*[1] )@\\
 \mbox{}\verb@VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@# example 3@\\
@@ -392,8 +392,8 @@ The \texttt{larSimplexFacets} function, for estraction of non-oriented $(d-1)$-f
 \mbox{}\verb@    d = len(simplices[0])@\\
 \mbox{}\verb@    for simplex in simplices:@\\
 \mbox{}\verb@        out += AA(sorted)([simplex[0:k]+simplex[k+1:d] for k in range(d)])@\\
-\mbox{}\verb@    out = set(AA(str)(out))@\\
-\mbox{}\verb@    return  sorted(AA(eval)(out))@\\
+\mbox{}\verb@    out = set(AA(tuple)(out))@\\
+\mbox{}\verb@    return  sorted(out)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}

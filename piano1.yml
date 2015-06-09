@@ -1,0 +1,1795 @@
+---
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.431, 0.607], [0.474, 0.91]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 0
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.431, 0.607]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666207912
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.22799999999999998], [0.04299999999999998, 0.261]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666207912
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.228]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666113272
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.18500000000000005], [0.04299999999999998, 0.22799999999999998]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666113272
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.185]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666207768
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.020000000000000018], [0.04299999999999998, 0.03300000000000003]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666207768
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.02]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666113920
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.05800000000000005], [0.04299999999999998, 0.08299999999999996]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666113920
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.058]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666253536
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.08299999999999996], [0.04299999999999998, 0.126]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666253536
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.083]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666101416
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.017000000000000015, 0.020000000000000018]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666101416
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.02]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666204888
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.126], [0.04299999999999998, 0.15100000000000002]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666204888
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.126]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666249440
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.03300000000000003], [0.04299999999999998, 0.05800000000000005]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666249440
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.033]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666112984
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.15100000000000002], [0.04299999999999998, 0.18500000000000005]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 9
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666112984
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.151]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666211936
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.261], [0.04299999999999998, 0.30300000000000005]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_destra
+         son: 10
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_destra-4666211936
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.261]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.372, 0.657], [0.416, 0.953]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.372, 0.657]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666210784
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.236], [0.043999999999999984, 0.272]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666210784
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.236]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666211576
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.135], [0.043999999999999984, 0.16799999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666211576
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.135]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666100408
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.06699999999999995], [0.043999999999999984, 0.10099999999999998]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666100408
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.067]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666098752
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.272], [0.043999999999999984, 0.29599999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666098752
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.272]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666113200
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.10099999999999998], [0.043999999999999984, 0.135]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666113200
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.101]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666098392
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.03299999999999992], [0.043999999999999984, 0.06699999999999995]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666098392
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.033]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666099328
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.043999999999999984, 0.03299999999999992]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666099328
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.033]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666254112
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.20199999999999996], [0.043999999999999984, 0.236]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666254112
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.202]
+-    id: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666228816
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.16799999999999993], [0.043999999999999984, 0.20199999999999996]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra
+         son: 9
+         description: piano1-piano1_superficieUtile_zonaNord_uffici_sinistra-4666228816
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.168]
+-    id: piano1-piano1_connettivo_orizzontale_zonaNord
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.416, 0.627], [0.431, 0.986]]
+     properties:
+         class: corridoi
+         parent: piano1
+         son: 2
+         description: piano1-piano1_connettivo_orizzontale_zonaNord
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.416, 0.627]
+-    id: piano1-piano1_connettivo_orizzontale_zonaNord-4666240896
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.015000000000000013, 0.359]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_orizzontale_zonaNord
+         son: 1
+         description: piano1-piano1_connettivo_orizzontale_zonaNord-4666240896
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.03]
+-    id: piano1-piano1_connettivo_verticale_zonaNord_ascensore
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.431, 0.607], [0.494, 0.929]]
+     properties:
+         class: ascensori
+         parent: piano1
+         son: 3
+         description: piano1-piano1_connettivo_verticale_zonaNord_ascensore
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.431, 0.607]
+-    id: piano1-piano1_connettivo_verticale_zonaNord_ascensore-4666240752
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.017000000000000015, 0.020000000000000018]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaNord_ascensore
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaNord_ascensore-4666240752
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.02]
+-    id: piano1-piano1_connettivo_verticale_zonaNord_ascensore-4666240824
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.30300000000000005], [0.063, 0.32200000000000006]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaNord_ascensore
+         son: 2
+         description: piano1-piano1_connettivo_verticale_zonaNord_ascensore-4666240824
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.303]
+-    id: piano1-piano1_connettivo_verticale_zonaNord_scale
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.431, 0.97], [0.466, 1.0]]
+     properties:
+         class: scale
+         parent: piano1
+         son: 4
+         description: piano1-piano1_connettivo_verticale_zonaNord_scale
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.431, 0.97]
+-    id: piano1-piano1_connettivo_verticale_zonaNord_scale-4666230544
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.03500000000000003, 0.030000000000000027]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaNord_scale
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaNord_scale-4666230544
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.011]
+-    id: piano1-piano1_superficieUtile_zonaNord_servizi
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.372, 0.627], [0.474, 0.997]]
+     properties:
+         class: servizi
+         parent: piano1
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaNord_servizi
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.372, 0.627]
+-    id: piano1-piano1_superficieUtile_zonaNord_servizi-4666100120
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.32599999999999996], [0.043999999999999984, 0.37]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_servizi
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaNord_servizi-4666100120
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.326]
+-    id: piano1-piano1_superficieUtile_zonaNord_servizi-4666128576
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.059, 0.30000000000000004], [0.10199999999999998, 0.33599999999999997]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_servizi
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaNord_servizi-4666128576
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.059, 0.336]
+-    id: piano1-piano1_superficieUtile_zonaNord_servizi-4666231120
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.043999999999999984, 0.030000000000000027]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaNord_servizi
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaNord_servizi-4666231120
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.03]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.423, 0.138], [0.467, 0.476]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.423, 0.163]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666229608
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.273], [0.04400000000000004, 0.29800000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666229608
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.273]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666237368
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.171], [0.04400000000000004, 0.204]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666237368
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.171]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666173272
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.23900000000000002], [0.04400000000000004, 0.273]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666173272
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.239]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666208552
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.07899999999999999], [0.04400000000000004, 0.10300000000000001]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666208552
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.079]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666100192
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.10300000000000001], [0.04400000000000004, 0.13799999999999998]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666100192
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.103]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666126488
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.29800000000000004], [0.04400000000000004, 0.31299999999999994]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666126488
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.298]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666117728
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.043999999999999984], [0.04400000000000004, 0.07899999999999999]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666117728
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4519956776
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.01899999999999999], [0.04400000000000004, 0.043999999999999984]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4519956776
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.019]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666127928
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.13799999999999998], [0.04400000000000004, 0.171]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 9
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666127928
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.138]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666239600
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, -0.024999999999999998], [0.04400000000000004, 0.01899999999999999]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 10
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666239600
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.019]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666239024
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.204], [0.04400000000000004, 0.23900000000000002]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_destra
+         son: 11
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_destra-4666239024
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.204]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.482, 0.145], [0.525, 0.44500000000000006]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.482, 0.145]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519958936
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.027999999999999997], [0.04300000000000004, 0.062]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519958936
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.028]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519758664
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.19800000000000004], [0.04300000000000004, 0.222]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519758664
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.198]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666209776
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.04300000000000004, 0.027999999999999997]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666209776
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.028]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666227240
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.097], [0.04300000000000004, 0.13100000000000003]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666227240
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.097]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519758880
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.222], [0.04300000000000004, 0.267]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519758880
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.222]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666225296
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.267], [0.04300000000000004, 0.30000000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666225296
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.267]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519959440
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.164], [0.04300000000000004, 0.19800000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4519959440
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.164]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666244056
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.062], [0.04300000000000004, 0.097]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666244056
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.062]
+-    id: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666212936
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.13100000000000003], [0.04300000000000004, 0.164]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra
+         son: 9
+         description: piano1-piano1_superficieUtile_zonaSud_uffici_sinistra-4666212936
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.131]
+-    id: piano1-piano1_connettivo_orizzontale_zonaSud
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.467, 0.116], [0.482, 0.476]]
+     properties:
+         class: corridoi
+         parent: piano1
+         son: 8
+         description: piano1-piano1_connettivo_orizzontale_zonaSud
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.467, 0.116]
+-    id: piano1-piano1_connettivo_orizzontale_zonaSud-4666226232
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.014999999999999958, 0.36]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_orizzontale_zonaSud
+         son: 1
+         description: piano1-piano1_connettivo_orizzontale_zonaSud-4666226232
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.005]
+-    id: piano1-piano1_connettivo_verticale_zonaSud_ascensore
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.449, 0.476], [0.467, 0.493]]
+     properties:
+         class: ascensori
+         parent: piano1
+         son: 9
+         description: piano1-piano1_connettivo_verticale_zonaSud_ascensore
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.449, 0.476]
+-    id: piano1-piano1_connettivo_verticale_zonaSud_ascensore-4666246496
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.018000000000000016, 0.017000000000000015]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaSud_ascensore
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaSud_ascensore-4666246496
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.017]
+-    id: piano1-piano1_connettivo_verticale_zonaSud_scale
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.431, 0.101], [0.467, 0.131]]
+     properties:
+         class: scale
+         parent: piano1
+         son: 10
+         description: piano1-piano1_connettivo_verticale_zonaSud_scale
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.431, 0.101]
+-    id: piano1-piano1_connettivo_verticale_zonaSud_scale-4666214232
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.03600000000000003, 0.03]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaSud_scale
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaSud_scale-4666214232
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.03]
+-    id: piano1-piano1_superficieUtile_zonaSud_servizi
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.482, 0.104], [0.525, 0.476]]
+     properties:
+         class: servizi
+         parent: piano1
+         son: 11
+         description: piano1-piano1_superficieUtile_zonaSud_servizi
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.482, 0.129]
+-    id: piano1-piano1_superficieUtile_zonaSud_servizi-4519756936
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.327], [0.04300000000000004, 0.347]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_servizi
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaSud_servizi-4519756936
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.327]
+-    id: piano1-piano1_superficieUtile_zonaSud_servizi-4519792008
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.02400000000000002, 0.316], [0.04300000000000004, 0.335]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_servizi
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaSud_servizi-4519792008
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.024, 0.316]
+-    id: piano1-piano1_superficieUtile_zonaSud_servizi-4666212504
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.316], [0.014000000000000012, 0.327]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_servizi
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaSud_servizi-4666212504
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.316]
+-    id: piano1-piano1_superficieUtile_zonaSud_servizi-4666214304
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.014000000000000012, 0.316], [0.02400000000000002, 0.327]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_servizi
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaSud_servizi-4666214304
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.014, 0.316]
+-    id: piano1-piano1_superficieUtile_zonaSud_servizi-4666260440
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, -0.02500000000000001], [0.04300000000000004, 0.015999999999999986]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaSud_servizi
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaSud_servizi-4666260440
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.016]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.035, 0.533], [0.376, 0.577]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 12
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.035, 0.533]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666117224
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.223, 0.0], [0.265, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666117224
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.223, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666241824
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.197, 0.0], [0.223, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666241824
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.197, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666258064
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.045, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666258064
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.0]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666276608
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.045, 0.0], [0.06999999999999999, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666276608
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.045, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666260512
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.265, 0.0], [0.29900000000000004, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666260512
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.265, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666274880
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.172, 0.0], [0.197, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666274880
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.172, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666275168
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.129, 0.0], [0.172, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666275168
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.129, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666263312
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.06999999999999999, 0.0], [0.096, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666263312
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.07, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666275528
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.096, 0.0], [0.129, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 9
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666275528
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.096, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666241320
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.29900000000000004, 0.0], [0.34099999999999997, 0.04399999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_destra
+         son: 10
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_destra-4666241320
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.299, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.07, 0.474], [0.343, 0.518]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 13
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.07, 0.474]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666245704
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.03499999999999999, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666245704
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666264752
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.07, 0.0], [0.10299999999999998, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666264752
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.07, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666114776
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.17099999999999999, 0.0], [0.20500000000000002, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666114776
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.171, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666259648
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.13699999999999998, 0.0], [0.17099999999999999, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666259648
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.137, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666270208
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.03499999999999999, 0.0], [0.07, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666270208
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.035, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666105152
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.10299999999999998, 0.0], [0.13699999999999998, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666105152
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.103, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666270928
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.238, 0.0], [0.273, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666270928
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.238, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666271576
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.20500000000000002, 0.0], [0.238, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaEst_uffici_sinistra-4666271576
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.205, 0.044]
+-    id: piano1-piano1_connettivo_orizzontale_zonaEst
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.013, 0.518], [0.376, 0.533]]
+     properties:
+         class: corridoi
+         parent: piano1
+         son: 14
+         description: piano1-piano1_connettivo_orizzontale_zonaEst
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.013, 0.518]
+-    id: piano1-piano1_connettivo_orizzontale_zonaEst-4519797824
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.363, 0.015000000000000013]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_orizzontale_zonaEst
+         son: 1
+         description: piano1-piano1_connettivo_orizzontale_zonaEst-4519797824
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.015]
+-    id: piano1-piano1_connettivo_verticale_zonaEst_ascensore
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.376, 0.533], [0.39, 0.549]]
+     properties:
+         class: ascensori
+         parent: piano1
+         son: 15
+         description: piano1-piano1_connettivo_verticale_zonaEst_ascensore
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.376, 0.533]
+-    id: piano1-piano1_connettivo_verticale_zonaEst_ascensore-4666266904
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.014000000000000012, 0.016000000000000014]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaEst_ascensore
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaEst_ascensore-4666266904
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.016]
+-    id: piano1-piano1_connettivo_verticale_zonaEst_scale
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.533], [0.03, 0.568]]
+     properties:
+         class: scale
+         parent: piano1
+         son: 16
+         description: piano1-piano1_connettivo_verticale_zonaEst_scale
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.539]
+-    id: piano1-piano1_connettivo_verticale_zonaEst_scale-4666259072
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, -0.006000000000000002], [0.03, 0.028999999999999915]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaEst_scale
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaEst_scale-4666259072
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.029]
+-    id: piano1-piano1_superficieUtile_zonaEst_servizi
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.001, 0.474], [0.376, 0.518]]
+     properties:
+         class: servizi
+         parent: piano1
+         son: 17
+         description: piano1-piano1_superficieUtile_zonaEst_servizi
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.001, 0.474]
+-    id: piano1-piano1_superficieUtile_zonaEst_servizi-4519837848
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.069, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_servizi
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaEst_servizi-4519837848
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.0]
+-    id: piano1-piano1_superficieUtile_zonaEst_servizi-4519839288
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.342, 0.0], [0.375, 0.04400000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaEst_servizi
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaEst_servizi-4519839288
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.342, 0.044]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.521, 0.526], [0.963, 0.568]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 18
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.521, 0.526]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666267768
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.356, 0.0], [0.398, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666267768
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.356, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519839720
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.14400000000000002, 0.0], [0.17699999999999994, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519839720
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.144, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666266184
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.398, 0.0], [0.44199999999999995, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666266184
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.398, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519839000
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.30299999999999994, 0.0], [0.356, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519839000
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.303, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519838496
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.017000000000000015, 0.0], [0.041999999999999926, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519838496
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.017, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519825280
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.263, 0.0], [0.28700000000000003, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519825280
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.263, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666264896
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.28700000000000003, 0.0], [0.30299999999999994, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666264896
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.287, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519800128
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.236, 0.0], [0.263, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519800128
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.236, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666103136
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.10999999999999999, 0.0], [0.14400000000000002, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 9
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666103136
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.11, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519824344
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.041999999999999926, 0.0], [0.07599999999999996, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 10
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519824344
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.042, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666264320
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.017000000000000015, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 11
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666264320
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.025]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666119088
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.07599999999999996, 0.0], [0.10999999999999999, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 12
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666119088
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.076, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666120600
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.21199999999999997, 0.0], [0.236, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 13
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4666120600
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.212, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519792152
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.17699999999999994, 0.0], [0.21199999999999997, 0.041999999999999926]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_destra
+         son: 14
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_destra-4519792152
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.177, 0.042]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.555, 0.584], [0.955, 0.627]]
+     properties:
+         class: uffici
+         parent: piano1
+         son: 19
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.555, 0.584]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666276032
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.02499999999999991, 0.0], [0.06699999999999995, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666276032
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.025, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519823912
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.06699999999999995, 0.0], [0.10099999999999998, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519823912
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.067, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666103424
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.2689999999999999, 0.0], [0.29599999999999993, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 3
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666103424
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.269, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519771312
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.02499999999999991, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 4
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519771312
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519777992
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.373, 0.0], [0.3999999999999999, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 5
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519777992
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.373, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519785536
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.29599999999999993, 0.0], [0.33899999999999997, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 6
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519785536
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.296, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519770088
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.20199999999999996, 0.0], [0.237, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 7
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519770088
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.202, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519840368
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.237, 0.0], [0.2689999999999999, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 8
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519840368
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.237, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666261160
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.10099999999999998, 0.0], [0.1349999999999999, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 9
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666261160
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.101, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666272512
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.33899999999999997, 0.0], [0.373, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 10
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4666272512
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.339, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519823768
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.1349999999999999, 0.0], [0.16799999999999993, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 11
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519823768
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.135, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519777632
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.16799999999999993, 0.0], [0.20199999999999996, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra
+         son: 12
+         description: piano1-piano1_superficieUtile_zonaOvest_uffici_sinistra-4519777632
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.168, 0.043]
+-    id: piano1-piano1_connettivo_orizzontale_zonaOvest
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.521, 0.568], [0.985, 0.584]]
+     properties:
+         class: corridoi
+         parent: piano1
+         son: 20
+         description: piano1-piano1_connettivo_orizzontale_zonaOvest
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.521, 0.568]
+-    id: piano1-piano1_connettivo_orizzontale_zonaOvest-4519803000
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.46399999999999997, 0.016000000000000014]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_orizzontale_zonaOvest
+         son: 1
+         description: piano1-piano1_connettivo_orizzontale_zonaOvest-4519803000
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.016]
+-    id: piano1-piano1_connettivo_verticale_zonaOvest_ascensore
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.506, 0.504], [0.828, 0.568]]
+     properties:
+         class: ascensori
+         parent: piano1
+         son: 21
+         description: piano1-piano1_connettivo_verticale_zonaOvest_ascensore
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.506, 0.551]
+-    id: piano1-piano1_connettivo_verticale_zonaOvest_ascensore-4519796320
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.015000000000000013, 0.016999999999999904]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaOvest_ascensore
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaOvest_ascensore-4519796320
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.017]
+-    id: piano1-piano1_connettivo_verticale_zonaOvest_ascensore-4519795024
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.30200000000000005, -0.04700000000000004], [0.32199999999999995, -0.025000000000000022]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaOvest_ascensore
+         son: 2
+         description: piano1-piano1_connettivo_verticale_zonaOvest_ascensore-4519795024
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.302, -0.025]
+-    id: piano1-piano1_connettivo_verticale_zonaOvest_scale
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.97, 0.533], [1.0, 0.568]]
+     properties:
+         class: scale
+         parent: piano1
+         son: 22
+         description: piano1-piano1_connettivo_verticale_zonaOvest_scale
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.97, 0.533]
+-    id: piano1-piano1_connettivo_verticale_zonaOvest_scale-4666121176
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.030000000000000027, 0.03499999999999992]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_zonaOvest_scale
+         son: 1
+         description: piano1-piano1_connettivo_verticale_zonaOvest_scale-4666121176
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.035]
+-    id: piano1-piano1_superficieUtile_zonaOvest_servizi
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.521, 0.584], [0.997, 0.627]]
+     properties:
+         class: servizi
+         parent: piano1
+         son: 23
+         description: piano1-piano1_superficieUtile_zonaOvest_servizi
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.521, 0.584]
+-    id: piano1-piano1_superficieUtile_zonaOvest_servizi-4666101984
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.43399999999999994, 0.0], [0.476, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_servizi
+         son: 1
+         description: piano1-piano1_superficieUtile_zonaOvest_servizi-4666101984
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.434, 0.043]
+-    id: piano1-piano1_superficieUtile_zonaOvest_servizi-4519857400
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.03400000000000003, 0.04300000000000004]]
+     properties:
+         class: room
+         parent: piano1-piano1_superficieUtile_zonaOvest_servizi
+         son: 2
+         description: piano1-piano1_superficieUtile_zonaOvest_servizi-4519857400
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.023]
+-    id: piano1-piano1_connettivo_orizzontale_centroStella
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.376, 0.476], [0.521, 0.627]]
+     properties:
+         class: corridoi
+         parent: piano1
+         son: 24
+         description: piano1-piano1_connettivo_orizzontale_centroStella
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.376, 0.493]
+-    id: piano1-piano1_connettivo_orizzontale_centroStella-4519857832
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, -0.017000000000000015], [0.14500000000000002, 0.134]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_orizzontale_centroStella
+         son: 1
+         description: piano1-piano1_connettivo_orizzontale_centroStella-4519857832
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.025]
+-    id: piano1-piano1_connettivo_verticale_centroStella_scale
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.39, 0.497], [0.506, 0.607]]
+     properties:
+         class: ascensori
+         parent: piano1
+         son: 25
+         description: piano1-piano1_connettivo_verticale_centroStella_scale
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.39, 0.533]
+-    id: piano1-piano1_connettivo_verticale_centroStella_scale-4519794376
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.0, 0.0], [0.013000000000000012, 0.07399999999999995]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_centroStella_scale
+         son: 1
+         description: piano1-piano1_connettivo_verticale_centroStella_scale-4519794376
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.0, 0.016]
+-    id: piano1-piano1_connettivo_verticale_centroStella_scale-4519795096
+     type: Feature
+     geometry:
+         type: Polygon
+         box: [[0.10399999999999998, -0.03600000000000003], [0.11599999999999999, 0.03499999999999993]]
+     properties:
+         class: room
+         parent: piano1-piano1_connettivo_verticale_centroStella_scale
+         son: 2
+         description: piano1-piano1_connettivo_verticale_centroStella_scale-4519795096
+         tVector: [0, 0, 0]
+         rVector: [0, 0, 0]
+         tVector: [0.104, -0.036]

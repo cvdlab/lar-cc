@@ -71,7 +71,8 @@ A multidimensional binary image is generated here by using a random approach, bo
 
 %-------------------------------------------------------------------------------
 @d Generation of random image
-@{def randomImage(shape, structure, noiseFraction=0.0):
+@{
+def randomImage(shape, structure, noiseFraction=0.0):
 	""" Generation of random image of given shape and structure. 
 		Return scipy.ndarray(shape)
 	"""
@@ -665,7 +666,8 @@ The \texttt{shape} and \texttt{structure} variables must contain two tuples, of 
 
 %------------------------------------------------------------------
 @o test/py/morph/test01.py
-@{@< Initial import of modules @>
+@{
+@< Initial import of modules @>
 @< Import the module @(morph@) @> 
 shape = 64,64
 structure = 8,8

@@ -43,7 +43,10 @@ ALA_A = EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(Ala_A)))
 VIEW(EXPLODE(1.2,1.2,1.2)([ ALA_A, COLOR(BLUE)(SKEL_1(ALA_A)) ]))
 
 Edificio = Struct([ Ala_A, Ali_B_C_D ],"Edificio")
-V,FV = struct2lar(Edificio)
+out = struct2lar(Edificio)
+if len(out)==2: V,FV = out
+else: V,FV,EV = out
+
 EDIFICIO = STRUCT(MKPOLS((V,FV)))
 VIEW(STRUCT([ EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
 

@@ -370,7 +370,7 @@ def facesFromComponents(model):
 from larcc import *
 import re # regular expression
 
-def svg2lines(filename):
+def svg2lines(filename,rect2lines=True):
     stringLines = [line.strip() for line in open(filename)]   
     
     # SVG <line> primitives
@@ -379,7 +379,7 @@ def svg2lines(filename):
     for line in lines:
         searchObj = re.search( r'(<line )(.+)(" x1=")(.+)(" y1=")(.+)(" x2=")(.+)(" y2=")(.+)("/>)', line)
         if searchObj:
-            outLines += "[["+searchObj.group(4)+","+searchObj.group(6)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
+            outLines += "[["+searchObj.group(4)+","+searchObj.group(6)+"], ["+searchObj.group(8) +","+ searchObj.group(10) +"]],"
     if lines != []:
         lines = list(eval(outLines))
               
@@ -387,13 +387,16 @@ def svg2lines(filename):
     rects = [string.strip() for string in stringLines if re.match("<rect ",string)!=None]   
     outRects,searchObj = "",False 
     for rect in rects:
-        searchObj = re.search( r'(<rect x=")(.+)(" y=")(.+)(" fill)(.*?)( width=")(.+)(" height=")(.+)("/>)', rect)
+        searchObj = re.search( r'(<rect x=")(.+?)(" y=")(.+?)(" )(.*?)( width=")(.+?)(" height=")(.+?)("/>)', rect)
         if searchObj:
             outRects += "[["+searchObj.group(2)+","+searchObj.group(4)+"], ["+searchObj.group(8)+","+searchObj.group(10)+"]],"
     
     if rects != []:
         rects = list(eval(outRects))
-        lines += CAT([[[[x,y],[x+w,y]],[[x+w,y],[x+w,y+h]],[[x+w,y+h],[x,y+h]],[[x,y+h],[x,y]]] for [x,y],[w,h] in rects])
+        if rect2lines:
+            lines += CAT([[[[x,y],[x+w,y]],[[x+w,y],[x+w,y+h]],[[x+w,y+h],[x,y+h]],[[x,y+h],[x,y]]] for [x,y],[w,h] in rects])
+        else: 
+            lines += [[[x,y],[x+w,y+h]] for [x,y],[w,h] in rects]
     for line in lines: print line
     
     """ SVG input normalization transformation """

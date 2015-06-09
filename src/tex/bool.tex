@@ -265,10 +265,7 @@ The more important function of this section is the higher level \texttt{intersec
 @D Set of line segments partitioning a facet
 @{""" Set of line segments partitioning a facet """
 def intersection(V,FV,EV):
-    #global PRECISION
-    #PRECISION += 5
     FE = crossRelation(FV,EV)
-    print "eccomi 1"
 
     def intersection0(k,bundledFaces):
         pivotFace = [V[v] for v in FV[k]]
@@ -336,7 +333,9 @@ the function \texttt{spacePartition}, given in the below script, takes as input 
  
 %-------------------------------------------------------------------------------
 @D Space partitioning via submanifold mapping
-@{""" Space partitioning via submanifold mapping """
+@{@< Take the two extremes of a set of aligned points @>
+
+""" Space partitioning via submanifold mapping """
 def spacePartition(V,FV,EV, parts):
     transfFaces = []
     splitting = intersection(V,FV,EV)
@@ -359,17 +358,51 @@ def spacePartition(V,FV,EV, parts):
                     y = (y2-y1)/(z2-z1) + y1
                     p = [x,y,0]
                     line += [eval(vcode(p))]
-            if line!=[]: edges += [line]
+            if line!=[]: 
+                if len(line)==2: edges += [line]
+                elif len(line)>2: edges += takeExtremePoints(line)
+                else: print "error: too few points in line"
+            
+        if DEBUG: print "> edges =",edges
         edges = [[point[:-1] for point in edge] for edge in edges]
         edges = AA(AA(eval))(AA(AA(vcode))(edges))
-        v,fv,ev = larFromLines(edges)   
-        if DEBUG: print "k,v,fv,ev =",k,v,fv,ev 
+        if DEBUG: print "< edges =",edges
+        v,fv,ev = larFromLines(edges) 
+        if DEBUG:
+            print "k,v,fv,ev =",k,v,fv,ev ,"\n"
+            VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((v,ev)))))
         if len(fv)>1: fv = fv[:-1]   ## ??
         lar = [w+[0.0] for w in v],fv,ev
         transfFaces += [Struct([ larApply(transform.I)(lar) ])]
     W,FW,EW = struct2lar(Struct(transfFaces))
     #FW,EW = edgeCheck(W,FW,EW)
     return W,FW,EW
+@}
+%-------------------------------------------------------------------------------
+
+%\paragraph{Take the two extremes of a set of aligned 2D points}
+%The function \texttt{takeExtremePoints} is used to compute the two extreme points from a list, names \texttt{line} of aligned points. For this purpose the first and last list elements are used to define the parametric equation of the \emph{aligned set}:
+%\[
+%\p{p}=\p{p}_1+ \alpha (\p{p}_2-\p{p}_1),\quad\mbax{so that}\quad
+%\alpha = (\p{p}-\p{p}_1)/(\p{p}_2-\p{p}_1).
+%\] 
+%The substitution of every point in \texttt{line} in the above formula is used to compute their corresponding parameter values, which are finally sorted to get the extreme points.
+
+%-------------------------------------------------------------------------------
+@D Take the two extremes of a set of aligned points
+@{""" Take the two extremes of a set of aligned points """
+def takeExtremePoints(line):
+    [x1,y1,z1],[x2,y2,z1] = line[0], line[-1]
+    if x1 != x2: parameters = [(x-x1)/(x2-x1) for x,y,z in line]
+    elif y1 != y2: parameters = [(y-y1)/(y2-y1) for x,y,z in line]
+    pairs = sorted(zip(parameters,line))
+    """
+    p_first = pairs[0][1]
+    p_last = pairs[-1][1]
+    return [p_first,p_last]
+    """
+    edges = [[pairs[k][1],pairs[k+1][1]] for k,pair in enumerate(pairs[:-1])]
+    return edges
 @}
 %-------------------------------------------------------------------------------
 
@@ -454,49 +487,37 @@ from triangle import *
 from integr import *
 from copy import copy
 def boundaryTriangulation(W,FW,EW,FE):
-    triangleSet = []
+    triangleSet = []    
     for f,face in enumerate(FW):
-        signedEdgesLoop = boundaryCycles(FE[f],EW)[0]
-        vertexLoop = [EW[ABS(e)][0] if e<0 else EW[e][1]  for e in signedEdgesLoop]
-
+        edges = FE[f]
         pivotFace = [W[v] for v in face]
         transform = submanifoldMapping(pivotFace)
         mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
         verts2D = [point[:-2] for point in mappedVerts]  
-
-        n = len(verts2D)
-        triples = [[(k-1)%n,k,(k+1)%n] for k,vert in enumerate(verts2D)]
-        vects = array(verts2D)
-        angles = [cross(vects[k2]-vects[k1],vects[k0]-vects[k1]) for k0,k1,k2 in triples] 
-
-        Verts = [v+[0.0] for v in verts2D]
-        tria = range(n)
-        trias = AA(C(AL)(0))(TRANS([tria[1:-1],tria[2:]]))
-        P = Verts,trias
-        area = Surface(P,signed=True)
-        if area<0: angles = AA(C(DIFF)(0))(angles)
-
         pts = array(verts2D)
         n = len(verts2D)
-        holes = [triples[k] for k,angle in enumerate(angles) if angle<0]
         EdgeVerts = AA(list)(zip(range(n),range(1,n)+[0]))
-        
-        tri = {	'vertices': pts, 'segments': EdgeVerts }
+        tri = {    'vertices': pts, 'segments': EdgeVerts }
         triangles = triangulate(tri)['triangles'].tolist()
-        FaceVerts = [face for face in triangles if not any([set(face)==set(hole) for hole in holes])]
+        pts = pts.tolist()
+        
+        centers = [CCOMB([pts[v] for v in triangle]) for triangle in triangles]
+        triangles = [triangle for triangle,p in zip(triangles,centers) 
+        	if pointInPolygonClassification(p,(pts,EdgeVerts))=="p_in"]	
 
-        points = (transform.I * (mat([p+[1.0] for p in Verts]).T)).T.tolist()
-        trias = [[points[k][:-1] for k in face]+[points[face[0]][:-1]] for face in FaceVerts]
-
+        points = (transform.I * (mat(mappedVerts).T)).T.tolist()
+        trias = [[points[k][:-1] for k in face]+[points[face[0]][:-1]] for face in triangles]
         triangleSet += [AA(orientTriangle)(trias)]
+    print "new_triangleSet =",triangleSet
     return triangleSet
 
 def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
     for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
     for h,faceSetOfTriangles in enumerate(triangleSet):
-        out += [[[vertDict[vcode(p)] for p in triangle[:-1]] 
-                    for triangle in faceSetOfTriangles]]
+        trias = [[vertDict[vcode(p)] for p in triangle[:-1]] 
+                    for triangle in faceSetOfTriangles]
+        out += [trias]
     return out
 @}
 %-------------------------------------------------------------------------------
@@ -570,11 +591,16 @@ def planeProjection(normals):
 
 def faceSlopeOrdering(model,FE):
     V,FV,EV = model
+    print "\nV",V
+    print "\nFV",FV
+    print "\nEV",EV
+    print "\nFE",FE
     triangleSet = boundaryTriangulation(V,FV,EV,FE)
     TV = triangleIndices(triangleSet,V)
     triangleVertices = CAT(TV)
     TE = crossRelation(triangleVertices,EV)
     ET,ET_angle = invertRelation(TE),[]
+    #import pdb; pdb.set_trace()
     for e,et in enumerate(ET):
         v1,v2 = EV[e]
         v1v2 = set([v1,v2])
@@ -717,6 +743,7 @@ def facesFromComponents(model,FE,EF_angle):
     face = 0
     boundaryLoop = boundaryCycles(FE[face],EV)[0]
     firstEdge = boundaryLoop[0]
+    #import pdb; pdb.set_trace()
     cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
     for face,edge in zip(cf,coe):
         if visitedCell[face][0]==None: visitedCell[face][0] = edge
@@ -806,7 +833,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
     def orientFace(face,boundaryLoop): 
         for e in boundaryLoop:
             if ABS(e) in FE[face]: return -e
-            
+
     coe = [orientFace(face,boundaryLoop)]
     cf = [face] 
     while boundaryLoop != []:
@@ -827,7 +854,30 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Double check the faces boundaries made of edges}
+Let us notice that a sistematic use of the \texttt{FE} relation to compute the edges on the boundary of a face is \emph{not} reliable when the faces are non-convex. A better solution is to double-check the result \texttt{FE[f]} when \texttt{len(FE[f]) > len(FV[f])}, in order to filter out the spurious edges ...
+The function below works with the precondition that vertices in \texttt{FV[f]} are spatially ordered along the face boundary.
 
+%-------------------------------------------------------------------------------
+@D Double check the faces boundaries made of edges
+@{""" Double check the faces boundaries made of edges """
+def doubleCheckFaceBoundaries(FE,V,FV,EV):
+    FEout = []
+    for f,face in enumerate(FE):
+        n = len(FV[f])
+        if len(FE[f]) > n:
+            verts = list(FV[f])+[FV[f][0]]
+            edges = [sorted([verts[k],verts[k+1]]) for k in range(n)]
+            edgeDict = dict()
+            for e in FE[f]: edgeDict[EV[e]] = e
+            orderedEdges = [edgeDict[tuple(edge)] for edge in edges]
+            assert len(orderedEdges)==len(verts)-1
+            FEout += [orderedEdges]
+        else:
+            FEout += [face]
+    return FEout
+@}
+%-------------------------------------------------------------------------------
 
 
 \subsubsection{Main procedure of arrangement partitioning}
@@ -835,24 +885,32 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
 %-------------------------------------------------------------------------------
 @D Main procedure of arrangement partitioning
 @{""" Main procedure of arrangement partitioning """
+
+@< Double check the faces boundaries made of edges @>
+
 def partition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets(containmentBoxes(quadArray))
-    print "W =",W
-    print "FW =",FW
-    print "EW =",EW
+
     #import pdb; pdb.set_trace()
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
-    ZZ = AA(LIST)(range(len(Z)))
-    submodel = STRUCT(MKPOLS((Z,EZ)))
-    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
-    #import pdb; pdb.set_trace()
+    print "Z =",Z
+    print "FZ =",FZ
+    print "EZ =",EZ
     
     EZ = [EZ[0]]+EZ
     model = Z,FZ,EZ
-    FE = crossRelation(FZ,EZ)
+
+    ZZ = AA(LIST)(range(len(Z)))
+    submodel = STRUCT(MKPOLS((Z,EZ)))
+    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.4)) 
+    #import pdb; pdb.set_trace()
+
+    FE = crossRelation(FZ,EZ) ## to be double checked !!
+    FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
+    
     # remove 0 indices from FE relation
-    FE = [[f for f in face if f!=0] for face in FE]
+    FE = [[f if f!=0 else 1 for f in face] for face in FE]
     EF_angle = faceSlopeOrdering(model,FE)
     
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
@@ -891,6 +949,7 @@ DEBUG = False
 @< Set of line segments partitioning a facet @>
 @< Check for superimposing edges @>
 @< Space partitioning via submanifold mapping @>
+@< Point in polygon testing @>
 @< 3D boundary triangulation of the space partition @>
 @< Computation of incidence between edges and 3D triangles @>
 @< Directional and orthogonal projection operators @>
@@ -1297,6 +1356,12 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11g.py @{
+@< testing example @(t(.25,.25,.75),s(.5,.5,.5)@) @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test11h.py @{
 @< testing example @(t(1.5,1.5,1.5)@) @>
 @}
 %-------------------------------------------------------------------------------
@@ -1318,7 +1383,6 @@ cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
 """
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
 cubeGrids = Struct(2*[cubeGrid,@1])
-#cubeGrids = Struct(2*[cubeGrid,t(.25,.25,.25),s(.5,.5,.5)])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
@@ -1328,6 +1392,8 @@ cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
 BE = list({e for f in BF for e in FE[f]})
+
+Volume((V,[FV[f] for f in CF[0]]))
 
 VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF],[EV[e] for e in BE]) ))
 VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell],[EV[e] for e in set(CAT([FE[f] for f in cell]))]) for cell in CF]))
@@ -1355,13 +1421,46 @@ VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in
 \end{figure}
 
 
+%-------------------------------------------------------------------------------
+@O test/py/bool/test12.py @{
+""" Testing of point-in-polygon classification algorithm """
+import sys; 
+sys.path.insert(0, 'test/py/inters/')
+from test10 import *
+
+@< Point in polygon testing @>
+
+result = []
+for k in range(10000):
+    queryPoint = [random.random(),random.random()]
+    inOut = pointInPolygonClassification(queryPoint,[V,EV])
+    #print k,queryPoint,inOut
+    if inOut=="p_in": result += [MK(queryPoint)]
+    elif inOut=="p_out": result += [COLOR(RED)(MK(queryPoint))]
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(STRUCT([
+    POLYLINE([[queryPoint[0],0],[queryPoint[0],1]]),
+    POLYLINE([[0,queryPoint[1]],[1,queryPoint[1]]]),
+    larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.4)
+    ]+result))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/pointInPolygon} 
+   \caption{Testing the point-in-polygon algorithm.}
+   \label{fig:pointInPolygon}
+\end{figure}
 
 \appendix
 %===============================================================================
 \section{Code utilities}
 %===============================================================================
 
-\paragraph{Coding utilities}
+\subsection{Generation of random data}
 
 Some utility fuctions used by the module are collected in this appendix. Their macro names can be seen in the below script.
 
@@ -1529,6 +1628,106 @@ def centroid(boxes,coord):
     for box in boxes:
         delta += (box[a] + box[b])/2
     return delta/n
+@}
+%-------------------------------------------------------------------------------
+
+\subsection{Point in polygon classification}
+
+%-------------------------------------------------------------------------------
+@D Point in polygon testing
+@{
+@< Half-line crossing test @>
+@< Tile codes computation @>
+@< Point-in-polygon classification algorithm @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Tile codes computation}
+%-------------------------------------------------------------------------------
+@D Tile codes computation
+@{""" Tile codes computation """
+def setTile(box):
+    tiles = [[9,1,5],[8,0,4],[10,2,6]]
+    b1,b2,b3,b4 = box
+    def tileCode(point):
+        x,y = point
+        code = 0
+        if y>b1: code=code|1
+        if y<b2: code=code|2
+        if x>b3: code=code|4
+        if x<b4: code=code|8
+        return code 
+    return tileCode
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Point in polygon testing}
+%-------------------------------------------------------------------------------
+@D Point-in-polygon classification algorithm
+@{""" Point in polygon classification """
+def pointInPolygonClassification(p,pol):
+    x,y = p
+    V,EV = pol
+    xmin,xmax,ymin,ymax = x,x,y,y
+    tilecode = setTile([ymax,ymin,xmax,xmin])
+    count,status = 0,0
+    for k,edge in enumerate(EV):
+        p1,p2 = V[edge[0]],V[edge[1]]
+        (x1,y1),(x2,y2) = p1,p2
+        c1,c2 = tilecode(p1),tilecode(p2)
+        k,c_edge, c_un, c_int = k,c1^c2, c1|c2, c1&c2
+        #print "k,c_edge, c_un, c_int =",k,c_edge, c_un, c_int
+        
+        if c_edge == 0 and c_un == 0: return "p_on"
+        elif c_edge == 12 and c_un == c_edge: return "p_on"
+        elif c_edge == 3:
+            if c_int == 0: return "p_on"
+            elif c_int == 4: count += 1
+        elif c_edge == 15:
+            x_int = ((y-y2)*(x1-x2)/(y1-y2))+x2 
+            if x_int > x: count += 1
+            elif x_int == x: return "p_on"
+        elif c_edge == 13 and ((c1==4) or (c2==4)):
+                count,status = crossingTest(1,2,count,status)
+        elif c_edge == 14 and (c1==4) or (c2==4):
+                count,status = crossingTest(2,1,count,status)
+        elif c_edge == 7: count += 1
+        elif c_edge == 11: count = count
+        elif c_edge == 1:
+            if c_int == 0: return "p_on"
+            elif c_int == 4: count,status = crossingTest(1,2,count,status)
+        elif c_edge == 2:
+            if c_int == 0: return "p_on"
+            elif c_int == 4: count,status = crossingTest(2,1,count,status)
+        elif c_edge == 4 and c_un == c_edge: return "p_on"
+        elif c_edge == 8 and c_un == c_edge: return "p_on"
+        elif c_edge == 5:
+            if (c1==0) or (c2==0): return "p_on"
+            else: count,status = crossingTest(1,2,count,status)
+        elif c_edge == 6:
+            if (c1==0) or (c2==0): return "p_on"
+            else: count,status = crossingTest(2,1,count,status)
+        elif c_edge == 9 and ((c1==0) or (c2==0)): return "p_on"
+        elif c_edge == 10 and ((c1==0) or (c2==0)): return "p_on"
+        #print "count,p1,p2 =",count,p1,p2        
+    if (round(count)%2)==1: return "p_in"
+    else: return "p_out"
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Half-line crossing test}
+%-------------------------------------------------------------------------------
+@D Half-line crossing test 
+@{""" Half-line crossing test """
+def crossingTest(new,old,count,status):
+    if status == 0:
+        status = new
+        count += 0.5
+    else:
+        if status == old: count += 0.5
+        else: count -= 0.5
+        status = 0
+    return count,status
 @}
 %-------------------------------------------------------------------------------
 

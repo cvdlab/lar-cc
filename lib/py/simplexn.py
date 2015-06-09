@@ -43,8 +43,8 @@ def larSimplexFacets(simplices):
     d = len(simplices[0])
     for simplex in simplices:
         out += AA(sorted)([simplex[0:k]+simplex[k+1:d] for k in range(d)])
-    out = set(AA(str)(out))
-    return  sorted(AA(eval)(out))
+    out = set(AA(tuple)(out))
+    return  sorted(out)
 
 """ Transformation to triangles by sorting circularly the vertices of faces """
 def quads2tria(model):
@@ -82,11 +82,11 @@ if __name__ == "__main__":
    VIEW(EXPLODE(1,1,1.2)(MKPOLS(model)))
    
    # example 2
-   model = larExtrude1( VOID, 6*[1] )
+   model = larExtrude1( VOID, 10*[1] )
    VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
-   model = larExtrude1( model, 6*[1] )
+   model = larExtrude1( model, 10*[1] )
    VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
-   model = larExtrude1( model, 6*[1] )
+   model = larExtrude1( model, 10*[1] )
    VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(model)))
    
    # example 3

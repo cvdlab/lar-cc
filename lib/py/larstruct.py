@@ -1,10 +1,7 @@
 """Module with functions needed to interface LAR with pyplasm"""
-def importModule(moduleName):
-    import sys; sys.path.insert(0, 'lib/py/')
-    import moduleName
-    
-
+import sys; sys.path.insert(0, 'lib/py/')
 from lar2psm import *
+from larcc import *
 def t(*args): 
     d = len(args)
     mat = scipy.identity(d+1)
@@ -173,6 +170,7 @@ class Model:
         return list((self.verts,self.cells))[i]
 
 from myfont import *
+from larcc import *
 class Struct:
     """ The assembly type of the LAR package """
     def __init__(self,data=None,name=None,category=None):
@@ -206,6 +204,13 @@ class Struct:
     def __repr__(self):
         return "<Struct name: %s>" % self.__name__()
         #return "'Struct(%s,%s)'" % (str(self.body),str(str(self.__name__())))
+    def boundary(self):
+        data = struct2lar(self)
+        if len(data) == 3:
+            V,FV,EV = data
+            return larcc.signedBoundaryCells(V,FV,EV) 
+        else:
+            return "<Struct name: %s> boundary non computable" % self.__name__()
     def draw(self,color=WHITE,scaling=1,metric=ID):
         vmin,vmax = self.box
         delta = VECTDIFF([vmax,vmin])
