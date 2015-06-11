@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = larstruct
+NAME = hijson
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 

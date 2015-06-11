@@ -23,25 +23,27 @@ sys.path.insert(0, 'lib/py/')
 from inters import *
 from iot3d import *
 from larcc import *
+from bool import *
+from copy import copy
+
+#-- DATA input -------------------------------------------------------------------------
 
 filename = "test/py/inters/plan.svg"
 lines = svg2lines(filename)
-#VIEW(STRUCT(AA(POLYLINE)(lines)))
+VIEW(STRUCT(AA(POLYLINE)(lines)))
     
 V,FV,EV = larFromLines(lines)
 FV[2] += FV[71]
-#VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
-#VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.025))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.025))
 
 verts,faces,edges = polyline2lar([[ V[v] for v in FV[-1] ]])
-#VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((verts,edges))))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((verts,edges))))
 
-
-verts,faces,edges
-
+#-- PICK emulation -------------------------------------------------------------------------
 
 from scipy import spatial
 from bool import crossRelation,pointInPolygonClassification
@@ -59,7 +61,7 @@ def subComplexInBox(V,FV,EV,queryBox):
 queryPoint = (0.6,0.58)
 selectBox = ((0.5, 0.5), (1, 0.75))
 vertexSubset,faceSubset,edgeSubset = subComplexInBox(V,FV,EV,selectBox)
-#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in edgeSubset])) + [COLOR(RED)(MK(queryPoint))]))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in edgeSubset])) + [COLOR(RED)(MK(queryPoint))]))
 
    
 def subComplexAroundPoint(V,FV,EV,FE,queryPoint):
@@ -77,25 +79,25 @@ def subComplexAroundPoint(V,FV,EV,FE,queryPoint):
     faceSubset = [face]
     return vertexSubset,faceSubset,edgeSubset
     
-     
 FE = crossRelation(FV,EV)
 vertexSubset,faceSubset,edgeSubset = subComplexAroundPoint(V,FV,EV,FE,queryPoint)
-#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [COLOR(RED)(MK(queryPoint))] ))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [COLOR(RED)(MK(queryPoint))] ))
 
+#-- MISCELLANEA -------------------------------------------------------------------------
+     
 
 
 def cells2hpcs(V,FV,cells,k): 
+    colors = [RED,GREEN,BLUE,CYAN,MAGENTA,YELLOW,WHITE,PURPLE,BROWN]
     return AA(COLOR(colors[k]))(MKPOLS((V,[FV[f] for f in cells])))
 
 
-colors = [RED,GREEN,BLUE,CYAN,MAGENTA,YELLOW,WHITE,PURPLE,BROWN]
-boxes = [0 for k in range(64)]
-point = [0 for k in range(64)]
-FE = crossRelation(FV,EV)
 
 #-- ala NORD -------------------------------------------------------------------------
 
 
+boxes = [0 for k in range(64)]
+point = [0 for k in range(64)]
 boxes[0] = [[0.431, 0.607], [0.474, 0.91]] #[V[k] for k in [39,208]]
 boxes[1] = [[0.416, 0.657], [0.372, 0.953]] #[V[k] for k in [162,39]]
 boxes[2] = [[0.416, 0.627], [0.431, 0.986]] #[V[k] for k in [206,247]]
@@ -106,7 +108,6 @@ boxes[27] = [[0.416, 0.627], [0.372, 0.657]] #[V[k] for k in [110,82]]
 
 point[0] = [0.394, 0.9625] #CCOMB([V[k] for k in [190,197]])
 point[1] = [0.4525, 0.9325] #CCOMB([V[k] for k in [166,159]])
-
 
 piano1_superficieUtile_zonaNord_uffici_destra = subComplexInBox(V,FV,EV,boxes[0])[1]
 piano1_superficieUtile_zonaNord_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[1])[1]
@@ -121,7 +122,7 @@ piano1_superficieUtile_zonaNord_servizi += subComplexInBox(V,FV,EV,boxes[27])[1]
 piano1N = [piano1_superficieUtile_zonaNord_uffici_destra, piano1_superficieUtile_zonaNord_uffici_sinistra, piano1_connettivo_orizzontale_zonaNord, piano1_connettivo_verticale_zonaNord_ascensore, piano1_connettivo_verticale_zonaNord_scale, piano1_superficieUtile_zonaNord_servizi]
     
 nord = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1N)])
-#VIEW(EXPLODE(1.2,1.2,1.2)(nord))
+VIEW(EXPLODE(1.2,1.2,1.2)(nord))
 
 #-- ala EST -------------------------------------------------------------------------
 
@@ -146,7 +147,7 @@ piano1_superficieUtile_zonaEst_servizi += subComplexInBox(V,FV,EV,boxes[11])[1]
 piano1E = [piano1_superficieUtile_zonaEst_uffici_destra, piano1_superficieUtile_zonaEst_uffici_sinistra, piano1_connettivo_orizzontale_zonaEst, piano1_connettivo_verticale_zonaEst_ascensore, piano1_connettivo_verticale_zonaEst_scale, piano1_superficieUtile_zonaEst_servizi]
 
 est = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1E)])
-#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord))
+VIEW(EXPLODE(1.2,1.2,1.2)(est + nord))
 
 
 #-- ala SUD -------------------------------------------------------------------------
@@ -170,7 +171,7 @@ piano1_superficieUtile_zonaSud_servizi += subComplexInBox(V,FV,EV,boxes[18])[1]
 piano1S = [piano1_superficieUtile_zonaSud_uffici_destra, piano1_superficieUtile_zonaSud_uffici_sinistra, piano1_connettivo_orizzontale_zonaSud, piano1_connettivo_verticale_zonaSud_ascensore, piano1_connettivo_verticale_zonaSud_scale, piano1_superficieUtile_zonaSud_servizi]
     
 sud = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1S)])
-#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud))
+VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud))
 
 
 #-- ala OVEST -------------------------------------------------------------------------
@@ -184,7 +185,6 @@ boxes[24] = [[0.955, 0.584], [0.997, 0.627]] #[V[k] for k in [220,24]]
 boxes[25] = [[0.521, 0.584], [0.555, 0.627]] #[V[k] for k in [11,144]]
 boxes[26] = [[1.0, 0.533], [0.97, 0.568]] #[V[k] for k in [233,201]]
 
-
 piano1_superficieUtile_zonaOvest_uffici_destra = subComplexInBox(V,FV,EV,boxes[19])[1]
 piano1_superficieUtile_zonaOvest_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[20])[1]
 piano1_connettivo_orizzontale_zonaOvest = subComplexInBox(V,FV,EV,boxes[21])[1]
@@ -197,7 +197,7 @@ piano1_connettivo_verticale_zonaOvest_scale = subComplexInBox(V,FV,EV,boxes[26])
 piano1O = [piano1_superficieUtile_zonaOvest_uffici_destra, piano1_superficieUtile_zonaOvest_uffici_sinistra, piano1_connettivo_orizzontale_zonaOvest, piano1_connettivo_verticale_zonaOvest_ascensore, piano1_connettivo_verticale_zonaOvest_scale, piano1_superficieUtile_zonaOvest_servizi]
     
 ovest = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1O)])
-#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest))
+VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest))
 
 
 #-- CENTRO stella -------------------------------------------------------------------------
@@ -207,8 +207,8 @@ piano1_connettivo_verticale_centroStella_scale = [15,26]
 
 piano1C = [[],[],piano1_connettivo_orizzontale_centroStella,[], piano1_connettivo_verticale_centroStella_scale]
 centro = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1C)])
-#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest + centro))
-#VIEW(STRUCT(est + nord + sud + ovest + centro))
+VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest + centro))
+VIEW(STRUCT(est + nord + sud + ovest + centro))
 
 
 #-- Strutture foglia -------------------------------------------------------------------------
@@ -232,13 +232,8 @@ def chain2structs(V,FV,EV,FE):
         chainName,classtype = args
         chain = eval(chainName)
         boundaryFacets = chain2BoundaryChain(FV,EV)(chain)
-        ##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryFacets]))))
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryFacets]))))
         chainFacets = sorted(set(CAT([FE[cell] for cell in chain])))
-        """
-        if isinstance(chain,Struct): 
-            V,FV,EV = struct2lar(chain)
-            chain = FV
-        """
         struct = []
         chainVerts = list(set(CAT([FV[cell] for cell in chain])))
         localOrigin = min([V[v] for v in chainVerts])
@@ -266,35 +261,35 @@ piano1N_nomi = ["piano1_superficieUtile_zonaNord_uffici_destra", "piano1_superfi
 piano1N_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1N = zip(piano1N_nomi,piano1N_categorie)
 piano1_zonaNord = Struct(AA(chainsToStruct)(p1N),"piano1_zonaNord","ala")
-#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaNord)))))
+VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaNord)))))
 
 
 piano1E_nomi = ["piano1_superficieUtile_zonaEst_uffici_destra", "piano1_superficieUtile_zonaEst_uffici_sinistra", "piano1_connettivo_orizzontale_zonaEst", "piano1_connettivo_verticale_zonaEst_ascensore", "piano1_connettivo_verticale_zonaEst_scale", "piano1_superficieUtile_zonaEst_servizi"]
 piano1E_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1E = zip(piano1E_nomi, piano1E_categorie)
 piano1_zonaEst = Struct(AA(chainsToStruct)(p1E), "piano1_zonaEst", "ala")
-#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaEst)))))
+VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaEst)))))
 
 
 piano1S_nomi = ["piano1_superficieUtile_zonaSud_uffici_destra", "piano1_superficieUtile_zonaSud_uffici_sinistra", "piano1_connettivo_orizzontale_zonaSud", "piano1_connettivo_verticale_zonaSud_ascensore", "piano1_connettivo_verticale_zonaSud_scale", "piano1_superficieUtile_zonaSud_servizi"]
 piano1S_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1S = zip(piano1S_nomi, piano1S_categorie)
 piano1_zonaSud = Struct(AA(chainsToStruct)(p1S), "piano1_zonaSud", "ala")
-#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaSud)))))
+VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaSud)))))
 
 
 piano1O_nomi = ["piano1_superficieUtile_zonaOvest_uffici_destra", "piano1_superficieUtile_zonaOvest_uffici_sinistra", "piano1_connettivo_orizzontale_zonaOvest", "piano1_connettivo_verticale_zonaOvest_ascensore", "piano1_connettivo_verticale_zonaOvest_scale", "piano1_superficieUtile_zonaOvest_servizi"]
 piano1O_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1O = zip(piano1O_nomi, piano1O_categorie)
 piano1_zonaOvest = Struct(AA(chainsToStruct)(p1O), "piano1_zonaOvest", "ala")
-#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaOvest)))))
+VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaOvest)))))
 
 
 piano1C_nomi = ["piano1_connettivo_orizzontale_centroStella", "piano1_connettivo_verticale_centroStella_scale"]
 piano1C_categorie = ["corridoi","ascensori"]
 p1C = zip(piano1C_nomi, piano1C_categorie)
 piano1_centroStella = Struct(AA(chainsToStruct)(p1C), "piano1_centroStella", "centro")
-#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_centroStella)))))
+VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_centroStella)))))
 
 
 #-- Primo piano -------------------------------------------------------------------------
@@ -304,12 +299,76 @@ p1 = p1N + p1S + p1E + p1O + p1C
 piano1_nomi = ["piano1_zonaNord", "piano1_zonaEst", "piano1_zonaSud", "piano1_zonaOvest", "piano1_centroStella"]
 piano1_categorie = ["ala","ala","ala","ala","centro"]
 piano1 = Struct(AA(chainsToStruct)(p1), "piano1", "piano")
-#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
+VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
+
+def boundaryCycles(edgeBoundary,EV):
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    cbe = copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
 
 
 
+def structBoundaryModel(struct):
+    V,FV,EV = struct2lar(struct)
+    edgeBoundary = boundaryCells(FV,EV)
+    cycles = boundaryCycles(edgeBoundary,EV)
+    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
+    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
+    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
+    return V,cells
+    
+    
+V,boundaryEdges = structBoundaryModel(piano1)
+drawing = mkSignedEdges((V,boundaryEdges))
+VIEW(drawing)
 
-b = chain2BoundaryChain(FV,EV)()
+
+def boundaryModel2polylines(model):
+    V,EV = model
+    polylines = []
+    succDict = dict(EV)
+    visited = [False for k in range(len(V))]
+    nonVisited = [k for k in succDict.keys() if not visited[k]]
+    while nonVisited != []:
+        first = nonVisited[0]; v = first; polyline = []
+        while visited[v] == False:
+            visited[v] = True; 
+            polyline += V[v], 
+            v = succDict[v]
+        polyline += [V[first]]
+        polylines += [polyline]
+        nonVisited = [k for k in succDict.keys() if not visited[k]]
+    return polylines
+        
+polylines = boundaryModel2polylines((V,boundaryEdges))
+VIEW(STRUCT(AA(POLYLINE)(polylines)))
+    
+
+def boundaryPolylines(struct):
+    V,boundaryEdges = structBoundaryModel(struct)
+    polylines = boundaryModel2polylines((V,boundaryEdges))
+    return polylines
+
+boundaryPolylines(piano1)
+
 
 
 b = chain2BoundaryChain(FV,EV)(piano1_connettivo_orizzontale_zonaNord +											piano1_connettivo_orizzontale_zonaSud + piano1_connettivo_orizzontale_zonaEst + 							piano1_connettivo_orizzontale_zonaOvest + piano1_connettivo_orizzontale_centroStella)

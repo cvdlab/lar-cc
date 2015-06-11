@@ -211,7 +211,6 @@ class Verts(scipy.ndarray): pass
 %-------------------------------------------------------------------------------
 @D Struct class
 @{from myfont import *
-from larcc import *
 class Struct:
     """ The assembly type of the LAR package """
     def __init__(self,data=None,name=None,category=None):
@@ -249,7 +248,8 @@ class Struct:
         data = struct2lar(self)
         if len(data) == 3:
             V,FV,EV = data
-            return larcc.signedBoundaryCells(V,FV,EV) 
+            #import pdb; pdb.set_trace()
+            return V,FV,EV
         else:
             return "<Struct name: %s> boundary non computable" % self.__name__()
     def draw(self,color=WHITE,scaling=1,metric=ID):
