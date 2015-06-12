@@ -197,23 +197,16 @@ def chain2structs(V,FV,EV,FE):
     def chain2structs0(args): 
         if args == ([],[],[]): return
         chain,chainName,classtype = args
-        #chain = eval(chainName)
-        boundaryFacets = chain2BoundaryChain(FV,EV)(chain)
-        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryFacets]))))
-        chainFacets = sorted(set(CAT([FE[cell] for cell in chain])))
         struct = []
-        chainVerts = list(set(CAT([FV[cell] for cell in chain])))
-        localOrigin = min([V[v] for v in chainVerts])
         for cell in chain:
-            vs = (array([V[v] for v in FV[cell]]) - localOrigin).tolist()
+            vs = [V[v] for v in FV[cell]]
             vdict = dict([[vcode(vert),k] for k,vert in enumerate(vs)])
-            facetEdges = [ (array([V[v] for v in EV[e]]) - localOrigin).tolist() for e in FE[cell]]
+            facetEdges = [[V[v] for v in EV[e]] for e in FE[cell]]
             ev = [(vdict[vcode(v1)], vdict[vcode(v2)]) for v1,v2 in facetEdges]
             fv = [range(len(vs))]
-            tvect = eval(min(vdict))
-            shape = (array(vs)-tvect).tolist(),fv,ev
-            struct += [ Struct([ t(*tvect), shape],name=None,category="room" ) ]
-            out = Struct([t(*localOrigin)]+struct,name=chainName,category=classtype)
+            shape = vs,fv,ev
+            struct += [ Struct([ shape ], name=None, category="room" ) ]
+        out = Struct( struct, name=chainName, category=classtype )
         return out
     return chain2structs0
 @}
