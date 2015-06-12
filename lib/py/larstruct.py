@@ -176,7 +176,7 @@ class Struct:
         if data==None or data==[]:
             self.body = []
         else:
-            self.body = data
+            self.body = [item for item in data if item != None]
             self.box = box(self) 
         if name != None: 
             self.name = str(name)

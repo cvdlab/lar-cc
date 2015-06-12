@@ -91,7 +91,7 @@ if __name__=="__main__":
 \subsection{Emulation of interactive graphics input}
 %///////////////////////////////////////////////////////////////////////////////
 
-In this section two functions are given to emulate two graphics input primitives.
+In this section two functions are given to emulate two graphics input primitives, respectively.
 
 \paragraph{Emulation of input from ``selection box''}
 The function accepts as input the LAR model \texttt{V,FV,EV} and a \texttt{queryBox} given in normalized coordinates. It returns \texttt{vertexSubset $\subseteq$ V, faceSubset $\subseteq$ FV, edgeSubset $\subseteq$ EV}.
@@ -195,8 +195,9 @@ def chain2BoundaryChain(FV,EV):
 @{""" From chains to structures """
 def chain2structs(V,FV,EV,FE):
     def chain2structs0(args): 
-        chainName,classtype = args
-        chain = eval(chainName)
+        if args == ([],[],[]): return
+        chain,chainName,classtype = args
+        #chain = eval(chainName)
         boundaryFacets = chain2BoundaryChain(FV,EV)(chain)
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryFacets]))))
         chainFacets = sorted(set(CAT([FE[cell] for cell in chain])))
@@ -239,10 +240,10 @@ def structBoundaryModel(struct):
 
 
 
-\paragraph{From LAR boundary model to polylines}
+\paragraph{From LAR oriented boundary model to polylines}
 %-------------------------------------------------------------------------------
 @D From LAR boundary model to polylines
-@{""" From LAR boundary model to polylines """
+@{""" From LAR oriented boundary model to polylines """
 def boundaryModel2polylines(model):
     V,EV = model
     polylines = []
@@ -306,13 +307,6 @@ DEBUG = False
 @< From Struct object to LAR boundary model @>
 @< From LAR boundary model to polylines @>
 @< From structures to boundary polylines @>
-@< Ala nord @>
-@< Ala est @>
-@< Ala sud @>
-@< Ala ovest @>
-@< Centro stella @>
-@< Assemblaggio @>
-
 @}
 %-------------------------------------------------------------------------------
 
@@ -333,10 +327,22 @@ DEBUG = False
    \label{fig:example}
 \end{figure}
 
+
+\paragraph{Visualization of cell numbering in a 2D complex}
+%-------------------------------------------------------------------------------
+@D Visualization of cell numbering in a 2D complex
+@{""" Visualization of cell numbering in a 2D complex """
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.025))
+@}
+%-------------------------------------------------------------------------------
+
+
 \paragraph{Ala nord (HPCs)}
 %-------------------------------------------------------------------------------
 @D Ala nord
-@{
+@{FE = crossRelation(FV,EV)
 chainsToStruct = chain2structs(V,FV,EV,FE)
 
 """ Ala nord """
@@ -372,7 +378,7 @@ piano1N = [piano1_superficieUtile_zonaNord_uffici_destra, piano1_superficieUtile
 @{""" Ala nord """
 piano1N_nomi = ["piano1_superficieUtile_zonaNord_uffici_destra", "piano1_superficieUtile_zonaNord_uffici_sinistra", "piano1_connettivo_orizzontale_zonaNord", "piano1_connettivo_verticale_zonaNord_ascensore", "piano1_connettivo_verticale_zonaNord_scale", "piano1_superficieUtile_zonaNord_servizi"]
 piano1N_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1N = zip(piano1N_nomi,piano1N_categorie)
+p1N = zip(piano1N,piano1N_nomi,piano1N_categorie)
 piano1_zonaNord = Struct(AA(chainsToStruct)(p1N),"piano1_zonaNord","ala")
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaNord)))))
     
@@ -411,7 +417,7 @@ piano1E = [piano1_superficieUtile_zonaEst_uffici_destra, piano1_superficieUtile_
 @{""" Ala est """
 piano1E_nomi = ["piano1_superficieUtile_zonaEst_uffici_destra", "piano1_superficieUtile_zonaEst_uffici_sinistra", "piano1_connettivo_orizzontale_zonaEst", "piano1_connettivo_verticale_zonaEst_ascensore", "piano1_connettivo_verticale_zonaEst_scale", "piano1_superficieUtile_zonaEst_servizi"]
 piano1E_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1E = zip(piano1E_nomi, piano1E_categorie)
+p1E = zip(piano1E,piano1E_nomi, piano1E_categorie)
 piano1_zonaEst = Struct(AA(chainsToStruct)(p1E), "piano1_zonaEst", "ala")
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaEst)))))
 
@@ -450,7 +456,7 @@ piano1S = [piano1_superficieUtile_zonaSud_uffici_destra, piano1_superficieUtile_
 @{""" Ala sud """
 piano1S_nomi = ["piano1_superficieUtile_zonaSud_uffici_destra", "piano1_superficieUtile_zonaSud_uffici_sinistra", "piano1_connettivo_orizzontale_zonaSud", "piano1_connettivo_verticale_zonaSud_ascensore", "piano1_connettivo_verticale_zonaSud_scale", "piano1_superficieUtile_zonaSud_servizi"]
 piano1S_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1S = zip(piano1S_nomi, piano1S_categorie)
+p1S = zip(piano1S,piano1S_nomi, piano1S_categorie)
 piano1_zonaSud = Struct(AA(chainsToStruct)(p1S), "piano1_zonaSud", "ala")
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaSud)))))
     
@@ -491,7 +497,7 @@ piano1O = [piano1_superficieUtile_zonaOvest_uffici_destra, piano1_superficieUtil
 @{""" Ala ovest """
 piano1O_nomi = ["piano1_superficieUtile_zonaOvest_uffici_destra", "piano1_superficieUtile_zonaOvest_uffici_sinistra", "piano1_connettivo_orizzontale_zonaOvest", "piano1_connettivo_verticale_zonaOvest_ascensore", "piano1_connettivo_verticale_zonaOvest_scale", "piano1_superficieUtile_zonaOvest_servizi"]
 piano1O_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1O = zip(piano1O_nomi, piano1O_categorie)
+p1O = zip(piano1O,piano1O_nomi, piano1O_categorie)
 piano1_zonaOvest = Struct(AA(chainsToStruct)(p1O), "piano1_zonaOvest", "ala")
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaOvest)))))
     
@@ -516,9 +522,9 @@ centro = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1C)])
 %-------------------------------------------------------------------------------
 @D Centro stella
 @{""" Centro stella """
-piano1C_nomi = ["piano1_connettivo_orizzontale_centroStella", "piano1_connettivo_verticale_centroStella_scale"]
-piano1C_categorie = ["corridoi","ascensori"]
-p1C = zip(piano1C_nomi, piano1C_categorie)
+piano1C_nomi = [[],[],"piano1_connettivo_orizzontale_centroStella", [], "piano1_connettivo_verticale_centroStella_scale"]
+piano1C_categorie = [[],[],"corridoi",[], "ascensori"]
+p1C = zip(piano1C,piano1C_nomi, piano1C_categorie)
 piano1_centroStella = Struct(AA(chainsToStruct)(p1C), "piano1_centroStella", "centro")
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_centroStella)))))
 
@@ -555,6 +561,28 @@ print boundaryPolylines(piano1)
 @}
 %-------------------------------------------------------------------------------
 
+
+%-------------------------------------------------------------------------------
+@O test/py/hijson/test01.py
+@{""" make the model of a layout floor """
+""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from hijson import *
+
+filename = "test/py/inters/plan.svg"
+larModel = svg2lar(filename)
+V,FV,EV = larModel
+FV[2] += FV[71]      # for now :o)
+@< Visualization of cell numbering in a 2D complex @>
+@< Ala nord @>
+@< Ala est @>
+@< Ala sud @>
+@< Ala ovest @>
+@< Centro stella @>
+@< Assemblaggio @>
+@}
+%-------------------------------------------------------------------------------
 
 
 
