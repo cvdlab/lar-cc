@@ -219,6 +219,7 @@ class Struct:
         else:
             self.body = [item for item in data if item != None]
             self.box = box(self) 
+            self.dim = len(self.box[0])
         if name != None: 
             self.name = str(name)
         else:
@@ -572,7 +573,7 @@ def flatten(lst):
 \paragraph{Initialization and call of the algorithm}
 
 The function \texttt{evalStruct} is used to evaluate a structure network, i.e.~to return a \texttt{scene}
-list of objects of type \texttt{Model}, all referenced in the world coordinate system. The input variable \texttt{struct} must contain an object of class \texttt{Struct}, i.e.~a reference to an unevaluated structure network. The variable \texttt{dim}  contains the embedding dimension of the structure, i.e.~the number of doordinates of its vertices (normally either 2 or 3), the CTM (Current Transformation Matrix) is initialised to the (homogeneous) identity matrix, and  the \texttt{scene} is returned by calling the \texttt{traverse} algorithm.
+list of objects of type \texttt{Model}, all referenced in the world coordinate system. The input variable \texttt{struct} must contain an object of class \texttt{Struct}, i.e.~a reference to an unevaluated structure network. The variable \texttt{dim}  contains the embedding dimension of the structure, i.e.~the number of coordinates of its vertices (normally either 2 or 3), the CTM (Current Transformation Matrix) is initialised to the (homogeneous) identity matrix, and  the \texttt{scene} is returned by calling the \texttt{traverse} algorithm.
 
 %-------------------------------------------------------------------------------
 @D Traversal of a scene multigraph
@@ -616,13 +617,14 @@ The \texttt{traversal} algorithm decides between three different cases, dependin
 @< Structure embedding algorithm  @>
 
 def embedStruct(n):
-    def embedStruct0(struct):
+    def embedStruct0(struct,suffix="New"):
         if n==0: 
             return struct, len(struct.box[0])
         cloned = Struct()
         cloned.box = hstack((struct.box, [n*[0],n*[0]])).tolist()
-        cloned.name = struct.name+"New"
-        cloned = embedTraversal(cloned,struct,n) 
+        cloned.name = struct.name+suffix
+        cloned.dim = struct.dim + n
+        cloned = embedTraversal(cloned,struct,n,suffix) 
         return cloned
     return embedStruct0
 @}
@@ -632,7 +634,7 @@ def embedStruct(n):
 %-------------------------------------------------------------------------------
 @D Structure embedding algorithm 
 @{""" Structure embedding algorithm """
-def embedTraversal(cloned, obj,n):
+def embedTraversal(cloned, obj,n,suffix):
     for i in range(len(obj)):
         if isinstance(obj[i],Model): 
             cloned.body += [obj[i]]
@@ -655,8 +657,8 @@ def embedTraversal(cloned, obj,n):
         elif isinstance(obj[i],Struct):
             newObj = Struct()
             newObj.box = hstack((obj[i].box, [n*[0],n*[0]]))
-            newObj.name = obj[i].name+"New"
-            cloned.body  += [embedTraversal(newObj, obj[i], n)]
+            newObj.name = obj[i].name+suffix
+            cloned.body  += [embedTraversal(newObj, obj[i], n, suffix)]
     return cloned
 @}
 %-------------------------------------------------------------------------------

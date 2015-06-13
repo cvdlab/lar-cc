@@ -226,6 +226,7 @@ def structBoundaryModel(struct):
     edges = [signedEdge for cycle in cycles for signedEdge in cycle]
     orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
     cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
+    if cells[0][0]==cells[1][0]: REVERSE(cells[0])  # bug badly patched! ... TODO better
     return V,cells
 @}
 %-------------------------------------------------------------------------------
@@ -542,7 +543,6 @@ piano1 = Struct(AA(chainsToStruct)(p1), "piano1", "piano")
 
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
 
-    
 V,boundaryEdges = structBoundaryModel(piano1)
 drawing = mkSignedEdges((V,boundaryEdges))
 VIEW(drawing)
@@ -555,18 +555,10 @@ print boundaryPolylines(piano1)
 %-------------------------------------------------------------------------------
 
 
+\paragraph{Assembling floor layout generation}
 %-------------------------------------------------------------------------------
-@O test/py/hijson/test01.py
-@{""" make the model of a layout floor """
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from hijson import *
-
-filename = "test/py/inters/plan.svg"
-larModel = svg2lar(filename)
-V,FV,EV = larModel
-FV[2] += FV[71]      # for now :o)
+@D Assembling floor layout generation
+@{""" Assembling floor layout generation """
 @< Visualization of cell numbering in a 2D complex @>
 @< Ala nord @>
 @< Ala est @>
@@ -577,6 +569,71 @@ FV[2] += FV[71]      # for now :o)
 @}
 %-------------------------------------------------------------------------------
 
+
+
+%-------------------------------------------------------------------------------
+@D Tower example initialization
+@{""" make the model of a layout floor """
+""" import modules from larcc/lib """
+import sys
+sys.path.insert(0, 'lib/py/')
+from hijson import *
+
+filename = "test/py/inters/plan.svg"
+larModel = svg2lar(filename)
+V,FV,EV = larModel
+FV[2] += FV[71]      # for now :o)
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/hijson/test01.py
+@{""" make the model of a layout floor """
+@< Tower example initialization @>
+@< Assembling floor layout generation @>
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@D Exploring the tower generation
+@{""" Exploring the floor layout generation """
+@< Assembling floor layout generation @>
+
+piano = Struct([piano1_zonaNord,piano1_zonaEst,piano1_zonaSud,piano1_zonaOvest, piano1_centroStella], "pianoTipo","piano")
+print "\npiano =",piano
+print "piano.dim =",piano.dim
+
+Vp,FVp,EVp = struct2lar(piano)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((Vp,EVp))))
+
+piano3D = embedStruct(1)(piano,"3D")
+print "\npiano3D =",piano3D
+print "piano3D.dim =",piano3D.dim
+print "piano3D.body =",piano3D.body
+
+print "\npiano3D.body[0] =",piano3D.body[0]
+print "piano3D.body[0].body =",piano3D.body[0].body
+print "piano3D.body[0].body[0] =",piano3D.body[0].body[0]
+print "piano3D.body[0].body[0].body =",piano3D.body[0].body[0].body
+print "piano3D.body[0].body[0].body[0] =",piano3D.body[0].body[0].body[0]
+print "piano3D.body[0].body[0].body[0].body =",piano3D.body[0].body[0].body[0].body
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/hijson/test02.py
+@{""" make the 2.5 model of a building tower """
+@< Tower example initialization @>
+@< Assembling floor layout generation @>
+@< Exploring the tower generation @>
+
+pianoNord3D = embedStruct(1)(piano1_zonaNord,"3D")
+torreNord = Struct(6*[pianoNord3D,t(0,0,0.03)], "torreNord", "edificio2.5D")
+V,FV,EV = struct2lar(torreNord)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
+@}
+%-------------------------------------------------------------------------------
 
 
 \bibliographystyle{amsalpha}

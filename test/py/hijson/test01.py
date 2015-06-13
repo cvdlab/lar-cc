@@ -1,4 +1,5 @@
 """ make the model of a layout floor """
+""" make the model of a layout floor """
 """ import modules from larcc/lib """
 import sys
 sys.path.insert(0, 'lib/py/')
@@ -8,6 +9,8 @@ filename = "test/py/inters/plan.svg"
 larModel = svg2lar(filename)
 V,FV,EV = larModel
 FV[2] += FV[71]      # for now :o)
+
+""" Assembling floor layout generation """
 """ Visualization of cell numbering in a 2D complex """
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
@@ -163,7 +166,6 @@ piano1 = Struct(AA(chainsToStruct)(p1), "piano1", "piano")
 
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
 
-    
 V,boundaryEdges = structBoundaryModel(piano1)
 drawing = mkSignedEdges((V,boundaryEdges))
 VIEW(drawing)
@@ -172,4 +174,5 @@ polylines = boundaryModel2polylines((V,boundaryEdges))
 VIEW(STRUCT(AA(POLYLINE)(polylines)))
     
 print boundaryPolylines(piano1)
+
 

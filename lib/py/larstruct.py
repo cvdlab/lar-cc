@@ -178,6 +178,7 @@ class Struct:
         else:
             self.body = [item for item in data if item != None]
             self.box = box(self) 
+            self.dim = len(self.box[0])
         if name != None: 
             self.name = str(name)
         else:
@@ -287,7 +288,7 @@ def larEmbed(k):
 
 """ embed a struct object """
 """ Structure embedding algorithm """
-def embedTraversal(cloned, obj,n):
+def embedTraversal(cloned, obj,n,suffix):
     for i in range(len(obj)):
         if isinstance(obj[i],Model): 
             cloned.body += [obj[i]]
@@ -310,19 +311,20 @@ def embedTraversal(cloned, obj,n):
         elif isinstance(obj[i],Struct):
             newObj = Struct()
             newObj.box = hstack((obj[i].box, [n*[0],n*[0]]))
-            newObj.name = obj[i].name+"New"
-            cloned.body  += [embedTraversal(newObj, obj[i], n)]
+            newObj.name = obj[i].name+suffix
+            cloned.body  += [embedTraversal(newObj, obj[i], n, suffix)]
     return cloned
 
 
 def embedStruct(n):
-    def embedStruct0(struct):
+    def embedStruct0(struct,suffix="New"):
         if n==0: 
             return struct, len(struct.box[0])
         cloned = Struct()
         cloned.box = hstack((struct.box, [n*[0],n*[0]])).tolist()
-        cloned.name = struct.name+"New"
-        cloned = embedTraversal(cloned,struct,n) 
+        cloned.name = struct.name+suffix
+        cloned.dim = struct.dim + n
+        cloned = embedTraversal(cloned,struct,n,suffix) 
         return cloned
     return embedStruct0
 

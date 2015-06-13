@@ -114,6 +114,7 @@ def structBoundaryModel(struct):
     edges = [signedEdge for cycle in cycles for signedEdge in cycle]
     orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
     cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
+    if cells[0][0]==cells[1][0]: REVERSE(cells[0])  # bug badly patched! ... TODO better
     return V,cells
 
 """ From LAR oriented boundary model to polylines """
