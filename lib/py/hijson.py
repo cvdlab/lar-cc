@@ -4,7 +4,7 @@ from pyplasm import *
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
-from iot3d import *
+#from iot3d import *
 from larcc import *
 from bool import *
 from copy import copy
@@ -14,12 +14,14 @@ DEBUG = False
 def svg2lar(filename):
     lines = svg2lines(filename)
     larModel = larFromLines(lines)
+    larModel = larApply(s(100,100))(larModel)
     V,FV,EV = larModel
     return larModel
     
 if __name__=="__main__":
     filename = "test/py/inters/plan.svg"
     larModel = svg2lar(filename)
+    larModel = larApply(s(100,100))(larModel)
     V,FV,EV = larModel
     FV[2] += FV[71]      # for now :o)
 
@@ -65,8 +67,8 @@ if __name__=="__main__":
     FE = crossRelation(FV,EV)
     queryPoint = (0.6,0.58)
     vertexSubset,faceSubset,edgeSubset = subComplexAroundPoint(V,FV,EV,FE,queryPoint)
-    VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [
-        COLOR(RED)(MK(queryPoint))] ))
+    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [
+        #COLOR(RED)(MK(queryPoint))] ))
 
 """ From LAR chain to colored HPCs """
 def cells2hpcs(V,FV,cells,k): 
@@ -114,7 +116,10 @@ def structBoundaryModel(struct):
     edges = [signedEdge for cycle in cycles for signedEdge in cycle]
     orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
     cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
-    if cells[0][0]==cells[1][0]: REVERSE(cells[0])  # bug badly patched! ... TODO better
+    if cells[0][0]==cells[1][0]: # bug badly patched! ... TODO better
+        temp0 = cells[0][0]
+        temp1 = cells[0][1]
+        cells[0] = [temp1, temp0]
     return V,cells
 
 """ From LAR oriented boundary model to polylines """

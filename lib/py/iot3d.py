@@ -1,6 +1,8 @@
 """Module with automatic generation of simplified 3D buildings"""
 import sys; sys.path.insert(0, 'lib/py/')
 from architectural import *
+import hijson
+
 class Struct2(Struct):
    def flatten(self): 
       structs = copy(self.body)
@@ -58,6 +60,12 @@ def printStruct2GeoJson(path,struct):
     CTM, stack = scipy.identity(dim+1), []
     fathers = [filename]
     #import pdb; pdb.set_trace()
+
+    tabs = (3*1)*" "
+    V,boundaryEdges = hijson.structBoundaryModel(struct)   #+new
+    coordinates = hijson.boundaryModel2polylines((V,boundaryEdges))  #+new
+
+    printStructObject(theFile,tabs, 0,struct.name,struct.category,coordinates,"building")
     scene,fathers = printTraversal(theFile, CTM, stack, struct, [], 0, fathers,filename) 
     theFile.close()
     """ exporting to JSON via YML a lar structure """
@@ -70,7 +78,7 @@ def printStruct2GeoJson(path,struct):
     return scene,fathers
 
 """ Print a model object in a geoJson file """
-def printModelObject(theFile,tabs, i,name,category,verts,cells,father):
+def printModelObject(theFile,tabs, i,name,category,verts,cells,father,tvect=[0,0,0]):
     tab = "    "
     print >> theFile, "-   ","id:", name
     print >> theFile, tab, "type:", "Feature"
@@ -83,7 +91,7 @@ def printModelObject(theFile,tabs, i,name,category,verts,cells,father):
     print >> theFile, tab+tab, "parent:", father
     print >> theFile, tab+tab, "son:", i
     print >> theFile, tab+tab, "description:", name
-    print >> theFile, tab+tab, "tVector:", [0, 0, 0]
+    print >> theFile, tab+tab, "tVector:", [tvect[0],tvect[1],tvect[2]]
     print >> theFile, tab+tab, "rVector:", [0, 0, 0]
 
 """ Print a mat object in a geoJson file """
@@ -92,23 +100,24 @@ def printMatObject(theFile,tabs, theMat):
     print >> theFile, tab+tab, "tVector:", theMat.T[-1,:-1].tolist()
 
 """ Print a struct object in a geoJson file """
-def printStructObject(theFile,tabs, i,name,category,box,father):
+def printStructObject(theFile,tabs, i,name,category,coordinates,father,tvect=[0,0,0]):
     tab = "    "
     print >> theFile, "-   ","id:", name
     print >> theFile, tab,"type:", "Feature"
     print >> theFile, tab,"geometry:" 
     print >> theFile, tab+tab, "type:", "Polygon"
-    print >> theFile, tab+tab, "box:", box
+    print >> theFile, tab+tab, "coordinates:", coordinates
     print >> theFile, tab,"properties:"
+    print "category=", category
     print >> theFile, tab+tab, "class:", category
     print >> theFile, tab+tab, "parent:", father
     print >> theFile, tab+tab, "son:", i
     print >> theFile, tab+tab, "description:", name
-    print >> theFile, tab+tab, "tVector:", [0, 0, 0]
+    print >> theFile, tab+tab, "tVector:", [tvect[0],tvect[1],tvect[2]]
     print >> theFile, tab+tab, "rVector:", [0, 0, 0]
 
 """ Traverse a structure to print a geoJson file """
-def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father=""):
+def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father="",tvect=[0,0,0]):
    tabs = (4*level)*" "
    for i in range(len(obj)):
       if isinstance(obj[i],Model): 
@@ -118,7 +127,7 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
          else: 
             name = father+'-'+ str(obj[i].__name__())
          printModelObject(theFile,tabs, i,name,None,verts,cells,father)
-         scene += [larApply(CTM)(obj[i])]
+         scene += [ rApply(CTM)(obj[i])]
          fathers += [father]
       elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
          verts,cells = obj[i]
@@ -128,7 +137,7 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
          fathers += [father]
       elif isinstance(obj[i],Mat): 
          printMatObject(theFile,tabs, obj[i])
-         CTM = scipy.dot(CTM, obj[i])
+         CTM = scipy.dot(CTM,  obj[i])
       elif isinstance(obj[i], Struct):
          if obj[i].__name__() == None:
             name = father+'-'+ str(id(obj[i]))
@@ -136,8 +145,20 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
             name = father+'-'+ str(obj[i].__name__())
             
          box = obj[i].box
+         tvect = box[0]
+         V,boundaryEdges = hijson.structBoundaryModel(obj[i])   #+new
+         #import pdb; pdb.set_trace()
+         coordinates = hijson.boundaryModel2polylines((V,boundaryEdges))  #+new
+         transfMat = array(t(*[-x for x in tvect]))
          
-         printStructObject(theFile,tabs, i,name,obj[i].__category__(),box,father)
+         def transformCycle(transfMat,cycle):
+             affineCoordinates = [point+[1] for point in cycle]
+             localCoords = (transfMat.dot(array(affineCoordinates).T)).T
+             localCoordinates = [[x,y,z] for x,y,z,w in localCoords.tolist()]
+             return localCoordinates
+             
+         coordinates = [transformCycle(transfMat,cycle) for cycle in coordinates]
+         printStructObject(theFile,tabs, i,name,obj[i].__category__(),coordinates,father)
          stack.append(CTM) 
          level += 1
          fathers.append(name)

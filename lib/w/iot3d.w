@@ -232,13 +232,13 @@ def printMatObject(theFile,tabs, theMat):
 %-------------------------------------------------------------------------------
 @D Print a Struct object in a geoJson file
 @{""" Print a struct object in a geoJson file """
-def printStructObject(theFile,tabs, i,name,category,box,father):
+def printStructObject(theFile,tabs, i,name,category,coordinates,father):
     tab = "    "
     print >> theFile, "-   ","id:", name
     print >> theFile, tab,"type:", "Feature"
     print >> theFile, tab,"geometry:" 
     print >> theFile, tab+tab, "type:", "Polygon"
-    print >> theFile, tab+tab, "box:", box
+    print >> theFile, tab+tab, "coordinates:", coordinates
     print >> theFile, tab,"properties:"
     print >> theFile, tab+tab, "class:", category
     print >> theFile, tab+tab, "parent:", father
@@ -249,11 +249,34 @@ def printStructObject(theFile,tabs, i,name,category,box,father):
 @}
 %-------------------------------------------------------------------------------
 
+
+
+
+\paragraph{From Struct object to LAR boundary model}
+%-------------------------------------------------------------------------------
+@D From Struct object to LAR boundary model
+@{""" From Struct object to LAR boundary model """
+def structBoundaryModel(struct):
+    V,FV,EV = struct2lar(struct)
+    edgeBoundary = boundaryCells(FV,EV)
+    cycles = boundaryCycles(edgeBoundary,EV)
+    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
+    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
+    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
+    if cells[0][0]==cells[1][0]: REVERSE(cells[0])  # bug badly patched! ... TODO better
+    return V,cells
+@}
+%-------------------------------------------------------------------------------
+    
+
+
 \paragraph{Traverse a structure to print a geoJson file}
 
 %-------------------------------------------------------------------------------
 @D Traverse a structure to print a geoJson file
 @{""" Traverse a structure to print a geoJson file """
+from hijson import *
+
 def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father=""):
    tabs = (4*level)*" "
    for i in range(len(obj)):
@@ -264,7 +287,7 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
          else: 
             name = father+'-'+ str(obj[i].__name__())
          printModelObject(theFile,tabs, i,name,None,verts,cells,father)
-         scene += [larApply(CTM)(obj[i])]
+         scene += [ rApply(CTM)(obj[i])]
          fathers += [father]
       elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and len(obj[i])==2:
          verts,cells = obj[i]
@@ -274,7 +297,7 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
          fathers += [father]
       elif isinstance(obj[i],Mat): 
          printMatObject(theFile,tabs, obj[i])
-         CTM = scipy.dot(CTM, obj[i])
+         CTM = scipy.dot(CTM,  obj[i])
       elif isinstance(obj[i], Struct):
          if obj[i].__name__() == None:
             name = father+'-'+ str(id(obj[i]))
@@ -282,8 +305,19 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
             name = father+'-'+ str(obj[i].__name__())
             
          box = obj[i].box
+         tvect = box[0]
+         V,boundaryEdges = structBoundaryModel(obj[i])   #+new
+         coordinates = boundaryModel2polylines((V,boundaryEdges))  #+new
+         transfMat = array(t(*[-x for x in tvect]))
          
-         printStructObject(theFile,tabs, i,name,obj[i].__category__(),box,father)
+         def transformCycle(transfMat,cycle):
+             affineCoordinates = [point+[1] for point in cycle]
+             localCoords = (transfMat.dot(array(affineCoordinates).T)).T
+             localCoordinates = [[x,y,z] for x,y,z,w in localCoords.tolist()]
+             return localCoordinates
+             
+         coordinates = [transformCycle(transfMat,cycle) for cycle in coordinates]
+         printStructObject(theFile,tabs, i,name,obj[i].__category__(),coordinates,father)
          stack.append(CTM) 
          level += 1
          fathers.append(name)

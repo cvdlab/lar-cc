@@ -312,6 +312,7 @@ def embedTraversal(cloned, obj,n,suffix):
             newObj = Struct()
             newObj.box = hstack((obj[i].box, [n*[0],n*[0]]))
             newObj.name = obj[i].name+suffix
+            newObj.category = obj[i].category
             cloned.body  += [embedTraversal(newObj, obj[i], n, suffix)]
     return cloned
 
@@ -323,6 +324,7 @@ def embedStruct(n):
         cloned = Struct()
         cloned.box = hstack((struct.box, [n*[0],n*[0]])).tolist()
         cloned.name = struct.name+suffix
+        cloned.category = struct.category
         cloned.dim = struct.dim + n
         cloned = embedTraversal(cloned,struct,n,suffix) 
         return cloned

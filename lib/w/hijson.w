@@ -76,12 +76,14 @@ We notice the the LAR input is normalized by the \texttt{larFromLines} function:
 def svg2lar(filename):
     lines = svg2lines(filename)
     larModel = larFromLines(lines)
+    larModel = larApply(s(100,100))(larModel)
     V,FV,EV = larModel
     return larModel
     
 if __name__=="__main__":
     filename = "test/py/inters/plan.svg"
     larModel = svg2lar(filename)
+    larModel = larApply(s(100,100))(larModel)
     V,FV,EV = larModel
     FV[2] += FV[71]      # for now :o)
 @}
@@ -147,8 +149,8 @@ if __name__=="__main__":
     FE = crossRelation(FV,EV)
     queryPoint = (0.6,0.58)
     vertexSubset,faceSubset,edgeSubset = subComplexAroundPoint(V,FV,EV,FE,queryPoint)
-    VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [
-        COLOR(RED)(MK(queryPoint))] ))
+    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [
+        #COLOR(RED)(MK(queryPoint))] ))
 @}
 %-------------------------------------------------------------------------------
 
@@ -215,24 +217,6 @@ def chain2structs(V,FV,EV,FE):
 
 
 
-\paragraph{From Struct object to LAR boundary model}
-%-------------------------------------------------------------------------------
-@D From Struct object to LAR boundary model
-@{""" From Struct object to LAR boundary model """
-def structBoundaryModel(struct):
-    V,FV,EV = struct2lar(struct)
-    edgeBoundary = boundaryCells(FV,EV)
-    cycles = boundaryCycles(edgeBoundary,EV)
-    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
-    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
-    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
-    if cells[0][0]==cells[1][0]: REVERSE(cells[0])  # bug badly patched! ... TODO better
-    return V,cells
-@}
-%-------------------------------------------------------------------------------
-    
-
-
 
 \paragraph{From LAR oriented boundary model to polylines}
 %-------------------------------------------------------------------------------
@@ -256,6 +240,29 @@ def boundaryModel2polylines(model):
     return polylines
 @}
 %-------------------------------------------------------------------------------
+
+
+
+
+\paragraph{From Struct object to LAR boundary model}
+%-------------------------------------------------------------------------------
+@D From Struct object to LAR boundary model
+@{""" From Struct object to LAR boundary model """
+def structBoundaryModel(struct):
+    V,FV,EV = struct2lar(struct)
+    edgeBoundary = boundaryCells(FV,EV)
+    cycles = boundaryCycles(edgeBoundary,EV)
+    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
+    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
+    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
+    if cells[0][0]==cells[1][0]: # bug badly patched! ... TODO better
+        temp0 = cells[0][0]
+        temp1 = cells[0][1]
+        cells[0] = [temp1, temp0]
+    return V,cells
+@}
+%-------------------------------------------------------------------------------
+    
 
 
 \paragraph{From structures to boundary polylines}
@@ -286,7 +293,7 @@ from pyplasm import *
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
-from iot3d import *
+#from iot3d import *
 from larcc import *
 from bool import *
 from copy import copy
@@ -342,16 +349,16 @@ chainsToStruct = chain2structs(V,FV,EV,FE)
 """ Ala nord """
 boxes = [0 for k in range(64)]
 point = [0 for k in range(64)]
-boxes[0] = [[0.431, 0.607], [0.474, 0.91]] #[V[k] for k in [39,208]]
-boxes[1] = [[0.416, 0.657], [0.372, 0.953]] #[V[k] for k in [162,39]]
-boxes[2] = [[0.416, 0.627], [0.431, 0.986]] #[V[k] for k in [206,247]]
-boxes[3] = [[0.431, 0.607], [0.448, 0.627]] #[V[k] for k in [39,7]]
-boxes[4] = [[0.431, 0.91], [0.494, 0.929]]  #[V[k] for k in [213,234]]
-boxes[5] = [[0.431, 0.97], [0.466, 1.0]] #[V[k] for k in [58,88]]
-boxes[27] = [[0.416, 0.627], [0.372, 0.657]] #[V[k] for k in [110,82]]
+boxes[0] = array([[0.431, 0.607], [0.474, 0.91]])*100 #[V[k] for k in [39,208]]
+boxes[1] = array([[0.416, 0.657], [0.372, 0.953]])*100 #[V[k] for k in [162,39]]
+boxes[2] = array([[0.416, 0.627], [0.431, 0.986]])*100 #[V[k] for k in [206,247]]
+boxes[3] = array([[0.431, 0.607], [0.448, 0.627]])*100 #[V[k] for k in [39,7]]
+boxes[4] = array([[0.431, 0.91], [0.494, 0.929]])*100  #[V[k] for k in [213,234]]
+boxes[5] = array([[0.431, 0.97], [0.466, 1.0]])*100 #[V[k] for k in [58,88]]
+boxes[27] = array([[0.416, 0.627], [0.372, 0.657]])*100 #[V[k] for k in [110,82]]
 
-point[0] = [0.394, 0.9625] #CCOMB([V[k] for k in [190,197]])
-point[1] = [0.4525, 0.9325] #CCOMB([V[k] for k in [166,159]])
+point[0] = array([0.394, 0.9625])*100 #CCOMB([V[k] for k in [190,197]])
+point[1] = array([0.4525, 0.9325])*100 #CCOMB([V[k] for k in [166,159]])
 
 piano1_superficieUtile_zonaNord_uffici_destra = subComplexInBox(V,FV,EV,boxes[0])[1]
 piano1_superficieUtile_zonaNord_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[1])[1]
@@ -386,14 +393,14 @@ VIEW(EXPLODE(1.2,1.2,1.2)(nord))
 %-------------------------------------------------------------------------------
 @D Ala est
 @{""" Ala est """
-boxes[6] = [[0.019, 0.533], [0.376, 0.577]] #[V[k] for k in [241,29]]
-boxes[7] = [[0.07, 0.474], [0.343, 0.518]] #[V[k] for k in [264,148]]
-boxes[8] = [[0.013, 0.518], [0.376, 0.533]] #[V[k] for k in [22,63]]
-boxes[9] = [[0.376, 0.533], [0.39, 0.549]] #[V[k] for k in [63,92]]
-boxes[10] = [[0.001, 0.474], [0.07, 0.518]] #[V[k] for k in [263,265]]
-boxes[11] = [[0.343, 0.474], [0.376, 0.518]] #[V[k] for k in [84,149]]
+boxes[6] = array([[0.019, 0.533], [0.376, 0.577]])*100 #[V[k] for k in [241,29]]
+boxes[7] = array([[0.07, 0.474], [0.343, 0.518]])*100 #[V[k] for k in [264,148]]
+boxes[8] = array([[0.013, 0.518], [0.376, 0.533]])*100 #[V[k] for k in [22,63]]
+boxes[9] = array([[0.376, 0.533], [0.39, 0.549]])*100 #[V[k] for k in [63,92]]
+boxes[10] = array([[0.001, 0.474], [0.07, 0.518]])*100 #[V[k] for k in [263,265]]
+boxes[11] = array([[0.343, 0.474], [0.376, 0.518]])*100 #[V[k] for k in [84,149]]
 
-point[2] = [0.015, 0.5535] #CCOMB([V[k] for k in [228,14]])
+point[2] = array([0.015, 0.5535])*100 #CCOMB([V[k] for k in [228,14]])
 
 piano1_superficieUtile_zonaEst_uffici_destra = subComplexInBox(V,FV,EV,boxes[6])[1]
 piano1_superficieUtile_zonaEst_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[7])[1]
@@ -425,13 +432,13 @@ VIEW(EXPLODE(1.2,1.2,1.2)(est + nord))
 %-------------------------------------------------------------------------------
 @D Ala sud
 @{""" Ala sud """
-boxes[12] = [[0.467, 0.138], [0.423, 0.476]] #[V[k] for k in [252,47]]
-boxes[13] = [[0.482, 0.145], [0.525, 0.445]] #[V[k] for k in [241,126]]
-boxes[14] = [[0.482, 0.476], [0.467, 0.116]] #[V[k] for k in [254,232]]
-boxes[15] = [[0.449, 0.476], [0.467, 0.493]] #[V[k] for k in [40,237]]
-boxes[16] = [[0.431, 0.101], [0.467, 0.131]] #[V[k] for k in [259,2]]
-boxes[17] = [[0.482, 0.445], [0.525, 0.476]] #[V[k] for k in [155,248]]
-boxes[18] = [[0.525, 0.104], [0.482, 0.145]] #[V[k] for k in [111,241]]
+boxes[12] = array([[0.467, 0.138], [0.423, 0.476]])*100 #[V[k] for k in [252,47]]
+boxes[13] = array([[0.482, 0.145], [0.525, 0.445]])*100 #[V[k] for k in [241,126]]
+boxes[14] = array([[0.482, 0.476], [0.467, 0.116]])*100 #[V[k] for k in [254,232]]
+boxes[15] = array([[0.449, 0.476], [0.467, 0.493]])*100 #[V[k] for k in [40,237]]
+boxes[16] = array([[0.431, 0.101], [0.467, 0.131]])*100 #[V[k] for k in [259,2]]
+boxes[17] = array([[0.482, 0.445], [0.525, 0.476]])*100 #[V[k] for k in [155,248]]
+boxes[18] = array([[0.525, 0.104], [0.482, 0.145]])*100 #[V[k] for k in [111,241]]
 
 piano1_superficieUtile_zonaSud_uffici_destra = subComplexInBox(V,FV,EV,boxes[12])[1]
 piano1_superficieUtile_zonaSud_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[13])[1]
@@ -464,14 +471,14 @@ VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud))
 %-------------------------------------------------------------------------------
 @D Ala ovest
 @{""" Ala ovest """
-boxes[19] = [[0.521, 0.526], [0.963, 0.568]] #[V[k] for k in [169,202]]
-boxes[20] = [[0.555, 0.584], [0.955, 0.627]] #[V[k] for k in [12,23]]
-boxes[21] = [[0.521, 0.568], [0.985, 0.584]] #[V[k] for k in [209,204]]
-boxes[22] = [[0.506, 0.551], [0.521, 0.568]] #[V[k] for k in [89,209]]
-boxes[23] = [[0.808, 0.504], [0.828, 0.526]] #[V[k] for k in [270,77]]
-boxes[24] = [[0.955, 0.584], [0.997, 0.627]] #[V[k] for k in [220,24]]
-boxes[25] = [[0.521, 0.584], [0.555, 0.627]] #[V[k] for k in [11,144]]
-boxes[26] = [[1.0, 0.533], [0.97, 0.568]] #[V[k] for k in [233,201]]
+boxes[19] = array([[0.521, 0.526], [0.963, 0.568]])*100 #[V[k] for k in [169,202]]
+boxes[20] = array([[0.555, 0.584], [0.955, 0.627]])*100 #[V[k] for k in [12,23]]
+boxes[21] = array([[0.521, 0.568], [0.985, 0.584]])*100 #[V[k] for k in [209,204]]
+boxes[22] = array([[0.506, 0.551], [0.521, 0.568]])*100 #[V[k] for k in [89,209]]
+boxes[23] = array([[0.808, 0.504], [0.828, 0.526]])*100 #[V[k] for k in [270,77]]
+boxes[24] = array([[0.955, 0.584], [0.997, 0.627]])*100 #[V[k] for k in [220,24]]
+boxes[25] = array([[0.521, 0.584], [0.555, 0.627]])*100 #[V[k] for k in [11,144]]
+boxes[26] = array([[1.0, 0.533], [0.97, 0.568]])*100 #[V[k] for k in [233,201]]
 
 piano1_superficieUtile_zonaOvest_uffici_destra = subComplexInBox(V,FV,EV,boxes[19])[1]
 piano1_superficieUtile_zonaOvest_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[20])[1]
@@ -539,7 +546,7 @@ p1 = p1N + p1S + p1E + p1O + p1C
 
 piano1_nomi = ["piano1_zonaNord", "piano1_zonaEst", "piano1_zonaSud", "piano1_zonaOvest", "piano1_centroStella"]
 piano1_categorie = ["ala","ala","ala","ala","centro"]
-piano1 = Struct(AA(chainsToStruct)(p1), "piano1", "piano")
+piano1 = Struct(AA(chainsToStruct)(p1), "piano1", "level")
 
 VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
 
@@ -553,6 +560,7 @@ VIEW(STRUCT(AA(POLYLINE)(polylines)))
 print boundaryPolylines(piano1)
 @}
 %-------------------------------------------------------------------------------
+
 
 
 \paragraph{Assembling floor layout generation}
@@ -591,47 +599,45 @@ FV[2] += FV[71]      # for now :o)
 @{""" make the model of a layout floor """
 @< Tower example initialization @>
 @< Assembling floor layout generation @>
+
+primoPiano = AA(list)([CAT(AA(S1)(p1N)),CAT(AA(S1)(p1E)),CAT(AA(S1)(p1S)), 
+				CAT(AA(S1)(p1O)),CAT(AA(S1)(p1C))])
+primoPiano_nomi = ["piano1_zonaNord","piano1_zonaEst","piano1_zonaSud","piano1_zonaOvest","piano1_centroStella"]
+primoPiano_categorie = ["ala","ala","ala","ala","centro"]
+pianoPrimo = zip(primoPiano, primoPiano_nomi, primoPiano_categorie)
+piano_1 = Struct( AA(chainsToStruct)(pianoPrimo), "piano1", "level" )
+import iot3d
+
+piano_1_3D = embedStruct(1)(piano_1,"3D")
+iot3d.printStruct2GeoJson("./",piano_1_3D)
+
+print "piano_1_3D =",piano_1_3D.category
+print "piano_1_3D.body[0] =",piano_1_3D.body[0].category
+print "piano_1_3D.body[0].body[0] =",piano_1_3D.body[0].body[0].category
 @}
 %-------------------------------------------------------------------------------
 
-
-%-------------------------------------------------------------------------------
-@D Exploring the tower generation
-@{""" Exploring the floor layout generation """
-@< Assembling floor layout generation @>
-
-piano = Struct([piano1_zonaNord,piano1_zonaEst,piano1_zonaSud,piano1_zonaOvest, piano1_centroStella], "pianoTipo","piano")
-print "\npiano =",piano
-print "piano.dim =",piano.dim
-
-Vp,FVp,EVp = struct2lar(piano)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((Vp,EVp))))
-
-piano3D = embedStruct(1)(piano,"3D")
-print "\npiano3D =",piano3D
-print "piano3D.dim =",piano3D.dim
-print "piano3D.body =",piano3D.body
-
-print "\npiano3D.body[0] =",piano3D.body[0]
-print "piano3D.body[0].body =",piano3D.body[0].body
-print "piano3D.body[0].body[0] =",piano3D.body[0].body[0]
-print "piano3D.body[0].body[0].body =",piano3D.body[0].body[0].body
-print "piano3D.body[0].body[0].body[0] =",piano3D.body[0].body[0].body[0]
-print "piano3D.body[0].body[0].body[0].body =",piano3D.body[0].body[0].body[0].body
-@}
-%-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/hijson/test02.py
 @{""" make the 2.5 model of a building tower """
 @< Tower example initialization @>
 @< Assembling floor layout generation @>
-@< Exploring the tower generation @>
 
 pianoNord3D = embedStruct(1)(piano1_zonaNord,"3D")
-torreNord = Struct(6*[pianoNord3D,t(0,0,0.03)], "torreNord", "edificio2.5D")
-V,FV,EV = struct2lar(torreNord)
+pianoEst3D = embedStruct(1)(piano1_zonaEst,"3D")
+pianoSud3D = embedStruct(1)(piano1_zonaSud,"3D")
+pianoOvest3D = embedStruct(1)(piano1_zonaOvest,"3D")
+pianoCentro3D = embedStruct(1)(piano1_centroStella,"3D")
+torreNord = Struct(4*[pianoNord3D,t(0,0,3)], "torreNord", "edificio")
+torreEst = Struct(7*[pianoEst3D,t(0,0,3)], "torreEst", "edificio")
+torreSud = Struct(7*[pianoSud3D,t(0,0,3)], "torreSud", "edificio")
+torreOvest = Struct(7*[pianoOvest3D,t(0,0,3)], "torreOvest", "edificio")
+torreCentro = Struct(7*[pianoCentro3D,t(0,0,3)], "torreCentro", "edificio")
+torre = Struct([torreNord,torreEst,torreSud,torreOvest,torreCentro],"torre", "edificio")
+V,FV,EV = struct2lar(torre)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
+VIEW(STRUCT(MKPOLS((V,FV))))
 @}
 %-------------------------------------------------------------------------------
 
