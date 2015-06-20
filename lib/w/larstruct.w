@@ -245,6 +245,10 @@ class Struct:
     def __repr__(self):
         return "<Struct name: %s>" % self.__name__()
         #return "'Struct(%s,%s)'" % (str(self.body),str(str(self.__name__())))
+    def set_name(self,name):
+        self.name = str(name)
+    def set_category(self,category):
+        self.category = str(category)
     def boundary(self):
         data = struct2lar(self)
         if len(data) == 3:
@@ -623,6 +627,7 @@ def embedStruct(n):
         cloned = Struct()
         cloned.box = hstack((struct.box, [n*[0],n*[0]])).tolist()
         cloned.name = struct.name+suffix
+        cloned.category = struct.category
         cloned.dim = struct.dim + n
         cloned = embedTraversal(cloned,struct,n,suffix) 
         return cloned
@@ -658,6 +663,7 @@ def embedTraversal(cloned, obj,n,suffix):
             newObj = Struct()
             newObj.box = hstack((obj[i].box, [n*[0],n*[0]]))
             newObj.name = obj[i].name+suffix
+            newObj.category = obj[i].category
             cloned.body  += [embedTraversal(newObj, obj[i], n, suffix)]
     return cloned
 @}

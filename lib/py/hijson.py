@@ -14,16 +14,8 @@ DEBUG = False
 def svg2lar(filename):
     lines = svg2lines(filename)
     larModel = larFromLines(lines)
-    larModel = larApply(s(100,100))(larModel)
     V,FV,EV = larModel
     return larModel
-    
-if __name__=="__main__":
-    filename = "test/py/inters/plan.svg"
-    larModel = svg2lar(filename)
-    larModel = larApply(s(100,100))(larModel)
-    V,FV,EV = larModel
-    FV[2] += FV[71]      # for now :o)
 
 """ Emulation of input from ``selection box'' over a LAR normalized representation """
 from scipy import spatial
@@ -125,6 +117,8 @@ def structBoundaryModel(struct):
 """ From LAR oriented boundary model to polylines """
 def boundaryModel2polylines(model):
     V,EV = model
+    #VIEW(STRUCT(MKPOLS((V,EV))))
+    #import pdb; pdb.set_trace()
     polylines = []
     succDict = dict(EV)
     visited = [False for k in range(len(V))]

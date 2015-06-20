@@ -49,7 +49,7 @@
 \tableofcontents
 
 \begin{abstract}
-In this module we develop stepwise the concept and the preliminary building program of a hospital of medium size, using as source the document~\cite{who:2013} of the World Health Organisation. The main aim of this modelling is to make experiments with ``cochain calculus'' over a cell decomposition of a quite complex engineering project. It may be useful to eemplify some characters of a model-based engineering approach to the initial, and more important setps of an engineering project.
+In this module we develop stepwise the concept and the preliminary building program of a hospital of medium size, using as source the document~\cite{who:2013} of the World Health Organisation. The main aim of this modelling is to make experiments with ``cochain calculus'' over a cell decomposition of a quite complex engineering project. It may be useful to exemplify some characters of a model-based engineering approach to the initial, and more important setps of an engineering project.
 \end{abstract}
 
 \section{Introduction}

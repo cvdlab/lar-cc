@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = hijson
+NAME = hospital2
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
@@ -25,13 +25,13 @@ exec:
 	cp -R $(IDIR)images . 
 	cp $(IDIR)$(NAME).tex $(NAME).w
 	
-	nuweb -l $(NAME).w
+	nuweb $(NAME).w
 
 pdf: $(IDIR)$(NAME).tex
 	make exec
 	
 	pdflatex $(NAME).tex
-	nuweb $(NAME)
+	nuweb $(NAME).w
 	bibtex $(NAME)
 	
 	pdflatex $(NAME).tex

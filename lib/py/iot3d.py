@@ -154,15 +154,17 @@ def printTraversal(theFile,CTM, stack, obj, scene=[], level=0, fathers=[],father
          def transformCycle(transfMat,cycle):
              affineCoordinates = [point+[1] for point in cycle]
              localCoords = (transfMat.dot(array(affineCoordinates).T)).T
+             print localCoords
              localCoordinates = [[x,y,z] for x,y,z,w in localCoords.tolist()]
              return localCoordinates
              
          coordinates = [transformCycle(transfMat,cycle) for cycle in coordinates]
-         printStructObject(theFile,tabs, i,name,obj[i].__category__(),coordinates,father)
+         category = obj[i].__category__()
+         printStructObject(theFile,tabs, i,name,category,coordinates,father,tvect)
          stack.append(CTM) 
          level += 1
          fathers.append(name)
-         printTraversal(theFile,CTM, stack, obj[i], scene, level, fathers,name)
+         printTraversal(theFile,CTM, stack, obj[i], scene, level, fathers,name, tvect)
          name = fathers.pop()
          level -= 1
          CTM = stack.pop()

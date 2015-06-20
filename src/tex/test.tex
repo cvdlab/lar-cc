@@ -1,389 +1,375 @@
-\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
-\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
-\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
-%\geometry{landscape}                		% Activate for for rotated page geometry
-%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
-\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
-								% TeX will automatically convert eps --> pdf in pdflatex		
+\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}		%...ora4paperora5paperor...
+%\geometry{landscape}		%Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
 \usepackage{amssymb}
+\usepackage[colorlinks]{hyperref}
 
-\title{Brief Article}
-\author{The Author}
-%\date{}							% Activate to display a given date or no date
+%----macros begin---------------------------------------------------------------
+\usepackage{color}
+\usepackage{amsthm}
+
+\def\conv{\mbox{\textrm{conv}\,}}
+\def\aff{\mbox{\textrm{aff}\,}}
+\def\E{\mathbb{E}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\tex{\TeX}
+\def\latex{\LaTeX}
+\def\v#1{{\bf #1}}
+\def\p#1{{\bf #1}}
+\def\T#1{{\bf #1}}
+
+\def\vet#1{{\left(\begin{array}{cccccccccccccccccccc}#1\end{array}\right)}}
+\def\mat#1{{\left(\begin{array}{cccccccccccccccccccc}#1\end{array}\right)}}
+
+\def\lin{\mbox{\rm lin}\,}
+\def\aff{\mbox{\rm aff}\,}
+\def\pos{\mbox{\rm pos}\,}
+\def\cone{\mbox{\rm cone}\,}
+\def\conv{\mbox{\rm conv}\,}
+\newcommand{\homog}[0]{\mbox{\rm homog}\,}
+\newcommand{\relint}[0]{\mbox{\rm relint}\,}
+
+%----macros end-----------------------------------------------------------------
+
+\title{Title
+\footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
+}
+\author{TheAuthor}
+%\date{}							%Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
-%\section{}
-%\subsection{}
+\nonstopmode
 
 
-\begin{verbatim}
-import sys
+%===============================================================================
+\section{Model input}
+%===============================================================================
+
+
+%-------------------------------------------------------------------------------
+@O test/py/hospital2/test01.py
+@{""" An hospital draft design """
+
+from pyplasm import *
+
+""" import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-from inters import *
-from iot3d import *
-from larcc import *
-from bool import *
-from copy import copy
+from hospital import metric
+from iot3d import polyline2lar
+from larstruct import Struct,t,s,struct2lar
+from architectural import lar2lines
+from lar2psm import MKPOLS,EXPLODE
+from mapper import larTranslate
 
-#-- DATA input -------------------------------------------------------------------------
-
-filename = "test/py/inters/plan.svg"
-lines = svg2lines(filename)
-VIEW(STRUCT(AA(POLYLINE)(lines)))
+DEBUG = True
+def poly2struct(polylines,name="Name",category="Department"):
+    larModel = polyline2lar(polylines)
+    return Struct( [larModel], name, category )
     
-V,FV,EV = larFromLines(lines)
-FV[2] += FV[71]
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
-
-VV = AA(LIST)(range(len(V)))
-submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.025))
-
-verts,faces,edges = polyline2lar([[ V[v] for v in FV[-1] ]])
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((verts,edges))))
-
-#-- PICK emulation -------------------------------------------------------------------------
-
-from scipy import spatial
-from bool import crossRelation,pointInPolygonClassification
-
-def subComplexInBox(V,FV,EV,queryBox):
-    (xmin,ymin),(xmax,ymax) = queryBox
-    if xmin > xmax: xmin,xmax = xmax,xmin
-    if ymin > ymax: ymin,ymax = ymax,ymin
-    vdict = dict([(vcode(vert),k) for k,vert in enumerate(V)])
-    vertexSubset = [vdict[vcode((x,y))] for x,y in V if xmin<=x<=xmax and ymin<=y<=ymax]
-    edgeSubset = [e for e,edge in enumerate(EV) if all([v in vertexSubset  for v in edge])]    
-    faceSubset = [f for f,face in enumerate(FV) if all([v in vertexSubset  for v in face])]
-    return vertexSubset,faceSubset,edgeSubset
-
-queryPoint = (0.6,0.58)
-selectBox = ((0.5, 0.5), (1, 0.75))
-vertexSubset,faceSubset,edgeSubset = subComplexInBox(V,FV,EV,selectBox)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in edgeSubset])) + [COLOR(RED)(MK(queryPoint))]))
-
-   
-def subComplexAroundPoint(V,FV,EV,FE,queryPoint):
-    tree = spatial.cKDTree(V)
-    pts = np.array([queryPoint])
-    dist,closestVertex = tree.query(pts)
-    VF = invertRelation(FV)
-    closestFaces = VF[closestVertex]
-    for face in closestFaces:
-    	faceEdges = [EV[e] for e in FE[face]]
-        if pointInPolygonClassification(queryPoint, (V,faceEdges)) == "p_in":
-            break
-    vertexSubset = FV[face]
-    edgeSubset = [EV[e] for e in FE[face]]
-    faceSubset = [face]
-    return vertexSubset,faceSubset,edgeSubset
-    
-FE = crossRelation(FV,EV)
-vertexSubset,faceSubset,edgeSubset = subComplexAroundPoint(V,FV,EV,FE,queryPoint)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [COLOR(RED)(MK(queryPoint))] ))
-
-#-- MISCELLANEA -------------------------------------------------------------------------
-     
-
-
-def cells2hpcs(V,FV,cells,k): 
-    colors = [RED,GREEN,BLUE,CYAN,MAGENTA,YELLOW,WHITE,PURPLE,BROWN]
-    return AA(COLOR(colors[k]))(MKPOLS((V,[FV[f] for f in cells])))
-
-
-
-#-- ala NORD -------------------------------------------------------------------------
-
-
-boxes = [0 for k in range(64)]
-point = [0 for k in range(64)]
-boxes[0] = [[0.431, 0.607], [0.474, 0.91]] #[V[k] for k in [39,208]]
-boxes[1] = [[0.416, 0.657], [0.372, 0.953]] #[V[k] for k in [162,39]]
-boxes[2] = [[0.416, 0.627], [0.431, 0.986]] #[V[k] for k in [206,247]]
-boxes[3] = [[0.431, 0.607], [0.448, 0.627]] #[V[k] for k in [39,7]]
-boxes[4] = [[0.431, 0.91], [0.494, 0.929]]  #[V[k] for k in [213,234]]
-boxes[5] = [[0.431, 0.97], [0.466, 1.0]] #[V[k] for k in [58,88]]
-boxes[27] = [[0.416, 0.627], [0.372, 0.657]] #[V[k] for k in [110,82]]
-
-point[0] = [0.394, 0.9625] #CCOMB([V[k] for k in [190,197]])
-point[1] = [0.4525, 0.9325] #CCOMB([V[k] for k in [166,159]])
-
-piano1_superficieUtile_zonaNord_uffici_destra = subComplexInBox(V,FV,EV,boxes[0])[1]
-piano1_superficieUtile_zonaNord_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[1])[1]
-piano1_connettivo_orizzontale_zonaNord = subComplexInBox(V,FV,EV,boxes[2])[1]
-piano1_connettivo_verticale_zonaNord_ascensore = subComplexInBox(V,FV,EV,boxes[3])[1]
-piano1_connettivo_verticale_zonaNord_ascensore += subComplexInBox(V,FV,EV,boxes[4])[1]
-piano1_connettivo_verticale_zonaNord_scale = subComplexInBox(V,FV,EV,boxes[5])[1]
-piano1_superficieUtile_zonaNord_servizi = subComplexAroundPoint(V,FV,EV,FE,point[0])[1]
-piano1_superficieUtile_zonaNord_servizi += subComplexAroundPoint(V,FV,EV,FE,point[1])[1]
-piano1_superficieUtile_zonaNord_servizi += subComplexInBox(V,FV,EV,boxes[27])[1]
-
-piano1N = [piano1_superficieUtile_zonaNord_uffici_destra, piano1_superficieUtile_zonaNord_uffici_sinistra, piano1_connettivo_orizzontale_zonaNord, piano1_connettivo_verticale_zonaNord_ascensore, piano1_connettivo_verticale_zonaNord_scale, piano1_superficieUtile_zonaNord_servizi]
-    
-nord = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1N)])
-VIEW(EXPLODE(1.2,1.2,1.2)(nord))
-
-#-- ala EST -------------------------------------------------------------------------
-
-boxes[6] = [[0.019, 0.533], [0.376, 0.577]] #[V[k] for k in [241,29]]
-boxes[7] = [[0.07, 0.474], [0.343, 0.518]] #[V[k] for k in [264,148]]
-boxes[8] = [[0.013, 0.518], [0.376, 0.533]] #[V[k] for k in [22,63]]
-boxes[9] = [[0.376, 0.533], [0.39, 0.549]] #[V[k] for k in [63,92]]
-boxes[10] = [[0.001, 0.474], [0.07, 0.518]] #[V[k] for k in [263,265]]
-boxes[11] = [[0.343, 0.474], [0.376, 0.518]] #[V[k] for k in [84,149]]
-
-point[2] = [0.015, 0.5535] #CCOMB([V[k] for k in [228,14]])
-
-
-piano1_superficieUtile_zonaEst_uffici_destra = subComplexInBox(V,FV,EV,boxes[6])[1]
-piano1_superficieUtile_zonaEst_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[7])[1]
-piano1_connettivo_orizzontale_zonaEst = subComplexInBox(V,FV,EV,boxes[8])[1]
-piano1_connettivo_verticale_zonaEst_ascensore = subComplexInBox(V,FV,EV,boxes[9])[1]
-piano1_connettivo_verticale_zonaEst_scale = subComplexAroundPoint(V,FV,EV,FE,point[2])[1]
-piano1_superficieUtile_zonaEst_servizi = subComplexInBox(V,FV,EV,boxes[10])[1]
-piano1_superficieUtile_zonaEst_servizi += subComplexInBox(V,FV,EV,boxes[11])[1]
-
-piano1E = [piano1_superficieUtile_zonaEst_uffici_destra, piano1_superficieUtile_zonaEst_uffici_sinistra, piano1_connettivo_orizzontale_zonaEst, piano1_connettivo_verticale_zonaEst_ascensore, piano1_connettivo_verticale_zonaEst_scale, piano1_superficieUtile_zonaEst_servizi]
-
-est = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1E)])
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord))
-
-
-#-- ala SUD -------------------------------------------------------------------------
-
-boxes[12] = [[0.467, 0.138], [0.423, 0.476]] #[V[k] for k in [252,47]]
-boxes[13] = [[0.482, 0.145], [0.525, 0.445]] #[V[k] for k in [241,126]]
-boxes[14] = [[0.482, 0.476], [0.467, 0.116]] #[V[k] for k in [254,232]]
-boxes[15] = [[0.449, 0.476], [0.467, 0.493]] #[V[k] for k in [40,237]]
-boxes[16] = [[0.431, 0.101], [0.467, 0.131]] #[V[k] for k in [259,2]]
-boxes[17] = [[0.482, 0.445], [0.525, 0.476]] #[V[k] for k in [155,248]]
-boxes[18] = [[0.525, 0.104], [0.482, 0.145]] #[V[k] for k in [111,241]]
-
-piano1_superficieUtile_zonaSud_uffici_destra = subComplexInBox(V,FV,EV,boxes[12])[1]
-piano1_superficieUtile_zonaSud_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[13])[1]
-piano1_connettivo_orizzontale_zonaSud = subComplexInBox(V,FV,EV,boxes[14])[1]
-piano1_connettivo_verticale_zonaSud_ascensore = subComplexInBox(V,FV,EV,boxes[15])[1]
-piano1_connettivo_verticale_zonaSud_scale = subComplexInBox(V,FV,EV,boxes[16])[1]
-piano1_superficieUtile_zonaSud_servizi = subComplexInBox(V,FV,EV,boxes[17])[1]
-piano1_superficieUtile_zonaSud_servizi += subComplexInBox(V,FV,EV,boxes[18])[1]
-
-piano1S = [piano1_superficieUtile_zonaSud_uffici_destra, piano1_superficieUtile_zonaSud_uffici_sinistra, piano1_connettivo_orizzontale_zonaSud, piano1_connettivo_verticale_zonaSud_ascensore, piano1_connettivo_verticale_zonaSud_scale, piano1_superficieUtile_zonaSud_servizi]
-    
-sud = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1S)])
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud))
-
-
-#-- ala OVEST -------------------------------------------------------------------------
-
-boxes[19] = [[0.521, 0.526], [0.963, 0.568]] #[V[k] for k in [169,202]]
-boxes[20] = [[0.555, 0.584], [0.955, 0.627]] #[V[k] for k in [12,23]]
-boxes[21] = [[0.521, 0.568], [0.985, 0.584]] #[V[k] for k in [209,204]]
-boxes[22] = [[0.506, 0.551], [0.521, 0.568]] #[V[k] for k in [89,209]]
-boxes[23] = [[0.808, 0.504], [0.828, 0.526]] #[V[k] for k in [270,77]]
-boxes[24] = [[0.955, 0.584], [0.997, 0.627]] #[V[k] for k in [220,24]]
-boxes[25] = [[0.521, 0.584], [0.555, 0.627]] #[V[k] for k in [11,144]]
-boxes[26] = [[1.0, 0.533], [0.97, 0.568]] #[V[k] for k in [233,201]]
-
-piano1_superficieUtile_zonaOvest_uffici_destra = subComplexInBox(V,FV,EV,boxes[19])[1]
-piano1_superficieUtile_zonaOvest_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[20])[1]
-piano1_connettivo_orizzontale_zonaOvest = subComplexInBox(V,FV,EV,boxes[21])[1]
-piano1_connettivo_verticale_zonaOvest_ascensore = subComplexInBox(V,FV,EV,boxes[22])[1]
-piano1_connettivo_verticale_zonaOvest_ascensore += subComplexInBox(V,FV,EV,boxes[23])[1]
-piano1_superficieUtile_zonaOvest_servizi = subComplexInBox(V,FV,EV,boxes[24])[1]
-piano1_superficieUtile_zonaOvest_servizi += subComplexInBox(V,FV,EV,boxes[25])[1]
-piano1_connettivo_verticale_zonaOvest_scale = subComplexInBox(V,FV,EV,boxes[26])[1]
-
-piano1O = [piano1_superficieUtile_zonaOvest_uffici_destra, piano1_superficieUtile_zonaOvest_uffici_sinistra, piano1_connettivo_orizzontale_zonaOvest, piano1_connettivo_verticale_zonaOvest_ascensore, piano1_connettivo_verticale_zonaOvest_scale, piano1_superficieUtile_zonaOvest_servizi]
-    
-ovest = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1O)])
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest))
-
-
-#-- CENTRO stella -------------------------------------------------------------------------
-
-piano1_connettivo_orizzontale_centroStella = [2]
-piano1_connettivo_verticale_centroStella_scale = [15,26]
-
-piano1C = [[],[],piano1_connettivo_orizzontale_centroStella,[], piano1_connettivo_verticale_centroStella_scale]
-centro = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1C)])
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest + centro))
-VIEW(STRUCT(est + nord + sud + ovest + centro))
-
-
-#-- Strutture foglia -------------------------------------------------------------------------
-
-def chain2BoundaryChain(FV,EV):
-    csrBoundaryMat = boundary(FV,EV)
-    nedges,nfaces = csrBoundaryMat.shape   
-    def chain2BoundaryChain0(chain):
-        row = np.array(chain)
-        col = np.array([0 for k in range(len(chain))])
-        data = np.array([1 for k in range(len(chain))])
-        csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
-        csrEdgeVect = csrBoundaryMat*csrFaceVect
-        boundaryChain = [h for h,val in 
-            zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
-        return boundaryChain
-    return chain2BoundaryChain0
- 
-def chain2structs(V,FV,EV,FE):
-    def chain2structs0(args): 
-        chainName,classtype = args
-        chain = eval(chainName)
-        boundaryFacets = chain2BoundaryChain(FV,EV)(chain)
-        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryFacets]))))
-        chainFacets = sorted(set(CAT([FE[cell] for cell in chain])))
-        struct = []
-        chainVerts = list(set(CAT([FV[cell] for cell in chain])))
-        localOrigin = min([V[v] for v in chainVerts])
-        for cell in chain:
-            vs = (array([V[v] for v in FV[cell]]) - localOrigin).tolist()
-            vdict = dict([[vcode(vert),k] for k,vert in enumerate(vs)])
-            facetEdges = [ (array([V[v] for v in EV[e]]) - localOrigin).tolist() for e in FE[cell]]
-            ev = [(vdict[vcode(v1)], vdict[vcode(v2)]) for v1,v2 in facetEdges]
-            fv = [range(len(vs))]
-            tvect = eval(min(vdict))
-            shape = (array(vs)-tvect).tolist(),fv,ev
-            struct += [ Struct([ t(*tvect), shape],name=None,category="room" ) ]
-            out = Struct([t(*localOrigin)]+struct,name=chainName,category=classtype)
-        return out
-    return chain2structs0
-
-
-
-
-#-- Strutture intermedie -------------------------------------------------------------------------
-
-chainsToStruct = chain2structs(V,FV,EV,FE)
-
-piano1N_nomi = ["piano1_superficieUtile_zonaNord_uffici_destra", "piano1_superficieUtile_zonaNord_uffici_sinistra", "piano1_connettivo_orizzontale_zonaNord", "piano1_connettivo_verticale_zonaNord_ascensore", "piano1_connettivo_verticale_zonaNord_scale", "piano1_superficieUtile_zonaNord_servizi"]
-piano1N_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1N = zip(piano1N_nomi,piano1N_categorie)
-piano1_zonaNord = Struct(AA(chainsToStruct)(p1N),"piano1_zonaNord","ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaNord)))))
-
-
-piano1E_nomi = ["piano1_superficieUtile_zonaEst_uffici_destra", "piano1_superficieUtile_zonaEst_uffici_sinistra", "piano1_connettivo_orizzontale_zonaEst", "piano1_connettivo_verticale_zonaEst_ascensore", "piano1_connettivo_verticale_zonaEst_scale", "piano1_superficieUtile_zonaEst_servizi"]
-piano1E_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1E = zip(piano1E_nomi, piano1E_categorie)
-piano1_zonaEst = Struct(AA(chainsToStruct)(p1E), "piano1_zonaEst", "ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaEst)))))
-
-
-piano1S_nomi = ["piano1_superficieUtile_zonaSud_uffici_destra", "piano1_superficieUtile_zonaSud_uffici_sinistra", "piano1_connettivo_orizzontale_zonaSud", "piano1_connettivo_verticale_zonaSud_ascensore", "piano1_connettivo_verticale_zonaSud_scale", "piano1_superficieUtile_zonaSud_servizi"]
-piano1S_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1S = zip(piano1S_nomi, piano1S_categorie)
-piano1_zonaSud = Struct(AA(chainsToStruct)(p1S), "piano1_zonaSud", "ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaSud)))))
-
-
-piano1O_nomi = ["piano1_superficieUtile_zonaOvest_uffici_destra", "piano1_superficieUtile_zonaOvest_uffici_sinistra", "piano1_connettivo_orizzontale_zonaOvest", "piano1_connettivo_verticale_zonaOvest_ascensore", "piano1_connettivo_verticale_zonaOvest_scale", "piano1_superficieUtile_zonaOvest_servizi"]
-piano1O_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
-p1O = zip(piano1O_nomi, piano1O_categorie)
-piano1_zonaOvest = Struct(AA(chainsToStruct)(p1O), "piano1_zonaOvest", "ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaOvest)))))
-
-
-piano1C_nomi = ["piano1_connettivo_orizzontale_centroStella", "piano1_connettivo_verticale_centroStella_scale"]
-piano1C_categorie = ["corridoi","ascensori"]
-p1C = zip(piano1C_nomi, piano1C_categorie)
-piano1_centroStella = Struct(AA(chainsToStruct)(p1C), "piano1_centroStella", "centro")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_centroStella)))))
-
-
-#-- Primo piano -------------------------------------------------------------------------
-
-p1 = p1N + p1S + p1E + p1O + p1C
-
-piano1_nomi = ["piano1_zonaNord", "piano1_zonaEst", "piano1_zonaSud", "piano1_zonaOvest", "piano1_centroStella"]
-piano1_categorie = ["ala","ala","ala","ala","centro"]
-piano1 = Struct(AA(chainsToStruct)(p1), "piano1", "piano")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
-
-def boundaryCycles(edgeBoundary,EV):
-    verts2edges = defaultdict(list)
-    for e in edgeBoundary:
-        verts2edges[EV[e][0]] += [e]
-        verts2edges[EV[e][1]] += [e]
-    cycles = []
-    cbe = copy(edgeBoundary)
-    while cbe != []:
-        e = cbe[0]
-        v = EV[e][0]
-        cycle = []
-        while True:
-            cycle += [(e,v)]
-            e = list(set(verts2edges[v]).difference([e]))[0]
-            cbe.remove(e)
-            v = list(set(EV[e]).difference([v]))[0]
-            if (e,v)==cycle[0]:
-                break
-        n = len(cycle)
-        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
-            for k,(e,v) in enumerate(cycle)]]
-    return cycles
-
-
-
-def structBoundaryModel(struct):
-    V,FV,EV = struct2lar(struct)
-    edgeBoundary = boundaryCells(FV,EV)
-    cycles = boundaryCycles(edgeBoundary,EV)
-    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
-    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
-    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
-    return V,cells
-    
-    
-V,boundaryEdges = structBoundaryModel(piano1)
-drawing = mkSignedEdges((V,boundaryEdges))
-VIEW(drawing)
-
-
-def boundaryModel2polylines(model):
-    V,EV = model
-    polylines = []
-    succDict = dict(EV)
-    visited = [False for k in range(len(V))]
-    nonVisited = [k for k in succDict.keys() if not visited[k]]
-    while nonVisited != []:
-        first = nonVisited[0]; v = first; polyline = []
-        while visited[v] == False:
-            visited[v] = True; 
-            polyline += V[v], 
-            v = succDict[v]
-        polyline += [V[first]]
-        polylines += [polyline]
-        nonVisited = [k for k in succDict.keys() if not visited[k]]
-    return polylines
-        
-polylines = boundaryModel2polylines((V,boundaryEdges))
-VIEW(STRUCT(AA(POLYLINE)(polylines)))
-    
-
-def boundaryPolylines(struct):
-    V,boundaryEdges = structBoundaryModel(struct)
-    polylines = boundaryModel2polylines((V,boundaryEdges))
-    return polylines
-
-boundaryPolylines(piano1)
-
-
-
-b = chain2BoundaryChain(FV,EV)(piano1_connettivo_orizzontale_zonaNord +											piano1_connettivo_orizzontale_zonaSud + piano1_connettivo_orizzontale_zonaEst + 							piano1_connettivo_orizzontale_zonaOvest + piano1_connettivo_orizzontale_centroStella)
-\end{verbatim}
+@< Coding utilities @>
+@< Storey input @>
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@D Storey input
+@{""" Storey input """
+@< Ground floor @>
+@< First floor @>
+@< Mezanine floor @>
+@< Second floor @>
+@< Third floor @>
+@< Fourth floor @>
+@< Fifth floor @>
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Ground floor input}
+%-------------------------------------------------------------------------------
+@D Ground floor 
+@{""" Ground floor """
+OpenCourt10 = poly2struct([TRANS([[3,3,4,4,6,6,6.65,6.65],[4,8,8,7.8,7.8,8,8,4]])])
+RadioDiagnosticImaging = poly2struct([TRANS([[7,7,9,10,10,8.7],[4,8,8,8,4,4]])])
+ServiceCore10 = poly2struct([TRANS([[1.15, 1.15, 1.3,2.55, 2.55,2], [2.85, 3.7,3.7,3.7, 2.85,2.85]])])
+ServiceCore20 = poly2struct([TRANS([[7,7,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])])
+EmergencyDepartment = poly2struct([TRANS([[4.7,4.7,7,7,8.8,8.8,9.65,9.65],[0,3.7,3.7, 2.8,2.8,3.7,3.7,0]])])
+Endoscopy = poly2struct([TRANS([[3,3,3,4.4,4.4],[0,2.5,3.7,3.7,0]])])
+OutPatientDepartment10 = poly2struct([TRANS([[4./7.5, 4./7.5,1.15,1.15,2,2,3,3], [0,3.7,3.7,2.85,2.85,2.5,2.5,0]])])
+OutPatientDepartment20 = poly2struct([TRANS([[0,0,2.65,2.65,1.3],[4,5.85,5.85,4,4]])])
+RenalDialysis = poly2struct([TRANS([[0,0,1,2.65,2.65],[5.85,8,8,8,5.85]])])
+OpenCourt20 = poly2struct([TRANS([[2,2,2,2,4,4,4,4],[10,11,11.35,12,12,11.35,11,10]])])
+ChemiotherapyUnit = poly2struct([TRANS([[0,0,4.5,4.5,4,4,2,2,1], [11.35,14,14,11.35,11.35,12,12,11.35,11.35,]])])
+Service = poly2struct([TRANS([[0,0,1,1,2,2,2,1],[8.35,10,10,9,9,8.5, 8.35,8.35]])])
+PhysicalMedicineDept = poly2struct([TRANS([[2,2,1,1,0,0, 1,2,2,4,4,4.5,4.5,4,4], [8.5,9,9,10,10,11,11,11,10,10,11,11,9,9,8.5]])])
+MainEntrance = poly2struct([TRANS([[4,4,4,4.5,4.75,4.75,6.65,6.65,6,6], [8.4,8.5,9,9,9,11,11, 9,9,8.4]])])
+Unknown = poly2struct([TRANS([[7.25,7.25, 6.65,6.65,6.65,10,10,9,8.2], [8.35,8.5,8.5,9,11,11,8.35,8.35,8.35]])])
+#Mortuary = poly2struct([TRANS([[],[]])])
+Corridor0 = poly2struct([[[4.4,0],[4.4,3.7],[3,3.7],[3,2.5],[2,2.5],[2,2.85],[2.55,2.85], [2.55,3.7],[1.3,3.7],[1.3,4],[2.65,4],[2.65,5.85],[2.65,8],[1,8],[1,8.35], [2,8.35],[2,8.5],[4,8.5],[4,8.4],[6,8.4],[6,9],[6.65,9],[6.65,8.5],[7.25,8.5], [7.25,8.35],[8.2,8.35],[9,8.35],[9,8],[7,8],[7,4],[8.7,4],[8.7,3.7], [7,3.7],[4.7,3.7],[4.7,0]]])
+Corridor0a = poly2struct([TRANS([[1, 1, 2, 2], [11, 11.35, 11.35, 11]])])
+Corridor0b = poly2struct([TRANS([[4.5, 4.5, 4, 4, 4.5, 4.5, 4.75,4.75, 4.75], [9, 11, 11, 11.35, 11.35, 14,14, 11, 9]])])
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Mezanine floor 
+@{""" Mezanine floor """
+MedicalWaste = poly2struct([TRANS([[4./7.5,4./7.5,.8,1.25,1.25],[0,1.5,1.5,1.5,0]])])
+CentralStores =
+poly2struct([TRANS([[1.25,1.25,.8,.8,3.7,3.7,2.55,2.55,2.2,2.2],[0,1.5,1.5,
+2.65,2.65,.35,.35,.65,.65,0]])])
+StaffDining = poly2struct([TRANS([[3.95,3.95,6.7,6.7,6.95,6.95],[0,3.7,3.7,2,2,0]])])
+CSSD = poly2struct([TRANS([[6.95,6.95,6.95,8.8,8.8,9.65,9.65],[0,2,2.65,2.65,2,2,0]])])
+HouseKeeping = poly2struct([TRANS([[8.8,8.8,8.8,8.8,9.65,9.65],[2,2.65,2.8,3.7,3.7,2]])])
+CentralStaffChanging11 =
+poly2struct([TRANS([[4./7.5,4./7.5,1.15,1.15],[2.85,3.7,3.7,2.85]])])
+CentralStaffChanging21 = poly2struct([TRANS([[2.55,2.55,3.7,3.7],[2.85,3.7,3.7,2.85]])])
+OpenCourt11 = poly2struct([TRANS([[3,3,7,7,7],[4,8,8,6,4]])])
+Pharmacy = poly2struct([TRANS([[0,0,2.65,2.65,1.3],[4,6.45,6.45,4,4]])])
+CentralWorkshop = poly2struct([TRANS([[0,0,1,2.65,2.65],[6.45,8,8,8,6.45]])])
+Laundry = poly2struct([TRANS([[7,7,10,10,8.7],[4,6,6,4,4]])])
+AdministrationSuite11 = poly2struct([TRANS([[7,7,9,10,10],[6,8,8,8,6]])])
+MainLaboratories = poly2struct([TRANS([[1,1,0,0,2,2,5,5,4,4,4],[8.3,8.4,8.4,11,11,10,10,9,
+9,8.4,8.3]])])
+MedicalLibrary = poly2struct([TRANS([[6.7,6.7,8,8,7.75],[9.7,11,11,9.7,9.7]])])
+MedicalRecords = poly2struct([TRANS([[8,8,8,8.85,8.85,8.85],[8.3,9.7,11,11,9.75,8.3]])])
+AdministrationSuite21 =
+poly2struct([TRANS([[8.85,8.85,10,10,9,9],[8.3,9.75,9.75,8.4,8.4,8.3]])])
+MeetingRooms =
+poly2struct([TRANS([[6,6,6,6.7,6.7,7.75,7.75,7.45,7,7],[8.3,8.4,9,9,9.7,9.7,
+8.7,8.7,8.7,8.3]])])
+DataCenter = poly2struct([TRANS([[7,7,7.45,7.45],[8.3,8.7,8.7,8.3]])])
+ServerRoom = poly2struct([TRANS([[7.45,7.45,7.75,7.75],[8.3,8.7,8.7,8.3]])])
+PublicCore = poly2struct([TRANS([[4,4,5,6,6],[8.4,9,9,9,8.4]])])
+ServiceCore11 = poly2struct([TRANS([[1.15,1.15,1.3,2.55,2.55],[2.85,3.7,3.7,3.7,2.85]])])
+ServiceCore21 = poly2struct([TRANS([[7,7,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])])
+Corridor1 =
+poly2struct([[[2.2,0],[2.2,0.65],[2.55,0.65],[2.55,0.35],[3.7,0.35],[3.7,2.65],
+[0.8,2.65],[0.8,1.5],[0.5333,1.5],[0.5333,2.85],[1.15,2.85],[2.55,2.85],[3.7,
+2.85],[3.7,3.7],[2.55,3.7],[1.3,3.7],[1.3,4],[2.65,4],[2.65,6.45],[2.65,
+8],[1,8],[1,8.3],[4,8.3],[4,8.4],[6,8.4],[6,8.3],[7,8.3],[7.45,8.3],
+[7.75,8.3],[7.75,8.7],[7.75,9.7],[8,9.7],[8,8.3],[8.85,8.3],[9,8.3],[9,8],
+[7,8],[3,8],[3,4],[7,4],[8.7,4],[8.7,3.7],[7,3.7],[7,2.8],[8.8,2.8],
+[8.8,2.65],[6.95,2.65],[6.95,2],[6.7,2],[6.7,3.7],[3.95,3.7],[3.95,0]]])
+GroundRoof =
+poly2struct([TRANS([[4,4,2,2,1,1,0,0,4.75,4.75],[10,12,12,11,11,11.35,11.35,14, 14,10]])])
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{First floor input}
+%-------------------------------------------------------------------------------
+@D First floor
+@{""" First floor """
+OpenCourt3 = poly2struct([TRANS([[3.,3.,7.,7.],[4.,8.,8.,4.]])])
+Surgery = poly2struct([TRANS([[4.15,4.15,7.,7.,8.8,8.8,9.65,9.65],[0,3.7,3.7, 2.8,2.8, 3.7,3.7,0]])])
+CatheterizationLab = poly2struct([TRANS([[3,3,4.15,4.15],[0,3.7,3.7,0]])])
+ServiceCore32 = poly2struct([TRANS([[7.,7.,8.7,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])])
+CoronaryCareUnit = poly2struct([TRANS([[7.,7.,8.3,9.,10.,10.,8.7],[4.,8.,8.,8.,8.,4.,4.]])])
+DeliveryAndNicu = poly2struct([TRANS([[0,0, 1.7,2.65,2.65,1.3],[4.,8.,8.,8.,4.,4.]])])
+ServiceCore31 = poly2struct([TRANS([[1.15, 1.15, 1.3,2.65, 2.65], [2.85, 3.7,3.7, 3.7, 2.85]])])
+IntensiveCareUnit = poly2struct([TRANS([[4./7.5, 4./7.5,1.15,1.15,2.65, 2.65,1.95,1.95], [0.,3.7,3.7,2.85,2.85,.6,.6,0.]])])
+ServiceCore33 = poly2struct([TRANS([[1.95,1.95,2.65, 2.65],[0,.6,.6,0]])])
+PublicCore3 = poly2struct([TRANS([[1.7,1.7,4.,4.,6.,6.,8.3,8.3,7,3,2.65], [8,8.4,8.4,9,9,8.4,8.4,8,8,8,8]])])
+Corridor3 = poly2struct([TRANS([[2.65,2.65,2.65,2.65,1.3,1.3,2.65,2.65,3.0,3.0,7.0,8.7,8.7, 7.0,4.15,3.0,3.0],[0.0,0.6,2.85,3.7,3.7,4.0,4.0,8.0,8.0,4.0,4.0,4.0,3.7, 3.7,3.7,3.7,0.0]])])
+MezanineRoof = poly2struct([TRANS([[1,1,0,0,2,2,4.75,4.75,10,10,9,9,8.3,8.3, 6,6,4,4 ,1.7,1.7], [8,8.4,8.4,11,11,10,10,11,11,8.4,8.4,8,8,8.4,8.4,9,9,8.4,8.4,8]])])
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Second floor input} 
+%-------------------------------------------------------------------------------
+@D Second floor
+@{
+@< Ward sections @>
+
+""" Second floor """
+PublicCore4 = poly2struct([TRANS([[1.7,1.7,4,4,6,6,8.3,8.3, 8,7+2./3, 7, 3, 2+1./3,2], [8,8.4,8.4,9,9,8.4,8.4,8,8,8,8,8,8,8]])])
+Filter1 = poly2struct([TRANS([[1,1,1.35,1.35,1.15],[3.7,4,4,3.7,3.7]])])
+Filter2 = poly2struct([TRANS([[8.65,8.65,9,9,8.8],[3.7,4,4,3.7,3.7]])])
+ServiceCore14 = poly2struct([TRANS([[1.15, 1.15, 1.35,2.55, 2.55], [2.8, 3.7,3.7, 3.7, 2.8]])])
+ServiceCore24 = poly2struct([TRANS([[7,7,8.65,8.8,8.8],[2.8,3.7,3.7,3.7,2.8]])])
+FirstRoof = poly2struct([TRANS([[4./7.5, 4./7.5,1.15,1.15,2.55,2.55,7,7,8.8,8.8,9.65,9.65], [0,3.7,3.7,2.8,2.8,3.7,3.7,2.8,2.8,3.7,3.7,0]])])
+Corridor4a = poly2struct([[[1.35,3.7],[1.35,4],[2,4],[2.3333,4],[3,4],[7,4],[7.6667,4],[8,4], [8.65,4],[8.65,3.7],[7,3.7],[2.55,3.7]]])
+Corridor4b = poly2struct([[[1,4.0],[1,4.25],[1,4.5],[1,4.75],[1,5.0],[1,5.25],[1,5.5], [1,5.75],[1,6.0],[1,6.25],[1,6.5],[1,6.75],[1,7.0],[1,7.25],[1,7.5], [1,7.75],[1,8.0],[2,8.0],[2,7.75],[2,7.5],[2,7.25],[2,7.0],[2,6.75], [2,6.5],[2,6.25],[2,6.0],[2,5.75],[2,5.5],[2,5.25],[2,5.0],[2,4.75], [2,4.5],[2,4.25],[2,4.0],[1.35,4.0]]])
+Corridor4b1 = poly2struct([[[1.3,4.3],[1.3,4.6],[1.3,4.9],[1.3,5.3],[1.3,5.7],[1.5,5.7],[1.7,5.7], [1.7,5.3],[1.7,4.9],[1.7,4.6],[1.7,4.3]]])
+Corridor4b2 = poly2struct([[[1.3,6.3],[1.3,6.7],[1.3,7.1],[1.3,7.4],[1.3,7.7],[1.7,7.7],[1.7,7.4], [1.7,7.1],[1.7,6.7],[1.7,6.3],[1.5,6.3]]])
+Corridor4c = poly2struct([[[8,4.0],[8,4.25],[8,4.5],[8,4.75],[8,5.0],[8,5.25],[8,5.5], [8,5.75],[8,6.0],[8,6.25],[8,6.5],[8,6.75],[8,7.0],[8,7.25],[8,7.5], [8,7.75],[8,8.0],[8.3,8.0],[9,8.0],[9,7.75],[9,7.5],[9,7.25],[9,7.0], [9,6.75],[9,6.5],[9,6.25],[9,6.0],[9,5.75],[9,5.5],[9,5.25],[9,5.0], [9,4.75],[9,4.5],[9,4.25],[9,4.0],[8.65,4.0]]])
+Corridor4c1 = poly2struct([[[8.3,4.3],[8.3,4.6],[8.3,4.9],[8.3,5.3],[8.3,5.7],[8.5,5.7],[8.7,5.7], [8.7,5.3],[8.7,4.9],[8.7,4.6],[8.7,4.3]]])
+Corridor4c2 = poly2struct([[[8.3,6.3],[8.3,6.7],[8.3,7.1],[8.3,7.4],[8.3,7.7],[8.7,7.7],[8.7,7.4], [8.7,7.1],[8.7,6.7],[8.7,6.3],[8.5,6.3]]])
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Third floor input}
+%-------------------------------------------------------------------------------
+@D Third floor
+@{""" Third floor  
+GeneralWard1 = Struct([t(0,4), Ward])
+SurgicalWard2 = Struct([t(7,4), Ward])
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Fourth floor input}
+%-------------------------------------------------------------------------------
+@D Fourth floor
+@{""" Fourth floor  
+PediatricWard1 = Struct([t(0,4), Ward])
+PediatricWard2 = Struct([t(7,4), Ward]) 
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Fifth floor input}
+%-------------------------------------------------------------------------------
+@D Fifth floor
+@{""" Fifth floor  
+GeneralWard2 = Struct([t(0,4), Ward])
+GeneralWard3 = Struct([t(7,4), Ward]) 
+@}
+%-------------------------------------------------------------------------------
+
+
+%===============================================================================
+\appendix
+\section{Code utilities}
+%===============================================================================
+
+\paragraph{Coding utilities}
+%-------------------------------------------------------------------------------
+@D Coding utilities
+@{""" Coding utilities """
+@< Reference grid @>
+@< From grid to metric coordinates @>
+@< Mapping a grid frame to a Cartesian one @>
+@< From array indices to grid coordinates @>
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsection{Reference grid}
+\label{sec:grid}
+
+Looking at the images of Figure~\ref{fig:hismail}, it is easy to notice the presence of a very regular structural frame, providing in the following a reference grid for the numeric input of the geometry of the departments and floors of the hospital model. Some images with evidenced (in blue) the structural frame grid are shown in Figure~\ref{fig:referencegrid}.
+
+It may be useful to underline that the grid step in the $y$ direction (from top to bottom of the drawings) is constant and equal to $8.4 m$, whereas the grid in the $x$ direction (from left to right of the drawings) alternates the $[7.5,9.5,7.5] m$ pattern with the step-size used in the other direction ($8.4 m$).  the above numeric patterns are actually derived by the architect from the layout of the inpatient wards.
+
+Notice also that both grid directions, and of course the structural frame of the building, are aligned with the \emph{inpatient wards}, that supply one the main ideas of the design concept as a whole.
 
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/torre1} 
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/torre2} 
-   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/torre3} 
-   \caption{Edificio torre  per uffici: (a) rappresentazione LAR del piano-tipo come complesso cellulare; (b) ``zooning'' funzionale della planimetria; (c) bordo esploso del 2-complesso definito dalla somma di catene \texttt{piano1-connettivo-orizzontale-zonaNord + piano1-connettivo-orizzontale-zonaSud + piano1-connettivo-orizzontale-zonaEst + piano1-connettivo-orizzontale-zonaOvest + piano1-connettivo-orizzontale- centroStella}.}
-   \label{fig:example}
+   \includegraphics[width=0.495\linewidth]{images/firstfloor} 
+   \includegraphics[width=0.495\linewidth]{images/secondfloor} 
+   \caption{The zooming of two floor plans, with evidentced the structural grid (in blue): (a) first floor; (b) second floor.}
+   \label{fig:referencegrid1}
+\end{figure}
+
+\paragraph{Reference grid}
+
+The reference grid is defined as \texttt{structuralGrid} in the script below, where \texttt{PROD} is the \texttt{pyplasm} primitive for Cartesian product of geometric values. The global variable \texttt{YMAX} is used in this module to compute (in the \texttt{metric} function) a proper coordinate transformation of the model from the reference frame used in the 2D hospital drawings (origin at top-left point, $y$ pointing downwards---see Figure~\ref{fig:referencegrid1}) to the standard righthand reference frame (origin at bottom-left point, $y$ pointing upwards---see Figure~\ref{fig:referencegrid2}).
+
+%-------------------------------------------------------------------------------
+@D Reference grid
+@{""" Reference grid """
+X = [0]+[7.5,9.5,7.5]+4*[8.4]+[7.5,9.5,7.5]+[0]
+Y = [0]+14*[8.4]+[0]
+xgrid = QUOTE(X[1:-1])
+ygrid = QUOTE(Y[1:-1])
+structuralGrid = PROD([xgrid,ygrid])
+YMAX = SUM(Y)
+@}
+%-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.33\linewidth]{images/hospitalgrid} 
+   \caption{The reference grid used in the model construction. The intersections of grid lines have integer coordinates.}
+   \label{fig:referencegrid2}
 \end{figure}
 
 
-\end{document}  import sys
 
+\paragraph{From grid to metric coordinates}
+The actual transformation of vertices of geometric data is executed by applying the (partial) function \texttt{metric} to a list of 2D points, as shown by the example below.
+
+%-------------------------------------------------------------------------------
+@D From grid to metric coordinates
+@{""" From grid to metric coordinates """
+def grid2coords(X,Y):
+    xMeasures = list(cumsum(X))
+    yMeasures = list(cumsum(Y))
+    def grid2coords0(point):
+        x,y = point[0:2]
+        xint,yint = int(x), int(y)
+        xdec,ydec = float(x-xint), float(y-yint)
+        xcoord = xMeasures[xint] + xdec*X[xint+1]
+        ycoord = yMeasures[yint] + ydec*Y[yint+1]
+        if len(point)==2: return [xcoord, ycoord]
+        else: return [xcoord, ycoord, point[2]]
+    return grid2coords0
+
+def coordMaps(YMAX):
+    def coordMaps0(polyline):
+        polyline = AA(grid2coords(X,Y))(polyline)
+        polyline = vmap(YMAX)(polyline)
+        return [eval(vcode(point)) for point in polyline]
+    return coordMaps0
+
+metric = coordMaps(YMAX)
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Example} 
+A simple example of transformation from grid to metric coordinates is given here:
+{\small 
+\begin{verbatim}
+polyline = metric([[3,4],[3,8],[4,8],[4,7.8],[6,7.8],[6,8],[6.65,8],[6.65,4]])
+>>> [[24.5,84.0],[24.5,50.4],[32.9,50.4],[32.9,52.08],[49.7,52.08],[49.7,50.4],
+     [55.16,50.4],[55.16,84.0]]
+\end{verbatim}}
+
+\paragraph{Mapping the grid frame to a Cartesian right-hand frame}
+%-------------------------------------------------------------------------------
+@D Mapping a grid frame to a Cartesian one
+@{""" Mapping the grid frame to a Cartesian right-hand frame """
+def vmap(YMAX):
+    def vmap0(V):
+        if len(V[0])==3: W = [[x,YMAX-y,z] for x,y,z in V]
+        else: W = [[x,YMAX-y] for x,y in V]
+        return W
+    return vmap0
+                
+def embed(z):
+    def embed0(p): 
+        return p+[z]
+    return embed0
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{From array indices to grid coordinates}
+
+The reference grid, as the Cartesian product of two subsets of adjacent integers, will be used both to strongly simplify the input of data, and to assign to such coordinate numbers a more interesting meaning. For example the open space in the middle of the building will so defined as the 2D box with extreme points of integer coordinates $(3,4)$ and $(7,11)$.
+Therefore the whole building  will be contained in the 2D interval $[0,10]\times [0,14]$ in ``\emph{grid coordinates}''.
+
+%-------------------------------------------------------------------------------
+@D From array indices to grid coordinates
+@{""" From array indices to grid coordinates """
+def index2coords(theArray):
+    return CONS(AA(T([1,2]))(CAT((theArray).tolist())))
+@}
+%-------------------------------------------------------------------------------
+
+
+\bibliographystyle{amsalpha}
+\bibliography{test}
+
+\end{document}

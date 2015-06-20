@@ -204,6 +204,10 @@ class Struct:
     def __repr__(self):
         return "<Struct name: %s>" % self.__name__()
         #return "'Struct(%s,%s)'" % (str(self.body),str(str(self.__name__())))
+    def set_name(self,name):
+        self.name = str(name)
+    def set_category(self,category):
+        self.category = str(category)
     def boundary(self):
         data = struct2lar(self)
         if len(data) == 3:

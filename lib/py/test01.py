@@ -5,9 +5,11 @@ import sys
 sys.path.insert(0, 'lib/py/')
 from hijson import *
 
+scaleFactor = 83.333
+
 filename = "plan.svg"
 larModel = svg2lar(filename)
-larModel = larApply(s(100,100))(larModel)
+larModel = larApply(s(scaleFactor,scaleFactor))(larModel)
 V,FV,EV = larModel
 FV[2] += FV[71]      # for now :o)
 
@@ -23,16 +25,16 @@ chainsToStruct = chain2structs(V,FV,EV,FE)
 """ Ala nord """
 boxes = [0 for k in range(64)]
 point = [0 for k in range(64)]
-boxes[0] = array([[0.431, 0.607], [0.474, 0.91]])*100 #[V[k] for k in [39,208]]
-boxes[1] = array([[0.416, 0.657], [0.372, 0.953]])*100 #[V[k] for k in [162,39]]
-boxes[2] = array([[0.416, 0.627], [0.431, 0.986]])*100 #[V[k] for k in [206,247]]
-boxes[3] = array([[0.431, 0.607], [0.448, 0.627]])*100 #[V[k] for k in [39,7]]
-boxes[4] = array([[0.431, 0.91], [0.494, 0.929]])*100  #[V[k] for k in [213,234]]
-boxes[5] = array([[0.431, 0.97], [0.466, 1.0]])*100 #[V[k] for k in [58,88]]
-boxes[27] = array([[0.416, 0.627], [0.372, 0.657]])*100 #[V[k] for k in [110,82]]
+boxes[0] = array([[0.431, 0.607], [0.474, 0.91]])*scaleFactor #[V[k] for k in [39,208]]
+boxes[1] = array([[0.416, 0.657], [0.372, 0.953]])*scaleFactor #[V[k] for k in [162,39]]
+boxes[2] = array([[0.416, 0.627], [0.431, 0.986]])*scaleFactor #[V[k] for k in [206,247]]
+boxes[3] = array([[0.431, 0.607], [0.448, 0.627]])*scaleFactor #[V[k] for k in [39,7]]
+boxes[4] = array([[0.431, 0.91], [0.494, 0.929]])*scaleFactor  #[V[k] for k in [213,234]]
+boxes[5] = array([[0.431, 0.97], [0.466, 1.0]])*scaleFactor #[V[k] for k in [58,88]]
+boxes[27] = array([[0.416, 0.627], [0.372, 0.657]])*scaleFactor #[V[k] for k in [110,82]]
 
-point[0] = array([0.394, 0.9625])*100 #CCOMB([V[k] for k in [190,197]])
-point[1] = array([0.4525, 0.9325])*100 #CCOMB([V[k] for k in [166,159]])
+point[0] = array([0.394, 0.9625])*scaleFactor #CCOMB([V[k] for k in [190,197]])
+point[1] = array([0.4525, 0.9325])*scaleFactor #CCOMB([V[k] for k in [166,159]])
 
 piano1_superficieUtile_zonaNord_uffici_destra = subComplexInBox(V,FV,EV,boxes[0])[1]
 piano1_superficieUtile_zonaNord_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[1])[1]
@@ -56,14 +58,14 @@ nord = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1N)])
 #VIEW(EXPLODE(1.2,1.2,1.2)(nord))
 
 """ Ala est """
-boxes[6] = array([[0.019, 0.533], [0.376, 0.577]])*100 #[V[k] for k in [241,29]]
-boxes[7] = array([[0.07, 0.474], [0.343, 0.518]])*100 #[V[k] for k in [264,148]]
-boxes[8] = array([[0.013, 0.518], [0.376, 0.533]])*100 #[V[k] for k in [22,63]]
-boxes[9] = array([[0.376, 0.533], [0.39, 0.549]])*100 #[V[k] for k in [63,92]]
-boxes[10] = array([[0.001, 0.474], [0.07, 0.518]])*100 #[V[k] for k in [263,265]]
-boxes[11] = array([[0.343, 0.474], [0.376, 0.518]])*100 #[V[k] for k in [84,149]]
+boxes[6] = array([[0.019, 0.533], [0.376, 0.577]])*scaleFactor #[V[k] for k in [241,29]]
+boxes[7] = array([[0.07, 0.474], [0.343, 0.518]])*scaleFactor #[V[k] for k in [264,148]]
+boxes[8] = array([[0.013, 0.518], [0.376, 0.533]])*scaleFactor #[V[k] for k in [22,63]]
+boxes[9] = array([[0.376, 0.533], [0.39, 0.549]])*scaleFactor #[V[k] for k in [63,92]]
+boxes[10] = array([[0.001, 0.474], [0.07, 0.518]])*scaleFactor #[V[k] for k in [263,265]]
+boxes[11] = array([[0.343, 0.474], [0.376, 0.518]])*scaleFactor #[V[k] for k in [84,149]]
 
-point[2] = array([0.015, 0.5535])*100 #CCOMB([V[k] for k in [228,14]])
+point[2] = array([0.015, 0.5535])*scaleFactor #CCOMB([V[k] for k in [228,14]])
 
 piano1_superficieUtile_zonaEst_uffici_destra = subComplexInBox(V,FV,EV,boxes[6])[1]
 piano1_superficieUtile_zonaEst_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[7])[1]
@@ -85,13 +87,13 @@ est = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1E)])
 #VIEW(EXPLODE(1.2,1.2,1.2)(est + nord))
 
 """ Ala sud """
-boxes[12] = array([[0.467, 0.138], [0.423, 0.476]])*100 #[V[k] for k in [252,47]]
-boxes[13] = array([[0.482, 0.145], [0.525, 0.445]])*100 #[V[k] for k in [241,126]]
-boxes[14] = array([[0.482, 0.476], [0.467, 0.116]])*100 #[V[k] for k in [254,232]]
-boxes[15] = array([[0.449, 0.476], [0.467, 0.493]])*100 #[V[k] for k in [40,237]]
-boxes[16] = array([[0.431, 0.101], [0.467, 0.131]])*100 #[V[k] for k in [259,2]]
-boxes[17] = array([[0.482, 0.445], [0.525, 0.476]])*100 #[V[k] for k in [155,248]]
-boxes[18] = array([[0.525, 0.104], [0.482, 0.145]])*100 #[V[k] for k in [111,241]]
+boxes[12] = array([[0.467, 0.138], [0.423, 0.476]])*scaleFactor #[V[k] for k in [252,47]]
+boxes[13] = array([[0.482, 0.145], [0.525, 0.445]])*scaleFactor #[V[k] for k in [241,126]]
+boxes[14] = array([[0.482, 0.476], [0.467, 0.116]])*scaleFactor #[V[k] for k in [254,232]]
+boxes[15] = array([[0.449, 0.476], [0.467, 0.493]])*scaleFactor #[V[k] for k in [40,237]]
+boxes[16] = array([[0.431, 0.101], [0.467, 0.131]])*scaleFactor #[V[k] for k in [259,2]]
+boxes[17] = array([[0.482, 0.445], [0.525, 0.476]])*scaleFactor #[V[k] for k in [155,248]]
+boxes[18] = array([[0.525, 0.104], [0.482, 0.145]])*scaleFactor #[V[k] for k in [111,241]]
 
 piano1_superficieUtile_zonaSud_uffici_destra = subComplexInBox(V,FV,EV,boxes[12])[1]
 piano1_superficieUtile_zonaSud_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[13])[1]
@@ -113,14 +115,14 @@ sud = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1S)])
 #VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud))
 
 """ Ala ovest """
-boxes[19] = array([[0.521, 0.526], [0.963, 0.568]])*100 #[V[k] for k in [169,202]]
-boxes[20] = array([[0.555, 0.584], [0.955, 0.627]])*100 #[V[k] for k in [12,23]]
-boxes[21] = array([[0.521, 0.568], [0.985, 0.584]])*100 #[V[k] for k in [209,204]]
-boxes[22] = array([[0.506, 0.551], [0.521, 0.568]])*100 #[V[k] for k in [89,209]]
-boxes[23] = array([[0.808, 0.504], [0.828, 0.526]])*100 #[V[k] for k in [270,77]]
-boxes[24] = array([[0.955, 0.584], [0.997, 0.627]])*100 #[V[k] for k in [220,24]]
-boxes[25] = array([[0.521, 0.584], [0.555, 0.627]])*100 #[V[k] for k in [11,144]]
-boxes[26] = array([[1.0, 0.533], [0.97, 0.568]])*100 #[V[k] for k in [233,201]]
+boxes[19] = array([[0.521, 0.526], [0.963, 0.568]])*scaleFactor #[V[k] for k in [169,202]]
+boxes[20] = array([[0.555, 0.584], [0.955, 0.627]])*scaleFactor #[V[k] for k in [12,23]]
+boxes[21] = array([[0.521, 0.568], [0.985, 0.584]])*scaleFactor #[V[k] for k in [209,204]]
+boxes[22] = array([[0.506, 0.551], [0.521, 0.568]])*scaleFactor #[V[k] for k in [89,209]]
+boxes[23] = array([[0.808, 0.504], [0.828, 0.526]])*scaleFactor #[V[k] for k in [270,77]]
+boxes[24] = array([[0.955, 0.584], [0.997, 0.627]])*scaleFactor #[V[k] for k in [220,24]]
+boxes[25] = array([[0.521, 0.584], [0.555, 0.627]])*scaleFactor #[V[k] for k in [11,144]]
+boxes[26] = array([[1.0, 0.533], [0.97, 0.568]])*scaleFactor #[V[k] for k in [233,201]]
 
 piano1_superficieUtile_zonaOvest_uffici_destra = subComplexInBox(V,FV,EV,boxes[19])[1]
 piano1_superficieUtile_zonaOvest_uffici_sinistra = subComplexInBox(V,FV,EV,boxes[20])[1]

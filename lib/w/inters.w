@@ -582,7 +582,7 @@ The whole transformation of an array of lines into a two-dimensional \texttt{LAR
 @D Transformation of an array of lines in a 2D LAR complex @{
 """ Transformation of an array of lines in a 2D LAR complex """
 from bool1 import larRemoveVertices
-from hospital import surfIntegration
+import hospital  
 
 def larFromLines(lines):
     V,EV = lines2lar(lines)
@@ -590,7 +590,7 @@ def larFromLines(lines):
     EV = list(set(AA(tuple)(sorted(AA(sorted)(CAT(EVs)))))) 
     V,EV = larRemoveVertices(V,EV)
     V,FV,EV = facesFromComponents((V,EV))
-    areas = surfIntegration((V,FV,EV))
+    areas = hospital.surfIntegration((V,FV,EV))
     boundaryArea = max(areas)
     interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea and len(areas)>2]
     boundaryFace = FV[areas.index(boundaryArea)]
@@ -603,8 +603,7 @@ def larFromLines(lines):
 def larComplexFromLines(lines):
 V,FV,EV = facesFromComponents((V,EV))
 
-from hospital import surfIntegration
-areas = surfIntegration((V,FV,EV))
+areas = hospital.surfIntegration((V,FV,EV))
 boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
 @}
@@ -967,7 +966,7 @@ The input vertices are finally set to a fixed resolution, using the \texttt{vcod
 from larcc import *
 import re # regular expression
 
-def svg2lines(filename,rect2lines=True):
+def svg2lines(filename,containmentBox=[],rect2lines=True):
     stringLines = [line.strip() for line in open(filename)]   
     
     # SVG <line> primitives
@@ -997,6 +996,7 @@ def svg2lines(filename,rect2lines=True):
     for line in lines: print line
     
     @< SVG input normalization transformation @>
+    containmentBox = box
     
     return lines
 @}
