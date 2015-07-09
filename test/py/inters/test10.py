@@ -4,8 +4,8 @@ sys.path.insert(0, 'lib/py/')
 from inters import *
 from iot3d import polyline2lar
 
-filename = "test/py/inters/Emergency.svg"
-#filename = "test/py/inters/plan.svg"
+#filename = "test/py/inters/Emergency.svg"
+filename = "test/py/inters/plan.svg"
 #filename = "test/py/inters/building.svg"
 #filename = "test/py/inters/complex.svg"
 lines = svg2lines(filename)

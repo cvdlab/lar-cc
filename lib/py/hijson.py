@@ -34,10 +34,10 @@ def subComplexInBox(V,FV,EV,queryBox):
 if __name__=="__main__":
     selectBox = ((0.45, 0.45), (0.65, 0.75))
     vertexSubset,faceSubset,edgeSubset = subComplexInBox(V,FV,EV,selectBox)
-    VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in edgeSubset])) + [
-      COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
-    VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[FV[f] for f in faceSubset])) + [
-      COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
+    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in edgeSubset])) + [
+      #COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
+    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[FV[f] for f in faceSubset])) + [
+      #COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
 
 """ Emulation of  ``pick'' input over a LAR normalized representation """
 def subComplexAroundPoint(V,FV,EV,FE,queryPoint):
@@ -59,7 +59,7 @@ if __name__=="__main__":
     FE = crossRelation(FV,EV)
     queryPoint = (0.6,0.58)
     vertexSubset,faceSubset,edgeSubset = subComplexAroundPoint(V,FV,EV,FE,queryPoint)
-    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [
+    ##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [
         #COLOR(RED)(MK(queryPoint))] ))
 
 """ From LAR chain to colored HPCs """
@@ -117,7 +117,7 @@ def structBoundaryModel(struct):
 """ From LAR oriented boundary model to polylines """
 def boundaryModel2polylines(model):
     V,EV = model
-    #VIEW(STRUCT(MKPOLS((V,EV))))
+    ##VIEW(STRUCT(MKPOLS((V,EV))))
     #import pdb; pdb.set_trace()
     polylines = []
     succDict = dict(EV)

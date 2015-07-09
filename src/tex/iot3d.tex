@@ -157,6 +157,8 @@ my_dictionary = yaml.safe_load(file_handle)
 file_handle.close()
 with open(path+filename+".json", 'w') as outfile:
      json.dump(my_dictionary, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+#filejson = open("file1.json", 'r')
+#dicta = json.loads(filejson.read())
 @}
 %-------------------------------------------------------------------------------
 
@@ -181,13 +183,22 @@ def printStruct2GeoJson(path,struct):
     CTM, stack = scipy.identity(dim+1), []
     fathers = [filename]
     #import pdb; pdb.set_trace()
+    
 
     tabs = (3*1)*" "
     V,boundaryEdges = hijson.structBoundaryModel(struct)   #+new
-    coordinates = hijson.boundaryModel2polylines((V,boundaryEdges))  #+new
+    boundaryPolygons = hijson.boundaryModel2polylines((V,boundaryEdges))  #+new
+    
+    p1V,p1FV,p1EV = struct2lar(struct)
+    p1BE = AA(tuple)(AA(sorted)(boundaryEdges))
+    p1IE = list(set(p1EV).difference(p1BE))
+    
+    #VIEW(STRUCT(MKPOLS((V,p1BE))))
+    #VIEW(STRUCT(MKPOLS((V,p1IE))))
 
-    printStructObject(theFile,tabs, 0,struct.name,struct.category,coordinates,"building")
+    printStructObject(theFile,tabs, 0,struct.name,struct.category,boundaryPolygons, "building")
     scene,fathers = printTraversal(theFile, CTM, stack, struct, [], 0, fathers,filename) 
+    printWalls( theFile, p1V,p1BE,p1IE )
     theFile.close()
     @< Exporting to JSON via YML @>
     return scene,fathers
@@ -222,14 +233,49 @@ def printModelObject(theFile,tabs, i,name,category,verts,cells,father,tvect=[0,0
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Print a \texttt{Mat} object in a \texttt{xGeoJson} file}
+\paragraph{Print a \texttt{Model} object in a \texttt{xGeoJson} file}
+
+%-------------------------------------------------------------------------------
+@D Print a Model object in a geoJson file
+@{""" Print a model object in a geoJson file """
+def printModelObject(theFile,tabs, i,name,category,verts,cells,father,tvect=[0,0,0]):
+    tab = "    "
+    print >> theFile, "-   ","id:", name
+    print >> theFile, tab, "type:", "Feature"
+    print >> theFile, tab, "geometry:" 
+    print >> theFile, tab+tab, "type:", "Polygon"
+    print >> theFile, tab+tab, "coordinates:" 
+    print >> theFile, tab+tab+tab, AA(eval)(AA(vcode)(verts))
+    print >> theFile, tab, "properties:"
+    print >> theFile, tab+tab, "class:", category
+    print >> theFile, tab+tab, "parent:", father
+    print >> theFile, tab+tab, "son:", i
+    print >> theFile, tab+tab, "description:", name
+    print >> theFile, tab+tab, "tVector:", [tvect[0],tvect[1],tvect[2]]
+    print >> theFile, tab+tab, "rVector:", [0, 0, 0]
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Print walls object in a \texttt{xGeoJson} file}
 
 %-------------------------------------------------------------------------------
 @D Print a Mat object in a geoJson file
 @{""" Print a mat object in a geoJson file """
-def printMatObject(theFile,tabs, theMat):
-    tab = "    "
-    print >> theFile, tab+tab, "tVector:", theMat.T[-1,:-1].tolist()
+def printWalls( theFile, p1V,p1BE,p1IE ):
+	
+	for k,edge in enumerate(p1BE):
+		tvectBE = VECTDIFF([[0,0,0], p1V[edge[0]]])
+		edgeBE = [VECTDIFF([p1V[edge[0]],tvectBE]), VECTDIFF([p1V[edge[1]],tvectBE])]
+		name = "e_wall_" + str(k)
+		print "tvect=",tvectBE," edge=",edgeBE
+		printWallObject(theFile, name,k, 'external_wall',edgeBE,'piano13D',tvectBE)
+		
+	for k,edge in enumerate(p1IE):
+		tvectIE = VECTDIFF([[0,0,0], p1V[edge[0]]])
+		edgeIE = [VECTDIFF([p1V[edge[0]],tvectIE]), VECTDIFF([p1V[edge[1]],tvectIE])]
+		name = "i_wall_" + str(k)
+		print "tvect=",tvectIE," edge=",edgeIE
+		printWallObject(theFile, name,k, 'internal_wall',edgeIE,'piano13D',tvectIE)
 @}
 %-------------------------------------------------------------------------------
 
@@ -238,13 +284,36 @@ def printMatObject(theFile,tabs, theMat):
 %-------------------------------------------------------------------------------
 @D Print a Struct object in a geoJson file
 @{""" Print a struct object in a geoJson file """
-def printStructObject(theFile,tabs, i,name,category,coordinates,father,tvect=[0,0,0]):
+def printStructObject(theFile,tabs, i,name,category, boundaryPolyline,father,tvect=[0,0,0]):
     tab = "    "
     print >> theFile, "-   ","id:", name
     print >> theFile, tab,"type:", "Feature"
     print >> theFile, tab,"geometry:" 
     print >> theFile, tab+tab, "type:", "Polygon"
-    print >> theFile, tab+tab, "coordinates:", coordinates
+    print >> theFile, tab+tab, "coordinates:", boundaryPolyline
+    print >> theFile, tab,"properties:"
+    print "category=", category
+    print >> theFile, tab+tab, "class:", category
+    print >> theFile, tab+tab, "parent:", father
+    print >> theFile, tab+tab, "son:", i
+    print >> theFile, tab+tab, "description:", name
+    print >> theFile, tab+tab, "tVector:", [tvect[0],tvect[1],tvect[2]]
+    print >> theFile, tab+tab, "rVector:", [0, 0, 0]
+    
+@< Print a SINGLE Wall LAR model  in a geoJson file @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Print a SINGLE Wall LAR model  in a geoJson file
+@{""" Print a struct object in a geoJson file """
+def printWallObject(theFile, name,i,category, edge,father,tvect=[0,0,0]):
+    tab = "    "
+    print >> theFile, "-   ","id:", name
+    print >> theFile, tab,"type:", "Feature"
+    print >> theFile, tab,"geometry:" 
+    print >> theFile, tab+tab, "type:", "LineString"
+    print >> theFile, tab+tab, "coordinates:", edge
     print >> theFile, tab,"properties:"
     print "category=", category
     print >> theFile, tab+tab, "class:", category
@@ -367,8 +436,8 @@ spazioComune = larEmbed(1)(polyline2lar(AA(REVERSE)(newLanding)))
 
 # test of input consistency (flat assembly of LAR models)
 pianoTipo = Struct([ala_est,ala_sud,ala_ovest,ala_nord,ascensori,spazioComune],"pianoTipo")
-#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(pianoTipo))))
-#VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(pianoTipo)))))
+##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(pianoTipo))))
+##VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(pianoTipo)))))
 
 # LAR to structs
 Ala_est = Struct(lar2Structs(ala_est),"Ala_est")
@@ -379,19 +448,19 @@ Ascensori = Struct(lar2Structs(ascensori),"Ascensori")
 SpazioComune = Struct(lar2Structs(spazioComune),"SpazioComune")
 
 model = struct2lar(Ala_est)
-#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
+##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 for k,room in enumerate(Ala_est.body):
     print room.body
 
 # hierarchical assembly of simplest LAR models
 TreAli = Struct([Ala_est,Ala_sud,Ala_ovest,Ascensori,SpazioComune],"TreAli")
-#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(TreAli))))
+##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(TreAli))))
 Ali_B_C_D = Struct(6*[TreAli, t(0,0,30)],"Ali_B_C_D")
-#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(Ali_B_C_D))))
+##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(Ali_B_C_D))))
 
 Ala_A = Struct(4*[Ala_nord,  t(0,0,30)],"Ala_A")
 ALA_A = EXPLODE(1.2,1.2,1.2)(MKPOLS(struct2lar(Ala_A)))
-#VIEW(EXPLODE(1.2,1.2,1.2)([ ALA_A, COLOR(BLUE)(SKEL_1(ALA_A)) ]))
+##VIEW(EXPLODE(1.2,1.2,1.2)([ ALA_A, COLOR(BLUE)(SKEL_1(ALA_A)) ]))
 
 Edificio = Struct([ Ala_A, Ali_B_C_D ],"Edificio")
 out = struct2lar(Edificio)
@@ -399,20 +468,22 @@ if len(out)==2: V,FV = out
 else: V,FV,EV = out
 
 EDIFICIO = STRUCT(MKPOLS((V,FV)))
-#VIEW(STRUCT([ EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
+##VIEW(STRUCT([ EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
 
 VV = AA(LIST)(range(len(V)))
 SK = SKEL_1(EDIFICIO)
-#VIEW(larModelNumbering(1,1,1)(V,[VV,[],FV],STRUCT([ COLOR(BLUE)(SK), EDIFICIO ]),20))
+##VIEW(larModelNumbering(1,1,1)(V,[VV,[],FV],STRUCT([ COLOR(BLUE)(SK), EDIFICIO ]),20))
 
 Va,EVa = struct2lar(TreAli)
 Vb,EVb = struct2lar(Ala_A)
 a = PROD([ SKEL_1(STRUCT(MKPOLS( ([ v[:2] for v in Va], EVa) ))), QUOTE(5*[30]) ])
 b = PROD([ SKEL_1(STRUCT(MKPOLS( ([ v[:2] for v in Vb], EVb) ))), QUOTE(3*[30]) ])
 glass = MATERIAL([1,0,0,0.3,  0,1,0,0.3,  0,0,1,0.3, 0,0,0,0.3, 100])
-#VIEW(glass(STRUCT([a,b])))
+##VIEW(glass(STRUCT([a,b])))
 
-#VIEW(STRUCT([ glass(STRUCT([a,b])), EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
+##VIEW(STRUCT([ glass(STRUCT([a,b])), EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
+
+
 scene,fathers = printStruct2GeoJson(PATH,pianoTipo)
 scene,fathers = printStruct2GeoJson(PATH,Edificio)
 @}

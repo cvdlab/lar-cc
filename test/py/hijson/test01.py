@@ -17,7 +17,7 @@ FV[2] += FV[71]      # for now :o)
 """ Visualization of cell numbering in a 2D complex """
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,5))
 
 FE = crossRelation(FV,EV)
 chainsToStruct = chain2structs(V,FV,EV,FE)

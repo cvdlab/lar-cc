@@ -17,7 +17,7 @@ FV[2] += FV[71]      # for now :o)
 """ Visualization of cell numbering in a 2D complex """
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
+#VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
 
 FE = crossRelation(FV,EV)
 chainsToStruct = chain2structs(V,FV,EV,FE)
@@ -52,10 +52,10 @@ piano1N_nomi = ["piano1_superficieUtile_zonaNord_uffici_destra", "piano1_superfi
 piano1N_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1N = zip(piano1N,piano1N_nomi,piano1N_categorie)
 piano1_zonaNord = Struct(AA(chainsToStruct)(p1N),"piano1_zonaNord","ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaNord)))))
+#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaNord)))))
     
 nord = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1N)])
-VIEW(EXPLODE(1.2,1.2,1.2)(nord))
+#VIEW(EXPLODE(1.2,1.2,1.2)(nord))
 
 """ Ala est """
 boxes[6] = array([[0.019, 0.533], [0.376, 0.577]])*scaleFactor #[V[k] for k in [241,29]]
@@ -81,10 +81,10 @@ piano1E_nomi = ["piano1_superficieUtile_zonaEst_uffici_destra", "piano1_superfic
 piano1E_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1E = zip(piano1E,piano1E_nomi, piano1E_categorie)
 piano1_zonaEst = Struct(AA(chainsToStruct)(p1E), "piano1_zonaEst", "ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaEst)))))
+#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaEst)))))
 
 est = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1E)])
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord))
+#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord))
 
 """ Ala sud """
 boxes[12] = array([[0.467, 0.138], [0.423, 0.476]])*scaleFactor #[V[k] for k in [252,47]]
@@ -109,10 +109,10 @@ piano1S_nomi = ["piano1_superficieUtile_zonaSud_uffici_destra", "piano1_superfic
 piano1S_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1S = zip(piano1S,piano1S_nomi, piano1S_categorie)
 piano1_zonaSud = Struct(AA(chainsToStruct)(p1S), "piano1_zonaSud", "ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaSud)))))
+#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaSud)))))
     
 sud = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1S)])
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud))
+#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud))
 
 """ Ala ovest """
 boxes[19] = array([[0.521, 0.526], [0.963, 0.568]])*scaleFactor #[V[k] for k in [169,202]]
@@ -139,10 +139,10 @@ piano1O_nomi = ["piano1_superficieUtile_zonaOvest_uffici_destra", "piano1_superf
 piano1O_categorie = ["uffici","uffici","corridoi","ascensori","scale","servizi"]
 p1O = zip(piano1O,piano1O_nomi, piano1O_categorie)
 piano1_zonaOvest = Struct(AA(chainsToStruct)(p1O), "piano1_zonaOvest", "ala")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaOvest)))))
+#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_zonaOvest)))))
     
 ovest = CAT([cells2hpcs(V,FV,chain,k) for k,chain in enumerate(piano1O)])
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest))
+#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest))
 
 """ Centro stella """
 piano1_connettivo_orizzontale_centroStella = [2]
@@ -155,10 +155,10 @@ piano1C_nomi = [[],[],"piano1_connettivo_orizzontale_centroStella", [], "piano1_
 piano1C_categorie = [[],[],"corridoi",[], "ascensori"]
 p1C = zip(piano1C,piano1C_nomi, piano1C_categorie)
 piano1_centroStella = Struct(AA(chainsToStruct)(p1C), "piano1_centroStella", "centro")
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_centroStella)))))
+#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1_centroStella)))))
 
-VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest + centro))
-VIEW(STRUCT(est + nord + sud + ovest + centro))
+#VIEW(EXPLODE(1.2,1.2,1.2)(est + nord + sud + ovest + centro))
+#VIEW(STRUCT(est + nord + sud + ovest + centro))
 
 """ Assemblaggio """
 p1 = p1N + p1S + p1E + p1O + p1C
@@ -167,14 +167,14 @@ piano1_nomi = ["piano1_zonaNord", "piano1_zonaEst", "piano1_zonaSud", "piano1_zo
 piano1_categorie = ["ala","ala","ala","ala","centro"]
 piano1 = Struct(AA(chainsToStruct)(p1), "piano1", "level")
 
-VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
+#VIEW(SKEL_1(STRUCT(MKPOLS(struct2lar(piano1)))))
 
 V,boundaryEdges = structBoundaryModel(piano1)
 drawing = mkSignedEdges((V,boundaryEdges))
-VIEW(drawing)
+#VIEW(drawing)
         
 polylines = boundaryModel2polylines((V,boundaryEdges))
-VIEW(STRUCT(AA(POLYLINE)(polylines)))
+#VIEW(STRUCT(AA(POLYLINE)(polylines)))
     
 print boundaryPolylines(piano1)
 
@@ -192,5 +192,5 @@ torreOvest = Struct(7*[pianoOvest3D,t(0,0,3)], "torreOvest", "edificio")
 torreCentro = Struct(7*[pianoCentro3D,t(0,0,3)], "torreCentro", "edificio")
 torre = Struct([torreNord,torreEst,torreSud,torreOvest,torreCentro],"torre", "edificio")
 V,FV,EV = struct2lar(torre)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
-VIEW(STRUCT(MKPOLS((V,FV))))
+#VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
+#VIEW(STRUCT(MKPOLS((V,FV))))
