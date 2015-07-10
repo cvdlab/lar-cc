@@ -1,5 +1,4 @@
 """ make the model of a layout floor """
-""" make the model of a layout floor """
 """ import modules from larcc/lib """
 import sys
 sys.path.insert(0, 'lib/py/')
@@ -163,416 +162,7 @@ piano1_centroStella = Struct(AA(chainsToStruct)(p1C), "piano1_centroStella", "ce
 
 
 
-
-p1 = [p1N, p1S, p1E, p1O, p1C]
-cellHierarchy = AA(AA(S1))(p1)
-nameHierarchy = AA(AA(S2))(p1)
-categoryHierarchy = AA(AA(S3))(p1)
-
-
-
-cellHierarchy = [
- [[4, 5, 28, 41, 63, 77, 86, 99, 102, 105],
-  [13, 23, 49, 53, 80, 81, 83, 91, 98],
-  [12],
-  [77, 48],
-  [19],
-  [95, 47, 31]],
- [[8, 14, 27, 36, 37, 44, 62, 69, 75, 85, 94],
-  [1, 24, 40, 50, 60, 61, 65, 87, 92],
-  [25],
-  [3],
-  [66],
-  [10, 11, 52, 89, 108]],
- [[20, 21, 30, 67, 70, 88, 90, 96, 107, 110],
-  [0, 51, 58, 59, 68, 78, 84, 93],
-  [29],
-  [56],
-  [34],
-  [16, 76]],
- [[7, 9, 17, 18, 35, 38, 39, 46, 64, 79, 100, 101, 103, 111],
-  [22, 32, 33, 42, 45, 55, 73, 74, 97, 106, 109, 112],
-  [6],
-  [43, 57],
-  [82],
-  [104, 54]],
- [[], [], [2], [], [15, 26]]
- ]
- 
- 
-def compute(nestedLists,xfather,yfather):
-	out = []
-	for element in nestedLists:
-		if ISSEQOF(ISSEQ)(element):
-			temp = compute(element,xfather,yfather)
-			if temp[1] != []:
-				out += [temp]
-		elif element != []:
-			xmin,ymin = AA(min)(TRANS([V[v] for cell in element for v in FV[cell]]))
-			out += [(vcode([xmin,ymin]),element)]
-			xfather,yfather = AA(min)([[xfather,xmin],[yfather,ymin]])
-	if [xfather,yfather]==[sys.maxint,sys.maxint]: [xfather,yfather]=[.0,.0]
-	return (vcode([xfather,yfather]),out)
-		
-hierarchyPairs = compute(cellHierarchy,sys.maxint,sys.maxint)
-
-
-def hierarchy2struct(pair, cellList=[]):
-    tvect,nestedList = pair
-    if isinstance(nestedList,list):
-        for element in nestedList:
-        	print "\nelement =",element
-            hierarchy2struct(element,cellList)
-    else:
-        [tx,ty],cells = element
-        for cell in cells:
-            cellVerts = [V[v] for cell in element for v in FV[cell]]
-            xmin,ymin = AA(min)(TRANS(cellVerts))
-            verts = larTranslate ([xmin-tx,ymin-ty])(cellVerts)
-            fvDict = dict([(v,k) for k,v in enumerate(FV[cell])])
-            larModel = (verts, [range(len(verts))], [[fvDict[v] for v in EV[e]] for e in FE[cell]])
-            cellList += [ Struct([ transl, larModel ], category="room") ]
-    return cellList
-
-hierarchy2struct(hierarchyPairs)
-
-
-nameHierarchy = [
- ['piano1_superficieUtile_zonaNord_uffici_destra',
-  'piano1_superficieUtile_zonaNord_uffici_sinistra',
-  'piano1_connettivo_orizzontale_zonaNord',
-  'piano1_connettivo_verticale_zonaNord_ascensore',
-  'piano1_connettivo_verticale_zonaNord_scale',
-  'piano1_superficieUtile_zonaNord_servizi'],
- ['piano1_superficieUtile_zonaSud_uffici_destra',
-  'piano1_superficieUtile_zonaSud_uffici_sinistra',
-  'piano1_connettivo_orizzontale_zonaSud',
-  'piano1_connettivo_verticale_zonaSud_ascensore',
-  'piano1_connettivo_verticale_zonaSud_scale',
-  'piano1_superficieUtile_zonaSud_servizi'],
- ['piano1_superficieUtile_zonaEst_uffici_destra',
-  'piano1_superficieUtile_zonaEst_uffici_sinistra',
-  'piano1_connettivo_orizzontale_zonaEst',
-  'piano1_connettivo_verticale_zonaEst_ascensore',
-  'piano1_connettivo_verticale_zonaEst_scale',
-  'piano1_superficieUtile_zonaEst_servizi'],
- ['piano1_superficieUtile_zonaOvest_uffici_destra',
-  'piano1_superficieUtile_zonaOvest_uffici_sinistra',
-  'piano1_connettivo_orizzontale_zonaOvest',
-  'piano1_connettivo_verticale_zonaOvest_ascensore',
-  'piano1_connettivo_verticale_zonaOvest_scale',
-  'piano1_superficieUtile_zonaOvest_servizi'],
- [[],
-  [],
-  'piano1_connettivo_orizzontale_centroStella',
-  [],
-  'piano1_connettivo_verticale_centroStella_scale']
-]
-  
-categoryHierarchy = [
- ['uffici', 'uffici', 'corridoi', 'ascensori', 'scale', 'servizi'],
- ['uffici', 'uffici', 'corridoi', 'ascensori', 'scale', 'servizi'],
- ['uffici', 'uffici', 'corridoi', 'ascensori', 'scale', 'servizi'],
- ['uffici', 'uffici', 'corridoi', 'ascensori', 'scale', 'servizi'],
- [[], [], 'corridoi', [], 'ascensori']
-]
-  
-
-from copy import deepcopy
-
-def flatten(items, seqtypes=(list, tuple)):
-    for i, x in enumerate(items):
-        while isinstance(items[i], seqtypes):
-            items[i:i+1] = items[i]
-    return items
-
-
-def abs2rel(hierarchicalChains,out,outchain):
-	index = 0
-	for chain in hierarchicalChains:
-		if type(chain) == list and chain!=[]: 			
-			abs2rel(chain,out,outchain)
-			flatchain = flatten(deepcopy(chain))
-			xmin,ymin = AA(min)(TRANS([V[v] for cell in flatchain for v in FV[cell]]))
-			outchain += [(tuple(flatchain),[xmin,ymin])]
-			index += 1
-			print "list", chain,index
-		elif type(chain) == int:
-			xmin,ymin = AA(min)(TRANS([V[v] for v in FV[chain]]))
-			outchain += [(chain,[xmin,ymin])]
-			print "int", chain, vcode([xmin,ymin])
-	return dict(outchain)
-			
-outChainDict = abs2rel(cellHierarchy,[],[])
-
-
-
-roomsDict = {0: [5.833310000000001, 39.499841999999994],
- 1: [40.166506, 14.416609],
- 2: [31.333208, 39.666508],
- 3: [37.416517, 39.666508],
- 4: [35.916523, 69.583055],
- 5: [35.916523, 65.999736],
- 6: [43.416493, 47.333144],
- 7: [73.083041, 43.833158000000005],
- 8: [35.249859, 36.333188],
- 9: [55.416445, 43.833158000000005],
- 10: [40.166506, 37.999848],
- 11: [42.166498, 37.083185],
- 12: [34.666528, 52.249791],
- 13: [30.999876, 74.416369],
- 14: [35.249859, 27.833222000000003],
- 15: [32.49987, 44.416489],
- 16: [0.083333, 39.499841999999994],
- 17: [76.583027, 43.833158000000005],
- 18: [68.666392, 43.833158000000005],
- 19: [35.916523, 80.83301],
- 20: [21.499914, 44.416489],
- 21: [19.333256000000002, 44.416489],
- 22: [48.33313999999999, 48.666472],
- 23: [30.999876, 65.999736],
- 24: [40.166506, 28.583219000000003],
- 25: [38.916511, 9.666628000000001],
- 26: [41.166502, 41.416501],
- 27: [35.249859, 33.499866000000004],
- 28: [35.916523, 52.249791],
- 29: [1.083329, 43.166494],
- 30: [2.9166550000000004, 44.416489],
- 31: [30.999876, 52.249791],
- 32: [51.833126, 48.666472],
- 33: [68.666392, 48.666472],
- 34: [0.0, 44.416489],
- 35: [44.833154, 43.833158000000005],
- 36: [35.249859, 20.166586],
- 37: [35.249859, 22.166578],
- 38: [65.333072, 43.833158000000005],
- 39: [67.33306400000001, 43.833158000000005],
- 40: [40.166506, 12.083284999999998],
- 41: [35.916523, 55.416445],
- 42: [46.249815000000005, 48.666472],
- 43: [42.166498, 45.916483],
- 44: [35.249859, 38.416513],
- 45: [77.33302400000001, 48.666472],
- 46: [63.083081, 43.833158000000005],
- 47: [35.916523, 77.249691],
- 48: [35.916523, 75.83303000000001],
- 49: [30.999876, 60.33309199999999],
- 50: [40.166506, 20.166586],
- 51: [11.666620000000002, 39.499841999999994],
- 52: [40.166506, 37.083185],
- 53: [30.999876, 77.416357],
- 54: [43.416493, 48.666472],
- 55: [70.916383, 48.666472],
- 56: [31.333208, 44.416489],
- 57: [67.33306400000001, 41.999832],
- 58: [20.083253, 39.499841999999994],
- 59: [17.249931, 39.499841999999994],
- 60: [40.166506, 30.583211],
- 61: [40.166506, 34.333196],
- 62: [35.249859, 17.249931],
- 63: [35.916523, 57.49976999999999],
- 64: [52.583123, 43.833158000000005],
- 65: [40.166506, 25.749897],
- 66: [35.916523, 8.416633000000001],
- 67: [6.66664, 44.416489],
- 68: [8.749965, 39.499841999999994],
- 69: [35.249859, 15.166606],
- 70: [24.9999, 44.416489],
- 73: [63.083081, 48.666472],
- 74: [65.999736, 48.666472],
- 75: [35.249859, 25.083233],
- 76: [28.583219000000003, 39.499841999999994],
- 77: [35.916523, 50.583130999999995],
- 78: [14.416609, 39.499841999999994],
- 79: [46.916478999999995, 43.833158000000005],
- 80: [30.999876, 63.166413999999996],
- 81: [30.999876, 57.49976999999999],
- 82: [80.83301, 44.416489],
- 83: [30.999876, 54.749781],
- 84: [25.666563999999997, 39.499841999999994],
- 85: [35.249859, 11.499954],
- 86: [35.916523, 61.083089],
- 87: [40.166506, 17.249931],
- 88: [17.249931, 44.416489],
- 89: [41.333168, 37.083185],
- 90: [13.666612, 44.416489],
- 91: [30.999876, 71.583047],
- 92: [40.166506, 22.999908],
- 93: [22.916575, 39.499841999999994],
- 94: [35.249859, 30.583211],
- 95: [30.999876, 79.416349],
- 96: [8.749965, 44.416489],
- 97: [54.666448, 48.666472],
- 98: [30.999876, 68.749725],
- 99: [35.916523, 53.33312],
- 100: [43.416493, 43.833158000000005],
- 101: [49.749801, 43.833158000000005],
- 102: [35.916523, 63.166413999999996],
- 103: [61.083089, 43.833158000000005],
- 104: [79.58301499999999, 48.666472],
- 105: [35.916523, 72.333044],
- 106: [74.499702, 48.666472],
- 107: [10.916623, 44.416489],
- 108: [40.166506, 8.666632],
- 109: [57.49976999999999, 48.666472],
- 110: [27.833222000000003, 44.416489],
- 111: [58.166433999999995, 43.833158000000005],
- 112: [60.249759, 48.666472]}
- 
- 
-roomList = []
-for room in roomsDict.keys():
- 	transl = t(*roomsDict[room])
-	tvect = VECTDIFF([ [0,0], roomsDict[room] ])
-	verts = larTranslate (tvect)([V[v] for v in FV[room]])
-	fvDict = dict([(v,k) for k,v in enumerate(FV[room])])
-	roomModel = verts, [range(len(verts))], [[fvDict[v] for v in EV[e]] for e in FE[room]]
- 	roomList += [ Struct([ transl, roomModel ], "room_"+str(room), "room") ]
-	
-floor = Struct(roomList,"floor_1","level")
-
-
-
-
-
-
-nodesDict = {
-(0, 51, 58, 59, 68, 78, 84, 93): [5.833310000000001, 39.499841999999994],
- (1, 24, 40, 50, 60, 61, 65, 87, 92): [40.166506, 12.083284999999998],
- (2,): [31.333208, 39.666508],
- (2, 15, 26): [31.333208, 39.666508],
- (3,): [37.416517, 39.666508],
- (4, 5, 28, 41, 63, 77, 86, 99, 102, 105): [35.916523, 50.583130999999995],
- (4, 5, 28, 41, 63, 77, 86, 99, 102, 105, 13, 23, 49, 53, 80, 81, 83, 91, 98, 12, 77, 48, 19, 95, 47, 31): [30.999876, 50.583130999999995],
- (6,): [43.416493, 47.333144],
- (7, 9, 17, 18, 35, 38, 39, 46, 64, 79, 100, 101, 103, 111): [43.416493, 43.833158000000005],
- (7, 9, 17, 18, 35, 38, 39, 46, 64, 79, 100, 101, 103, 111, 22, 32, 33, 42, 45, 55, 73, 74, 97, 106, 109, 112, 6, 43, 57, 82, 104, 54): [42.166498, 41.999832],
- (8, 14, 27, 36, 37, 44, 62, 69, 75, 85, 94): [35.249859, 11.499954],
- (8, 14, 27, 36, 37, 44, 62, 69, 75, 85, 94, 1, 24, 40, 50, 60, 61, 65, 87, 92, 25, 3, 66, 10, 11, 52, 89, 108): [35.249859, 8.416633000000001],
- (10, 11, 52, 89, 108): [40.166506, 8.666632],
- (12,): [34.666528, 52.249791],
- (13, 23, 49, 53, 80, 81, 83, 91, 98): [30.999876, 54.749781],
- (15, 26): [32.49987, 41.416501],
- (16, 76): [0.083333, 39.499841999999994],
- (19,): [35.916523, 80.83301],
- (20, 21, 30, 67, 70, 88, 90, 96, 107, 110): [2.9166550000000004, 44.416489],
- (20, 21, 30, 67, 70, 88, 90, 96, 107, 110, 0, 51, 58, 59, 68, 78, 84, 93, 29, 56, 34, 16, 76): [0.0, 39.499841999999994],
- (22, 32, 33, 42, 45, 55, 73, 74, 97, 106, 109, 112): [46.249815000000005, 48.666472],
- (25,): [38.916511, 9.666628000000001],
- (29,): [1.083329, 43.166494],
- (34,): [0.0, 44.416489],
- (43, 57): [42.166498, 41.999832],
- (56,): [31.333208, 44.416489],
- (66,): [35.916523, 8.416633000000001],
- (77, 48): [35.916523, 50.583130999999995],
- (82,): [80.83301, 44.416489],
- (95, 47, 31): [30.999876, 52.249791],
- (104, 54): [43.416493, 48.666472]
- }
-
-
-
-node = AA(set)(nodesDict.keys())
-absTvects = nodesDict.values()
-arcs = []
-n = len(node)
-
-for k in range(n):
-	for h in range(n):
-		if k!=h and node[k].intersection(node[h]) == node[h]:
-			arcs += [(k,h)]
-	
-	
-	
-treeDict = defaultdict(list)
-
-for i,j in arcs:
-	treeDict[i] += [j]
-	
-for key in treeDict.keys():
-	print "key =",key
-	for node in treeDict[key]:
-		print "node =",node
-		treeDict[node] += list(nodesDict.keys()[node])
-	
-
-
-treeDict =  {
- 0: [20, 21, 30, 67, 70, 88, 90, 96, 107, 110],
- 1: [34],
- 2: [77, 48],
- 3: [15, 26],
- 4: [16, 76],
- 5: [1, 24, 40, 50, 60, 61, 65, 87, 92],
- 6: [66],
- 7: [3],
- 8: [10, 11, 52, 89, 108],
- 9: [5, 6, 7, 8, 18, 19],
- 10: [0, 51, 58, 59, 68, 78, 84, 93],
- 11: [56],
- 12: [13, 23, 49, 53, 80, 81, 83, 91, 98],
- 13: [104, 54],
- 14: [22, 32, 33, 42, 45, 55, 73, 74, 97, 106, 109, 112],
- 15: [13, 14, 20, 25, 28, 29],
- 16: [3, 21],
- 17: [12],
- 18: [8, 14, 27, 36, 37, 44, 62, 69, 75, 85, 94],
- 19: [25],
- 20: [7, 9, 17, 18, 35, 38, 39, 46, 64, 79, 100, 101, 103, 111],
- 21: [2],
- 22: [29],
- 23: [95, 47, 31],
- 24: [4, 5, 28, 41, 63, 77, 86, 99, 102, 105],
- 25: [6],
- 26: [2, 12, 17, 23, 24, 30],
- 27: [0, 1, 4, 10, 11, 22],
- 28: [82],
- 29: [43, 57],
- 30: [19]
-}
-
-
-
-lattice = []
-for chain in treeDict.values():
-	if tuple(chain) in nodesDict.keys():
-		lattice += [(tuple(chain), nodesDict[tuple(chain)])]
-lattice = dict(lattice)
-	
-	
-lattice = {
- (0, 51, 58, 59, 68, 78, 84, 93): [5.833310000000001, 39.499841999999994],
- (1, 24, 40, 50, 60, 61, 65, 87, 92): [40.166506, 12.083284999999998],
- (2,): [31.333208, 39.666508],
- (3,): [37.416517, 39.666508],
- (4, 5, 28, 41, 63, 77, 86, 99, 102, 105): [35.916523, 50.583130999999995],
- (6,): [43.416493, 47.333144],
- (7, 9, 17, 18, 35, 38, 39, 46, 64, 79, 100, 101, 103, 111): [43.416493,
-  43.833158000000005],
- (8, 14, 27, 36, 37, 44, 62, 69, 75, 85, 94): [35.249859, 11.499954],
- (10, 11, 52, 89, 108): [40.166506, 8.666632],
- (12,): [34.666528, 52.249791],
- (13, 23, 49, 53, 80, 81, 83, 91, 98): [30.999876, 54.749781],
- (15, 26): [32.49987, 41.416501],
- (16, 76): [0.083333, 39.499841999999994],
- (19,): [35.916523, 80.83301],
- (20, 21, 30, 67, 70, 88, 90, 96, 107, 110): [2.9166550000000004, 44.416489],
- (22, 32, 33, 42, 45, 55, 73, 74, 97, 106, 109, 112): [46.249815000000005,
-  48.666472],
- (25,): [38.916511, 9.666628000000001],
- (29,): [1.083329, 43.166494],
- (34,): [0.0, 44.416489],
- (43, 57): [42.166498, 41.999832],
- (56,): [31.333208, 44.416489],
- (66,): [35.916523, 8.416633000000001],
- (77, 48): [35.916523, 50.583130999999995],
- (82,): [80.83301, 44.416489],
- (95, 47, 31): [30.999876, 52.249791],
- (104, 54): [43.416493, 48.666472]
-}
-
-
-cellHierarchy = [[[4, 5, 28, 41, 63, 77, 86, 99, 102, 105],
+data = [[[4, 5, 28, 41, 63, 77, 86, 99, 102, 105],
   [13, 23, 49, 53, 80, 81, 83, 91, 98],
   [12],
   [77, 48],
@@ -598,5 +188,46 @@ cellHierarchy = [[[4, 5, 28, 41, 63, 77, 86, 99, 102, 105],
   [104, 54]],
  [[], [], [2], [], [15, 26]]]
 
-	
-	
+
+p1 = [p1N, p1S, p1E, p1O, p1C]
+cellHierarchy = AA(AA(S1))(p1)
+nameHierarchy = AA(AA(S2))(p1)
+categoryHierarchy = AA(AA(S3))(p1)
+
+
+def to_pair (item):
+  if type(item) is int:
+    origin = tuple(AA(min)(TRANS([V[v] for v in FV[item]])))
+    pair = (origin, [item])
+    return pair
+  else:
+    items = [x for x in item if type(x) is not list or x != []]
+    pairs = AA(to_pair)(items)
+    origins = AA(S1)(pairs)
+    origin = (min(AA(S1)(origins)), min(AA(S2)(origins)))
+    pair = (origin, pairs)
+    return pair
+    
+
+pair = to_pair(cellHierarchy)
+
+def to_struct (params):
+    p_origin, parent = params
+    c_origin, c_pairs = parent
+    cell = c_pairs[0]
+    origin = VECTDIFF([c_origin, p_origin])
+    if type(cell) is int:        
+        c_x,c_y = c_origin
+        verts = larTranslate([-c_x,-c_y])([V[v] for v in FV[cell]])
+        fvDict = dict([(v,k) for k,v in enumerate(FV[cell])])
+        model = (verts, [range(len(verts))], [[fvDict[v] for v in EV[e]] for e in FE[cell]])
+        return Struct([t(*origin), model])
+    else:
+        return Struct( [t(*origin)] + AA(to_struct)(DISTL([c_origin, c_pairs])) )
+
+
+output = to_struct([pair[0], pair])
+W,WF,WE = struct2lar(output)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS( (W,WE) )))
+
+
