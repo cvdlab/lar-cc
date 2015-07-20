@@ -247,6 +247,11 @@ class Struct:
         #return "'Struct(%s,%s)'" % (str(self.body),str(str(self.__name__())))
     def set_name(self,name):
         self.name = str(name)
+    def clone(self,i=0):
+        from copy import deepcopy
+        newObj = deepcopy(self)
+        if i != 0: newObj.name = self.name + "_" + str(i)
+        return newObj
     def set_category(self,category):
         self.category = str(category)
     def boundary(self):
@@ -318,7 +323,7 @@ def removeDups (CW):
     no_duplicates = defaultdict(list)
     for f in CWs: no_duplicates[f] = []
     for f in CW:
-    	no_duplicates[tuple(sorted(f))] += [f]
+        no_duplicates[tuple(sorted(f))] += [f]
     CW = [f[0] for f in no_duplicates.values()]
     return CW
 @}
@@ -369,14 +374,14 @@ def struct2lar(structure,metric=ID):
             
     
     if len(model)==2: 
-    	if len(CW[0])==2: 
-			CW = list(set(AA(tuple)(AA(sorted)(CW))))
-		else: CW = removeDups(CW)
-    	return metric(W),CW
+        if len(CW[0])==2: 
+            CW = list(set(AA(tuple)(AA(sorted)(CW))))
+        else: CW = removeDups(CW)
+        return metric(W),CW
     if len(model)==3: 
-    	FW = list(set(AA(tuple)(AA(sorted)(FW))))
-		CW = removeDups(CW)
-    	return metric(W),CW,FW
+        FW = list(set(AA(tuple)(AA(sorted)(FW))))
+        CW = removeDups(CW)
+        return metric(W),CW,FW
 @}
 %-------------------------------------------------------------------------------
 \subsection{Embedding or projecting LAR models}
@@ -626,7 +631,7 @@ def embedStruct(n):
             return struct, len(struct.box[0])
         cloned = Struct()
         cloned.box = hstack((struct.box, [n*[0],n*[0]])).tolist()
-        cloned.name = struct.name+suffix
+        cloned.name = str(id(cloned))  #struct.name+suffix
         cloned.category = struct.category
         cloned.dim = struct.dim + n
         cloned = embedTraversal(cloned,struct,n,suffix) 

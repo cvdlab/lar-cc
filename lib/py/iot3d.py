@@ -83,6 +83,8 @@ def printStruct2GeoJson(path,struct):
     file_handle.close()
     with open(path+filename+".json", 'w') as outfile:
          json.dump(my_dictionary, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+    #filejson = open("file1.json", 'r')
+    #dicta = json.loads(filejson.read())
     
     return scene,fathers
 
@@ -102,24 +104,12 @@ def printModelObject(theFile,tabs, i,name,category,verts,cells,father,tvect=[0,0
     print >> theFile, tab+tab, "description:", name
     print >> theFile, tab+tab, "tVector:", [tvect[0],tvect[1],tvect[2]]
     print >> theFile, tab+tab, "rVector:", [0, 0, 0]
-""" Print a model object in a geoJson file """
-def printModelObject(theFile,tabs, i,name,category,verts,cells,father,tvect=[0,0,0]):
-    tab = "    "
-    print >> theFile, "-   ","id:", name
-    print >> theFile, tab, "type:", "Feature"
-    print >> theFile, tab, "geometry:" 
-    print >> theFile, tab+tab, "type:", "Polygon"
-    print >> theFile, tab+tab, "coordinates:" 
-    print >> theFile, tab+tab+tab, AA(eval)(AA(vcode)(verts))
-    print >> theFile, tab, "properties:"
-    print >> theFile, tab+tab, "class:", category
-    print >> theFile, tab+tab, "parent:", father
-    print >> theFile, tab+tab, "son:", i
-    print >> theFile, tab+tab, "description:", name
-    print >> theFile, tab+tab, "tVector:", [tvect[0],tvect[1],tvect[2]]
-    print >> theFile, tab+tab, "rVector:", [0, 0, 0]
 
 """ Print a mat object in a geoJson file """
+def printMatObject(theFile,tabs, theMat):
+    tab = "    "
+    print >> theFile, tab+tab, "tVector:", theMat.T[-1,:-1].tolist()
+""" Print a wall object in a geoJson file """
 def printWalls( theFile, p1V,p1BE,p1IE ):
    
    for k,edge in enumerate(p1BE):
