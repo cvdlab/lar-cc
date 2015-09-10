@@ -64,5 +64,5 @@ glass = MATERIAL([1,0,0,0.3,  0,1,0,0.3,  0,0,1,0.3, 0,0,0,0.3, 100])
 ##VIEW(STRUCT([ glass(STRUCT([a,b])), EDIFICIO, COLOR(BLUE)(SKEL_1(EDIFICIO)) ]))
 
 
-scene,fathers = printStruct2GeoJson(PATH,pianoTipo)
-scene,fathers = printStruct2GeoJson(PATH,Edificio)
+printStruct2GeoJson(PATH,pianoTipo)
+printStruct2GeoJson(PATH,Edificio)

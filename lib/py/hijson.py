@@ -4,9 +4,9 @@ from pyplasm import *
 import sys
 sys.path.insert(0, 'lib/py/')
 from inters import *
-#from iot3d import *
 from larcc import *
 from bool import *
+from iot3d import *
 from copy import copy
 DEBUG = False
 
@@ -35,9 +35,9 @@ if __name__=="__main__":
     selectBox = ((0.45, 0.45), (0.65, 0.75))
     vertexSubset,faceSubset,edgeSubset = subComplexInBox(V,FV,EV,selectBox)
     #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in edgeSubset])) + [
-      #COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
+        #COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
     #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[FV[f] for f in faceSubset])) + [
-      #COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
+        #COLOR(RED)(MK(selectBox[0])),  COLOR(RED)(MK(selectBox[1]))]))
 
 """ Emulation of  ``pick'' input over a LAR normalized representation """
 def subComplexAroundPoint(V,FV,EV,FE,queryPoint):
@@ -101,8 +101,24 @@ def chain2structs(V,FV,EV,FE):
     return chain2structs0
 
 """ From Struct object to LAR boundary model """
+def structFilter(obj):
+    if isinstance(obj,list):
+        if (len(obj) > 1):
+            return [structFilter(obj[0])] + structFilter(obj[1:])
+        return [structFilter(obj[0])]
+    if isinstance(obj,Struct):
+        if obj.category in ["external_wall", "internal_wall", "corridor_wall"]:
+            return
+        return Struct(structFilter(obj.body),obj.name,obj.category)
+    return obj
+
+
 def structBoundaryModel(struct):
-    V,FV,EV = struct2lar(struct)
+    print ">> struct =",struct
+    filteredStruct = structFilter(struct)
+    print ">> filteredStruct =",filteredStruct
+    #import pdb; pdb.set_trace()
+    V,FV,EV = struct2lar(filteredStruct)
     edgeBoundary = boundaryCells(FV,EV)
     cycles = boundaryCycles(edgeBoundary,EV)
     edges = [signedEdge for cycle in cycles for signedEdge in cycle]

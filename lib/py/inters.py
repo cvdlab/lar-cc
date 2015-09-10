@@ -429,7 +429,7 @@ def svg2lines(filename,containmentBox=[],rect2lines=True):
 
 """ Transformation of an array of lines in a 2D LAR complex """
 from bool1 import larRemoveVertices
-import hospital  
+import integr
 
 def larFromLines(lines):
     V,EV = lines2lar(lines)
@@ -437,7 +437,7 @@ def larFromLines(lines):
     EV = list(set(AA(tuple)(sorted(AA(sorted)(CAT(EVs)))))) 
     V,EV = larRemoveVertices(V,EV)
     V,FV,EV = facesFromComponents((V,EV))
-    areas = hospital.surfIntegration((V,FV,EV))
+    areas = integr.surfIntegration((V,FV,EV))
     boundaryArea = max(areas)
     interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea and len(areas)>2]
     boundaryFace = FV[areas.index(boundaryArea)]

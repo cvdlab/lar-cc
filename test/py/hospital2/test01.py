@@ -61,11 +61,6 @@ def vmap(YMAX):
         else: W = [[x,YMAX-y] for x,y in V]
         return W
     return vmap0
-                
-def embed(z):
-    def embed0(p): 
-        return p+[z]
-    return embed0
 
 """ From array indices to grid coordinates """
 def index2coords(theArray):
@@ -252,14 +247,14 @@ Ground_floor = Struct(Ground, "Ground_floor", "level")
 """Mezanine floor """
 Mezanine = [MedicalWaste, CentralStores,
     StaffDining, CSSD, HouseKeeping,  CentralStaffChanging11,
-    CentralStaffChanging21, OpenCourt11, Pharmacy, CentralWorkshop, Laundry,
+    CentralStaffChanging21, Pharmacy, CentralWorkshop, Laundry,
     AdministrationSuite11, MainLaboratories, MedicalLibrary, MedicalRecords,
     AdministrationSuite21, MeetingRooms, DataCenter, ServerRoom, PublicCore,
     ServiceCore11, ServiceCore21, Corridor1, GroundRoof]
 
 Mezanine_names = ["MedicalWaste", "CentralStores",
     "StaffDining", "CSSD", "HouseKeeping", "CentralStaffChanging11",
-    "CentralStaffChanging21", "OpenCourt11", "Pharmacy", "CentralWorkshop", "Laundry",
+    "CentralStaffChanging21", "Pharmacy", "CentralWorkshop", "Laundry",
     "AdministrationSuite11", "MainLaboratories", "MedicalLibrary", "MedicalRecords",
     "AdministrationSuite21", "MeetingRooms", "DataCenter", "ServerRoom", "PublicCore",
     "ServiceCore11", "ServiceCore21", "Corridor1", "GroundRoof"]
@@ -268,11 +263,11 @@ for struct,name in zip(Mezanine,Mezanine_names): struct.set_name(name)
 Mezanine_floor = Struct(Mezanine, "Mezanine_floor", "level")
 
 """First floor """
-First = [OpenCourt3, Surgery, CatheterizationLab,
+First = [Surgery, CatheterizationLab,
     ServiceCore32,  CoronaryCareUnit, DeliveryAndNicu, ServiceCore31,
     IntensiveCareUnit, ServiceCore33, PublicCore3, Corridor3, MezanineRoof]
 
-First_names = [ "OpenCourt3", "Surgery", "CatheterizationLab",
+First_names = ["Surgery", "CatheterizationLab",
     "ServiceCore32", "CoronaryCareUnit", "DeliveryAndNicu", "ServiceCore31",
     "IntensiveCareUnit", "ServiceCore33", "PublicCore3", "Corridor3", "MezanineRoof"]
 
@@ -346,6 +341,123 @@ VIEW(STRUCT(MKPOLS((V2,EV2))))
 VIEW(STRUCT(MKPOLS((V3,EV3))))
 VIEW(STRUCT(MKPOLS((V4,EV4))))
 VIEW(STRUCT(MKPOLS((V5,EV5))))
+
+""" Surface cochain review """
+""" Computing a surface cochain via Struct traversal """
+from collections import defaultdict
+from larstruct import checkStruct
+import scipy
+from larstruct import Model
+from integr import surfIntegration
+
+""" Traversing a hierarchical surface cochain """
+from larstruct import Mat, Model
+def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
+    repeatedNames = defaultdict(int)
+    
+    def map(model):
+        V,FV,EV = larApply(CTM)(model)
+        print "eccomi!"
+        print "V,FV,EV =",V,FV,EV 
+        return AA(int)(surfIntegration((V,FV,EV)))
+    
+    for i in range(len(obj)):
+        if isinstance(obj[i],Struct):
+            repeatedNames[obj[i].name] += 1
+            if repeatedNames[obj[i].name]==1: theName = obj[i].name
+            else: theName = obj[i].name + str(repeatedNames[obj[i].name]-1)
+            names.append(theName)
+            nameStack = nameStack+[names]
+            
+            stack.append(CTM) 
+            structCochainTraversal(CTM, stack, obj[i], cochainMap, names, nameStack)
+            CTM = stack.pop()
+            theName = names.pop()
+            
+        elif isinstance(obj[i],Model): 
+            cochainMap += [( ".".join(names), map(obj[i]) )]
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+              len(obj[i])==2 or len(obj[i])==3):
+            cochainMap += [( ".".join(names), map(obj[i]) )]
+        elif isinstance(obj[i],Mat): 
+            CTM = scipy.dot(CTM, obj[i])
+    return cochainMap
+
+
+def structCochain(depth=1):
+    def structCochain0(struct):
+        cochain = defaultdict(int)
+        dim = checkStruct(struct.body)
+        CTM, stack = scipy.identity(dim+1), []
+        cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
+        print cochainMap
+        cochainMap = [(key,[sum(value)]) for key,value in cochainMap]
+        for cell,cochainValue in cochainMap:
+            nameArray = cell.split(".")
+            cochain[".".join(nameArray[:depth])] += cochainValue[0]
+        return cochain
+    return structCochain0
+    
+
+
+""" Traversing a hierarchical surface cochain """
+from larstruct import Mat, Model
+def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
+    repeatedNames = defaultdict(int)
+    
+    def map(model):
+        V,FV,EV = larApply(CTM)(model)
+        print "eccomi!"
+        print "V,FV,EV =",V,FV,EV 
+        return AA(int)(surfIntegration((V,FV,EV)))
+    
+    for i in range(len(obj)):
+        if isinstance(obj[i],Struct):
+            repeatedNames[obj[i].name] += 1
+            if repeatedNames[obj[i].name]==1: theName = obj[i].name
+            else: theName = obj[i].name + str(repeatedNames[obj[i].name]-1)
+            names.append(theName)
+            nameStack = nameStack+[names]
+            
+            stack.append(CTM) 
+            structCochainTraversal(CTM, stack, obj[i], cochainMap, names, nameStack)
+            CTM = stack.pop()
+            theName = names.pop()
+            
+        elif isinstance(obj[i],Model): 
+            cochainMap += [( ".".join(names), map(obj[i]) )]
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+              len(obj[i])==2 or len(obj[i])==3):
+            cochainMap += [( ".".join(names), map(obj[i]) )]
+        elif isinstance(obj[i],Mat): 
+            CTM = scipy.dot(CTM, obj[i])
+    return cochainMap
+
+
+"""Hospital structure """
+from larstruct import embedStruct, larApply
+floors = [ Ground_floor, Mezanine_floor, First_floor, 
+    Second_floor, Third_floor, Fourth_floor, Fifth_floor ]
+
+Floors = AA(embedStruct(1))(floors)
+
+Floor_names = ["Ground_floor", "Mezanine_floor", "First_floor", 
+               "Second_floor", "Third_floor", "Fourth_floor", "Fifth_floor"] 
+                              
+for struct,name in zip(Floors, Floor_names): struct.set_name(name)
+
+Hospital = Struct( CAT(TRANS([Floors, 7*[t(0,0,4)]])), "General_Hospital", "building")
+
+print "\nstructCochain(0)(Ground_floor) =",structCochain(0)(Ground_floor),"\n"
+print "structCochain(1)(Ground_floor) =",structCochain(1)(Ground_floor),"\n"
+print "structCochain(2)(Ground_floor) =",structCochain(2)(Ground_floor),"\n"
+
+W,WF,WE = struct2lar(Hospital)
+lone = struct2lar( Struct( AA(embedStruct(1))([OpenCourt10, OpenCourt20]) ))
+Z,FZ,EZ = struct2lar( embedStruct(1)(Fifth_floor) )
+ZZ = AA(SUM)(DISTR([Z,[0,0,6*4]]))
+
+VIEW(STRUCT( MKTRIANGLES(W,WF,WE) + AA(COLOR(CYAN))(MKTRIANGLES(ZZ,FZ,EZ)) + [T(3)(.2)] + [COLOR(GREEN)(STRUCT(MKPOLS(lone)))] + AA(COLOR(BLACK))(MKPOLS((W,WE))) + [COLOR(MAGENTA)(STRUCT(MKPOLS((ZZ,EZ))))] ))
 
 """ Project definitions """
 """ Project definition """

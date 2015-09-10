@@ -34,6 +34,7 @@ def grid2coords(X,Y):
 
 def coordMaps(YMAX):
     def coordMaps0(polyline):
+        print "\npolyline =",polyline
         polyline = AA(grid2coords(X,Y))(polyline)
         polyline = vmap(YMAX)(polyline)
         return [eval(vcode(point)) for point in polyline]
@@ -568,7 +569,7 @@ if __name__=="__main__":
     VIEW(STRUCT(MKPOLS((V,EV))))
     
     storeys = STRUCT(CAT(DISTR([[ground,mezanine,first,
-               second,third,fourth,fifth],T(3)(4)])))
+                    second,third,fourth,fifth],T(3)(4)])))
     VIEW(STRUCT([storeys,SteelFrame] + MKPOLS((V,EV)) ))
 """ 2.5D building assembly """    
 """    
@@ -585,19 +586,6 @@ VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))))
 pils = STRUCT(CONS(AA(T([1,2]))(metric(EXPAND(pillars))))(CIRCLE(.4)([8,1])))
 VIEW(STRUCT(AA(APPLY)(TRANS([colors,hpcs]))+[COLOR(BLACK)(pils)]))
 """
-
-from integr import *
-""" Surface integration """
-def surfIntegration(model):
-    V,FV,EV = model
-    V = [v+[0.0] for v in V]
-    cochain = []
-    for face in FV:
-        triangles = AA(C(AL)(face[0]))(TRANS([face[1:-1],face[2:]]))
-        P = V,triangles
-        area = Surface(P,signed=True) 
-        cochain += [abs(area)]
-    return cochain
 
 """ Computing a surface cochain via Struct traversal """
 
@@ -632,24 +620,26 @@ def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[
     return cochainMap
 
 
-def structCochain(struct,depth=1):
-    cochain = defaultdict(int)
-    dim = checkStruct(struct.body)
-    CTM, stack = scipy.identity(dim+1), []
-    cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
-    for cell,cochainValue in cochainMap:
-        nameArray = cell.split(".")
-        cochain[".".join(nameArray[:depth])] += cochainValue[0]
-    return cochain
+def structCochain(depth=1):
+    def structCochain0(struct):
+        cochain = defaultdict(int)
+        dim = checkStruct(struct.body)
+        CTM, stack = scipy.identity(dim+1), []
+        cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
+        for cell,cochainValue in cochainMap:
+            nameArray = cell.split(".")
+            cochain[".".join(nameArray[:depth])] += cochainValue[0]
+        return cochain
+    return structCochain0
     
 """ Computing a surface cochain via Struct traversal """
 if __name__ == "__main__":
-    print "\nsurface cochain(ward) =", structCochain(ward,0)
-    print "\nsurface cochain(ward) =", structCochain(ward,1)
-    print "\nsurface cochain(ward) =", structCochain(ward,2)
-    print "\nsurface cochain(ward) =", structCochain(ward,3)
-    print "\nsurface cochain(ward) =", structCochain(ward,4)
-    print "\nsurface cochain(twoRooms) =", structCochain(twoRooms,1)
-    print "\nsurface cochain(twoRooms) =", structCochain(twoRooms,3)
+    print "\nsurface cochain(ward) =", structCochain(0)(ward)
+    print "\nsurface cochain(ward) =", structCochain(1)(ward)
+    print "\nsurface cochain(ward) =", structCochain(2)(ward)
+    print "\nsurface cochain(ward) =", structCochain(3)(ward)
+    print "\nsurface cochain(ward) =", structCochain(4)(ward)
+    print "\nsurface cochain(twoRooms) =", structCochain(1)(twoRooms)
+    print "\nsurface cochain(twoRooms) =", structCochain(3)(twoRooms)
 
 

@@ -649,7 +649,12 @@ def embedTraversal(cloned, obj,n,suffix):
         if isinstance(obj[i],Model): 
             cloned.body += [obj[i]]
         elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
-                len(obj[i])==2 or len(obj[i])==3):
+                len(obj[i])==2):
+            V,EV = obj[i]
+            V = [v+n*[0.0] for v in V]
+            cloned.body  += [(V,EV)]
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+                len(obj[i])==3):
             V,FV,EV = obj[i]
             V = [v+n*[0.0] for v in V]
             cloned.body  += [(V,FV,EV)]

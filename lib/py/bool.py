@@ -450,7 +450,6 @@ def boundaryTriangulation(W,FW,EW,FE):
         points = (transform.I * (mat(mappedVerts).T)).T.tolist()
         trias = [[points[k][:-1] for k in face]+[points[face[0]][:-1]] for face in triangles]
         triangleSet += [AA(orientTriangle)(trias)]
-    print "new_triangleSet =",triangleSet
     return triangleSet
 
 def triangleIndices(triangleSet,W):

@@ -445,7 +445,7 @@ A simple modification of a DFS (Depth First Search) visit of a graph can be used
 
 The representation chosen for structure networks with LAR is the serialised one, consisting in ordered sequences (lists) of either (a) LAR models, or (b) affine transformations, or (c) references to other structures, either directly nested within some given structure, or called by reference (name) from within the list.
 
-The aim of a structure network traversal is, of course, to transform every component structure, usually defined in a local coordinate system, into the reference frame of the structure as a whole, normally corresponding with the reference system of the structure's root, called the \emph{world coordinate} system.
+The usual aim of a structure network traversal is, of course, to transform every component structure, usually defined in a local coordinate system, into the reference frame of the structure as a whole, normally corresponding with the reference system of the structure's root, called the \emph{world coordinate} system.
 
 \paragraph{The pattern of calls and returned values}
 
@@ -649,7 +649,12 @@ def embedTraversal(cloned, obj,n,suffix):
         if isinstance(obj[i],Model): 
             cloned.body += [obj[i]]
         elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
-                len(obj[i])==2 or len(obj[i])==3):
+                len(obj[i])==2):
+            V,EV = obj[i]
+            V = [v+n*[0.0] for v in V]
+            cloned.body  += [(V,EV)]
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+                len(obj[i])==3):
             V,FV,EV = obj[i]
             V = [v+n*[0.0] for v in V]
             cloned.body  += [(V,FV,EV)]

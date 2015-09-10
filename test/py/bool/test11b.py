@@ -4,7 +4,6 @@
 import numpy
 import sys
 sys.path.insert(0, 'lib/py/')
-from larcc import *
 from bool import *
 
 V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)

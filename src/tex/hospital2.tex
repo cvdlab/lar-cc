@@ -80,6 +80,8 @@ import largrid
 @< Structural frame @>
 @< Storey structure @>
 @< Floor visualization @>
+@< Design review @>
+@< Hospital structure @>
 @< Sub-project indexing @>
 @< SVG files printing @>
 @}
@@ -329,14 +331,14 @@ Ground_floor = Struct(Ground, "Ground_floor", "level")
 @{"""Mezanine floor """
 Mezanine = [MedicalWaste, CentralStores,
     StaffDining, CSSD, HouseKeeping,  CentralStaffChanging11,
-    CentralStaffChanging21, OpenCourt11, Pharmacy, CentralWorkshop, Laundry,
+    CentralStaffChanging21, Pharmacy, CentralWorkshop, Laundry,
     AdministrationSuite11, MainLaboratories, MedicalLibrary, MedicalRecords,
     AdministrationSuite21, MeetingRooms, DataCenter, ServerRoom, PublicCore,
     ServiceCore11, ServiceCore21, Corridor1, GroundRoof]
 
 Mezanine_names = ["MedicalWaste", "CentralStores",
     "StaffDining", "CSSD", "HouseKeeping", "CentralStaffChanging11",
-    "CentralStaffChanging21", "OpenCourt11", "Pharmacy", "CentralWorkshop", "Laundry",
+    "CentralStaffChanging21", "Pharmacy", "CentralWorkshop", "Laundry",
     "AdministrationSuite11", "MainLaboratories", "MedicalLibrary", "MedicalRecords",
     "AdministrationSuite21", "MeetingRooms", "DataCenter", "ServerRoom", "PublicCore",
     "ServiceCore11", "ServiceCore21", "Corridor1", "GroundRoof"]
@@ -350,11 +352,11 @@ Mezanine_floor = Struct(Mezanine, "Mezanine_floor", "level")
 %-------------------------------------------------------------------------------
 @D First floor structure
 @{"""First floor """
-First = [OpenCourt3, Surgery, CatheterizationLab,
+First = [Surgery, CatheterizationLab,
     ServiceCore32,  CoronaryCareUnit, DeliveryAndNicu, ServiceCore31,
     IntensiveCareUnit, ServiceCore33, PublicCore3, Corridor3, MezanineRoof]
 
-First_names = [ "OpenCourt3", "Surgery", "CatheterizationLab",
+First_names = ["Surgery", "CatheterizationLab",
     "ServiceCore32", "CoronaryCareUnit", "DeliveryAndNicu", "ServiceCore31",
     "IntensiveCareUnit", "ServiceCore33", "PublicCore3", "Corridor3", "MezanineRoof"]
 
@@ -433,6 +435,35 @@ Fifth_floor = Struct(Fifth, "Fifth_floor", "level")
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Hospital structure}
+%-------------------------------------------------------------------------------
+@D Hospital structure
+@{"""Hospital structure """
+from larstruct import embedStruct, larApply
+floors = [ Ground_floor, Mezanine_floor, First_floor, 
+    Second_floor, Third_floor, Fourth_floor, Fifth_floor ]
+
+Floors = AA(embedStruct(1))(floors)
+
+Floor_names = ["Ground_floor", "Mezanine_floor", "First_floor", 
+					"Second_floor", "Third_floor", "Fourth_floor", "Fifth_floor"] 
+										
+for struct,name in zip(Floors, Floor_names): struct.set_name(name)
+
+Hospital = Struct( CAT(TRANS([Floors, 7*[t(0,0,4)]])), "General_Hospital", "building")
+
+print "\nstructCochain(0)(Ground_floor) =",structCochain(0)(Ground_floor),"\n"
+print "structCochain(1)(Ground_floor) =",structCochain(1)(Ground_floor),"\n"
+print "structCochain(2)(Ground_floor) =",structCochain(2)(Ground_floor),"\n"
+
+W,WF,WE = struct2lar(Hospital)
+lone = struct2lar( Struct( AA(embedStruct(1))([OpenCourt10, OpenCourt20]) ))
+Z,FZ,EZ = struct2lar( embedStruct(1)(Fifth_floor) )
+ZZ = AA(SUM)(DISTR([Z,[0,0,6*4]]))
+
+VIEW(STRUCT( MKTRIANGLES(W,WF,WE) + AA(COLOR(CYAN))(MKTRIANGLES(ZZ,FZ,EZ)) + [T(3)(.2)] + [COLOR(GREEN)(STRUCT(MKPOLS(lone)))] + AA(COLOR(BLACK))(MKPOLS((W,WE))) + [COLOR(MAGENTA)(STRUCT(MKPOLS((ZZ,EZ))))] ))
+@}
+%-------------------------------------------------------------------------------
 
 
 %-------------------------------------------------------------------------------
@@ -469,6 +500,118 @@ The starting point of the modelling developed here is the paper~\cite{who:2013},
    \label{fig:hismail}
 \end{figure}
 
+
+
+%===============================================================================
+\section{Design review}
+%===============================================================================
+
+The design review is here intended as the computation of the discrete fields of interest,
+above the space decomposition generated in the previous design steps. 
+
+As stated in the beginning of this document, the design processing proceeds by step-wise refinement 
+of topological (and geometrical) constraints on the planned spaces, aimed to satisfy
+a set of design requirements. In case of non-satisfaction, some design changes are introduced, producing a different space decomposition, and repeating the tests.
+
+The discrete field values within the cells of the decomposition provide an evaluated \emph{cochain} over 
+a chain (subset of cells) defined above the design decomposition. Both the chain of interest, and the cochain evaluated over it may vary, depending on the design task at hand. In any case the \emph{evaluation} of a cochain $\phi$ above a chain $\rho$, denoted as either $\phi(\rho)$ or the pairing $\langle \phi,\rho \rangle$, will produce a field value, in our case a number, corresponding to the integral of the field (discrete differential form) above the discretized integration domain (set of cells).
+
+%-------------------------------------------------------------------------------
+\subsection{Integration and cochains computation}
+%-------------------------------------------------------------------------------
+
+Very often, the discrete field value associated to every cell of a cellular decomposition  results from the integration  of some differential $k$-form on the given $k$-cell.  In general, a $k$-form can be described as an entity to be integrated on a $k$-dimensional (sub)region~\cite{Desbrun:2005:DDF:1198555.1198666}.
+For this purpose, we are going to  (a)  approximate the given form (function $\R^k \to \R$) with a multivariate polynomial;
+(b)    use a finite integration method for $k$-variate monomials in 2D or 3D Euclidean space~\cite{CattaniP-BIL1990}.
+The result is a (hierarchical) mapping between the (hierarchy of) cells of the decomposition, and the integral of an approximating polynomial on the cells.
+
+\paragraph{Computing a surface cochain via Struct traversal}
+
+The function \texttt{structCochain}, given in the script below, returns the hierarchical (surface) cochain corresponding to the given \texttt{depth} of the \texttt{struct} input. In particular, every value in the output dictionary \texttt{cochain} returns the evaluated (i.e.~summed) cochain associated to the \texttt{struct} subgraph rooted in every node at  \texttt{depth} distance from the root node of \texttt{struct}. Just notice that the keys of the output \texttt{cochain} dictionary result from the \emph{string-join} of the names of the \texttt{struct} nodes along the \emph{current} path from the root to the node (at level \texttt{depth}) associated with the key.
+
+%-------------------------------------------------------------------------------
+@D Computing a surface cochain via Struct traversal
+@{""" Computing a surface cochain via Struct traversal """
+from collections import defaultdict
+from larstruct import checkStruct
+import scipy
+from larstruct import Model
+from integr import surfIntegration
+
+@< Traversing a hierarchical surface cochain @>
+
+def structCochain(depth=1):
+    def structCochain0(struct):
+        cochain = defaultdict(int)
+        dim = checkStruct(struct.body)
+        CTM, stack = scipy.identity(dim+1), []
+        cochainMap = structCochainTraversal(CTM, stack, struct, [], [], []) 
+        print cochainMap
+        cochainMap = [(key,[sum(value)]) for key,value in cochainMap]
+        for cell,cochainValue in cochainMap:
+            nameArray = cell.split(".")
+            cochain[".".join(nameArray[:depth])] += cochainValue[0]
+        return cochain
+    return structCochain0
+    
+@< Example of hierarchical surface cochains @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Traversing a hierarchical surface cochain}
+The \texttt{structCochainTraversal} function given below executes a standard traversal of a hierarchical structure, consisting in relocating all encountered objects from local coordinates to the root coordinates. 
+
+While executing the traversal, a set of pairs (corresponding to each traversed node) is accumulated in the \texttt{cochainMap} list, initially empty. Every such pair contains the joined names of nodes along the current path, and the surface integral evaluated on the traversed node, cast to an integer value. 
+
+Notice that if a \texttt{struct} node contains more than one instance of the same son, then the names of such instances are joined with the counter value associated to the son's \texttt{name} within a dictionary \texttt{repeatedNames}, in order to make individually identifiable the various object instances.
+
+%-------------------------------------------------------------------------------
+@D Traversing a hierarchical surface cochain
+@{""" Traversing a hierarchical surface cochain """
+from larstruct import Mat, Model
+def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
+    repeatedNames = defaultdict(int)
+    
+    def map(model):
+        V,FV,EV = larApply(CTM)(model)
+        print "eccomi!"
+        print "V,FV,EV =",V,FV,EV 
+        return AA(int)(surfIntegration((V,FV,EV)))
+    
+    for i in range(len(obj)):
+        if isinstance(obj[i],Struct):
+            repeatedNames[obj[i].name] += 1
+            if repeatedNames[obj[i].name]==1: theName = obj[i].name
+            else: theName = obj[i].name + str(repeatedNames[obj[i].name]-1)
+            names.append(theName)
+            nameStack = nameStack+[names]
+            
+            stack.append(CTM) 
+            structCochainTraversal(CTM, stack, obj[i], cochainMap, names, nameStack)
+            CTM = stack.pop()
+            theName = names.pop()
+            
+        elif isinstance(obj[i],Model): 
+            cochainMap += [( ".".join(names), map(obj[i]) )]
+        elif (isinstance(obj[i],tuple) or isinstance(obj[i],list)) and (
+              len(obj[i])==2 or len(obj[i])==3):
+            cochainMap += [( ".".join(names), map(obj[i]) )]
+        elif isinstance(obj[i],Mat): 
+            CTM = scipy.dot(CTM, obj[i])
+    return cochainMap
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Design review}
+
+%-------------------------------------------------------------------------------
+@D Design review
+@{""" Surface cochain review """
+@< Computing a surface cochain via Struct traversal @>
+@< Traversing a hierarchical surface cochain @>
+@}
+%-------------------------------------------------------------------------------
 
 %===============================================================================
 \section{Model input}
@@ -814,11 +957,6 @@ def vmap(YMAX):
         else: W = [[x,YMAX-y] for x,y in V]
         return W
     return vmap0
-                
-def embed(z):
-    def embed0(p): 
-        return p+[z]
-    return embed0
 @}
 %-------------------------------------------------------------------------------
 

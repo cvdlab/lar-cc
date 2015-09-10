@@ -106,3 +106,16 @@ def TT(tau, alpha, beta, gamma, signed=False):
    elif a[2]==b[2]==0.0: return sl * VECTNORM(c) * SIGN(c[2])
    else: print "error: in signed surface integration"
 
+from integr import *
+""" Surface integration """
+def surfIntegration(model):
+    V,FV,EV = model
+    V = [v+[0.0] for v in V]
+    cochain = []
+    for face in FV:
+        triangles = AA(C(AL)(face[0]))(TRANS([face[1:-1],face[2:]]))
+        P = V,triangles
+        area = Surface(P,signed=True) 
+        cochain += [abs(area)]
+    return cochain
+
