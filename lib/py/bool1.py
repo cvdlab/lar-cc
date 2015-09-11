@@ -15,6 +15,7 @@ from larstruct import *
 from splitcell import *
 DEBUG = True
 TRACE,tracing = True,-1
+
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
 global PRECISION
 PRECISION = 3.
@@ -46,6 +47,7 @@ def vcode (vect):
 
    #if TRACE: tracing = mytrace(tracing,"<vcode")-1
    return prepKey(AA(fixedPrec)(vect))
+
 
 """ Merge two dictionaries with keys the point locations """
 def mergeVertices(model1, model2):
@@ -94,6 +96,7 @@ def mergeVertices(model1, model2):
    if TRACE: tracing = mytrace(tracing,"<mergeVertices")-1
    return V,CV1,CV2, n1+n2,n2,n2+n3
 
+
 """ Make Common Delaunay Complex """
 from scipy.spatial import Delaunay
 def makeCDC(arg1,arg2, brep=False):
@@ -133,6 +136,7 @@ def makeCDC(arg1,arg2, brep=False):
    if TRACE: tracing = mytrace(tracing,"<makeCDC")-1
    return V,CV,vertDict,n1,n12,n2,BC,len(BC1),len(BC2)
 
+
 """ Cell-facet intersection test """
 def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">cellFacetIntersecting")
@@ -168,6 +172,7 @@ def cellFacetIntersecting(boundaryFacet,cell,covector,V,CV):
    else: 
       if TRACE: tracing = mytrace(tracing,"<cellFacetIntersecting")-1
       return True
+
 
 
 """ Splitting tests """
@@ -228,6 +233,7 @@ def dividenda(V,CV, cell,facet,covector,unchosen):
    if TRACE: tracing = mytrace(tracing,"<dividenda")-1
    return out
 
+
 """ Computing the adjacent cells of a given cell """
 def adjacencyQuery (V,CV):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">adjacencyQuery")
@@ -246,6 +252,7 @@ def adjacencyQuery (V,CV):
 
    if TRACE: tracing = mytrace(tracing,"<adjacencyQuery")-1
    return adjacencyQuery0
+
 
 """ Computation of boundary facets covering with CDC cells """
 def boundaryCover(V,CV,BC,VC):
@@ -287,6 +294,7 @@ def boundaryCover(V,CV,BC,VC):
    if TRACE: tracing = mytrace(tracing,"<boundaryCover")-1
    return boundaryCellCovering
 
+
 """ CDC cell splitting with one or more cutting facets """
 # new implementation
 def fragment(cell,cellCuts,V,CV,BC):
@@ -316,6 +324,7 @@ def fragment(cell,cellCuts,V,CV,BC):
    if TRACE: tracing = mytrace(tracing,"<fragment")-1
    return cellFragments
 
+
 """ Boolean argument boundaries embedding in SCDC """
 def boundaryEmbedding(BCfrags,nbc1,dim):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaryEmbedding")
@@ -335,6 +344,7 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 
    if TRACE: tracing = mytrace(tracing,"<boundaryEmbedding")-1
    return boundary1,boundary2
+
 
 """ Make facets dictionaries """
 def makeFacetDicts(FW,boundary1,boundary2):
@@ -362,6 +372,7 @@ def makeFacetDicts(FW,boundary1,boundary2):
 
    if TRACE: tracing = mytrace(tracing,"<makeFacetDicts")-1
    return boundary1,boundary2,FWdict
+
 
 """ SCDC splitting with every boundary facet """
 def makeSCDC(V,CV,BC,nbc1,nbc2):
@@ -441,6 +452,7 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
    if TRACE: tracing = mytrace(tracing,"<makeSCDC")-1
    return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
 
+
 """ Characteristic matrix transposition """
 def invertRelation(CV):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">invertRelation")
@@ -464,6 +476,7 @@ def invertRelation(CV):
    if TRACE: tracing = mytrace(tracing,"<invertRelation")-1
    return VC
 
+
 """ Computation of embedded boundary cells """
 def facetsOnCuts(cellFragments,cellCuts,V,BC):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">facetsOnCuts")
@@ -474,6 +487,7 @@ def facetsOnCuts(cellFragments,cellCuts,V,BC):
 
    if TRACE: tracing = mytrace(tracing,"<facetsOnCuts")-1
    return #facets
+
 
 """ Coboundary operator on the convex decomposition of common space """
 from scipy.spatial import ConvexHull
@@ -528,6 +542,7 @@ if __name__ == "__main__":
    FV = convexFacets(V,CV,2)
    #EV = convexFacets(V,FV,1)
 
+
 """ Computation of boundary operator of a convex LAR model"""
 def convexBoundary(V,CV): 
    if TRACE: global tracing;tracing = mytrace(tracing+1,">convexBoundary")
@@ -556,6 +571,7 @@ def convexBoundary(V,CV):
 
    if TRACE: tracing = mytrace(tracing,"<convexBoundary")-1
    return boundaryFacets
+
 
 """ Writing labelling seeds on SCDC """
 def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):
@@ -586,6 +602,7 @@ def cellTagging(boundaryDict,boundaryMat,CW,FW,W,BC,CWbits,arg):
    if TRACE: tracing = mytrace(tracing,"<cellTagging")-1
    return CWbits
 
+
 """ Recursive diffusion of labels on SCDC """
 def booleanChainTraverse(h,cell,V,CV,CWbits,value):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">booleanChainTraverse")
@@ -598,6 +615,7 @@ def booleanChainTraverse(h,cell,V,CV,CWbits,value):
 
    if TRACE: tracing = mytrace(tracing,"<booleanChainTraverse")-1
    return CWbits
+
 
 """ Mapping from hyperplanes to lists of facets """
 def facet2covectors(W,FW):
@@ -613,6 +631,7 @@ def boundaries(boundary1,boundary2):
 
    if TRACE: tracing = mytrace(tracing,"<boundaries")-1
    return boundary1.union(boundary2)
+
 
 """ Mapping from hyperplanes to lists of facets """
 def facet2covectors(W,FW):
@@ -746,6 +765,7 @@ def gatherPolytopes(W,CW,FW,boundaryMat,bounds1,bounds2,CWbits):
    return X,CX,CXbits
 
 
+
 """ Removal of redundant vertices from simplified LAR model """
 def facetCovectors(X,FX):
    if TRACE: global tracing;tracing = mytrace(tracing+1,">facetCovectors")
@@ -788,6 +808,7 @@ def larVertexRemoval(X,CX,FX):
    if TRACE: tracing = mytrace(tracing,"<larVertexRemoval")-1
    return V,CV,FV
 
+
 """ Remove the unused vertices """
 def larRemoveVertices(V,FV):
     vertDict = dict()
@@ -806,6 +827,7 @@ def larRemoveVertices(V,FV):
                 outcell += [vertDict[key]]
         FW += [outcell]
     return W,FW
+
 
 """ Boolean Algorithm """
 def larBool(arg1,arg2, brep=False):

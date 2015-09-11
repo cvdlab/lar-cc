@@ -25,7 +25,7 @@ boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
 BE = list({e for f in BF for e in FE[f]})
 
-Volume((V,[FV[f] for f in CF[0]]))
+#Volume((V,[FV[f] for f in CF[0]]))
 
 VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF],[EV[e] for e in BE]) ))
 VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell],[EV[e] for e in set(CAT([FE[f] for f in cell]))]) for cell in CF]))
