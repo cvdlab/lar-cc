@@ -1,14 +1,6 @@
-from pyplasm import *
-from scipy import *
-import os,sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from simplexn import *
-from larcc import *
-from largrid import *
-from mapper import *
-from boolean import vertexSieve
+""" architectural module """
+""" Initial import of modules """
+from larlib import *
 
 def face2edge(FV):
    """ From faces to list of edges """

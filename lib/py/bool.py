@@ -1,9 +1,5 @@
 """ Module for Boolean computations between geometric objects """
-from pyplasm import *
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 DEBUG = False
 
 """ Coding utilities """
@@ -425,7 +421,7 @@ def orientTriangle(pointTriple):
     if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
     else: return pointTriple
     
-from triangle import *
+from triangle import triangulate
 from integr import *
 from copy import copy
 def boundaryTriangulation(W,FW,EW,FE):

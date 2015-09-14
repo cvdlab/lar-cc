@@ -1,10 +1,8 @@
 """ non-valid -> valid solid representation of a space partition """
+from larlib import *
 
 """ Two unit cubes """
-
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
+from larlib import *
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
@@ -25,8 +23,6 @@ parts = boxBuckets(boxes)
 
     
 W,FW,EW = spacePartition(V,FV,EV, parts)
-
-from architectural import *
 polylines = lar2polylines((W,FW))
 VIEW(EXPLODE(1.2,1.2,1.2)(AA(POLYLINE)(polylines)))
 

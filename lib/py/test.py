@@ -1,10 +1,9 @@
-
-    from pyplasm import *
+from pyplasm import *
 from scipy import *
 import os,sys
 """ import modules from larcc/lib """
 sys.path.insert(0, 'lib/py/')
-from boolean import *
+# from boolean import *
 from matrix import *
 
 subspace = T([1,2,3])([-50,-50,0])(CUBOID([100,100,100]))

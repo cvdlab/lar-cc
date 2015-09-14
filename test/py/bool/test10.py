@@ -1,7 +1,7 @@
 
 """ Visualization of indices of the boundary triangulation """
-import sys; sys.path.insert(0, 'lib/py/')
-from bool import *
+from larlib import *
+
 sys.path.insert(0, 'test/py/bool/')
 from test09 import *
 

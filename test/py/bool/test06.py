@@ -1,9 +1,7 @@
 """ 3-cell reconstruction from LAR space partition """
+from larlib import *
 """ Two unit cubes """
-
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
+from larlib import *
 V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct([cube1,t(.5,.5,.5),cube1])

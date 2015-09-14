@@ -1,9 +1,7 @@
 """ 2D polygon triangulation """
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
+from larlib import *
 
-filename = "test/py/bool/interior.svg"
+filename = "larlib/test/bool/interior.svg"
 lines = svg2lines(filename)    
 V,FV,EV = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))

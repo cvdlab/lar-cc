@@ -317,7 +317,6 @@ The input to \texttt{bUnit\_to\_eEiP}, to compute the 1D external envelope and i
 @O test/py/architectural/test04.py
 @{""" D LAR model input and handling """
 @< Initial import of modules @>
-from architectural import *
 @< Input of LAR architectural plan @>
 @< Generation of the typical flat of apartment block @>
 @}
@@ -348,7 +347,6 @@ VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))
 @O test/py/architectural/test05.py
 @{""" 3D mock-up of apartment block """
 @< Initial import of modules @>
-from architectural import *
 @< Input of LAR architectural plan @>
 @< Generation of the typical flat of apartment block @>
 stair = spiralStair(width=0.2,R=3,r=0.25,riser=0.1,pitch=4.4,nturns=1.75,steps=36)
@@ -375,8 +373,8 @@ VIEW(STRUCT(CAT(AA(MKPOLS)(assembly3D)) + horClosures + [frame3D]))
 
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test01.py
-@{@< Initial import of modules @>
-from architectural import *
+@{""" test file """
+@< Initial import of modules @>
 @< Input of LAR architectural plan @>
 bU = AA(SOLIDIFY)(AA(POLYLINE)(lar2polylines (dwelling)))
 EV = face2edge(FV)
@@ -432,7 +430,7 @@ The function \texttt{horizontalClosures} is applied to a 2D assembly and to a 1D
 \paragraph{Spatial beams and frames}
 %-------------------------------------------------------------------------------
 @D Spatial beams and frames
-@{from myfont import *
+@{""" Spatial beams and frames """
 columns0D = V,[[k] for k in range(len(V))]
 columns = larModelProduct([columns0D,larQuote1D([4])])
 indices = [T([1,2])(v)(S([1,2])([.1,.1])(TEXT(str(k)))) for k,v in enumerate(V)]
@@ -492,7 +490,7 @@ The \texttt{face2edge} operator takes every consecutive pair of vertex indices f
 
 \paragraph{From LAR model to list of polylines}
 The function \texttt{lar2polylines}
-transform a LAR model into a list of polylines, i.e.~of (closed) lists of 2D points, where the last point coincides with the first one.
+transforms a LAR model into a list of polylines, i.e.~of (closed) lists of 2D points, where the last point coincides with the first one.
 %-------------------------------------------------------------------------------
 @D From faces FV to list of edges EV
 @{def lar2polylines (model):
@@ -593,7 +591,8 @@ if __name__=="__main__":
 %-------------------------------------------------------------------------------
 
 @O lib/py/architectural.py
-@{@< Initial import of modules @>
+@{""" architectural module """
+@< Initial import of modules @>
 @< From faces FV to list of edges EV @>
 @< Some operators for assemblies @>
 @< Low-dimensional constructors: 1D and 0D @>
@@ -634,17 +633,8 @@ if __name__=="__main__":
 
 %-------------------------------------------------------------------------------
 @D Initial import of modules
-@{from pyplasm import *
-from scipy import *
-import os,sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from simplexn import *
-from larcc import *
-from largrid import *
-from mapper import *
-from boolean import vertexSieve
+@{""" Initial import of modules """
+from larlib import *
 @}
 %-------------------------------------------------------------------------------
 
@@ -655,8 +645,8 @@ from boolean import vertexSieve
 
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test01.py
-@{@< Initial import of modules @>
-from architectural import *
+@{""" Concept design """
+@< Initial import of modules @>
 @< Input of LAR architectural plan @>
 # VIEW(STRUCT(AA(POLYLINE)(lar2polylines (model))))
 # VIEW(EXPLODE(1.2,1.2,1)(AA(POLYLINE)(lar2polylines (model))))
@@ -690,8 +680,8 @@ VIEW(EXPLODE(1.2,1.2,1)(bU + MKPOLS(modIp2D) + MKPOLS(modEe2D)))
 
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test02.py
-@{@< Initial import of modules @>
-from architectural import *
+@{""" test file """
+@< Initial import of modules @>
 @< Input of LAR architectural plan @>
 (W,FW) = larApply(s(-1,-1))(dwelling)
 (V,FV) = dwelling

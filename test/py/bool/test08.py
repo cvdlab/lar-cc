@@ -1,8 +1,8 @@
 
 import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
-sys.path.insert(0, 'test/py/bool/')
+from larlib import *
+
+sys.path.insert(0, 'test/bool/')
 from test06 import *
 
 """ From triples of points to LAR model """

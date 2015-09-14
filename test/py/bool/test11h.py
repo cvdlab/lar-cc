@@ -1,10 +1,8 @@
 
 
 """ Visualization of indices of the boundary triangulation """
-import numpy
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
+import larlib
+from larlib import *
 
 V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
 """
@@ -18,7 +16,7 @@ cubeGrids = Struct(2*[cubeGrid,t(1.5,1.5,1.5)])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
-V,CV,FV,EV,CF,CE,COE,FE = partition(V,FV,EV)
+V,CV,FV,EV,CF,CE,COE,FE = larlib.partition(V,FV,EV)
 
 cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))

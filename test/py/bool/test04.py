@@ -1,10 +1,6 @@
 
 """ Visualizing with different colors the buckets of box-kd-tree """
-from pyplasm import *
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from bool import *
+from larlib import *
 
 randomQuadArray = randomQuads(30,0.8)
 VIEW(STRUCT(AA(MKPOL)([[verts, [[1,2,3,4]], None] for verts in randomQuadArray])))

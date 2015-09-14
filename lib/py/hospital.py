@@ -34,7 +34,7 @@ def grid2coords(X,Y):
 
 def coordMaps(YMAX):
     def coordMaps0(polyline):
-        print "\npolyline =",polyline
+		#print "\npolyline =",polyline
         polyline = AA(grid2coords(X,Y))(polyline)
         polyline = vmap(YMAX)(polyline)
         return [eval(vcode(point)) for point in polyline]

@@ -1,6 +1,7 @@
 
 """ Testing of point-in-polygon classification algorithm """
-import sys; 
+from larlib import *
+
 sys.path.insert(0, 'test/py/inters/')
 from test10 import *
 

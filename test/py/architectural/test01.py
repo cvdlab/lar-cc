@@ -1,16 +1,7 @@
-from pyplasm import *
-from scipy import *
-import os,sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from simplexn import *
-from larcc import *
-from largrid import *
-from mapper import *
-from boolean import vertexSieve
+""" test file """
+""" Initial import of modules """
+from larlib import *
 
-from architectural import *
 
 V = [[3,-3],
 [9,-3],[0,0],[3,0],[9,0],[15,0],
@@ -48,19 +39,10 @@ modEe2D = larModelProduct([ modEe1D, floorHeight ])
 VIEW(EXPLODE(1.2,1.2,1)(bU + MKPOLS(modIp2D) + eE1D))
 VIEW(EXPLODE(1.2,1.2,1)(bU + iP1D + MKPOLS(modEe2D)))
 VIEW(EXPLODE(1.2,1.2,1)(bU + MKPOLS(modIp2D) + MKPOLS(modEe2D)))
-from pyplasm import *
-from scipy import *
-import os,sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from simplexn import *
-from larcc import *
-from largrid import *
-from mapper import *
-from boolean import vertexSieve
+""" Concept design """
+""" Initial import of modules """
+from larlib import *
 
-from architectural import *
 
 V = [[3,-3],
 [9,-3],[0,0],[3,0],[9,0],[15,0],
