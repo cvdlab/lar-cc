@@ -1,7 +1,5 @@
 """ testing initial steps of Assembly Diagram construction """
-""" Initial import of modules """
-from lar2psm import *
-
+from larlib import *
 
 shape = [1,2,2]
 sizePatterns = [[1],[2,1],[0.8,0.2]]
@@ -19,10 +17,10 @@ VIEW(SKEL_1(STRUCT(MKPOLS(diagram1))))
 
 hpc = SKEL_1(STRUCT(MKPOLS(diagram1)))
 V = diagram1[0]
-hpc = cellNumbering ((V,FV),hpc)(interiorFaces,YELLOW,.5)
+hpc = cellNumbering((V,FV),hpc)(interiorFaces,YELLOW,.5)
 VIEW(hpc)
-hpc = cellNumbering ((V,EV),hpc)([for f in interiorFaces],GREEN,.4)
+hpc = cellNumbering((V,EV),hpc)([f for f in interiorFaces],GREEN,.4)
 VIEW(hpc)
-hpc = cellNumbering ((V,VV),hpc)(range(len(VV)),RED,.3)
+hpc = cellNumbering((V,VV),hpc)(range(len(VV)),RED,.3)
 VIEW(hpc)
 

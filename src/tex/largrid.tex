@@ -539,20 +539,20 @@ The file \texttt{test/py/largrid/test04.py} gives an example of computation of t
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test04.py
 @{""" Computation of the boundary of a simplicial grid """
-import sys; sys.path.insert(0, 'lib/py/')
-from larcc import *
-from largrid import *
+from larlib import *
 
 V,simplices = larSimplexGrid1((2,2))
 bases = larSimplicialStack(simplices)
 boundaryCells = signedBoundaryCells(V,bases[-1],bases[-2])
 
-def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
-orientedBoundary = [bases[-2][-k] if k<0 else swap(bases[-2][k]) 
+def swap(mylist): 
+    return [mylist[1]]+[mylist[0]]+mylist[2:]
+    
+orientedBoundary = [bases[-2][-k] if k<0 else swap(list(bases[-2][k]))
 						for k in boundaryCells]
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))
 submodel = STRUCT(MKPOLS((V,orientedBoundary)))
-VIEW(larModelNumbering(V,bases,submodel))
+VIEW(larModelNumbering()(V,bases,submodel))
 @}
 %-------------------------------------------------------------------------------
 
@@ -564,9 +564,7 @@ how to use the components of the LAR cell stack, computed as \texttt{larSimplici
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test03.py
 @{""" Computation of the boundary of a simplicial grid """
-import sys; sys.path.insert(0, 'lib/py/')
-from larcc import *
-from largrid import *
+from larlib import *
 
 V,CV = larSimplexGrid1((2,2,2))
 bases = larSimplicialStack(CV)
@@ -574,10 +572,10 @@ VV,EV,FV,CV = bases
 boundaryCells = signedBoundaryCells(V,CV,FV)
 
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
-orientedBoundary = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells]
+orientedBoundary = [FV[-k] if k<0 else swap(list(FV[k])) for k in boundaryCells]
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))
 submodel = EXPLODE(1.05,1.05,1.05)(MKPOLS((V,orientedBoundary)))
-VIEW(larModelNumbering(V,bases,submodel))
+VIEW(larModelNumbering()(V,bases,submodel))
 @}
 %-------------------------------------------------------------------------------
 
@@ -591,8 +589,7 @@ VIEW(larModelNumbering(V,bases,submodel))
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test05.py
 @{""" Extraction of oriented boundary of a cuboidal 2-complex """
-import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
+from larlib import *
 from random import random
 
 shape = 20,20
@@ -636,8 +633,7 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test06.py
 @{""" Extraction of oriented boundary of a cuboidal 3-complex """
-import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
+from larlib import *
 from random import random
 
 shape = (10,10,10)
@@ -756,8 +752,8 @@ In this section we assemble top-down the \texttt{largrid} module, by orderly lis
 @O larlib/larlib/largrid.py
 @{"""Module with functions for grid generation and Cartesian product"""
 import collections
-@< Importing \texttt{simplexn} and \texttt{numpy} libraries @>
-@< Import the module @(larcc@) @>
+from larlib import *
+
 @< Generation of vertices of decompositions of 1D intervals  @>
 @< Generation of uniform 0D cellular complex  @>
 @< Generation of uniform 1D cellular complex  @>
@@ -809,7 +805,8 @@ Some test examples of the \texttt{larSplit} function are given in the following.
 
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test01.py
-@{from pyplasm import *
+@{""" Vertices of 1D decompositions """
+from larlib import *
 
 @<Generation of vertices of decompositions of 1D intervals@>
 assert larSplit(1)(3) == [[0.0], [0.3333333333333333], [0.6666666666666666], [1.0]]
@@ -825,8 +822,8 @@ assert larSplit(2*PI)(12) == [[0.0], [0.5235987755982988], [1.0471975511965976],
 
 %-------------------------------------------------------------------------------
 @O test/py/largrid/test02.py
-@{import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
+@{""" Test file """
+from larlib import *
 
 mod_1 = larSplit(1)(4), larGrid(4)(1)
 squares = larModelProduct([mod_1,mod_1])
@@ -850,49 +847,6 @@ The list of macros follow.
 \label{sec:utilities}
 
 \subsection{Utilities}
-
-%-------------------------------------------------------------------------------
-@d Importing \texttt{simplexn} and \texttt{numpy} libraries
-@{from simplexn import *
-import numpy as np
-@}
-%-------------------------------------------------------------------------------
-
-An useful utility will allow for the creation of a subdirectory from a \texttt{dirpath} \emph{string}.
-%------------------------------------------------------------------
-@d Create directory from path 
-@{import os
-def createDir(dirpath):
-    if not os.path.exists(dirpath):
-        os.makedirs(dirpath)
-@| createDir @}
-%------------------------------------------------------------------
-
-It may be useful to define the repository(ies) for the unit tests associated to the module:
-%------------------------------------------------------------------
-@o test/py/largrid-tests.py
-@{@< Create directory from path @>
-createDir('test/py/largrid/')
-@}
-%------------------------------------------------------------------
-
-\subsection{Importing a generic module}
-First we define a parametric macro to allow the importing of \texttt{larcc} modules from the project repository \texttt{lib/py/}. When the user needs to import some project's module, she may call this macro as done in Section~\ref{sec:lar2psm}.
-%------------------------------------------------------------------
-@d Import the module
-@{import sys; sys.path.insert(0, 'lib/py/')
-import @1
-from @1 import *
-@}
-%------------------------------------------------------------------
-
-\paragraph{Importing a module} A function used to import a generic \texttt{lacccc} module within the current environment is also useful.
-%------------------------------------------------------------------
-@d Function to import a generic module
-@{def importModule(moduleName):
-	@< Import the module @(moduleName@) @>
-@| importModule @}
-%------------------------------------------------------------------
 
 
 

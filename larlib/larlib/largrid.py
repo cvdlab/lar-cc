@@ -1,11 +1,6 @@
 """Module with functions for grid generation and Cartesian product"""
 import collections
-from simplexn import *
-import numpy as np
-
-import sys; sys.path.insert(0, 'lib/py/')
-import larcc
-from larcc import *
+from larlib import *
 
 def larSplit(dom):
     def larSplit1(n):

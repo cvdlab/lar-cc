@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """Module for facet extraction, extrusion and simplicial grids"""
-from pyplasm import *
-from scipy import *
-import sys; sys.path.insert(0, 'lib/py/')
-from lar2psm import *
+from larlib import *
 
 VOID = V0,CV0 = [[]],[[0]]    # the empty simplicial model
 

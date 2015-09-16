@@ -1,6 +1,5 @@
 """ Extraction of oriented boundary of a cuboidal 2-complex """
-import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
+from larlib import *
 from random import random
 
 shape = 20,20

@@ -1,6 +1,6 @@
 """ An hospital draft design """
 from larlib import *
-
+    
 """ Coding utilities """
 """ Filter functions """
 DEBUG = True
@@ -336,6 +336,7 @@ VIEW(STRUCT(MKPOLS((V5,EV5))))
 from collections import defaultdict
 
 """ Traversing a hierarchical surface cochain """
+
 def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
     repeatedNames = defaultdict(int)
     
@@ -385,6 +386,7 @@ def structCochain(depth=1):
 
 
 """ Traversing a hierarchical surface cochain """
+
 def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
     repeatedNames = defaultdict(int)
     
@@ -418,7 +420,7 @@ def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[
 
 
 """Hospital structure """
-floors = [ Ground_floor, Mezanine_floor, First_floor,
+floors = [ Ground_floor, Mezanine_floor, First_floor, 
     Second_floor, Third_floor, Fourth_floor, Fifth_floor ]
 
 Floors = AA(embedStruct(1))(floors)
@@ -548,5 +550,5 @@ Projects = [Project_1, Project_2, Project_3, Project_4, Project_5, Project_6, Pr
          Project_8, Project_9, Project_10a, Project_10b, Project_10c, Project_10d ]
 
 for project in Projects:
-    printProject("./test/svg/hospital2/",project)
+    printProject("./",project)
 

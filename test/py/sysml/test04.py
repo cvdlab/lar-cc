@@ -1,8 +1,5 @@
 """ progressive refinement of a block diagram """
-""" Initial import of modules """
-from lar2psm import *
-
-DRAW = COMP([VIEW,STRUCT,MKPOLS])
+from larlib import *
 
 master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])
 V,CV = master

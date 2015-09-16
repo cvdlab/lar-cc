@@ -1,9 +1,5 @@
 """ Transfinite surface from Bezier control curves and periodic B-spline curve """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/') 
-from splines import *
-
+from larlib import *
 
 b1 = BEZIER(S1)([[0,1,0],[0,1,5]])
 b2 = BEZIER(S1)([[0,0,0],[0,0,5]])

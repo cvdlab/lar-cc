@@ -1,6 +1,5 @@
 """ boundary extraction of a block diagram """
-""" Initial import of modules """
-from lar2psm import *
+from larlib import *
 
 DRAW = COMP([VIEW,STRUCT,MKPOLS])
 

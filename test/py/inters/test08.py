@@ -21,7 +21,7 @@ VIEW(STRUCT(sets))
 EV = sorted(CAT(EVs))
 VIEW(STRUCT(MKPOLS((V,EV))))
 
-V,FV,EV = facesFromComponents((V,EV))
+V,FV,EV = facesFromComps((V,EV))
 
 areas = surfIntegration((V,FV,EV))
 boundaryArea = max(areas)

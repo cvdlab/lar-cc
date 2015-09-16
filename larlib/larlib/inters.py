@@ -323,7 +323,7 @@ def firstSearch(visited):
                 return edge,v
     return -1,-1
 
-def facesFromComponents(model):
+def facesFromComps(model):
     V,EV = model
     # Remove zero edges
     EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
@@ -430,7 +430,7 @@ def larFromLines(lines):
     V,EVs = biconnectedComponent((V,EV))
     EV = list(set(AA(tuple)(sorted(AA(sorted)(CAT(EVs)))))) 
     V,EV = larRemoveVertices(V,EV)
-    V,FV,EV = facesFromComponents((V,EV))
+    V,FV,EV = facesFromComps((V,EV))
     areas = integr.surfIntegration((V,FV,EV))
     boundaryArea = max(areas)
     interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea and len(areas)>2]

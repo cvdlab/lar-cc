@@ -443,8 +443,8 @@ def larCylinder(radius,height,angle=2*PI):
 %-------------------------------------------------------------------------------
 @O larlib/larlib/mapper.py
 @{""" Mapping functions and primitive objects """
-@< Initial import of modules @>
-from larstruct import *
+from larlib import *
+
 @< Affine transformations of $d$-points @>
 @< Generate a simplicial decomposition ot the $[0,1]^d$ domain @>
 @< Scaled simplicial decomposition ot the $[0,1]^d$ domain @>
@@ -483,8 +483,8 @@ by passing the rotation function \texttt{r} the components \texttt{a,b,c} of the
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test02.py
 @{""" General 3D rotation of a toroidal surface """
-@< Initial import of modules @>
-from mapper import *
+from larlib import *
+
 model = checkModel(larToroidal([0.2,1])())
 angle = PI/2; axis = UNITVECT([1,1,0])
 a,b,c = SCALARVECTPROD([ angle, axis ])
@@ -500,8 +500,8 @@ A simpler specification is needed when the 3D rotation is about a coordinate axi
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test03.py
 @{""" Elementary 3D rotation of a 2D circle """
-@< Initial import of modules @>
-from mapper import *
+from larlib import *
+
 model = checkModel(larCircle(1)())
 model = larEmbed(1)(model)
 model = larApply(r(PI/2,0,0))(model)
@@ -521,8 +521,9 @@ The generations of mapping domains of different dimension (1D, 2D, 3D) is shown 
 	
 %-------------------------------------------------------------------------------
 @D Basic tests of mapper module
-@{@< Initial import of modules @>
-from larstruct import *
+@{""" Basic tests of mapper module """
+from larlib import *
+
 if __name__=="__main__":
 	V,EV = larDomain([5])
 	VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))
@@ -546,9 +547,9 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 
 %-------------------------------------------------------------------------------
 @O test/py/mapper/test01.py
-@{""" Circumference of unit radius """
-@< Initial import of modules @>
-from mapper import *
+@{""" Testing some primitive object generators """
+from larlib import *
+
 model = larCircle(1)()
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 model = larHelix(1,0.5,4)()
@@ -622,63 +623,6 @@ assert larLimits(larSphere()()) == ([-1.0, -1.0, -1.0], [1.0, 1.0, 1.0])
 \section{Utility functions}
 %===============================================================================
 
-
-
-def FLATTEN( pol )
-	temp = Plasm.shrink(pol,True)
-	hpcList = []
-	for I in range(len(temp.childs)):			
-		g,vmat, hmat = temp.childs[I].g,temp.childs[I].vmat, temp.childs[I].hmat
-		g.embed(vmat. dim)
-		g.transform(vmat, hmat)
-		hpcList += [Hpc(g)]
-	return hpcList
-	
-VIEW(STRUCT( FLATTEN(pol) ))
-
-
-%-------------------------------------------------------------------------------
-@D Initial import of modules
-@{from pyplasm import *
-from scipy import *
-import os,sys
-
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-import lar2psm
-from simplexn import *
-from larcc import *
-from largrid import *
-from lar2psm import *
-from larstruct import *
-@< MaKe a list of HPC objects from a LAR model @>
-@< Explode the scene using \texttt{sx,sy,sz} scaling parameters @>
-@}
-%-------------------------------------------------------------------------------
-
-%------------------------------------------------------------------
-@d MaKe a list of HPC objects from a LAR model
-@{def MKPOLS (model):
-    V,FV = model
-    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
-    return pols  
-@| MKPOLS @}
-%------------------------------------------------------------------
-
-%------------------------------------------------------------------
-@d Explode the scene using \texttt{sx,sy,sz} scaling parameters
-@{def EXPLODE (sx,sy,sz):
-    def explode0 (scene):
-        centers = [CCOMB(S1(UKPOL(obj))) for obj in scene]
-        scalings = len(centers) * [S([1,2,3])([sx,sy,sz])]
-        scaledCenters = [UK(APPLY(pair)) for pair in
-                         zip(scalings, [MK(p) for p in centers])]
-        translVectors = [ VECTDIFF((p,q)) for (p,q) in zip(scaledCenters, centers) ]
-        translations = [ T([1,2,3])(v) for v in translVectors ]
-        return STRUCT([ t(obj) for (t,obj) in zip(translations,scene) ])
-    return explode0  
-@| EXPLODE @}
-%------------------------------------------------------------------
 
 \paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates. Second-order functions are used in order to employ their curried version to transform geometric assemblies.
 

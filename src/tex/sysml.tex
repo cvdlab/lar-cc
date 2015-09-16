@@ -174,6 +174,7 @@ The \texttt{diagram2cell} functions below works as follows.  Its job is to map t
 First, the matrix \texttt{mat}of this 3D-window to 3D-viewport transformation is computed, by invoking \texttt{diagram2cellMatrix}. Then, the \texttt(mat) transformation is applied to \texttt{vertices}.
 Then both such LAR models are passed as parameters of the \texttt{vertexSieve} function, that returns a single vertex list \texttt{V}, two (reindexed) lists \texttt{CV1} and \texttt{CV2}, and the number \texttt{n12} of common vertices.
 
+
 We can look at their common incidence matrix as shown in Figure~\ref{}.
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
@@ -325,9 +326,10 @@ Look to Section~\ref{sec:exterior} for a worked example.
 
 %-------------------------------------------------------------------------------
 @O larlib/larlib/sysml.py
-@{
+@{""" sysml library """
 from larlib import *
-@< Initial import of modules @>
+DRAW = COMP([VIEW,STRUCT,MKPOLS])
+
 @< To compute the boundary (d-1)-chain of a given d-chain @>
 @< Diagram initialization (non-uniform sizing) @>
 @< Boundary cells ($3D\to 2D$) computation @>
@@ -336,6 +338,7 @@ from larlib import *
 @< Drawing numbers of cells @>
 @< Subdiagram to diagram mapping @>
 @< Exterior space of a block diagram @>
+@< Place vertices of two LAR models in a common space @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -349,7 +352,7 @@ from larlib import *
 %-------------------------------------------------------------------------------
 @O test/py/sysml/test01.py
 @{""" testing initial steps of Assembly Diagram construction """
-@< Initial import of modules @>
+from larlib import *
 
 shape = [1,2,2]
 sizePatterns = [[1],[2,1],[0.8,0.2]]
@@ -367,11 +370,11 @@ VIEW(SKEL_1(STRUCT(MKPOLS(diagram1))))
 
 hpc = SKEL_1(STRUCT(MKPOLS(diagram1)))
 V = diagram1[0]
-hpc = cellNumbering ((V,FV),hpc)(interiorFaces,YELLOW,.5)
+hpc = cellNumbering((V,FV),hpc)(interiorFaces,YELLOW,.5)
 VIEW(hpc)
-hpc = cellNumbering ((V,EV),hpc)([for f in interiorFaces],GREEN,.4)
+hpc = cellNumbering((V,EV),hpc)([f for f in interiorFaces],GREEN,.4)
 VIEW(hpc)
-hpc = cellNumbering ((V,VV),hpc)(range(len(VV)),RED,.3)
+hpc = cellNumbering((V,VV),hpc)(range(len(VV)),RED,.3)
 VIEW(hpc)
 
 @}
@@ -384,7 +387,7 @@ VIEW(hpc)
 %-------------------------------------------------------------------------------
 @O test/py/sysml/test02.py
 @{""" definition and merging of two diagrams into a single diagram """
-@< Initial import of modules @>
+from larlib import *
 
 master = assemblyDiagramInit([2,2,2])([[.4,.6],[.4,.6],[.4,.6]])
 diagram = assemblyDiagramInit([3,3,3])([[.4,.2,.4],[.4,.2,.4],[.4,.2,.4]])
@@ -408,7 +411,7 @@ VIEW(SKEL_1(STRUCT( MKPOLS(master) )))
 %-------------------------------------------------------------------------------
 @O test/py/sysml/test03.py
 @{""" definition and merging of two diagrams into a single diagram """
-@< Initial import of modules @>
+from larlib import *
 
 master = assemblyDiagramInit([2,2,2])([[.4,.6],[.4,.6],[.4,.6]])
 diagram = assemblyDiagramInit([3,3,3])([[.4,.2,.4],[.4,.2,.4],[.4,.2,.4]])
@@ -479,8 +482,7 @@ vertex indices in \texttt{MKPOL}) is 1-based, like in Fortran or MATLAB.
 %-------------------------------------------------------------------------------
 @O test/py/sysml/test04.py
 @{""" progressive refinement of a block diagram """
-@< Initial import of modules @>
-DRAW = COMP([VIEW,STRUCT,MKPOLS])
+from larlib import *
 
 master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])
 V,CV = master
@@ -543,7 +545,8 @@ of the \texttt{master} diagram is first computed after the \texttt{master} initi
 %-------------------------------------------------------------------------------
 @O test/py/sysml/test05.py
 @{""" boundary extraction of a block diagram """
-@< Initial import of modules @>
+from larlib import *
+
 DRAW = COMP([VIEW,STRUCT,MKPOLS])
 
 master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])
@@ -631,6 +634,129 @@ def boundaryOfChain(cells,facets):
 from lar2psm import *
 @}
 %-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Reordering of vertex coordinates}
+%-------------------------------------------------------------------------------
+
+A global reordering of vertex coordinates is executed as the first step of the Boolean algorithm, in order to eliminate the duplicate vertices, by substituting duplicate vertex copies (coming from two close points) with a single instance. 
+
+Two dictionaries are created, then merged in a single dictionary, and finally split into three subsets of (vertex,index) pairs, with the aim of rebuilding the input representations, by making use of a novel and more useful vertex indexing.
+
+The union set of vertices is finally reordered using the three subsets of vertices belonging (a) only to the first argument, (b) only to the second argument and (c) to both, respectively denoted as $V_1, V_2, V_{12}$. A top-down description of this initial computational step is provided by the set of macros discussed in this section.
+
+%-------------------------------------------------------------------------------
+@D Place vertices of two LAR models in a common space
+@{""" Place vertices of two LAR models in a common space """
+@< Initial indexing of vertex positions @>
+@< Merge two dictionaries with keys the point locations @>
+@< Filter the common dictionary into three subsets @>
+@< Compute an inverted index to reorder the vertices of arguments @>
+@< Return the single reordered pointset and the two $d$-cell arrays @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsubsection{Re-indexing of vertices}
+%-------------------------------------------------------------------------------
+
+\paragraph{Initial indexing of vertex positions}
+The input LAR models are located in a common space by (implicitly) joining \texttt{V1} and \texttt{V2} in a same array, and (explicitly) shifting the vertex indices in \texttt{CV2} by the length of \texttt{V1}.
+%-------------------------------------------------------------------------------
+@D Initial indexing of vertex positions
+@{from collections import defaultdict, OrderedDict
+
+def vertexSieve(model1, model2):
+	V1,CV1 = model1; V2,CV2 = model2
+	n = len(V1); m = len(V2)
+	def shift(CV, n): 
+		return [[v+n for v in cell]for cell in CV]
+	CV2 = shift(CV2,n)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Merge two dictionaries with point location as keys}
+Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger than their initial sets 
+\texttt{V1} and \texttt{V2}, we index the set $\texttt{V1} \cup \texttt{V2}$ using a Python \texttt{defaultdict} dictionary, in order to avoid errors of "missing key". As dictionary keys, we use the string representation of the vertex position vector provided by the \texttt{vcode} function given in the Appendix.
+%-------------------------------------------------------------------------------
+@D Merge two dictionaries with keys the point locations
+@{
+	vdict1 = defaultdict(list)
+	for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
+	vdict2 = defaultdict(list)
+	for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
+	
+	vertdict = defaultdict(list)
+	for point in vdict1.keys(): vertdict[point] += vdict1[point]
+	for point in vdict2.keys(): vertdict[point] += vdict2[point]
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Example of string coding of a vertex position}
+The position vector of a point of real coordinates is provided by the function \texttt{vcode}.
+An example of coding is given below. The \emph{precision} of the string representation can be tuned at will.
+{\small
+\begin{verbatim}
+>>> vcode([-0.011660381062724849, 0.297350056848685860])
+'[-0.0116604, 0.2973501]'
+\end{verbatim}}
+
+
+
+\paragraph{Filter the common dictionary into three subsets}
+\texttt{Vertdict}, dictionary of vertices, uses as key stye position vectors of vertices coded as string, and as values the list of integer indices of vertices on the given position. If the point position belongs either to the first or to second argument only, it is stored in \texttt{case1} or \texttt{case2} lists respectively. If the position (\texttt{item.key}) is shared between two vertices, it is stored in \texttt{case12}.
+The variables \texttt{n1}, \texttt{n2}, and \texttt{n12} remember the number of vertices respectively stored in each repository.
+%-------------------------------------------------------------------------------
+@D Filter the common dictionary into three subsets
+@{
+	case1, case12, case2 = [],[],[]
+	for item in vertdict.items():
+		key,val = item
+		if len(val)==2:  case12 += [item]
+		elif val[0] < n: case1 += [item]
+		else: case2 += [item]
+	n1 = len(case1); n2 = len(case12); n3 = len(case2)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Compute an inverted index to reorder the vertices of Boolean arguments}
+The new indices of vertices are computed according with their position within the storage repositories \texttt{case1}, \texttt{case2}, and \texttt{case12}. Notice that every \texttt{item[1]} stored in \texttt{case1} or \texttt{case2} is a list with only one integer member. Two such values are conversely stored in each \texttt{item[1]} within \texttt{case12}.
+%-------------------------------------------------------------------------------
+@D Compute an inverted index to reorder the vertices of arguments
+@{
+	invertedindex = list(0 for k in range(n+m))
+	for k,item in enumerate(case1):
+		invertedindex[item[1][0]] = k
+	for k,item in enumerate(case12):
+		invertedindex[item[1][0]] = k+n1
+		invertedindex[item[1][1]] = k+n1
+	for k,item in enumerate(case2):
+		invertedindex[item[1][0]] = k+n1+n2
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsubsection{Re-indexing of d-cells}
+%-------------------------------------------------------------------------------
+
+\paragraph{Return the single reordered pointset and the two $d$-cell arrays}
+We are now finally ready to return two reordered LAR models defined over the same set \texttt{V} of vertices, and where (a) the vertex array \texttt{V} can be written as the union of three disjoint sets of points $C_1,C_{12},C_2$; (b) the $d$-cell array \texttt{CV1} is indexed over $C_1\cup C_{12}$; (b) the $d$-cell array \texttt{CV2} is indexed over $C_{12}\cup C_{2}$. 
+
+The \texttt{vertexSieve} function will return the new reordered vertex set $V = (V_1 \cup V_2) \setminus (V_1 \cap V_2)$, the two renumbered $s$-cell sets \texttt{CV1} and \texttt{CV2}, and the size \texttt{len(case12)} of $V_1 \cap V_2$.
+%-------------------------------------------------------------------------------
+@D Return the single reordered pointset and the two $d$-cell arrays
+@{
+	V = [eval(p[0]) for p in case1] + [eval(p[0]) for p in case12] + [eval(
+				p[0]) for p in case2]
+	CV1 = [sorted([invertedindex[v] for v in cell]) for cell in CV1]
+	CV2 = [sorted([invertedindex[v] for v in cell]) for cell in CV2]
+	return V, CV1, CV2, len(case12)
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
 
 \bibliographystyle{amsalpha}
 \bibliography{sysml}

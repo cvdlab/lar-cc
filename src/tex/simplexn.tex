@@ -355,10 +355,7 @@ The current version of the \texttt{simplexn} library is exported here. Next vers
 @O larlib/larlib/simplexn.py 
 @{# -*- coding: utf-8 -*-
 """Module for facet extraction, extrusion and simplicial grids"""
-from pyplasm import *
-from scipy import *
-import sys; sys.path.insert(0, 'lib/py/')
-from lar2psm import *
+from larlib import *
 
 VOID = V0,CV0 = [[]],[[0]]    # the empty simplicial model
 @< Cumulative sum  @>
@@ -407,8 +404,9 @@ We are finally able to generate and output a complete test file, including the v
 
 %-------------------------------------------------------------------------------
 @O test/py/simplexn/test01.py
-@{
-@<Inport the $Simple_X^n$ library@>
+@{""" 2D example """
+from larlib import *
+
 @<Generate a simplicial decomposition ot the $[0,1]^2$ domain@>
 @<Extract the edges of the 2D decomposition@>
 @}
@@ -441,8 +439,9 @@ and finally export a new test file:
 
 %-------------------------------------------------------------------------------
 @O test/py/simplexn/test02.py 
-@{
-@<Inport the $Simple_X^n$ library@>
+@{""" 3D example """
+from larlib import *
+
 @<Generate a simplicial decomposition ot the $[0,1]^3$ domain@>
 @<Extract the faces and edges of the 3D decomposition@>
 @}
@@ -476,16 +475,6 @@ def cumsum(iterable):
 @}
 %-------------------------------------------------------------------------------
 
-
-@d Inport the $Simple_X^n$ library
-@{""" import modules from larcc/lib """
-import sys
-from scipy import reshape
-sys.path.insert(0, 'lib/py/')
-from pyplasm import *
-from lar2psm import *
-from simplexn import *
-@}
 
 \bibliographystyle{amsalpha}
 \bibliography{simplexn}

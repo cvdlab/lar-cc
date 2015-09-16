@@ -1,14 +1,5 @@
 """ Mapping functions and primitive objects """
-from pyplasm import *
-from scipy import *
-import os,sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from simplexn import *
-from larcc import *
-from largrid import *
-from mapper import *
+from larlib import *
 
 """ Tensor product surface patch """
 def larTensorProdSurface (args):

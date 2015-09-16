@@ -1,14 +1,8 @@
 """ LAR implementation of morphological operators on multidimensional images."""
-import sys,os
+""" Initial import of modules """
+from larlib import *
 import scipy.misc, numpy, pickle
 from numpy.random import randint
-from pyplasm import *
-
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-
-import largrid
-from largrid import *
 
 
 def randomImage(shape, structure, noiseFraction=0.0):

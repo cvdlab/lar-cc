@@ -673,13 +673,13 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \subsection{Exporting the library}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap22}
-\protect\makebox[0ex][r]{\NWtarget{nuweb10c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/mapper.py"@\nobreak\ {\footnotesize 10c }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb10c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"larlib/larlib/mapper.py"@\nobreak\ {\footnotesize 10c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Mapping functions and primitive objects """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb14b}{14b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@from larstruct import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$Affine transformations of $d$-points\nobreak\ {\footnotesize \NWlink{nuweb15c}{15c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@from larlib import *@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Affine transformations of $d$-points\nobreak\ {\footnotesize \NWlink{nuweb14b}{14b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb2}{2}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb3a}{3a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
@@ -702,7 +702,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \mbox{}\verb@@\hbox{$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb10b}{10b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Hollow cylinder of given radiuses and height\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Hollow sphere of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb9c}{9c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb16}{16}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb15}{15}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Remove the unused vertices from a LAR model pair\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -723,8 +723,8 @@ by passing the rotation function \texttt{r} the components \texttt{a,b,c} of the
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" General 3D rotation of a toroidal surface """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb14b}{14b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@from mapper import *@\\
+\mbox{}\verb@from larlib import *@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@model = checkModel(larToroidal([0.2,1])())@\\
 \mbox{}\verb@angle = PI/2; axis = UNITVECT([1,1,0])@\\
 \mbox{}\verb@a,b,c = SCALARVECTPROD([ angle, axis ])@\\
@@ -746,8 +746,8 @@ A simpler specification is needed when the 3D rotation is about a coordinate axi
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Elementary 3D rotation of a 2D circle """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb14b}{14b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@from mapper import *@\\
+\mbox{}\verb@from larlib import *@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@model = checkModel(larCircle(1)())@\\
 \mbox{}\verb@model = larEmbed(1)(model)@\\
 \mbox{}\verb@model = larApply(r(PI/2,0,0))(model)@\\
@@ -773,8 +773,9 @@ The generations of mapping domains of different dimension (1D, 2D, 3D) is shown 
 \protect\makebox[0ex][r]{\NWtarget{nuweb12b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Basic tests of mapper module\nobreak\ {\footnotesize 12b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb14b}{14b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@from larstruct import *@\\
+\mbox{}\verb@""" Basic tests of mapper module """@\\
+\mbox{}\verb@from larlib import *@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@if __name__=="__main__":@\\
 \mbox{}\verb@   V,EV = larDomain([5])@\\
 \mbox{}\verb@   VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))@\\
@@ -808,9 +809,9 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 \protect\makebox[0ex][r]{\NWtarget{nuweb12c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/mapper/test01.py"@\nobreak\ {\footnotesize 12c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@""" Circumference of unit radius """@\\
-\mbox{}\verb@@\hbox{$\langle\,$Initial import of modules\nobreak\ {\footnotesize \NWlink{nuweb14b}{14b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@from mapper import *@\\
+\mbox{}\verb@""" Testing some primitive object generators """@\\
+\mbox{}\verb@from larlib import *@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@model = larCircle(1)()@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))@\\
 \mbox{}\verb@model = larHelix(1,0.5,4)()@\\
@@ -908,102 +909,11 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 %===============================================================================
 
 
-
-def FLATTEN( pol )
-	temp = Plasm.shrink(pol,True)
-	hpcList = []
-	for I in range(len(temp.childs)):			
-		g,vmat, hmat = temp.childs[I].g,temp.childs[I].vmat, temp.childs[I].hmat
-		g.embed(vmat. dim)
-		g.transform(vmat, hmat)
-		hpcList += [Hpc(g)]
-	return hpcList
-	
-VIEW(STRUCT( FLATTEN(pol) ))
-
-
-%-------------------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap29}
-\protect\makebox[0ex][r]{\NWtarget{nuweb14b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Initial import of modules\nobreak\ {\footnotesize 14b}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@from pyplasm import *@\\
-\mbox{}\verb@from scipy import *@\\
-\mbox{}\verb@import os,sys@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@""" import modules from larcc/lib """@\\
-\mbox{}\verb@sys.path.insert(0, 'lib/py/')@\\
-\mbox{}\verb@import lar2psm@\\
-\mbox{}\verb@from simplexn import *@\\
-\mbox{}\verb@from larcc import *@\\
-\mbox{}\verb@from largrid import *@\\
-\mbox{}\verb@from lar2psm import *@\\
-\mbox{}\verb@from larstruct import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize \NWlink{nuweb15a}{15a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Explode the scene using \texttt{sx,sy,sz} scaling parameters\nobreak\ {\footnotesize \NWlink{nuweb15b}{15b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb10c}{10c}\NWlink{nuweb11}{, 11}\NWlink{nuweb12a}{, 12a}\NWlink{nuweb12b}{b}\NWlink{nuweb12c}{c}.
-\end{list}
-\end{flushleft}
-%-------------------------------------------------------------------------------
-
-%------------------------------------------------------------------
-\begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap30}
-\protect\makebox[0ex][r]{\NWtarget{nuweb15a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize 15a}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@def MKPOLS (model):@\\
-\mbox{}\verb@    V,FV = model@\\
-\mbox{}\verb@    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]@\\
-\mbox{}\verb@    return pols  @\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb14b}{14b}.
-\end{list}
-\end{minipage}\\[4ex]
-\end{flushleft}
-%------------------------------------------------------------------
-
-%------------------------------------------------------------------
-\begin{flushleft} \small
-\begin{minipage}{\linewidth} \label{scrap31}
-\protect\makebox[0ex][r]{\NWtarget{nuweb15b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Explode the scene using \texttt{sx,sy,sz} scaling parameters\nobreak\ {\footnotesize 15b}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@def EXPLODE (sx,sy,sz):@\\
-\mbox{}\verb@    def explode0 (scene):@\\
-\mbox{}\verb@        centers = [CCOMB(S1(UKPOL(obj))) for obj in scene]@\\
-\mbox{}\verb@        scalings = len(centers) * [S([1,2,3])([sx,sy,sz])]@\\
-\mbox{}\verb@        scaledCenters = [UK(APPLY(pair)) for pair in@\\
-\mbox{}\verb@                         zip(scalings, [MK(p) for p in centers])]@\\
-\mbox{}\verb@        translVectors = [ VECTDIFF((p,q)) for (p,q) in zip(scaledCenters, centers) ]@\\
-\mbox{}\verb@        translations = [ T([1,2,3])(v) for v in translVectors ]@\\
-\mbox{}\verb@        return STRUCT([ t(obj) for (t,obj) in zip(translations,scene) ])@\\
-\mbox{}\verb@    return explode0  @\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb14b}{14b}.
-\end{list}
-\end{minipage}\\[4ex]
-\end{flushleft}
-%------------------------------------------------------------------
-
 \paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates. Second-order functions are used in order to employ their curried version to transform geometric assemblies.
 
 %------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap32}
-\protect\makebox[0ex][r]{\NWtarget{nuweb15c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Affine transformations of $d$-points\nobreak\ {\footnotesize 15c}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap29}
+\protect\makebox[0ex][r]{\NWtarget{nuweb14b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Affine transformations of $d$-points\nobreak\ {\footnotesize 14b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larTranslate (tvect):@\\
@@ -1040,8 +950,8 @@ VIEW(STRUCT( FLATTEN(pol) ))
 A small set of utilityy functions is used to transform a point representation as array of coordinates into a string of fixed format to be used as point key into python dictionaries.
 
 %------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap33}
-\protect\makebox[0ex][r]{\NWtarget{nuweb16}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 16}$\,\rangle\equiv$
+\begin{flushleft} \small \label{scrap30}
+\protect\makebox[0ex][r]{\NWtarget{nuweb15}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 15}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\

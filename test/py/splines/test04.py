@@ -1,9 +1,5 @@
 """ Graph of Bernstein-Bezier basis """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/') 
-from splines import *
-
+from larlib import *
 
 def larBezierBasisGraph(degree):
    basis = larBernsteinBasis(S1)(degree)

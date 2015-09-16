@@ -1,5 +1,6 @@
 
-from pyplasm import *
+""" Vertices of 1D decompositions """
+from larlib import *
 
 def larSplit(dom):
     def larSplit1(n):

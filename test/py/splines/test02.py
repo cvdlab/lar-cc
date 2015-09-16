@@ -1,9 +1,5 @@
 """ Example of transfinite surface """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/') 
-from splines import *
-
+from larlib import *
 
 dom = larDomain([20],'simplex')
 C0 = larBezier(S1)([[0,0,0],[10,0,0]])

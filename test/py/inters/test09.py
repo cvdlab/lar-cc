@@ -14,7 +14,7 @@ VIEW(STRUCT(sets))
 
 EV = CAT(EVs)
 V,EV = larRemoveVertices(V,EV)
-V,FV,EV = facesFromComponents((V,EV))
+V,FV,EV = facesFromComps((V,EV))
 areas = surfIntegration((V,FV,EV))
 boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
