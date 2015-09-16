@@ -1,17 +1,6 @@
 """ An hospital draft design """
-from pyplasm import *
+from larlib import *
 
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from hospital import metric
-from iot3d import polyline2lar
-from larstruct import Struct,t,s,struct2lar,evalStruct
-from architectural import lar2lines
-from lar2psm import MKPOLS,EXPLODE
-from mapper import larTranslate,larScale,vcode
-from bool import MKTRIANGLES
-import largrid
-    
 """ Coding utilities """
 """ Filter functions """
 DEBUG = True
@@ -345,13 +334,8 @@ VIEW(STRUCT(MKPOLS((V5,EV5))))
 """ Surface cochain review """
 """ Computing a surface cochain via Struct traversal """
 from collections import defaultdict
-from larstruct import checkStruct
-import scipy
-from larstruct import Model
-from integr import surfIntegration
 
 """ Traversing a hierarchical surface cochain """
-from larstruct import Mat, Model
 def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
     repeatedNames = defaultdict(int)
     
@@ -401,7 +385,6 @@ def structCochain(depth=1):
 
 
 """ Traversing a hierarchical surface cochain """
-from larstruct import Mat, Model
 def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[]):
     repeatedNames = defaultdict(int)
     
@@ -435,8 +418,7 @@ def structCochainTraversal(CTM, stack, obj, cochainMap=[], names=[], nameStack=[
 
 
 """Hospital structure """
-from larstruct import embedStruct, larApply
-floors = [ Ground_floor, Mezanine_floor, First_floor, 
+floors = [ Ground_floor, Mezanine_floor, First_floor,
     Second_floor, Third_floor, Fourth_floor, Fifth_floor ]
 
 Floors = AA(embedStruct(1))(floors)
@@ -566,5 +548,5 @@ Projects = [Project_1, Project_2, Project_3, Project_4, Project_5, Project_6, Pr
          Project_8, Project_9, Project_10a, Project_10b, Project_10c, Project_10d ]
 
 for project in Projects:
-    printProject("./",project)
+    printProject("./test/svg/hospital2/",project)
 

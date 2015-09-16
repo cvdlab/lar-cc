@@ -125,32 +125,6 @@ def unitDiagram(diagram, size=[1,1,1]):
 
 
 
-%-------------------------------------------------------------------------------
-\subsection{Cell numbering}
-%-------------------------------------------------------------------------------
-
-
-\paragraph{Drawing numbers of cells}
-
-%-------------------------------------------------------------------------------
-@D Drawing numbers of cells
-@{""" Drawing numbers of cells """
-def cellNumbering (larModel,hpcModel):
-	V,CV = larModel
-	def cellNumbering0 (cellSubset,color=WHITE,scalingFactor=1):
-		text = TEXTWITHATTRIBUTES (TEXTALIGNMENT='centre', TEXTANGLE=0, 
-							TEXTWIDTH=0.1*scalingFactor, 
-							TEXTHEIGHT=0.2*scalingFactor, 
-							TEXTSPACING=0.025*scalingFactor)
-		hpcList = [hpcModel]
-		for cell in cellSubset:
-			point = CCOMB([V[v] for v in CV[cell]])
-			hpcList.append(T([1,2,3])(point)(COLOR(color)(text(str(cell)))))
-		return STRUCT(hpcList)
-	return cellNumbering0
-@}
-%-------------------------------------------------------------------------------
-
 
 %-------------------------------------------------------------------------------
 \subsection{Diagram segmentation}
@@ -350,14 +324,15 @@ Look to Section~\ref{sec:exterior} for a worked example.
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-@O lib/py/sysml.py
-@{@< Initial import of modules @>
+@O larlib/larlib/sysml.py
+@{
+from larlib import *
+@< Initial import of modules @>
 @< To compute the boundary (d-1)-chain of a given d-chain @>
 @< Diagram initialization (non-uniform sizing) @>
 @< Boundary cells ($3D\to 2D$) computation @>
 @< Interior partitions ($3D\to 2D$) computation @>
 @< Diagram scaling to sized cuboid @>
-from myfont import *
 @< Drawing numbers of cells @>
 @< Subdiagram to diagram mapping @>
 @< Exterior space of a block diagram @>
@@ -375,7 +350,6 @@ from myfont import *
 @O test/py/sysml/test01.py
 @{""" testing initial steps of Assembly Diagram construction """
 @< Initial import of modules @>
-from sysml import *
 
 shape = [1,2,2]
 sizePatterns = [[1],[2,1],[0.8,0.2]]
@@ -411,7 +385,6 @@ VIEW(hpc)
 @O test/py/sysml/test02.py
 @{""" definition and merging of two diagrams into a single diagram """
 @< Initial import of modules @>
-from sysml import *
 
 master = assemblyDiagramInit([2,2,2])([[.4,.6],[.4,.6],[.4,.6]])
 diagram = assemblyDiagramInit([3,3,3])([[.4,.2,.4],[.4,.2,.4],[.4,.2,.4]])
@@ -436,7 +409,6 @@ VIEW(SKEL_1(STRUCT( MKPOLS(master) )))
 @O test/py/sysml/test03.py
 @{""" definition and merging of two diagrams into a single diagram """
 @< Initial import of modules @>
-from sysml import *
 
 master = assemblyDiagramInit([2,2,2])([[.4,.6],[.4,.6],[.4,.6]])
 diagram = assemblyDiagramInit([3,3,3])([[.4,.2,.4],[.4,.2,.4],[.4,.2,.4]])
@@ -508,7 +480,6 @@ vertex indices in \texttt{MKPOL}) is 1-based, like in Fortran or MATLAB.
 @O test/py/sysml/test04.py
 @{""" progressive refinement of a block diagram """
 @< Initial import of modules @>
-from sysml import *
 DRAW = COMP([VIEW,STRUCT,MKPOLS])
 
 master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])
@@ -573,7 +544,6 @@ of the \texttt{master} diagram is first computed after the \texttt{master} initi
 @O test/py/sysml/test05.py
 @{""" boundary extraction of a block diagram """
 @< Initial import of modules @>
-from sysml import *
 DRAW = COMP([VIEW,STRUCT,MKPOLS])
 
 master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])
@@ -657,11 +627,8 @@ def boundaryOfChain(cells,facets):
 
 %-------------------------------------------------------------------------------
 @D Initial import of modules
-@{from pyplasm import *
-from scipy import *
-import os,sys
-sys.path.insert(0, 'lib/py/')
-from mapper import *
+@{""" Initial import of modules """
+from lar2psm import *
 @}
 %-------------------------------------------------------------------------------
 

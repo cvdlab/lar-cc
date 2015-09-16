@@ -1,9 +1,7 @@
 """ make the 2.5 model of a building tower """
+from larlib import *
+
 """ make the model of a layout floor """
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from hijson import *
 
 scaleFactor = 83.333
 

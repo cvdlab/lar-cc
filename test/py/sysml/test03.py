@@ -1,11 +1,7 @@
 """ definition and merging of two diagrams into a single diagram """
-from pyplasm import *
-from scipy import *
-import os,sys
-sys.path.insert(0, 'lib/py/')
-from mapper import *
+""" Initial import of modules """
+from lar2psm import *
 
-from sysml import *
 
 master = assemblyDiagramInit([2,2,2])([[.4,.6],[.4,.6],[.4,.6]])
 diagram = assemblyDiagramInit([3,3,3])([[.4,.2,.4],[.4,.2,.4],[.4,.2,.4]])

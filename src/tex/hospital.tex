@@ -324,9 +324,8 @@ Notice the translation and the scaling, that transform the geometric model in ac
 
 %-------------------------------------------------------------------------------
 @O test/py/hospital/test01.py
-@{import sys
-sys.path.insert(0, 'lib/py/')
-from hospital import *
+@{""" Example """
+from larlib import *
 
 V,FV,EV = struct2lar(groundFloor)
 VIEW(STRUCT(MKPOLS((V,EV))))
@@ -1263,16 +1262,10 @@ if __name__ == "__main__":
 
 \paragraph{The \texttt{Hospital.py} module}
 %-------------------------------------------------------------------------------
-@O lib/py/hospital.py
+@O larlib/larlib/hospital.py
 @{""" The 'Hospital' module """
-
-from pyplasm import *
-
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
+from larlib import *
 from copy import deepcopy
-from architectural import *
-from iot3d import *
 DEBUG = True
 
 @< Reference grid @>

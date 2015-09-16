@@ -1,12 +1,10 @@
 """ Generation and random coloring of independent line buckets """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 lines = randomLines(200,0.3)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
-boxes = containmentBoxes(lines)
+boxes = containment2DBoxes(lines)
 buckets = boxBuckets(boxes)
 
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, PURPLE, BROWN]

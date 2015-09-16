@@ -78,12 +78,12 @@ The splitting algorithm may be easily parallelized, since both during their gene
 
 \paragraph{Containment boxes}
 
-Given as input a list \texttt{randomLineArray} of pairs of 2D points, the function \texttt{containmentBoxes} returns, in the same order, the list of \emph{containment boxes} of the input lines. A \emph{containment box} of a geometric object of dimension $d$ is defined as the minimal $d$-cuboid, equioriented with the reference frame, that contains the object. For a 2D line it is given by the tuple $(x1,y1,x2,y2)$, where $(x1,y1)$ is the point of minimal coordinates, and $(x2,y2)$ is the point of maximal  coordinates.
+Given as input a list \texttt{randomLineArray} of pairs of 2D points, the function \texttt{containment2DBoxes} returns, in the same order, the list of \emph{containment boxes} of the input lines. A \emph{containment box} of a geometric object of dimension $d$ is defined as the minimal $d$-cuboid, equioriented with the reference frame, that contains the object. For a 2D line it is given by the tuple $(x1,y1,x2,y2)$, where $(x1,y1)$ is the point of minimal coordinates, and $(x2,y2)$ is the point of maximal  coordinates.
 
 %-------------------------------------------------------------------------------
 @D Containment boxes
 @{""" Containment boxes """
-def containmentBoxes(randomLineArray):
+def containment2DBoxes(randomLineArray):
     boxes = [eval(vcode([min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2)]))
             for ((x1,y1),(x2,y2)) in randomLineArray]
     return boxes
@@ -229,7 +229,7 @@ def lineIntersection(lineArray):
         key = '['+ vcode(p1) +','+ vcode(p2) +']'
         pointStorage[key] = []
 
-    boxes = containmentBoxes(lineArray)
+    boxes = containment2DBoxes(lineArray)
     buckets = boxBuckets(boxes)
     intersectionPoints = set()
     for h,bucket in enumerate(buckets):
@@ -581,9 +581,6 @@ The whole transformation of an array of lines into a two-dimensional \texttt{LAR
 %-------------------------------------------------------------------------------
 @D Transformation of an array of lines in a 2D LAR complex @{
 """ Transformation of an array of lines in a 2D LAR complex """
-from bool1 import larRemoveVertices
-import integr
-
 def larFromLines(lines):
     V,EV = lines2lar(lines)
     V,EVs = biconnectedComponent((V,EV))
@@ -617,13 +614,10 @@ FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
 %===============================================================================
 
 %-------------------------------------------------------------------------------
-@O lib/py/inters.py
+@O larlib/larlib/inters.py
 @{""" Module for pipelined intersection of geometric objects """
-from pyplasm import *
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
+from scipy import mat
 DEBUG = True
 
 @< Coding utilities @>
@@ -657,14 +651,12 @@ DEBUG = True
 %-------------------------------------------------------------------------------
 @O test/py/inters/test01.py
 @{""" Generation of random line segments and their boxes """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 randomLineArray = randomLines(200,0.3)
 VIEW(STRUCT(AA(POLYLINE)(randomLineArray)))
 
-boxes = containmentBoxes(randomLineArray)
+boxes = containment2DBoxes(randomLineArray)
 rects= AA(box2rect)(boxes)
 cyan = COLOR(CYAN)(STRUCT(AA(POLYLINE)(randomLineArray)))
 yellow = COLOR(YELLOW)(STRUCT(AA(POLYLINE)(rects)))
@@ -677,13 +669,11 @@ VIEW(STRUCT([cyan,yellow]))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test02.py
 @{""" Split segment array in four independent buckets """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 randomLineArray = randomLines(200,0.3)
 VIEW(STRUCT(AA(POLYLINE)(randomLineArray)))
-boxes = containmentBoxes(randomLineArray)
+boxes = containment2DBoxes(randomLineArray)
 bucket = range(len(boxes))
 below,above = splitOnThreshold(boxes,bucket,1)
 below1,above1 = splitOnThreshold(boxes,above,2)
@@ -704,14 +694,12 @@ VIEW(STRUCT([cyan,yellow,red,green]))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test03.py
 @{""" Generation and random coloring of independent line buckets """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 lines = randomLines(200,0.3)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
-boxes = containmentBoxes(lines)
+boxes = containment2DBoxes(lines)
 buckets = boxBuckets(boxes)
 
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, PURPLE, BROWN]
@@ -727,9 +715,7 @@ VIEW(STRUCT(sets))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test04.py
 @{""" LAR of random line arrangement """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 lines = randomLines(300,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
@@ -754,9 +740,7 @@ VIEW(STRUCT([polylines]+[COLOR(MAGENTA)(markers)]))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test05.py
 @{""" LAR from splitting of othogonal lines """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 @< Orthogonal example @>
 @}
 %-------------------------------------------------------------------------------
@@ -788,9 +772,7 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test06.py
 @{""" Random coloring of the generated 1-complex """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 lines = randomLines(800,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
@@ -828,10 +810,7 @@ VIEW(STRUCT(sets))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test07.py
 @{""" Biconnected components from orthogonal LAR model """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
-from bool1 import larRemoveVertices
+from larlib import *
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GREEN, ORANGE, BLACK, BLUE, PURPLE]
 
 @< Orthogonal example @>
@@ -852,9 +831,7 @@ VIEW(STRUCT(MKPOLS((V,CAT(EVs)))))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test08.py
 @{""" 2-complex from orthogonal line segments """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GREEN, ORANGE, BLACK, BLUE, PURPLE]
 
 @< Orthogonal example @>
@@ -870,7 +847,6 @@ VIEW(STRUCT(MKPOLS((V,EV))))
 
 V,FV,EV = facesFromComponents((V,EV))
 
-from hospital import surfIntegration
 areas = surfIntegration((V,FV,EV))
 boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
@@ -896,12 +872,7 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV+EV)) + AA(MK)(V)))
 %-------------------------------------------------------------------------------
 @O test/py/inters/test09.py
 @{""" Biconnected components from orthogonal LAR model """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
-from bool1 import larRemoveVertices
-from hospital import surfIntegration
-from iot3d import polyline2lar
+from larlib import *
 colors = [CYAN, MAGENTA, YELLOW, RED, GREEN, ORANGE, PURPLE, WHITE, BLACK, BLUE]
 
 lines = randomLines(100,.8)
@@ -915,10 +886,8 @@ sets = [COLOR(colors[k%10])(hpc) for k,hpc in enumerate(HPCs)]
 VIEW(STRUCT(sets))
 
 EV = CAT(EVs)
-from bool1 import larRemoveVertices
 V,EV = larRemoveVertices(V,EV)
 V,FV,EV = facesFromComponents((V,EV))
-from hospital import surfIntegration
 areas = surfIntegration((V,FV,EV))
 boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
@@ -963,7 +932,7 @@ The input vertices are finally set to a fixed resolution, using the \texttt{vcod
 %-------------------------------------------------------------------------------
 @D SVG input parsing and transformation
 @{""" SVG input parsing and transformation """
-from larcc import *
+from larlib import *
 import re # regular expression
 
 def svg2lines(filename,containmentBox=[],rect2lines=True):
@@ -1044,10 +1013,7 @@ The polygonal boundary of the complex is finally drawn.
 %-------------------------------------------------------------------------------
 @O test/py/inters/test10.py
 @{""" Biconnected components from orthogonal LAR model """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
-from iot3d import polyline2lar
+from larlib import *
 
 filename = "test/py/inters/plan.svg"
 #filename = "test/py/inters/building.svg"
@@ -1084,9 +1050,8 @@ VIEW(STRUCT(MKPOLS((verts,edges))))
 @O test/py/inters/test11.py
 @{""" Fast Polygon Triangulation based on Seidel's Algorithm """
 # data generated by test10.py on file polygon.svg
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
+
 V,FV,EV = ([[0.222, 0.889],
   [0.722, 1.0],
   [0.519, 0.763],
@@ -1124,10 +1089,7 @@ vert2back_trap[trapezoids[-1][1]] = len(trapezoids)-1
 %-------------------------------------------------------------------------------
 @O test/py/inters/test12.py
 @{""" Biconnected components from orthogonal LAR model """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
-from iot3d import polyline2lar
+from larlib import *
 
 V = [[0.395, 0.296], [0.593, 0.0], [0.79, 0.773], [0.671, 0.889], [0.79, 0.0], [0.593, 0.296], [0.593, 0.593], [0.395, 0.593], [0.0, 0.889], [0.0, 0.0]]
 FV = [[0, 5, 4, 1], [1, 9, 0], [8, 7, 0, 9], [7, 8, 3, 2, 4, 5, 6]]
@@ -1174,10 +1136,10 @@ The arrays \texttt{xs} and \texttt{ys}, that contain the $x$ and $y$ coordinates
 @{""" Generation of random lines """
 def randomLines(numberOfLines=200,scaling=0.3):
     randomLineArray = [redge(scaling) for k in range(numberOfLines)]
-    [xs,ys] = TRANS(CAT(randomLineArray))
+    [xs,ys] = TRANS(CAT(randomLineArray))[:2]
     xmin, ymin = min(xs), min(ys)
     v = array([-xmin,-ymin])
-    randomLineArray = [[list(v1+v), list(v2+v)] for v1,v2 in randomLineArray]
+    randomLineArray = [[list(v1[:2]+v), list(v2[:2]+v)] for v1,v2 in randomLineArray]
     return randomLineArray
 @}
 %-------------------------------------------------------------------------------

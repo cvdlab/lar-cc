@@ -1,11 +1,7 @@
 """ boundary extraction of a block diagram """
-from pyplasm import *
-from scipy import *
-import os,sys
-sys.path.insert(0, 'lib/py/')
-from mapper import *
+""" Initial import of modules """
+from lar2psm import *
 
-from sysml import *
 DRAW = COMP([VIEW,STRUCT,MKPOLS])
 
 master = assemblyDiagramInit([5,5,2])([[.3,3.2,.1,5,.3],[.3,4,.1,2.9,.3],[.3,2.7]])

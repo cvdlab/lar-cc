@@ -1,11 +1,9 @@
 """ Split segment array in four independent buckets """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 randomLineArray = randomLines(200,0.3)
 VIEW(STRUCT(AA(POLYLINE)(randomLineArray)))
-boxes = containmentBoxes(randomLineArray)
+boxes = containment2DBoxes(randomLineArray)
 bucket = range(len(boxes))
 below,above = splitOnThreshold(boxes,bucket,1)
 below1,above1 = splitOnThreshold(boxes,above,2)

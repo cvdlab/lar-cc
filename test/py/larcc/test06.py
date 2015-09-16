@@ -1,7 +1,8 @@
-import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
+""" Boundary of random 2D simplicial complex """
+from larlib import *
 from scipy.spatial import Delaunay
+
+""" Test for quasi-equilateral triangles """
 def quasiEquilateral(tria):
    a = VECTNORM(VECTDIFF(tria[0:2]))
    b = VECTNORM(VECTDIFF(tria[1:3]))
@@ -10,6 +11,7 @@ def quasiEquilateral(tria):
    if m/a < 1.7 and m/b < 1.7 and m/c < 1.7: return True
    else: return False
 
+""" Generation and selection of random triangles """
 verts = np.random.rand(50,2)
 verts = (verts - [0.5,0.5]) * 2
 triangles = Delaunay(verts)
@@ -20,6 +22,7 @@ EV = larSimplexFacets(FV)
 pols2D = MKPOLS((V,FV))
 VIEW(EXPLODE(1.5,1.5,1.5)(pols2D))
 
+""" Boundary computation and visualisation """
 orientedBoundary = signedBoundaryCells(V,FV,EV)
 submodel = mkSignedEdges((V,orientedBoundary))
 VIEW(submodel)

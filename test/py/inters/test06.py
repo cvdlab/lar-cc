@@ -1,7 +1,5 @@
 """ Random coloring of the generated 1-complex """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 lines = randomLines(800,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))

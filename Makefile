@@ -2,12 +2,12 @@
 # Makefile for LARCC framework
 #
 
-NAME = bool
+NAME = lar2psm
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
 IDIR = src/tex/
-ODIR = lib/
+ODIR = larlib/larlib/
 DOCTEX = doc/tex/
 DOCPDF = doc/pdf/
 TESTDIR = test/py/$(NAME)/
@@ -58,7 +58,7 @@ tests: $(TESTFILES)
 clean:
 	mv -fv $(NAME).tex $(NAME).bbl macros.tex $(DOCTEX)
 	mv -fv $(NAME).pdf $(DOCPDF)
-	mv -fv $(NAME).w $(ODIR)w
+	mv -fv $(NAME).w $(ODIR)$(NAME).w
 	if [ -d $(DOCTEX)images ] ; then rm -R $(DOCTEX)images ; fi
 	mv -fv images $(DOCTEX)
-	rm $(NAME).*
+	rm $(NAME).* $(ODIR)$(NAME).w

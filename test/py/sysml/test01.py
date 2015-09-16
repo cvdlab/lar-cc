@@ -1,11 +1,7 @@
 """ testing initial steps of Assembly Diagram construction """
-from pyplasm import *
-from scipy import *
-import os,sys
-sys.path.insert(0, 'lib/py/')
-from mapper import *
+""" Initial import of modules """
+from lar2psm import *
 
-from sysml import *
 
 shape = [1,2,2]
 sizePatterns = [[1],[2,1],[0.8,0.2]]

@@ -1,7 +1,7 @@
-import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
-from scipy import *
+""" Oriented boundary of a random simplicial complex """
+from larlib import *
+
+""" Importing external modules """
 from scipy.spatial import Delaunay
 import numpy as np
 

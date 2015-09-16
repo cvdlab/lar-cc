@@ -1,8 +1,5 @@
 """ Biconnected components from orthogonal LAR model """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
-from bool1 import larRemoveVertices
+from larlib import *
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GREEN, ORANGE, BLACK, BLUE, PURPLE]
 
 

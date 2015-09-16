@@ -1,7 +1,5 @@
 """ Integrals on 2D non-convex polyline """
-import sys; sys.path.insert(0, 'lib/py/')
-from integr import *
-from hospital import *
+from larlib import *
 
 V,FV,EV = openCourt11.body[0]
 tria = FV[0]

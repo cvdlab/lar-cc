@@ -1,6 +1,9 @@
 """ LAR model input and handling """
+from larlib import *
 
-from mapper import *
+""" Input of LAR architectural plan """
+
+
 V = [[3,-3],
 [9,-3],[0,0],[3,0],[9,0],[15,0],
 [3,3],[6,3],[9,3],[15,3],[21,3], 
@@ -14,8 +17,21 @@ FV = [
 [9,10,20,19,14,13], [2,3,6,7,12,11], [0,1,4,8,7,6,3],
 [4,5,9,13,18,17,16,12,7,8],[17,18,25,24,23]]
 
+polylines = lar2polylines((V,FV))
+lines = CAT([zip(polyline[:-1],polyline[1:]) for polyline in polylines])
+vdict = defaultdict(list)
+
+for k,(v1,v2) in enumerate(lines):
+   vdict[vcode(v1)] += [k]
+   vdict[vcode(v2)] += [k]
+   
+verts = dict(zip(AA(vcode)(V),range(len(V))))
+edges = [tuple(sorted([verts[vcode(v1)], verts[vcode(v2)]])) for v1,v2 in lines]
+EV = list(set(edges))
+
 dwelling = larApply(t(3,0))(Model((V,FV)))
 print "\n dwelling =",dwelling
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((dwelling.verts,dwelling.cells))))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((dwelling.verts,EV))))
 plan = Struct([dwelling,s(-1,1),dwelling])
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(evalStruct(plan)))))

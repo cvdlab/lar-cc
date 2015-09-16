@@ -1,8 +1,5 @@
 """ Biconnected components from orthogonal LAR model """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
-from iot3d import polyline2lar
+from larlib import *
 
 V = [[0.395, 0.296], [0.593, 0.0], [0.79, 0.773], [0.671, 0.889], [0.79, 0.0], [0.593, 0.296], [0.593, 0.593], [0.395, 0.593], [0.0, 0.889], [0.0, 0.0]]
 FV = [[0, 5, 4, 1], [1, 9, 0], [8, 7, 0, 9], [7, 8, 3, 2, 4, 5, 6]]

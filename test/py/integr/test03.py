@@ -1,6 +1,5 @@
 """ Integrals on the standard 3D cube """
-import sys; sys.path.insert(0, 'lib/py/')
-from integr import *
+from larlib import *
 
 V = [[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]]
 

@@ -1,7 +1,6 @@
 """ Oriented cuboidal cells """
 """ Oriented cuboidal cells """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 def orientedBoundaryCells(V,(VV,EV,FV,CV)):
     boundaryMat = signedCellularBoundary(V,[VV,EV,FV,CV])

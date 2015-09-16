@@ -1,6 +1,5 @@
-import sys
-sys.path.insert(0, 'lib/py/')
-from hospital import *
+""" Example """
+from larlib import *
 
 V,FV,EV = struct2lar(groundFloor)
 VIEW(STRUCT(MKPOLS((V,EV))))

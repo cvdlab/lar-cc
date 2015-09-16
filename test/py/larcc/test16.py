@@ -1,7 +1,5 @@
 """ Boundary orientation of a random 2D triangulation """
-import sys;sys.path.insert(0, 'lib/py/')
-from scipy import linalg
-from larcc import *
+from larlib import *
 from random import random
 
 """ Vertices V generated as random point in the unit circle """

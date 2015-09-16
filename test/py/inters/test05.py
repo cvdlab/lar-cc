@@ -1,7 +1,5 @@
 """ LAR from splitting of othogonal lines """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 lines = [[[0,0],[6,0]], [[0,4],[10,4]], [[0,0],[0,4]], [[3,0],[3,4]], 
 [[6,0],[6, 8]], [[3,2],[6,2]], [[10,0],[10,8]], [[0,8],[10,8]]]

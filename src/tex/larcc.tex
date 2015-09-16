@@ -292,8 +292,9 @@ Let us compute and show in dense form the characteristic matrices of 2- and 1-ce
 By running the file \texttt{test/py/larcc/test08.py} the reader will get the two matrices shown in Example~\ref{ex:denseMat}
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test08.py
-@{import sys; sys.path.insert(0, 'lib/py/')
-from larcc import *
+@{""" Characteristic matrices """
+from larlib import *
+
 @< Test example of Brc to Csr transformation @>
 @< Test examples of Sparse to dense matrix transformation @>
 @}
@@ -550,7 +551,8 @@ As already outlined, the \texttt{modelIndexing} function return the \emph{hpc} v
 %-------------------------------------------------------------------------------
 @D Visualization of cell indices
 @{""" Visualization of cell indices """
-from sysml import *
+from larlib import *
+
 def modelIndexing(shape):
 	V, bases = larCuboids(shape,True)
 	# bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
@@ -623,9 +625,15 @@ An example of drawing of oriented edges is given in \texttt{test/py/larcc/test11
 
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test11.py
+@{
+@< Example of oriented edge drawing @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Example of oriented edge drawing
 @{""" Example of oriented edge drawing """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 V = [[9,0],[13,2],[15,4],[17,8],[14,9],[13,10],[11,11],[9,10],[7,9],[5,9],[3,
 8],[0,6],[2,3],[2,1],[5,0],[7,1],[4,2],[12,10],[6,3],[8,3],[3,5],[5,5],[7,6],
@@ -661,10 +669,8 @@ The boundary of whichever chain, here defined as the list of indices of its cell
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test19.py
 @{""" Example of oriented edge drawing """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
-sys.path.insert(0, 'test/py/larcc/')
-from test11 import *
+
+@< Example of oriented edge drawing @>
 
 C2 = csr_matrix((len(FV),1))
 for i in [1,2, 12,13,14,15, 22,23, 29,30,31]: C2[i,0] = 1
@@ -773,9 +779,8 @@ some more useful binary relationships (\texttt{CF, CE, FE}), needed for example 
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test10.py
 @{""" A mesh model and various incidence operators """
-import sys; sys.path.insert(0, 'lib/py/')
-from larcc import *
-from largrid import *
+
+from larlib import *
 
 shape = [2,2,2]
 V,(VV,EV,FV,CV) = larCuboids(shape,True)
@@ -823,9 +828,7 @@ def incidenceChain(bases):
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test13.py
 @{""" Example of incidence chain computation """
-import sys; sys.path.insert(0, 'lib/py/')
-from larcc import *
-from largrid import *
+from larlib import *
 
 shape = (1,1,2) 
 print "\n\nFor a better example provide a greater shape!"
@@ -1061,6 +1064,7 @@ def signedCellularBoundary(V,bases):
 @D Signed boundary cells for polytopal complexes
 @{""" Signed boundary cells for polytopal complexes """
 from scipy.sparse import *
+
 def signedCellularBoundaryCells(verts,bases):
 	CV = bases[-1]
 	boundaryMat = signedCellularBoundary(verts,bases)
@@ -1082,8 +1086,7 @@ The \texttt{larCuboids} function, when applied to a \texttt{shape} parameter and
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test14.py
 @{""" Boundary of a 2D cuboidal grid """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 V,bases = larCuboids([6,6],True)
 [VV,EV,FV] = bases
@@ -1107,8 +1110,7 @@ In both cases the boundary matrix is computed by using the general polytopal app
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test15.py
 @{""" Oriented cuboidal and simplicial cells (same algorithm) """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 # cuboidal grid
 V,bases = larCuboids([5,5,3],True)
@@ -1134,8 +1136,7 @@ VIEW(EXPLODE(1.25,1.25,1.25)(MKPOLS((V,cells))))
 @O test/py/larcc/test18.py
 @{""" Oriented cuboidal cells """
 """ Oriented cuboidal cells """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 def orientedBoundaryCells(V,(VV,EV,FV,CV)):
     boundaryMat = signedCellularBoundary(V,[VV,EV,FV,CV])
@@ -1176,9 +1177,7 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FVtriangles))+normalVectors))
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test17.py
 @{""" Boundary orientation of a random 2D cubical complex """
-import sys;sys.path.insert(0, 'lib/py/')
-from scipy import linalg
-from larcc import *
+from larlib import *
 from random import random
 
 # test model generation
@@ -1248,9 +1247,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 %-------------------------------------------------------------------------------
 @O test/py/larcc/test16.py
 @{""" Boundary orientation of a random 2D triangulation """
-import sys;sys.path.insert(0, 'lib/py/')
-from scipy import linalg
-from larcc import *
+from larlib import *
 from random import random
 
 @< Vertices V generated as random point in the unit circle @>
@@ -1455,22 +1452,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 \subsection{Importing of modules or packages}
 %-------------------------------------------------------------------------------
 @D Importing of modules or packages
-@{from pyplasm import *
+@{from larlib import *
+
 import collections
-import scipy
 import numpy as np
 from scipy import zeros,arange,mat,amin,amax,array
 from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
-
-from lar2psm import *
-from sysml import *
 @}
 %-------------------------------------------------------------------------------
 
 \subsection{Writing the library file}
 
 %-------------------------------------------------------------------------------
-@o lib/py/larcc.py
+@O larlib/larlib/larcc.py
 @{# -*- coding: utf-8 -*-
 """ Basic LARCC library """
 @< The MIT Licence @>
@@ -1574,10 +1568,9 @@ VIEW(mkSignedEdges((V,orientedBoundaryEV)))
 \subsection{Model generation, skeleton and boundary extraction}
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/test01.py
-@{import sys; sys.path.insert(0, 'lib/py/')
-from larcc import *
-from largrid import *
+@O test/py/larcc/test01.py
+@{""" Model generation, skeleton and boundary extraction """
+from larlib import *
 @< input of 2D topology and geometry data @>
 @< characteristic matrices @>
 @< incidence matrix @>
@@ -1725,16 +1718,16 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test02.py
-@{import sys; sys.path.insert(0, 'lib/py/')
+@{""" Boundary of 3D simplicial grid """
+from larlib import *
+
 @< boundary of 3D simplicial grid @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @D boundary of 3D simplicial grid
-@{from simplexn import *
-from larcc import *
-
+@{
 V,CV = larSimplexGrid1([10,10,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 SK2 = (V,larSimplexFacets(CV))
@@ -1763,7 +1756,10 @@ print "\nboundaryCells_2 =\n", boundaryFV
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test03.py
-@{@< Importing external modules @>
+@{""" Oriented boundary of a random simplicial complex """
+from larlib import *
+
+@< Importing external modules @>
 @< Generating and viewing a random 3D simplicial complex @>
 @< Computing and viewing its non-oriented boundary @>
 @< Computing and viewing its oriented boundary @>
@@ -1773,10 +1769,7 @@ print "\nboundaryCells_2 =\n", boundaryFV
 
 %-------------------------------------------------------------------------------
 @D Importing external modules
-@{import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
-from scipy import *
+@{""" Importing external modules """
 from scipy.spatial import Delaunay
 import numpy as np
 @}
@@ -1830,9 +1823,9 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundaryModel)))
 
 %-------------------------------------------------------------------------------
 @D Generate and view a 3D simplicial grid
-@{import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
+@{""" Generate and view a 3D simplicial grid """
+from larlib import *
+
 V,CV = larSimplexGrid1([4,4,4])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 @}
@@ -1862,9 +1855,10 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test05.py
-@{import sys; sys.path.insert(0, 'lib/py/')
+@{""" Skeletons and oriented boundary of a simplicial complex """
+from larlib import *
 
-@< Skeletons computation and vilualisation @>
+@< Skeletons computation and visualisation @>
 @< Oriented boundary matrix visualization @>
 @< Computation of oriented boundary cells @>
 @}
@@ -1873,8 +1867,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 
 %-------------------------------------------------------------------------------
 @D Skeletons computation and vilualisation
-@{from simplexn import *
-from larcc import *
+@{""" Skeletons computation and vilualisation """
 V,FV = larSimplexGrid1([3,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 EV = larSimplexFacets(FV)
@@ -1886,10 +1879,12 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,VV))))
 
 %-------------------------------------------------------------------------------
 @D Oriented boundary matrix visualization
-@{np.set_printoptions(threshold='nan')
+@{""" Oriented boundary matrix visualization """
+np.set_printoptions(threshold='nan')
 csrSignedBoundaryMat = signedSimplicialBoundary (FV,EV)
 Z = csr2DenseMatrix(csrSignedBoundaryMat)
 print "\ncsrSignedBoundaryMat =\n", Z
+import matplotlib.pyplot
 from pylab import *
 matshow(Z)
 show()
@@ -1898,7 +1893,8 @@ show()
 
 %-------------------------------------------------------------------------------
 @D Computation of oriented boundary cells 
-@{boundaryCells_1 = signedBoundaryCells(V,FV,EV)
+@{"""  Computation of oriented boundary cells """
+boundaryCells_1 = signedBoundaryCells(V,FV,EV)
 print "\nboundaryCells_1 =\n", boundaryCells_1
 boundaryEV = [EV[-k] if k<0 else swap(EV[k]) for k in boundaryCells_1]
 bndry = (V,boundaryEV)
@@ -1910,10 +1906,10 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(bndry)))
 
 %-------------------------------------------------------------------------------
 @o test/py/larcc/test06.py
-@{import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
+@{""" Boundary of random 2D simplicial complex """
+from larlib import *
 from scipy.spatial import Delaunay
+
 @< Test for quasi-equilateral triangles @>
 @< Generation and selection of random triangles @>
 @< Boundary computation and visualisation @>
@@ -1932,7 +1928,8 @@ from scipy.spatial import Delaunay
 
 %-------------------------------------------------------------------------------
 @D Test for quasi-equilateral triangles
-@{def quasiEquilateral(tria):
+@{""" Test for quasi-equilateral triangles """
+def quasiEquilateral(tria):
 	a = VECTNORM(VECTDIFF(tria[0:2]))
 	b = VECTNORM(VECTDIFF(tria[1:3]))
 	c = VECTNORM(VECTDIFF([tria[0],tria[2]]))
@@ -1944,7 +1941,8 @@ from scipy.spatial import Delaunay
 
 %-------------------------------------------------------------------------------
 @D Generation and selection of random triangles 
-@{verts = np.random.rand(50,2)
+@{""" Generation and selection of random triangles """
+verts = np.random.rand(50,2)
 verts = (verts - [0.5,0.5]) * 2
 triangles = Delaunay(verts)
 cells = [ cell for cell in triangles.vertices.tolist()
@@ -1958,7 +1956,8 @@ VIEW(EXPLODE(1.5,1.5,1.5)(pols2D))
 
 %-------------------------------------------------------------------------------
 @D Boundary computation and visualisation 
-@{orientedBoundary = signedBoundaryCells(V,FV,EV)
+@{""" Boundary computation and visualisation """
+orientedBoundary = signedBoundaryCells(V,FV,EV)
 submodel = mkSignedEdges((V,orientedBoundary))
 VIEW(submodel)
 @}
@@ -1967,7 +1966,8 @@ VIEW(submodel)
 
 %-------------------------------------------------------------------------------
 @D Decompose a permutation into cycles 
-@{def permutationOrbits(List):
+@{""" Decompose a permutation into cycles """
+def permutationOrbits(List):
 	d = dict((i,int(x)) for i,x in enumerate(List))
 	out = []
 	while d:
@@ -1990,11 +1990,10 @@ if __name__ == "__main__":
 \subsection{Assemblies of simplices and hypercubes}
 
 %-------------------------------------------------------------------------------
-@o test/py/larcc/test07.py
-@{import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
-from largrid import *
+@O test/py/larcc/test07.py
+@{""" Assemblies of simplices and hypercubes """
+from larlib import *
+
 @< Definition of 1-dimensional LAR models @>
 @< Assembly generation of squares and triangles @>
 @< Assembly generation  of cubes and tetrahedra @>
@@ -2011,7 +2010,8 @@ from largrid import *
 
 %-------------------------------------------------------------------------------
 @D Definition of 1-dimensional LAR models 
-@{geom_0,topol_0 = [[0.],[1.],[2.],[3.],[4.]],[[0,1],[1,2],[3,4]]
+@{""" Definition of 1-dimensional LAR models  """
+geom_0,topol_0 = [[0.],[1.],[2.],[3.],[4.]],[[0,1],[1,2],[3,4]]
 geom_1,topol_1 = [[0.],[1.],[2.]], [[0,1],[1,2]]
 mod_0 = (geom_0,topol_0)
 mod_1 = (geom_1,topol_1)
@@ -2020,7 +2020,8 @@ mod_1 = (geom_1,topol_1)
 
 %-------------------------------------------------------------------------------
 @D Assembly generation of squares and triangles
-@{squares = larModelProduct([mod_0,mod_1])
+@{""" Assembly generation of squares and triangles """
+squares = larModelProduct([mod_0,mod_1])
 V,FV = squares
 simplices = pivotSimplices(V,FV,d=2)
 VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
@@ -2030,7 +2031,7 @@ VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
 
 %-------------------------------------------------------------------------------
 @D Assembly generation  of cubes and tetrahedra 
-@{from largrid import *
+@{""" Assembly generation  of cubes and tetrahedra """
 cubes = larModelProduct([squares,mod_0])
 V,CV = cubes
 simplices = pivotSimplices(V,CV,d=3)

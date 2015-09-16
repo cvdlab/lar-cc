@@ -1,6 +1,5 @@
-import sys; sys.path.insert(0, 'lib/py/')
-from larcc import *
-from largrid import *
+""" Model generation, skeleton and boundary extraction """
+from larlib import *
 
 # input of geometry and topology  
 V2 = [[4,10],[8,10],[14,10],[8,7],[14,7],[4,4],[8,4],[14,4]]

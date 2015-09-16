@@ -1,6 +1,6 @@
+
 """ Example of oriented edge drawing """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 V = [[9,0],[13,2],[15,4],[17,8],[14,9],[13,10],[11,11],[9,10],[7,9],[5,9],[3,
 8],[0,6],[2,3],[2,1],[5,0],[7,1],[4,2],[12,10],[6,3],[8,3],[3,5],[5,5],[7,6],
@@ -26,3 +26,4 @@ orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])
 cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
 submodel = mkSignedEdges((V,cells))
 VIEW(submodel)
+

@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: larlib
+Version: 0.1
+Summary: Linear algebraic representation of topology and geometry as a complex of chain spaces
+Home-page: https://github.com/cvdlab/lar-cc
+Author: Alberto Paoluzzi
+Author-email: paoluzzi@dia.uniroma3.it
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN

@@ -1,7 +1,5 @@
 """ Integrals on 2D non-convex polyline """
-import sys; sys.path.insert(0, 'lib/py/')
-from integr import *
-from iot3d import *
+from larlib import *
 
 polyline = TRANS([[10,10,20,40,30,30,15,15],[10,20,30,20,10,15,15,10]])
 model = polyline2lar([polyline])

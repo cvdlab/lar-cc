@@ -1,7 +1,5 @@
 """ 2-complex from orthogonal line segments """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GREEN, ORANGE, BLACK, BLUE, PURPLE]
 
 
@@ -25,7 +23,6 @@ VIEW(STRUCT(MKPOLS((V,EV))))
 
 V,FV,EV = facesFromComponents((V,EV))
 
-from hospital import surfIntegration
 areas = surfIntegration((V,FV,EV))
 boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]

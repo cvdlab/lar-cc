@@ -1,6 +1,5 @@
 """ Boundary of a 2D cuboidal grid """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 V,bases = larCuboids([6,6],True)
 [VV,EV,FV] = bases

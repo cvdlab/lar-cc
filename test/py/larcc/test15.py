@@ -1,6 +1,5 @@
 """ Oriented cuboidal and simplicial cells (same algorithm) """
-import sys;sys.path.insert(0, 'lib/py/')
-from larcc import *
+from larlib import *
 
 # cuboidal grid
 V,bases = larCuboids([5,5,3],True)

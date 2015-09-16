@@ -1,9 +1,7 @@
 """ make the model of a layout floor """
+from larlib import *
+
 """ make the model of a layout floor """
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from hijson import *
 
 scaleFactor = 83.333
 
@@ -186,7 +184,6 @@ primoPiano_nomi = ["piano1_zonaNord","piano1_zonaEst","piano1_zonaSud","piano1_z
 primoPiano_categorie = ["ala","ala","ala","ala","centro"]
 pianoPrimo = zip(primoPiano, primoPiano_nomi, primoPiano_categorie)
 piano_1 = Struct( AA(chainsToStruct)(pianoPrimo), "piano1", "level" )
-import iot3d
 
 piano_1_3D = embedStruct(1)(piano_1,"3D")
 iot3d.printStruct2GeoJson("./",piano_1_3D)

@@ -1,7 +1,6 @@
 """ Example of non-nested structure with translation and rotations """
-import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
-from larstruct import *
+from larlib import *
+
 square = larCuboids([1,1])
 table = larApply( t(-.5,-.5) )(square)
 chair = larApply( s(.35,.35) )(table)

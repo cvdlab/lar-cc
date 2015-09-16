@@ -94,7 +94,6 @@ The function accepts as input the LAR model \texttt{V,FV,EV} and a \texttt{query
 @D Emulation of input from ``selection box''
 @{""" Emulation of input from ``selection box'' over a LAR normalized representation """
 from scipy import spatial
-from bool import crossRelation,pointInPolygonClassification
 
 def subComplexInBox(V,FV,EV,queryBox):
     (xmin,ymin),(xmax,ymax) = queryBox
@@ -216,8 +215,6 @@ def chain2structs(V,FV,EV,FE):
 @{""" From LAR oriented boundary model to polylines """
 def boundaryModel2polylines(model):
     V,EV = model
-    ##VIEW(STRUCT(MKPOLS((V,EV))))
-    #import pdb; pdb.set_trace()
     polylines = []
     succDict = dict(EV)
     visited = [False for k in range(len(V))]
@@ -296,16 +293,9 @@ def boundaryPolylines(struct):
 
 
 %-------------------------------------------------------------------------------
-@O lib/py/hijson.py
+@O larlib/larlib/hijson.py
 @{""" Module for Structured input to HIJSON """
-from pyplasm import *
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
-from larcc import *
-from bool import *
-from iot3d import *
+from larlib import *
 from copy import copy
 DEBUG = False
 
@@ -592,10 +582,6 @@ print boundaryPolylines(piano1)
 %-------------------------------------------------------------------------------
 @D Tower example initialization
 @{""" make the model of a layout floor """
-""" import modules from larcc/lib """
-import sys
-sys.path.insert(0, 'lib/py/')
-from hijson import *
 
 scaleFactor = 83.333
 
@@ -611,6 +597,8 @@ FV[2] += FV[71]      # for now :o)
 %-------------------------------------------------------------------------------
 @O test/py/hijson/test01.py
 @{""" make the model of a layout floor """
+from larlib import *
+
 @< Tower example initialization @>
 @< Assembling floor layout generation @>
 
@@ -620,7 +608,6 @@ primoPiano_nomi = ["piano1_zonaNord","piano1_zonaEst","piano1_zonaSud","piano1_z
 primoPiano_categorie = ["ala","ala","ala","ala","centro"]
 pianoPrimo = zip(primoPiano, primoPiano_nomi, primoPiano_categorie)
 piano_1 = Struct( AA(chainsToStruct)(pianoPrimo), "piano1", "level" )
-import iot3d
 
 piano_1_3D = embedStruct(1)(piano_1,"3D")
 iot3d.printStruct2GeoJson("./",piano_1_3D)
@@ -635,6 +622,8 @@ print "piano_1_3D.body[0].body[0] =",piano_1_3D.body[0].body[0].category
 %-------------------------------------------------------------------------------
 @O test/py/hijson/test02.py
 @{""" make the 2.5 model of a building tower """
+from larlib import *
+
 @< Tower example initialization @>
 @< Assembling floor layout generation @>
 

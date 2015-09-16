@@ -115,8 +115,11 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 %------------------------------------------------------------------
 @d MaKe a list of HPC objects from a LAR model
 @{def MKPOLS (model):
-    if len(model)==2: V,FV = model
-    elif len(model)==3: V,FV,EV = model
+    if isinstance(model,Model):
+        V,FV = model.verts,model.cells
+    elif (isinstance(model,tuple) or isinstance(model,list)):
+        if len(model)==2: V,FV = model
+        elif len(model)==3: V,FV,EV = model
     pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]
     return pols  
 @| MKPOLS @}
@@ -126,10 +129,10 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 @d LAR model decomposition
 @{def larModelBreak(model):
     if isinstance(model,Model):
-        # V, FV = model.verts.tolist(), model.cells
-        V, FV = model.verts, model.cells
-    elif isinstance(model,tuple) or isinstance(model,list):
-        V, FV = model
+        V,FV = model.verts,model.cells
+    elif (isinstance(model,tuple) or isinstance(model,list)):
+        if len(model)==2: V,FV = model
+        elif len(model)==3: V,FV,EV = model
     return V,FV
 @}
 %------------------------------------------------------------------
@@ -199,16 +202,16 @@ import @1
 \label{sec:lar2psm}
 Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the functional parts it is composed of. Of course, this one is the module version corresponding to the current state of the system, i.e.~to a very initial state. Other functions will be added when needed.
 %------------------------------------------------------------------
-@O lib/py/lar2psm.py
+@O larlib/larlib/lar2psm.py
 @{"""Module with functions needed to interface LAR with pyplasm"""
+from larlib import *
+
 @< Function to import a generic module @>
 @< Compute the convex combination of a list of vectors @>
-from pyplasm import *
-import simplexn
-from simplexn import *
 @< Symbolic utility to represent points as strings @>
 @< MaKe a list of HPC objects from a LAR model @>
 @< Explode the scene using \texttt{sx,sy,sz} scaling parameters @>
+@< Drawing numbers of cells @>
 @}
 %------------------------------------------------------------------
 
@@ -277,38 +280,36 @@ assert( CCOMB([VECTSUM(vects)]) == \
 @}
 %------------------------------------------------------------------
 
+
+%-------------------------------------------------------------------------------
+\subsection{Cell numbering}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Drawing numbers of cells}
+
+%-------------------------------------------------------------------------------
+@D Drawing numbers of cells
+@{""" Drawing numbers of cells """
+def cellNumbering (larModel,hpcModel):
+	V,CV = larModel
+	def cellNumbering0 (cellSubset,color=WHITE,scalingFactor=1):
+		text = TEXTWITHATTRIBUTES (TEXTALIGNMENT='centre', TEXTANGLE=0, 
+							TEXTWIDTH=0.1*scalingFactor, 
+							TEXTHEIGHT=0.2*scalingFactor, 
+							TEXTSPACING=0.025*scalingFactor)
+		hpcList = [hpcModel]
+		for cell in cellSubset:
+			point = CCOMB([V[v] for v in CV[cell]])
+			hpcList.append(T([1,2,3])(point)(COLOR(color)(text(str(cell)))))
+		return STRUCT(hpcList)
+	return cellNumbering0
+@}
+%-------------------------------------------------------------------------------
+
 \bibliographystyle{amsalpha}
 \bibliography{lar2psm}
 
-
-
-\subsection{Numeric utilities}
-
-A small set of utility functions is used to transform a \emph{point} representation, given as array of coordinates, into a string of fixed format to be used as point key into python dictionaries.
-
-%------------------------------------------------------------------
-@D Symbolic utility to represent points as strings
-@{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
-global PRECISION
-PRECISION = 4.
-
-def verySmall(number): return abs(number) < 10**-(PRECISION)
-
-def prepKey (args): return "["+", ".join(args)+"]"
-
-def fixedPrec(value):
-    out = round(value*10**(PRECISION))/10**(PRECISION)
-    if out == -0.0: out = 0.0
-    return str(out)
-    
-def vcode (vect): 
-    """
-    To generate a string representation of a number array.
-    Used to generate the vertex keys in PointSet dictionary, and other similar operations.
-    """
-    return prepKey(AA(fixedPrec)(vect))
-@}
-%------------------------------------------------------------------
 
 
 \end{document}

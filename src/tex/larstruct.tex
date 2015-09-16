@@ -72,7 +72,10 @@ First we state the general rules that will be satisfied by the matrices used in 
 
 %-------------------------------------------------------------------------------
 @D Apply an affine transformation to a LAR model 
-@{def larApply(affineMatrix):
+@{""" Apply an affine transformation to a LAR model  """
+from scipy import array
+
+def larApply(affineMatrix):
     def larApply0(model):
         if isinstance(model,Model):
             V = scipy.dot(array([v+[1.0] for v in model.verts]), affineMatrix.T).tolist()
@@ -210,7 +213,7 @@ class Verts(scipy.ndarray): pass
 \subsection{\texttt{Struct} iterable class}
 %-------------------------------------------------------------------------------
 @D Struct class
-@{from myfont import *
+@{""" Struct iterable class """
 class Struct:
     """ The assembly type of the LAR package """
     def __init__(self,data=None,name=None,category=None):
@@ -372,18 +375,88 @@ def struct2lar(structure,metric=ID):
                         outcell += [vertDict[key]]
                 FW += [outcell]
             
-    
-    if len(model)==2: 
+    if ((isinstance(model,tuple) or isinstance(model,list)) and len(model)==2) or (
+        (isinstance(model,Model) and model.n==2)): 
         if len(CW[0])==2: 
             CW = list(set(AA(tuple)(AA(sorted)(CW))))
         else: CW = removeDups(CW)
         return metric(W),CW
-    if len(model)==3: 
+    if ((isinstance(model,tuple) or isinstance(model,list)) and len(model)==3) or (
+        (isinstance(model,Model) and model.n==3)): 
         FW = list(set(AA(tuple)(AA(sorted)(FW))))
         CW = removeDups(CW)
         return metric(W),CW,FW
 @}
 %-------------------------------------------------------------------------------
+
+
+
+\subsection{Model simplification}
+
+\paragraph{Remove double instances of cells}
+
+%-------------------------------------------------------------------------------
+@O test/py/larstruct/test10.py
+@{""" Remove double instances of cells (and the unused vertices) """
+from larlib import *
+
+@< Transform Struct object to LAR model pair @>
+@< Remove the double instances of cells @>
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,FW))))
+
+@< Remove the unused vertices @>
+@}
+%-------------------------------------------------------------------------------
+
+The actual removal of double cells (useful in several applications, and in particular in the extraction of boundary models from 3D medical images) is performed by first generating a dictionary of cells, using as key the tuple given by the cells themselves, and then removing those discovered having a double instance.
+The algorithm is extremely simple, and its implementation, given below, is straightforward.
+
+%-------------------------------------------------------------------------------
+@D Remove the double instances of cells
+@{""" Remove the double instances of cells """
+cellDict = defaultdict(list)
+for k,cell in enumerate(FW):
+    cellDict[tuple(cell)] += [k]
+FW = [list(key) for key in cellDict.keys() if len(cellDict[key])==1]
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Remove the unused vertices
+@{""" Remove the unused vertices """
+print "len(W) =",len(W)
+V,FV = larRemoveVertices(W,FW)
+print "len(V) =",len(V)
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Remove the unused vertices from a LAR model pair
+@{""" Remove the unused vertices """
+def larRemoveVertices(V,FV):
+    vertDict = dict()
+    index,defaultValue,FW,W = -1,-1,[],[]
+        
+    for k,incell in enumerate(FV):
+        outcell = []
+        for v in incell:
+            key = vcode(V[v])
+            if vertDict.get(key,defaultValue) == defaultValue:
+                index += 1
+                vertDict[key] = index
+                outcell += [index]
+                W += [eval(key)]
+            else: 
+                outcell += [vertDict[key]]
+        FW += [outcell]
+    return W,FW
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+
 \subsection{Embedding or projecting LAR models}
 %-------------------------------------------------------------------------------
 
@@ -453,7 +526,9 @@ In order to better understand the behaviour of the traversal algorithm, where ev
 
 %-------------------------------------------------------------------------------
 @D Emulation of scene multigraph traversal
-@{from pyplasm import *
+@{""" Emulation of scene multigraph traversal """ 
+from larlib import *
+
 def __traverse(CTM, stack, o):
     for i in range(len(o)):
         if ISNUM(o[i]): print o[i], REVERSE(CTM)
@@ -685,11 +760,11 @@ def embedTraversal(cloned, obj,n,suffix):
 \label{sec:larstruct}
 Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the functional parts it is composed of. Of course, this one is the module version corresponding to the current state of the system, i.e.~to a very initial state. Other functions will be added when needed.
 %------------------------------------------------------------------
-@O lib/py/larstruct.py
-@{"""Module with functions needed to interface LAR with pyplasm"""
-import sys; sys.path.insert(0, 'lib/py/')
-from lar2psm import *
-from larcc import *
+@O larlib/larlib/larstruct.py
+@{"""Module with functions needed to interface LAR with pyplasm via Struct"""
+from larlib import *
+
+@< Symbolic utility to represent points as strings @>
 @< Translation matrices @>
 @< Scaling matrices @>
 @< Rotation matrices @>
@@ -697,6 +772,7 @@ from larcc import *
 @< Apply an affine transformation to a LAR model @>
 @< Check for dimension of a structure element (Verts or V) @>
 @< Remove duplicate faces @>
+@< Remove the unused vertices from a LAR model pair @>
 @< Traversal of a scene multigraph @>
 @< types Mat and Verts @>
 @< Model class @>
@@ -721,9 +797,8 @@ We start with a simple 2D example of a non-nested list of translated 2D object i
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test04.py
 @{""" Example of non-nested structure with translation and rotations """
-import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
-from larstruct import *
+from larlib import *
+
 square = larCuboids([1,1])
 table = larApply( t(-.5,-.5) )(square)
 chair = larApply( s(.35,.35) )(table)
@@ -742,9 +817,8 @@ A different composition of transformations, from local to global coordinate fram
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test05.py
 @{""" Example of non-nested structure with translation and rotations """
-import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
-from larstruct import *
+from larlib import *
+
 square = larCuboids([1,1])
 #square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
@@ -762,9 +836,8 @@ Finally, a similar 2D example is given, by nesting one (or more) structures via 
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test06.py
 @{""" Example of nested structures with translation and rotations """
-import sys; sys.path.insert(0, 'lib/py/')
-from largrid import *
-from larstruct import *
+from larlib import *
+
 square = larCuboids([1,1])
 #square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
@@ -781,10 +854,13 @@ VIEW(SKEL_1(STRUCT(CAT(AA(MKPOLS)(scene)))))
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test08.py
 @{""" LAR model input and handling """
+from larlib import *
+
 @< Input of LAR architectural plan @>
 dwelling = larApply(t(3,0))(Model((V,FV)))
 print "\n dwelling =",dwelling
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((dwelling.verts,dwelling.cells))))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((dwelling.verts,EV))))
 plan = Struct([dwelling,s(-1,1),dwelling])
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(evalStruct(plan)))))
 @}
@@ -794,8 +870,9 @@ VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(evalStruct(plan)))))
 
 %-------------------------------------------------------------------------------
 @D Input of LAR architectural plan
-@{@< Initial import of modules @>
-from mapper import *
+@{""" Input of LAR architectural plan """
+@< Initial import of modules @>
+
 V = [[3,-3],
 [9,-3],[0,0],[3,0],[9,0],[15,0],
 [3,3],[6,3],[9,3],[15,3],[21,3], 
@@ -808,6 +885,18 @@ FV = [
 [13,14,19,21,18], [16,17,23,22], [11,12,16,15],
 [9,10,20,19,14,13], [2,3,6,7,12,11], [0,1,4,8,7,6,3],
 [4,5,9,13,18,17,16,12,7,8],[17,18,25,24,23]]
+
+polylines = lar2polylines((V,FV))
+lines = CAT([zip(polyline[:-1],polyline[1:]) for polyline in polylines])
+vdict = defaultdict(list)
+
+for k,(v1,v2) in enumerate(lines):
+	vdict[vcode(v1)] += [k]
+	vdict[vcode(v2)] += [k]
+	
+verts = dict(zip(AA(vcode)(V),range(len(V))))
+edges = [tuple(sorted([verts[vcode(v1)], verts[vcode(v2)]])) for v1,v2 in lines]
+EV = list(set(edges))
 @}
 %-------------------------------------------------------------------------------
 
@@ -823,10 +912,7 @@ Let us notice that due to the assembly process, some 2-cells in \texttt{FW} are 
 %-------------------------------------------------------------------------------
 @O test/py/larstruct/test09.py
 @{""" Transformation of Struct object to LAR model pair """
-import sys
-""" import modules from larcc/lib """
-sys.path.insert(0, 'lib/py/')
-from larstruct import *
+from larlib import *
 
 @< Transform Struct object to LAR model pair @>
 @}
@@ -877,6 +963,35 @@ import @1
 @| importModule @}
 %------------------------------------------------------------------
 
+
+
+\subsection{Numeric utilities}
+
+A small set of utility functions is used to transform a \emph{point} representation, given as array of coordinates, into a string of fixed format to be used as point key into python dictionaries.
+
+%------------------------------------------------------------------
+@D Symbolic utility to represent points as strings
+@{""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
+global PRECISION
+PRECISION = 4.
+
+def verySmall(number): return abs(number) < 10**-(PRECISION)
+
+def prepKey (args): return "["+", ".join(args)+"]"
+
+def fixedPrec(value):
+    out = round(value*10**(PRECISION))/10**(PRECISION)
+    if out == -0.0: out = 0.0
+    return str(out)
+    
+def vcode (vect): 
+    """
+    To generate a string representation of a number array.
+    Used to generate the vertex keys in PointSet dictionary, and other similar operations.
+    """
+    return prepKey(AA(fixedPrec)(vect))
+@}
+%------------------------------------------------------------------
 
 
 \bibliographystyle{amsalpha}

@@ -300,6 +300,8 @@ The faces in every $\texttt{parts}(i)$ must be affinely transformed into the sub
 %-------------------------------------------------------------------------------
 @D Computation of face transformations
 @{""" Computation of affine face transformations """
+from scipy.linalg.basic import det
+
 def COVECTOR(points):
     pointdim = len(points[0])
     plane = Planef.bestFittingPlane(pointdim,
@@ -484,7 +486,6 @@ def orientTriangle(pointTriple):
     else: return pointTriple
     
 from triangle import triangulate
-from integr import *
 from copy import copy
 def boundaryTriangulation(W,FW,EW,FE):
     triangleSet = []    
@@ -690,7 +691,7 @@ def cyclesOrient(pcycles,fcycle,EV):
 if __name__ == "__main__":
     pcycles = [[-19, 13, 22, 23]]
     fcycle = [30, 20, 18, 2, 26, 19]
-    cyclesOrientation(pcycles,fcycle)
+    #cyclesOrientation(pcycles,fcycle)
 @}
 %-------------------------------------------------------------------------------
 
@@ -887,7 +888,7 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
 
 @< Double check the faces boundaries made of edges @>
 
-def partition(W,FW,EW):
+def thePartition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets(containmentBoxes(quadArray))
 
@@ -919,6 +920,7 @@ def partition(W,FW,EW):
 
 
 
+
 \subsection{Boolean chains}
 %===============================================================================
 
@@ -927,7 +929,7 @@ def partition(W,FW,EW):
 %===============================================================================
 
 %-------------------------------------------------------------------------------
-@O lib/py/bool.py
+@O larlib/larlib/bool.py
 @{""" Module for Boolean computations between geometric objects """
 from larlib import *
 DEBUG = False
@@ -1205,7 +1207,7 @@ LAR model is generated. Then the unique polygonal face in \texttt{FV} is embedde
 @{""" 2D polygon triangulation """
 from larlib import *
 
-filename = "larlib/test/bool/interior.svg"
+filename = "test/svg/bool/interior.svg"
 lines = svg2lines(filename)    
 V,FV,EV = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
@@ -1231,7 +1233,7 @@ VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))
 import sys
 from larlib import *
 
-sys.path.insert(0, 'test/bool/')
+sys.path.insert(0, 'test/py/bool/')
 from test06 import *
 
 """ From triples of points to LAR model """
@@ -1300,48 +1302,56 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11a.py @{
+from larlib import *
 @< testing example @(t(.5,.5,.5)@) @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11b.py @{
+from larlib import *
 @< testing example @(t(.5,.5,0)@) @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11c.py @{
+from larlib import *
 @< testing example @(t(.5,0,0)@) @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11d.py @{
+from larlib import *
 @< testing example @(t(0,0,0)@) @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11e.py @{
+from larlib import *
 @< testing example @(s(.5,.5,.5)@) @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11f.py @{
+from larlib import *
 @< testing example @(t(.25,.25,.25),s(.5,.5,.5)@) @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11g.py @{
+from larlib import *
 @< testing example @(t(.25,.25,.75),s(.5,.5,.5)@) @>
 @}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11h.py @{
+from larlib import *
 @< testing example @(t(1.5,1.5,1.5)@) @>
 @}
 %-------------------------------------------------------------------------------
@@ -1349,8 +1359,6 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
 %-------------------------------------------------------------------------------
 @D testing example @{
 """ Visualization of indices of the boundary triangulation """
-import larlib
-from larlib import *
 
 V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
 """
@@ -1364,7 +1372,7 @@ cubeGrids = Struct(2*[cubeGrid,@1])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
-V,CV,FV,EV,CF,CE,COE,FE = larlib.partition(V,FV,EV)
+V,CV,FV,EV,CF,CE,COE,FE = thePartition(V,FV,EV)
 
 cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))

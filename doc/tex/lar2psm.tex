@@ -205,8 +205,11 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def MKPOLS (model):@\\
-\mbox{}\verb@    if len(model)==2: V,FV = model@\\
-\mbox{}\verb@    elif len(model)==3: V,FV,EV = model@\\
+\mbox{}\verb@    if isinstance(model,Model):@\\
+\mbox{}\verb@        V,FV = model.verts,model.cells@\\
+\mbox{}\verb@    elif (isinstance(model,tuple) or isinstance(model,list)):@\\
+\mbox{}\verb@        if len(model)==2: V,FV = model@\\
+\mbox{}\verb@        elif len(model)==3: V,FV,EV = model@\\
 \mbox{}\verb@    pols = [MKPOL([[V[v] for v in f],[range(1,len(f)+1)], None]) for f in FV]@\\
 \mbox{}\verb@    return pols  @\\
 \mbox{}\verb@@{\NWsep}
@@ -228,10 +231,10 @@ Each cell \texttt{f} in the model (i.e.~each vertex list in the \texttt{FV} arra
 \begin{list}{}{} \item
 \mbox{}\verb@def larModelBreak(model):@\\
 \mbox{}\verb@    if isinstance(model,Model):@\\
-\mbox{}\verb@        # V, FV = model.verts.tolist(), model.cells@\\
-\mbox{}\verb@        V, FV = model.verts, model.cells@\\
-\mbox{}\verb@    elif isinstance(model,tuple) or isinstance(model,list):@\\
-\mbox{}\verb@        V, FV = model@\\
+\mbox{}\verb@        V,FV = model.verts,model.cells@\\
+\mbox{}\verb@    elif (isinstance(model,tuple) or isinstance(model,list)):@\\
+\mbox{}\verb@        if len(model)==2: V,FV = model@\\
+\mbox{}\verb@        elif len(model)==3: V,FV,EV = model@\\
 \mbox{}\verb@    return V,FV@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -356,18 +359,18 @@ First we define a parametric macro to allow the importing of \texttt{larcc} modu
 Here we assemble top-down the \texttt{lar2psm} module, by orderly listing the functional parts it is composed of. Of course, this one is the module version corresponding to the current state of the system, i.e.~to a very initial state. Other functions will be added when needed.
 %------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap16}
-\protect\makebox[0ex][r]{\NWtarget{nuweb6c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"lib/py/lar2psm.py"@\nobreak\ {\footnotesize 6c }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb6c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"larlib/larlib/lar2psm.py"@\nobreak\ {\footnotesize 6c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@"""Module with functions needed to interface LAR with pyplasm"""@\\
+\mbox{}\verb@from larlib import *@\\
+\mbox{}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Function to import a generic module\nobreak\ {\footnotesize \NWlink{nuweb6a}{6a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Compute the convex combination of a list of vectors\nobreak\ {\footnotesize \NWlink{nuweb2d}{2d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@from pyplasm import *@\\
-\mbox{}\verb@import simplexn@\\
-\mbox{}\verb@from simplexn import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb8}{8}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$MaKe a list of HPC objects from a LAR model\nobreak\ {\footnotesize \NWlink{nuweb4a}{4a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Explode the scene using \texttt{sx,sy,sz} scaling parameters\nobreak\ {\footnotesize \NWlink{nuweb5a}{5a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Drawing numbers of cells\nobreak\ {\footnotesize \NWlink{nuweb8}{8}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -483,39 +486,33 @@ Let we start producing some images, displayed in Figure~\ref{fig:lar2psm-01}, os
 \end{flushleft}
 %------------------------------------------------------------------
 
-\bibliographystyle{amsalpha}
-\bibliography{lar2psm}
+
+%-------------------------------------------------------------------------------
+\subsection{Cell numbering}
+%-------------------------------------------------------------------------------
 
 
+\paragraph{Drawing numbers of cells}
 
-\subsection{Numeric utilities}
-
-A small set of utility functions is used to transform a \emph{point} representation, given as array of coordinates, into a string of fixed format to be used as point key into python dictionaries.
-
-%------------------------------------------------------------------
+%-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap22}
-\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 8}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb8}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Drawing numbers of cells\nobreak\ {\footnotesize 8}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\
-\mbox{}\verb@global PRECISION@\\
-\mbox{}\verb@PRECISION = 4.@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@def verySmall(number): return abs(number) < 10**-(PRECISION)@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@def prepKey (args): return "["+", ".join(args)+"]"@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@def fixedPrec(value):@\\
-\mbox{}\verb@    out = round(value*10**(PRECISION))/10**(PRECISION)@\\
-\mbox{}\verb@    if out == -0.0: out = 0.0@\\
-\mbox{}\verb@    return str(out)@\\
-\mbox{}\verb@    @\\
-\mbox{}\verb@def vcode (vect): @\\
-\mbox{}\verb@    """@\\
-\mbox{}\verb@    To generate a string representation of a number array.@\\
-\mbox{}\verb@    Used to generate the vertex keys in PointSet dictionary, and other similar operations.@\\
-\mbox{}\verb@    """@\\
-\mbox{}\verb@    return prepKey(AA(fixedPrec)(vect))@\\
+\mbox{}\verb@""" Drawing numbers of cells """@\\
+\mbox{}\verb@def cellNumbering (larModel,hpcModel):@\\
+\mbox{}\verb@   V,CV = larModel@\\
+\mbox{}\verb@   def cellNumbering0 (cellSubset,color=WHITE,scalingFactor=1):@\\
+\mbox{}\verb@      text = TEXTWITHATTRIBUTES (TEXTALIGNMENT='centre', TEXTANGLE=0, @\\
+\mbox{}\verb@                     TEXTWIDTH=0.1*scalingFactor, @\\
+\mbox{}\verb@                     TEXTHEIGHT=0.2*scalingFactor, @\\
+\mbox{}\verb@                     TEXTSPACING=0.025*scalingFactor)@\\
+\mbox{}\verb@      hpcList = [hpcModel]@\\
+\mbox{}\verb@      for cell in cellSubset:@\\
+\mbox{}\verb@         point = CCOMB([V[v] for v in CV[cell]])@\\
+\mbox{}\verb@         hpcList.append(T([1,2,3])(point)(COLOR(color)(text(str(cell)))))@\\
+\mbox{}\verb@      return STRUCT(hpcList)@\\
+\mbox{}\verb@   return cellNumbering0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
@@ -524,7 +521,11 @@ A small set of utility functions is used to transform a \emph{point} representat
 \item \NWtxtMacroRefIn\ \NWlink{nuweb6c}{6c}.
 \end{list}
 \end{flushleft}
-%------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\bibliographystyle{amsalpha}
+\bibliography{lar2psm}
+
 
 
 \end{document}

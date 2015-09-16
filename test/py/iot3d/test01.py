@@ -4,7 +4,7 @@ PATH = "/Users/paoluzzi/Documents/RICERCA/sogei/edifici/"
 sys.path.insert(0, PATH)
 
 from buildings import *
-from iot3d import *
+from larlib import *
 
 # LAR models (absolute coordinates)
 ala_est = larEmbed(1)(polyline2lar(rects2polylines(eastRooms) + eastTip))
@@ -30,7 +30,7 @@ SpazioComune = Struct(lar2Structs(spazioComune),"SpazioComune")
 model = struct2lar(Ala_est)
 ##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS(model)))
 for k,room in enumerate(Ala_est.body):
-    print room.body
+   print room.body
 
 # hierarchical assembly of simplest LAR models
 TreAli = Struct([Ala_est,Ala_sud,Ala_ovest,Ascensori,SpazioComune],"TreAli")

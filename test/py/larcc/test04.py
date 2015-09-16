@@ -1,6 +1,6 @@
-import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
+""" Generate and view a 3D simplicial grid """
+from larlib import *
+
 V,CV = larSimplexGrid1([4,4,4])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
 

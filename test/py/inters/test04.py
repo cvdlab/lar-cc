@@ -1,7 +1,5 @@
 """ LAR of random line arrangement """
-import sys
-sys.path.insert(0, 'lib/py/')
-from inters import *
+from larlib import *
 
 lines = randomLines(300,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))

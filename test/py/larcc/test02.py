@@ -1,6 +1,6 @@
-import sys; sys.path.insert(0, 'lib/py/')
-from simplexn import *
-from larcc import *
+""" Boundary of 3D simplicial grid """
+from larlib import *
+
 
 V,CV = larSimplexGrid1([10,10,3])
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,CV))))
