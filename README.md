@@ -39,14 +39,10 @@ python setup.py install
 ## Authors
 
 - [Alberto Paoluzzi](http://paoluzzi.dia.uniroma3.it)
-- [Giorgio Scorzelli](http://www.dia.uniroma3.it/~scorzell)
 
-<!-- 
 ## Contributors
 
-- Alberto Paoluzzi
-- Giorgio Scorzelli
- -->
+- [Giorgio Scorzelli](http://www.dia.uniroma3.it/~scorzell)
 
 ## License
 
