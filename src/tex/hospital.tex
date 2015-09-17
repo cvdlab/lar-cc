@@ -1,4 +1,4 @@
-i\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
 \usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
 \geometry{letterpaper}        %...ora4paperora5paperor...
 %\geometry{landscape}        %Activateforforrotatedpagegeometry
@@ -148,7 +148,6 @@ def grid2coords(X,Y):
 
 def coordMaps(YMAX):
     def coordMaps0(polyline):
-        print "\npolyline =",polyline
         polyline = AA(grid2coords(X,Y))(polyline)
         polyline = vmap(YMAX)(polyline)
         return [eval(vcode(point)) for point in polyline]

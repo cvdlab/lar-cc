@@ -492,10 +492,6 @@ def planeProjection(normals):
 
 def faceSlopeOrdering(model,FE):
     V,FV,EV = model
-    print "\nV",V
-    print "\nFV",FV
-    print "\nEV",EV
-    print "\nFE",FE
     triangleSet = boundaryTriangulation(V,FV,EV,FE)
     TV = triangleIndices(triangleSet,V)
     triangleVertices = CAT(TV)
@@ -711,19 +707,13 @@ def thePartition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets(containmentBoxes(quadArray))
 
-    #import pdb; pdb.set_trace()
-    Z,FZ,EZ = spacePartition(W,FW,EW, parts)
-    print "Z =",Z
-    print "FZ =",FZ
-    print "EZ =",EZ
-    
+    Z,FZ,EZ = spacePartition(W,FW,EW, parts)    
     EZ = [EZ[0]]+EZ
     model = Z,FZ,EZ
 
     ZZ = AA(LIST)(range(len(Z)))
     submodel = STRUCT(MKPOLS((Z,EZ)))
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.4)) 
-    #import pdb; pdb.set_trace()
 
     FE = crossRelation(FZ,EZ) ## to be double checked !!
     FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)

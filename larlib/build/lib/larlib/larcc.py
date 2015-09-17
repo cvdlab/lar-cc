@@ -104,9 +104,7 @@ def csrPredFilter(CSRm, pred):
    return CSRm
 
 """ Characteristic matrix transposition """
-def invertRelation(CV):
-    print ">invertRelation"
-    
+def invertRelation(CV):    
     def myMax(List):
         if List==[]:  return -1
         else:  return max(List)
@@ -115,7 +113,6 @@ def invertRelation(CV):
     VC = [[] for k in range(columnNumber)]
     for k,cell in enumerate(CV):
         for v in cell: VC[v] += [k]
-    print "<invertRelation"
     return VC
 
 def boundary(cells,facets):

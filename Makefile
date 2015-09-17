@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = splines
+NAME = hospital2
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 

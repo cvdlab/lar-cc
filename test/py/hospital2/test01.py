@@ -550,5 +550,5 @@ Projects = [Project_1, Project_2, Project_3, Project_4, Project_5, Project_6, Pr
          Project_8, Project_9, Project_10a, Project_10b, Project_10c, Project_10d ]
 
 for project in Projects:
-    printProject("./",project)
+    printProject("test/svg/hospital2/",project)
 

@@ -2,7 +2,7 @@
 import sys
 from larlib import *
 
-sys.path.insert(0, 'test/bool/')
+sys.path.insert(0, 'test/py/bool/')
 from test06 import *
 
 """ From triples of points to LAR model """
