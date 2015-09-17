@@ -39,6 +39,7 @@ python setup.py install
 ## Authors
 
 - [Alberto Paoluzzi](http://paoluzzi.dia.uniroma3.it)
+- [Giorgio Scorzelli](http://www.dia.uniroma3.it/~scorzell)
 
 ## Contributors
 
