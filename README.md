@@ -41,16 +41,18 @@ python setup.py install
 - [Alberto Paoluzzi](http://paoluzzi.dia.uniroma3.it)
 - [Giorgio Scorzelli](http://www.dia.uniroma3.it/~scorzell)
 
+<!-- 
 ## Contributors
 
 - Alberto Paoluzzi
 - Giorgio Scorzelli
+ -->
 
 ## License
 
 (The MIT License)
 
-Copyright (c) 2013 Alberto Paoluzzi for CVD Lab ([http://dia.uniroma3.it/~cvdlab](http://dia.uniroma3.it/~cvdlab))
+Copyright (c) 2013 Alberto Paoluzzi for CVD Lab ([http://cvdlab.org/](http://cvdlab.org/))
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
