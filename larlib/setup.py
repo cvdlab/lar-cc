@@ -16,5 +16,6 @@ setup(name='larlib',
 						#'pyplasm',
 						'triangle',
 						#'matplotlib',
+						'Cython',
       ],
 	  include_package_data=True)

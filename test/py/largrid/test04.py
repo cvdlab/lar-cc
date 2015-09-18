@@ -12,4 +12,4 @@ orientedBoundary = [bases[-2][-k] if k<0 else swap(list(bases[-2][k]))
                   for k in boundaryCells]
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))
 submodel = STRUCT(MKPOLS((V,orientedBoundary)))
-VIEW(larModelNumbering(V,bases,submodel))
+VIEW(larModelNumbering()(V,bases,submodel))
