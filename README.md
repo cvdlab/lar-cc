@@ -18,7 +18,13 @@ install [pyplasm](https://github.com/plasm-language/pyplasm)
 
 ### install
 
-type in a terminal, from your workspace directory
+type in a terminal, from any directory
+
+```
+sudo easy_install larlib 
+```
+
+or, from your workspace directory
 
 ```
 git clone https://github.com/cvdlab/lar-cc
