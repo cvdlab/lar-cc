@@ -444,7 +444,7 @@ def larFromLines(lines):
 
 """ Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree
-def pruneVertices(pts,radius=0.01):
+def pruneVertices(pts,radius=0.001):
    tree, V, vmap = cKDTree(pts), [], dict()
    a = cKDTree.sparse_distance_matrix(tree,tree,radius)
    print a.keys()
@@ -460,13 +460,41 @@ def pruneVertices(pts,radius=0.01):
          V += [CCOMB([pts[v] for v in group])]
          for v in group: 
             vmap[v] = k
-            h += 1
+            #h += 1
          clusters += [group]
       else: 
          V += [pts[group[0]]]
          vmap[h] = k
          h += 1
       k += 1
+   return V,close,clusters,vmap
+   
+   
+
+def pruneVertices(pts,radius=0.001):
+   tree = cKDTree(pts)
+   a = cKDTree.sparse_distance_matrix(tree,tree,radius)
+   print a.keys()
+   close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
+   import networkx as nx
+   G=nx.Graph()
+   G.add_nodes_from(range(len(pts)))
+   G.add_edges_from(close)
+   clusters, k, h = [], 0, 0
+   
+   subgraphs = list(nx.connected_component_subgraphs(G))
+   V = [None for subgraph in subgraphs]
+   vmap = [None for k in xrange(len(pts))]
+   for k,subgraph in enumerate(subgraphs):
+      group = subgraph.nodes()
+      if len(group)>1: 
+         V[k] = CCOMB([pts[v] for v in group])
+         for v in group: vmap[v] = k
+         clusters += [group]
+      else: 
+         oldNode = group[0]
+         V[k] = pts[oldNode]
+         vmap[oldNode] = k
    return V,close,clusters,vmap
 
 """ Return a simplified LAR model """

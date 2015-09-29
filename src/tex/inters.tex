@@ -580,7 +580,7 @@ csr2DenseMatrix(csrVE)
 
 \paragraph{Transformation of an array of lines in a 2D LAR complex}
 
-The whole transformation of an array of lines into a two-dimensional \texttt{LAR} complex is executed by the function \texttt{larFromLines}. The function returns the model triple \texttt{V,FV,EV}. The last element in \texttt{FV} is the \emph{ordered} boundary chain.
+The whole transformation of an array of lines into a two-dimensional \texttt{LAR} complex is executed by the function \texttt{larFromLines}. The function returns the model triple \texttt{V,FV,EV}. The last element in \texttt{FV} is the \emph{ordered} boundary chain. just notice that 
 
 
 %-------------------------------------------------------------------------------
@@ -615,7 +615,7 @@ First, reduce the array of vertices \texttt{pts} to its \emph{quotient set} with
 @D Pruning away clusters of close vertices
 @{""" Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree
-def pruneVertices(pts,radius=0.01):
+def pruneVertices(pts,radius=0.001):
 	tree, V, vmap = cKDTree(pts), [], dict()
 	a = cKDTree.sparse_distance_matrix(tree,tree,radius)
 	print a.keys()
@@ -631,13 +631,41 @@ def pruneVertices(pts,radius=0.01):
 			V += [CCOMB([pts[v] for v in group])]
 			for v in group: 
 				vmap[v] = k
-				h += 1
+				#h += 1
 			clusters += [group]
 		else: 
 			V += [pts[group[0]]]
 			vmap[h] = k
 			h += 1
 		k += 1
+	return V,close,clusters,vmap
+	
+	
+
+def pruneVertices(pts,radius=0.001):
+	tree = cKDTree(pts)
+	a = cKDTree.sparse_distance_matrix(tree,tree,radius)
+	print a.keys()
+	close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
+	import networkx as nx
+	G=nx.Graph()
+	G.add_nodes_from(range(len(pts)))
+	G.add_edges_from(close)
+	clusters, k, h = [], 0, 0
+	
+	subgraphs = list(nx.connected_component_subgraphs(G))
+	V = [None for subgraph in subgraphs]
+	vmap = [None for k in xrange(len(pts))]
+	for k,subgraph in enumerate(subgraphs):
+		group = subgraph.nodes()
+		if len(group)>1: 
+			V[k] = CCOMB([pts[v] for v in group])
+			for v in group: vmap[v] = k
+			clusters += [group]
+		else: 
+			oldNode = group[0]
+			V[k] = pts[oldNode]
+			vmap[oldNode] = k
 	return V,close,clusters,vmap
 @}
 %-------------------------------------------------------------------------------
