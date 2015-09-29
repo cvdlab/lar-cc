@@ -444,32 +444,6 @@ def larFromLines(lines):
 
 """ Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree
-def pruneVertices(pts,radius=0.001):
-   tree, V, vmap = cKDTree(pts), [], dict()
-   a = cKDTree.sparse_distance_matrix(tree,tree,radius)
-   print a.keys()
-   close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
-   import networkx as nx
-   G=nx.Graph()
-   G.add_nodes_from(range(len(pts)))
-   G.add_edges_from(close)
-   clusters, k, h = [], 0, 0
-   for subgraph in nx.connected_component_subgraphs(G):
-      group = subgraph.nodes()
-      if len(group)>1: 
-         V += [CCOMB([pts[v] for v in group])]
-         for v in group: 
-            vmap[v] = k
-            #h += 1
-         clusters += [group]
-      else: 
-         V += [pts[group[0]]]
-         vmap[h] = k
-         h += 1
-      k += 1
-   return V,close,clusters,vmap
-   
-   
 
 def pruneVertices(pts,radius=0.001):
    tree = cKDTree(pts)
