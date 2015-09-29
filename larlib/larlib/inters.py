@@ -208,8 +208,10 @@ def lines2lar(lineArray):
                 edge += [vertDict[key]]
             EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
     
+    """
     # identification of close vertices
-    closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION+1))
+    #closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION+1))
+    closePairs = scipy.spatial.cKDTree(V).query_pairs(10**(-PRECISION+2))
     if closePairs != []:
         EV_ = []
         for v1,v2 in EV:
@@ -221,7 +223,10 @@ def lines2lar(lineArray):
 
     # Remove zero edges
     EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
-    return V,EV
+    return (V,EV)
+    """
+    model = (V,EV)
+    return larSimplify(model)
 
 """ Biconnected components """
 """ Adjacency lists of 1-complex vertices """
@@ -436,4 +441,50 @@ def larFromLines(lines):
     interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea and len(areas)>2]
     boundaryFace = FV[areas.index(boundaryArea)]
     return V,interiorFaces+[boundaryFace],EV
+
+""" Pruning away clusters of close vertices """
+from scipy.spatial import cKDTree
+def pruneVertices(pts,radius=0.01):
+   tree, V, vmap = cKDTree(pts), [], dict()
+   a = cKDTree.sparse_distance_matrix(tree,tree,radius)
+   print a.keys()
+   close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
+   import networkx as nx
+   G=nx.Graph()
+   G.add_nodes_from(range(len(pts)))
+   G.add_edges_from(close)
+   clusters, k, h = [], 0, 0
+   for subgraph in nx.connected_component_subgraphs(G):
+      group = subgraph.nodes()
+      if len(group)>1: 
+         V += [CCOMB([pts[v] for v in group])]
+         for v in group: 
+            vmap[v] = k
+            h += 1
+         clusters += [group]
+      else: 
+         V += [pts[group[0]]]
+         vmap[h] = k
+         h += 1
+      k += 1
+   return V,close,clusters,vmap
+
+""" Return a simplified LAR model """
+def larSimplify(model):
+   if len(model)==2: V,CV = model 
+   elif len(model)==3: V,CV,FV = model 
+   else: print "ERROR: model input"
+   
+   W,close,clusters,vmap = pruneVertices(V)
+   celldim = DIM(MKPOL([V,[[v+1 for v in CV[0]]],None]))
+   newCV = [list(set([vmap[v] for v in cell])) for cell in CV]
+   CV = list(set([tuple(cell) for cell in newCV if len(cell) >= celldim+1]))
+   CV = sorted(CV,key=len) # to get the boundary cell as last one (in most cases)
+
+   if len(model)==3:
+      celldim = DIM(MKPOL([V,[[v+1 for v in FV[0]]],None]))
+      newFV = [list(set([vmap[v] for v in facet])) for facet in FV]
+      FV = [facet for facet in newFV if len(facet) >= celldim]
+      return W,CV,FV
+   else: return W,CV
 

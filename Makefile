@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = hospital2
+NAME = inters
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 

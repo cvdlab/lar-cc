@@ -146,9 +146,14 @@ def geomPartitionate(boxes,buckets):
 
 """ Iterate the splitting until \texttt{splittingStack} is empty """
 def boxTest(boxes,h,k):
-    B1,B2,B3,B4,B5,B6,_ = boxes[k]
-    b1,b2,b3,b4,b5,b6,_ = boxes[h]
-    return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
+    if len(boxes[0])==4:
+        B1,B2,B3,B4 = boxes[k]
+        b1,b2,b3,b4 = boxes[h]
+        return not (b3<B1 or B3<b1 or b4<B2 or B4<b2)
+    else:
+        B1,B2,B3,B4,B5,B6 = boxes[k]
+        b1,b2,b3,b4,b5,b6 = boxes[h]
+        return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
 
 def boxBuckets(boxes):
     bucket = range(len(boxes))

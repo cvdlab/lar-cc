@@ -292,8 +292,10 @@ def lines2lar(lineArray):
                 edge += [vertDict[key]]
             EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
     
+    """
     # identification of close vertices
-    closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION+1))
+    #closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION+1))
+    closePairs = scipy.spatial.cKDTree(V).query_pairs(10**(-PRECISION+2))
     if closePairs != []:
         EV_ = []
         for v1,v2 in EV:
@@ -305,7 +307,10 @@ def lines2lar(lineArray):
 
     # Remove zero edges
     EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
-    return V,EV
+    return (V,EV)
+    """
+    model = (V,EV)
+    return larSimplify(model)
 @}
 %-------------------------------------------------------------------------------
 
@@ -597,12 +602,120 @@ def larFromLines(lines):
 
 
 
-def larComplexFromLines(lines):
-V,FV,EV = facesFromComps((V,EV))
+\subsection{Pruning LAR models from parts out of proper resolution}
+%===============================================================================
 
-areas = hospital.surfIntegration((V,FV,EV))
-boundaryArea = max(areas)
-FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
+Pruning of clusters of too close vertices is executed by taking a LAR model as input, 
+executing the following computations, and producing a new simplified LAR model.
+
+\paragraph{Pruning away clusters of close vertices}
+First, reduce the array of vertices \texttt{pts} to its \emph{quotient set} with respect to the transitive closure of the relation of ``nearness''. Two vertices are ``near'' when their (Euclidean) distance is less than a given \texttt{RADIUS}. The subgraphs of the graph of this relation are \emph{contracted} in a single point, set to the centroid of the vertices of the subgraph. The function \texttt{W} takes as input the array \texttt{pts} of vertex points, and returns: (a) the array \texttt{newV} of new vertices; (b) the list of lists \texttt{close} of sorted indices of pairs of close vertices, removed from duplicates; (c) the list of \texttt{clusters} of \texttt{pts} indices; (d) the integer  \texttt{vmap} array, mapping old vertex indices to new vertex indices.
+
+%-------------------------------------------------------------------------------
+@D Pruning away clusters of close vertices
+@{""" Pruning away clusters of close vertices """
+from scipy.spatial import cKDTree
+def pruneVertices(pts,radius=0.01):
+	tree, V, vmap = cKDTree(pts), [], dict()
+	a = cKDTree.sparse_distance_matrix(tree,tree,radius)
+	print a.keys()
+	close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
+	import networkx as nx
+	G=nx.Graph()
+	G.add_nodes_from(range(len(pts)))
+	G.add_edges_from(close)
+	clusters, k, h = [], 0, 0
+	for subgraph in nx.connected_component_subgraphs(G):
+		group = subgraph.nodes()
+		if len(group)>1: 
+			V += [CCOMB([pts[v] for v in group])]
+			for v in group: 
+				vmap[v] = k
+				h += 1
+			clusters += [group]
+		else: 
+			V += [pts[group[0]]]
+			vmap[h] = k
+			h += 1
+		k += 1
+	return V,close,clusters,vmap
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Export a simplified LAR model}
+Next, update the arrays of compressed characteristic matrices of a Linear Algebraic Representation. The standard approach is to read row-wise the arrays of matrices of incidence of cells on vertices; translate every index using the \texttt{vmap} array, mapping old vertex indices to new ones; remove repeated indices and substitute them with a single instance; check if the new index list has lenght greater or equal to the number of vertices of the simplex of the proper dimension. Finally, write an output cell if and only if the previous test is true.
+
+%-------------------------------------------------------------------------------
+@D Return a simplified LAR model
+@{""" Return a simplified LAR model """
+def larSimplify(model):
+	if len(model)==2: V,CV = model 
+	elif len(model)==3: V,CV,FV = model 
+	else: print "ERROR: model input"
+	
+	W,close,clusters,vmap = pruneVertices(V)
+	celldim = DIM(MKPOL([V,[[v+1 for v in CV[0]]],None]))
+	newCV = [list(set([vmap[v] for v in cell])) for cell in CV]
+	CV = list(set([tuple(cell) for cell in newCV if len(cell) >= celldim+1]))
+	CV = sorted(CV,key=len) # to get the boundary cell as last one (in most cases)
+
+	if len(model)==3:
+    	celldim = DIM(MKPOL([V,[[v+1 for v in FV[0]]],None]))
+    	newFV = [list(set([vmap[v] for v in facet])) for facet in FV]
+    	FV = [facet for facet in newFV if len(facet) >= celldim]
+    	return W,CV,FV
+	else: return W,CV
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Test of pruning clusters of close vertices}
+Here a list of random 2D points is generated. Then the set of vertices is pruned by updating it to its quotient set with respect to the transitive closure of a relation of ``nearness'' within an Euclidean distance of given \texttt{RADIUS}. The pruning of vertices is performed by the \texttt{pruneVertices} function, with input the array \texttt{pts} of points. The dictionary \texttt{vmap}
+%-------------------------------------------------------------------------------
+@O test/py/inters/test13.py
+@{""" Test of pruning clusters of close vertices """
+from larlib import *
+from scipy import rand
+from scipy.spatial import cKDTree
+POINTS = 1000
+RADIUS = 0.01
+
+pts = [rand(2).tolist() for k in range(POINTS)]
+VIEW(STRUCT(AA(MK)(pts)))
+V,close,clusters,vmap = pruneVertices(pts,RADIUS)
+circles = [T([1,2])(pts[h])(CIRCUMFERENCE(RADIUS)(18)) for h,k in close]
+convexes = [JOIN(AA(MK)([pts[v] for v in cluster])) for cluster in clusters]
+W = COLOR(CYAN)(STRUCT(AA(MK)(V)))
+VIEW(STRUCT(AA(MK)(pts)+AA(COLOR(YELLOW))(circles)))
+VIEW(STRUCT(AA(COLOR(RED))(convexes)+AA(MK)(pts)+AA(COLOR(YELLOW))(circles)+[W]))
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Test for exporting a simplified LAR model}
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test14.py
+@{""" Test for exporting a simplified LAR model """
+from larlib import *
+filename = "test/svg/inters/closepoints.svg"
+lines = svg2lines(filename)
+VIEW(STRUCT(AA(POLYLINE)(lines)))
+
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.5))
+
+V,EV = lines2lar(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+pts = V
+RADIUS = 0.05
+V,close,clusters,vmap = pruneVertices(pts,RADIUS)
+circles = [T([1,2])(pts[h])(CIRCUMFERENCE(RADIUS)(18)) for h,k in close]
+convexes = [JOIN(AA(MK)([pts[v] for v in cluster])) for cluster in clusters]
+W = COLOR(CYAN)(STRUCT(AA(MK)(V)))
+VIEW(STRUCT(AA(COLOR(RED))(convexes)+AA(MK)(pts)+AA(COLOR(YELLOW))(circles)+[W]))
 @}
 %-------------------------------------------------------------------------------
 
@@ -636,6 +749,8 @@ DEBUG = True
 @< Faces from biconnected components @>
 @< SVG input parsing and transformation @>
 @< Transformation of an array of lines in a 2D LAR complex @>
+@< Pruning away clusters of close vertices @>
+@< Return a simplified LAR model @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -704,7 +819,7 @@ buckets = boxBuckets(boxes)
 
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, PURPLE, BROWN]
 sets = [COLOR(colors[k%12])(STRUCT(AA(POLYLINE)([lines[h] 
-            for h in bucket]))) for k,bucket in enumerate(buckets)]
+            for h in bucket]))) for k,bucket in enumerate(buckets) if bucket!=[]]
 
 VIEW(STRUCT(sets))
 @}
