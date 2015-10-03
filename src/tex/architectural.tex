@@ -1,10 +1,10 @@
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepswithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepswithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb}
 \usepackage[colorlinks]{hyperref}
 
@@ -41,7 +41,7 @@
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{Alberto Paoluzzi \and Enrico Marino \and Federico Spini}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
@@ -167,21 +167,21 @@ The function \texttt{larCells} is used to apply a given \texttt{fun} to the \emp
 @D Some operators for assemblies
 @{
 def larCells(fun):
-	def larCells0(assembly):
-		return TRANS(CONS([S1,COMP([AA(fun),S2])])(TRANS(assembly)))
-	return larCells0
+    def larCells0(assembly):
+        return TRANS(CONS([S1,COMP([AA(fun),S2])])(TRANS(assembly)))
+    return larCells0
 
 def larVerts(fun):
-	def larCells0(assembly):
-		return TRANS(CONS([ COMP([AA(fun),S1]),S2 ])(TRANS(assembly)))
-	return larCells0
+    def larCells0(assembly):
+        return TRANS(CONS([ COMP([AA(fun),S1]),S2 ])(TRANS(assembly)))
+    return larCells0
 
 def larBinOps(op):
-	def larCells0(assembly):
-		def larCells1(arg):
-			return AA(op)(DISTR([assembly,arg]))
-		return larCells1
-	return larCells0
+    def larCells0(assembly):
+        def larCells1(arg):
+            return AA(op)(DISTR([assembly,arg]))
+        return larCells1
+    return larCells0
 @}
 %-------------------------------------------------------------------------------
 
@@ -192,11 +192,11 @@ The \texttt{larQuote1D} function replicates the behaviour of the PLaSM \texttt{Q
 @D Low-dimensional constructors: 1D and 0D
 @{
 def larQuote1D(pattern):
-	return larExtrude1( VOID, pattern )
+    return larExtrude1( VOID, pattern )
 
 def larQuote0D(pattern):
-	V,CV = larQuote1D(pattern)
-	return V,[[k] for k in range(len(V))] 
+    V,CV = larQuote1D(pattern)
+    return V,[[k] for k in range(len(V))] 
 @}
 %-------------------------------------------------------------------------------
 
@@ -275,11 +275,11 @@ The input to \texttt{bUnit\_to\_eEiP}, to compute the 1D external envelope and i
 %-------------------------------------------------------------------------------
 @D Subdivide the 1-cells
 @{def bUnit_to_eEiP(FV,EV):
-	""" Subdivide the 1-cells. 
-	Return external envelope and interior partitions """
-	eE = lar2boundaryEdges(FV,EV)
-	iP = lar2InteriorEdges(FV,EV)
-	return eE,iP
+    """ Subdivide the 1-cells. 
+    Return external envelope and interior partitions """
+    eE = lar2boundaryEdges(FV,EV)
+    iP = lar2InteriorEdges(FV,EV)
+    return eE,iP
 @}
 %-------------------------------------------------------------------------------
 
@@ -408,20 +408,20 @@ The function \texttt{horizontalClosures} is applied to a 2D assembly and to a 1D
 %-------------------------------------------------------------------------------
 @D Horizontal closures generator
 @{def horizontalClosures(pattern):
-	vertical1D = larQuote1D(pattern)
-	vertical0D = larQuote0D(pattern)
-	def horizontalClosures0(assembly2D):
-		out = []
-		for flat2D in assembly2D:
-			V,FV = flat2D
-			EV = face2edge(FV)
-			dwellH3D = larModelProduct([flat2D,vertical0D])
-			dwellV3D = larModelProduct([(V,EV),vertical1D])
-			poly3D = AA(POLYLINE)(lar2polylines(dwellH3D))
-			floors3D = AA(solidify)(poly3D)
-			out += floors3D+MKPOLS(dwellV3D)
-		return out
-	return horizontalClosures0
+    vertical1D = larQuote1D(pattern)
+    vertical0D = larQuote0D(pattern)
+    def horizontalClosures0(assembly2D):
+        out = []
+        for flat2D in assembly2D:
+            V,FV = flat2D
+            EV = face2edge(FV)
+            dwellH3D = larModelProduct([flat2D,vertical0D])
+            dwellV3D = larModelProduct([(V,EV),vertical1D])
+            poly3D = AA(POLYLINE)(lar2polylines(dwellH3D))
+            floors3D = AA(solidify)(poly3D)
+            out += floors3D+MKPOLS(dwellV3D)
+        return out
+    return horizontalClosures0
 @}
 %-------------------------------------------------------------------------------
 
@@ -482,9 +482,9 @@ The \texttt{face2edge} operator takes every consecutive pair of vertex indices f
 %-------------------------------------------------------------------------------
 @D From faces FV to list of edges EV
 @{def face2edge(FV):
-	""" From faces to list of edges """
-	edges = AA(sorted)(CAT([TRANS([face, face[1:]+[face[0]]]) for face in FV]))
-	return AA(eval)(set(AA(str)(edges)))
+    """ From faces to list of edges """
+    edges = AA(sorted)(CAT([TRANS([face, face[1:]+[face[0]]]) for face in FV]))
+    return AA(eval)(set(AA(str)(edges)))
 @}
 %-------------------------------------------------------------------------------
 
@@ -494,9 +494,9 @@ transforms a LAR model into a list of polylines, i.e.~of (closed) lists of 2D po
 %-------------------------------------------------------------------------------
 @D From faces FV to list of edges EV
 @{def lar2polylines (model):
-	""" From LAR model to list of polylines """
-	V,FV = model
-	return [[V[v] for v in cell]+[V[cell[0]]] for cell in FV]
+    """ From LAR model to list of polylines """
+    V,FV = model
+    return [[V[v] for v in cell]+[V[cell[0]]] for cell in FV]
 @}
 %-------------------------------------------------------------------------------
 
@@ -506,9 +506,9 @@ transform a LAR model into a list of lines, i.e.~of pairs of points.
 %-------------------------------------------------------------------------------
 @D From faces FV to list of edges EV
 @{def lar2lines (model):
-	""" From LAR model to list of lines """
-	V,EV = model
-	return [[V[v] for v in cell] for cell in EV]
+    """ From LAR model to list of lines """
+    V,EV = model
+    return [[V[v] for v in cell] for cell in EV]
 @}
 %-------------------------------------------------------------------------------
 
@@ -518,8 +518,8 @@ The computations of boundary cells is executed by calling the \texttt{boundaryCe
 %-------------------------------------------------------------------------------
 @D Boundary cells ($2D\to 1D$) computation
 @{def lar2boundaryEdges(FV,EV):
-	""" Boundary cells computation """
-	return boundaryCells(FV,EV)
+    """ Boundary cells computation """
+    return boundaryCells(FV,EV)
 @}
 %-------------------------------------------------------------------------------
 
@@ -528,11 +528,11 @@ The indices of the boundary 1-cells are returned in \texttt{boundarychain1}, and
 %-------------------------------------------------------------------------------
 @D Interior partitions ($2D\to 1D$) computation
 @{def lar2InteriorEdges(FV,EV):
-	""" Boundary cells computation """
-	boundarychain1 = boundaryCells(FV,EV)
-	totalChain1 = range(len(EV))
-	interiorCells = set(totalChain1).difference(boundarychain1)
-	return interiorCells
+    """ Boundary cells computation """
+    boundarychain1 = boundaryCells(FV,EV)
+    totalChain1 = range(len(EV))
+    interiorCells = set(totalChain1).difference(boundarychain1)
+    return interiorCells
 @}
 %-------------------------------------------------------------------------------
 
@@ -546,18 +546,18 @@ and \texttt{pointP}.
 %-------------------------------------------------------------------------------
 @D Move ($P\to Q$) operator
 @{def movePoint2point(twoModels):
-	""" Move (P -> Q) operator """
-	def movePoint2point0(pointP):
-		def movePoint2point1(pointQ):
-			[V,CV], [W,CW] = twoModels
-			mat = t( *DIFF([pointP,pointQ]) )
-			[W,CW] = larApply(mat)([W,CW])
-			print "\n W =",W
-			print "\n CW =",CW
-			n = len(V)
-			return [ V+W, CV+[[w+n for w in REVERSE(cell)] for cell in CW] ] 
-		return movePoint2point1	
-	return movePoint2point0
+    """ Move (P -> Q) operator """
+    def movePoint2point0(pointP):
+        def movePoint2point1(pointQ):
+            [V,CV], [W,CW] = twoModels
+            mat = t( *DIFF([pointP,pointQ]) )
+            [W,CW] = larApply(mat)([W,CW])
+            print "\n W =",W
+            print "\n CW =",CW
+            n = len(V)
+            return [ V+W, CV+[[w+n for w in REVERSE(cell)] for cell in CW] ] 
+        return movePoint2point1    
+    return movePoint2point0
 @}
 %-------------------------------------------------------------------------------
 
@@ -569,20 +569,20 @@ A fully parametric \texttt{spiralStair} functions is given below, where the majo
 %-------------------------------------------------------------------------------
 @D Trasform a solid helicoid into a spiral stair
 @{def spiralStair(width=0.2,R=1.,r=0.5,riser=0.1,pitch=2.,nturns=2.,steps=18):
-	V,CV = larSolidHelicoid(width,R,r,pitch,nturns,steps)()
-	W = CAT([[V[k],V[k+1],V[k+2],V[k+3]]+
-		[SUM([V[k+1],[0,0,-riser]]),SUM([V[k+3],[0,0,-riser]])]
-		for k,v in enumerate(V[:-4]) if k%4==0])
-	for k,w in enumerate(W[:-12]):
-		if k%6==0: W[k+1][2] = W[k+10][2]; W[k+3][2] = W[k+11][2]
-	nsteps = len(W)/12
-	CW =[SUM([[0,1,2,3,6,8,10,11],[6*k]*8]) for k in range(nsteps)]
-	return W,CW
+    V,CV = larSolidHelicoid(width,R,r,pitch,nturns,steps)()
+    W = CAT([[V[k],V[k+1],V[k+2],V[k+3]]+
+        [SUM([V[k+1],[0,0,-riser]]),SUM([V[k+3],[0,0,-riser]])]
+        for k,v in enumerate(V[:-4]) if k%4==0])
+    for k,w in enumerate(W[:-12]):
+        if k%6==0: W[k+1][2] = W[k+10][2]; W[k+3][2] = W[k+11][2]
+    nsteps = len(W)/12
+    CW =[SUM([[0,1,2,3,6,8,10,11],[6*k]*8]) for k in range(nsteps)]
+    return W,CW
 
 if __name__=="__main__":
-	VIEW(STRUCT(MKPOLS(spiralStair())))
-	VIEW(SKEL_1(STRUCT(MKPOLS(spiralStair()))))
-	VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
+    VIEW(STRUCT(MKPOLS(spiralStair())))
+    VIEW(SKEL_1(STRUCT(MKPOLS(spiralStair()))))
+    VIEW(STRUCT(MKPOLS(spiralStair(0.1))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -604,6 +604,7 @@ if __name__=="__main__":
 @< Trasform a solid helicoid into a spiral stair @>
 @< Specialized version of solidify operator for horizontal 3D polygons @>
 @< Horizontal closures generator @>
+@< Placing a 3D object (wall) with possible solid subtraction (door) @>
 @}
 %===============================================================================
 \section{Conclusion}\label{sec:conclusion}
@@ -696,20 +697,49 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 %-------------------------------------------------------------------------------
 @D Specialized version of solidify operator for horizontal 3D polygons
 @{""" Solidify horizontal polygons in 3D """
-def solidify(pol):	
-  	min=MIN([1])(pol)[0]
-  	max=MAX([1])(pol)[0]
-	z = MIN([3])(pol)[0]
-	pol = PROJECT(1)(pol)
-  	siz=max-min
-  	far_point=max+siz*100 
-  	def InftyProject(pol):
-  		verts,cells,pols=UKPOL(pol)
-  		verts=[[far_point] + v[1:] for v in verts]
-  		return MKPOL([verts,cells,pols])  
-  	ret=SPLITCELLS(pol)
-  	ret=[JOIN([pol,InftyProject(pol)]) for pol in ret]
-  	return T(3)(z)(XOR(ret))
+def solidify(pol):    
+    min=MIN([1])(pol)[0]
+    max=MAX([1])(pol)[0]
+    z = MIN([3])(pol)[0]
+    pol = PROJECT(1)(pol)
+    siz=max-min
+    far_point=max+siz*100 
+    def InftyProject(pol):
+        verts,cells,pols=UKPOL(pol)
+        verts=[[far_point] + v[1:] for v in verts]
+        return MKPOL([verts,cells,pols])  
+    ret=SPLITCELLS(pol)
+    ret=[JOIN([pol,InftyProject(pol)]) for pol in ret]
+    return T(3)(z)(XOR(ret))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Placing a 3D object (wall) with possible solid subtraction (door)}
+%-------------------------------------------------------------------------------
+@D Placing a 3D object (wall) with possible solid subtraction (door)
+@{""" Placing a 3D object (wall) with possible solid subtraction (door) """
+
+def place(obj):
+
+    def dist(p1,p2):
+        return SQRT(SQR(p1[0]-p2[0])+SQR(p1[1]-p2[1]))
+
+    depth,length,height = SIZE([1,2,3])(obj)
+    p = array(MIN([1,2,3])(obj))
+    obj = T([1,2,3])(list(-1*p))(obj)
+    obj = S(2)(1./length)(obj)
+    def place0(obj2=None):
+        def place01(line):
+            x,y,z = VECTDIFF([line[1],line[0]])
+            angle = -math.atan2(x,y)
+            outObj = S(2)(dist(line[1],line[0]))(obj)
+            if isinstance(obj2,pyplasm.xgepy.Hpc):
+                outObj = DIFFERENCE([outObj,obj2])
+            outObj = R([1,2])(angle)(outObj)
+            outObj = T([1,2,3])(line[0])(outObj)
+            return outObj
+        return place01
+    return place0
 @}
 %-------------------------------------------------------------------------------
 
