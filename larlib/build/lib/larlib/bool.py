@@ -151,8 +151,8 @@ def boxTest(boxes,h,k):
         b1,b2,b3,b4 = boxes[h]
         return not (b3<B1 or B3<b1 or b4<B2 or B4<b2)
     else:
-        B1,B2,B3,B4,B5,B6 = boxes[k]
-        b1,b2,b3,b4,b5,b6 = boxes[h]
+        B1,B2,B3,B4,B5,B6,_ = boxes[k]
+        b1,b2,b3,b4,b5,b6,_ = boxes[h]
         return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
 
 def boxBuckets(boxes):
@@ -307,14 +307,6 @@ def spacePartition(V,FV,EV, parts):
     splitting = intersection(V,FV,EV)
     for k,bundledFaces in enumerate(parts):
         edges,faces,transform = splitting(k,bundledFaces)
-        if DEBUG:
-            print "\nk,bundledFaces =",k,",",bundledFaces
-            print "edges =",edges
-            print "faces =",faces
-            print "transform =",transform
-            VV = AA(LIST)(range(len(V)))
-            submodel = STRUCT(MKPOLS((V,EV)))
-            VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.6)) 
         for face in faces:
             line = []
             for edge in face:
@@ -329,19 +321,14 @@ def spacePartition(V,FV,EV, parts):
                 elif len(line)>2: edges += takeExtremePoints(line)
                 else: print "error: too few points in line"
             
-        if DEBUG: print "> edges =",edges
         edges = [[point[:-1] for point in edge] for edge in edges]
         edges = AA(AA(eval))(AA(AA(vcode))(edges))
-        if DEBUG: print "< edges =",edges
         v,fv,ev = larFromLines(edges) 
-        if DEBUG:
-            print "k,v,fv,ev =",k,v,fv,ev ,"\n"
-            VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((v,ev)))))
         if len(fv)>1: fv = fv[:-1]   ## ??
         lar = [w+[0.0] for w in v],fv,ev
         transfFaces += [Struct([ larApply(transform.I)(lar) ])]
-    W,FW,EW = struct2lar(Struct(transfFaces))
-    #FW,EW = edgeCheck(W,FW,EW)
+    W,FW,EW  = struct2lar(Struct(transfFaces))
+    #W,FW,EW = larSimplify(W,FW,EW )
     return W,FW,EW
 
 

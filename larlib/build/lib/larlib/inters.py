@@ -208,23 +208,6 @@ def lines2lar(lineArray):
                 edge += [vertDict[key]]
             EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
     
-    """
-    # identification of close vertices
-    #closePairs = scipy.spatial.KDTree(V).query_pairs(10**(-PRECISION+1))
-    closePairs = scipy.spatial.cKDTree(V).query_pairs(10**(-PRECISION+2))
-    if closePairs != []:
-        EV_ = []
-        for v1,v2 in EV:
-            for v,w in closePairs:
-                if v1 == w: v1 = v
-                if v2 == w: v2 = v
-            EV_ += [[v1,v2]]
-        EV = EV_
-
-    # Remove zero edges
-    EV = list(set([ tuple(sorted([v1,v2])) for v1,v2 in EV if v1!=v2 ]))
-    return (V,EV)
-    """
     model = (V,EV)
     return larSimplify(model)
 
@@ -433,7 +416,7 @@ def svg2lines(filename,containmentBox=[],rect2lines=True):
 def larFromLines(lines):
     V,EV = lines2lar(lines)
     V,EVs = biconnectedComponent((V,EV))
-    EV = list(set(AA(tuple)(sorted(AA(sorted)(CAT(EVs)))))) 
+    EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
     V,EV = larRemoveVertices(V,EV)
     V,FV,EV = facesFromComps((V,EV))
     areas = integr.surfIntegration((V,FV,EV))
@@ -472,12 +455,12 @@ def pruneVertices(pts,radius=0.001):
    return V,close,clusters,vmap
 
 """ Return a simplified LAR model """
-def larSimplify(model):
+def larSimplify(model,radius=0.001):
    if len(model)==2: V,CV = model 
    elif len(model)==3: V,CV,FV = model 
    else: print "ERROR: model input"
    
-   W,close,clusters,vmap = pruneVertices(V)
+   W,close,clusters,vmap = pruneVertices(V,radius)
    celldim = DIM(MKPOL([V,[[v+1 for v in CV[0]]],None]))
    newCV = [list(set([vmap[v] for v in cell])) for cell in CV]
    CV = list(set([tuple(cell) for cell in newCV if len(cell) >= celldim+1]))

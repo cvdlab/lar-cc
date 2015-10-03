@@ -85,6 +85,15 @@ def larEmbed(k):
         elif len(model)==3: return V,CV,FV
     return larEmbed0
 
+def larEmbed(k):
+    def larEmbed0(model):
+        if k>0:
+            model[0] = [v+[0.]*k for v in model[0]] 
+        elif k<0:
+            model[0] = [v[:-k] for v in model[0]] 
+        return model
+    return larEmbed0
+
 """ Apply an affine transformation to a LAR model  """
 from scipy import array
 
@@ -335,6 +344,15 @@ def larEmbed(k):
             V = [v[:-k] for v in V] 
         if len(model)==2: return V,CV
         elif len(model)==3: return V,CV,FV
+    return larEmbed0
+
+def larEmbed(k):
+    def larEmbed0(model):
+        if k>0:
+            model[0] = [v+[0.]*k for v in model[0]] 
+        elif k<0:
+            model[0] = [v[:-k] for v in model[0]] 
+        return model
     return larEmbed0
 
 """ embed a struct object """
