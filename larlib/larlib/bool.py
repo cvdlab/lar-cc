@@ -80,14 +80,14 @@ def centroid(boxes,coord):
     return delta/n
 
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
-def MKTRIANGLES(*model): 
-    V,FV,EV = model
-    FE = crossRelation(FV,EV)
-    triangleSets = boundaryTriangulation(V,FV,EV,FE)
-    return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
-        for triangledFace in triangleSets ]
+def MKTRIANGLES(*model):
+	V,FV,EV = model
+	FE = crossRelation(FV,EV)
+	triangleSets = boundaryTriangulation(V,FV,EV,FE)
+	return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace])
+			for triangledFace in triangleSets ]
 
-def MKSOLID(*model): 
+def MKSOLID(*model):
     V,FV,EV = model
     FE = crossRelation(FV,EV)
     pivot = V[0]

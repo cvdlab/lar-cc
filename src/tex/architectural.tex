@@ -436,15 +436,283 @@ columns = larModelProduct([columns0D,larQuote1D([4])])
 indices = [T([1,2])(v)(S([1,2])([.1,.1])(TEXT(str(k)))) for k,v in enumerate(V)]
 VIEW(STRUCT(MKPOLS(columns)+indices))
 
-
 wire = SKEL_1(INSR(PROD)(AA(QUOTE)([[6,9,9,9,9,6],[-3,10,11],[4.2]*5])))
 VIEW(wire)
 frame3D = T(1)(-24)(OFFSET([.2,.4,.4])(wire))
 VIEW(frame3D)
-
-
 @}
+%-------------------------------------------------------------------------------
 
+%===============================================================================
+\section{Test case: generation of 3D model of tower building}\label{sec:library}
+%===============================================================================
+
+The generation (and visualization) of a business tower building is produced in this section, starting from a wire-frame vector drawings of typical floorplan. A movie file of the whole generation is given in \href{http://paoluzzi.dia.uniroma3.it/web/filmato.mov}{http://paoluzzi.dia.uniroma3.it/web/filmato.mov}.
+
+The movie begins from a graphical editor (in this case Adobe Illustrator) showing the content of a  raster file  within the session canvas, with a PNG image of a typical floor plan of the tower building. Then a second layer is shown, superimposing a vector drawing traced with red gross lines, and without precision at the crossings of lines. This fact is made evident by some zoom-ins. 
+
+Then the movie presents the only layer showing the vector drawing obtained as simplified "wire-frame"  tracing of the original raster image. This drawing is saved as SVG file, the W3C format for vector graphics on the web.
+
+The crossing points of lines will be precisely computed by the server application, discussed in the following sections, that is written in python using \href{https://github.com/plasm-language/pyplasm}{pyplasm} and \href{https://github.com/cvdlab/lar-cc}{larlib}.
+
+
+Adobe Illustrator is then left, and the movie shows the command-line terminal and the Python sources of the application within a text editor. The code is written in a very general form, but with some \emph{ad-hoc} customizations intended only for this test-case. These will be substituted by interactive operations on the graphical UI, when developed. Such customizations are used here to identify the 2-cells to consider "empty space" (i.e.~stairs and elevators). In the following we discuss the application code.
+
+%-------------------------------------------------------------------------------
+\subsection{Input of floorplan wire-frame}
+%-------------------------------------------------------------------------------
+
+First the \texttt{larlib} modules are imported, and the \texttt{plan.svg} file is read from the \texttt{test/inters} subdirectory.
+Then the parsed contents are handled by the \texttt{svg2lar} function, producing a first \texttt{larModel}.
+
+\paragraph{Input of floorplan wire-frame}
+%-------------------------------------------------------------------------------
+@D Input of floorplan wire-frame
+@{""" import modules from larlib """
+from larlib import *
+
+""" Input of floorplan wire-frame """
+filename = "test/svg/inters/plan.svg"
+larModel = svg2lar(filename)
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Generation of 2-cellular complexes}
+%-------------------------------------------------------------------------------
+
+Here we produce the first visualization of the test-case application, showing a well-formed cellular  2-complex, i.e.~a planar embedding of a graph. \texttt{V,FV,EV} are the components of a standard LAR format, after that the biconnected components of the plan graph have beeen computed, and the ``dangling'' edges and trees have been removed.
+The 0-cells (vertices), 1-cells (edges) and 2-cells (faces) are numbered according to position in their arrays (see Figure~\ref{fig:towerplan1}).
+From now on LAR provides a complete support and control of layout topology.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.325\linewidth]{images/towerplan0} 
+   \includegraphics[width=0.325\linewidth]{images/towerplan2} 
+   \includegraphics[width=0.325\linewidth]{images/towerplan1} 
+   \caption{(a) The input raster floorplan; (b) the vector ``wire-frame'' drawing; (c) the computed cellular 2-complex.}
+   \label{fig:towerplan1}
+\end{figure}
+
+\paragraph{Generation of 2-cellular complexes}
+The value of \texttt{scaleFactor} was precomputed to transform the model to unit sizes.
+%-------------------------------------------------------------------------------
+@D Generation of 2-cellular complexes
+@{""" Generation of 2-cellular complexes """
+
+""" Floor layout generation as LAR cellular complex """
+scaleFactor = 83.333
+larModel = larApply(s(scaleFactor,scaleFactor))(larModel)
+V,FV,EV = larModel
+
+""" Visualization of cell numbering of floorplan 2-complex """
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Selection of specialized 1-chains}
+%-------------------------------------------------------------------------------
+
+Three types of 1-chains are computed, corresponding to the subsets of boundary edges, corridor edges but the boundary ones; and  internal edges (but corridor edges). The latter correspond to the building components (blind walls) without openings; the former to the building enclosures, where windows will be automatically open. The corridor edges are used to automatically open the doors.
+
+\paragraph{Selection of specialized 1-chains}
+%-------------------------------------------------------------------------------
+@D Selection of specialized 1-chains
+@{""" Selection of specialized 1-chains """
+
+""" Classification of edges (boundary, interior, passage 1-chains) """
+FE = crossRelation(FV,EV)
+boundaryEdges = boundaryCells(FV[:-1], EV)
+corridorEdges = list(set(CAT([FE[k] for k in [1,16,9,19,10]])).difference(boundaryEdges))
+internalEdges = set(range(len(EV))).difference(boundaryEdges+corridorEdges)
+
+boundaryWalls = AA(COLOR(CYAN))(MKPOLS((V,[EV[k] for k in boundaryEdges])))
+internalWalls = AA(COLOR(MAGENTA))(MKPOLS((V,[EV[k] for k in internalEdges])))
+corridorWalls = AA(COLOR(YELLOW))(MKPOLS((V,[EV[k] for k in corridorEdges])))
+
+""" Visualization of coloured chains """
+submodel = STRUCT(boundaryWalls+internalWalls+corridorWalls)
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{Guides: 1-chains embedded in 3D}
+%-------------------------------------------------------------------------------
+
+The previously discussed 1-chains are extended here to the whole 2.5D LAR model, taking (for the test-case) the simplifying hypothesis that the typical foor plan is repeated four times without changes.
+
+\paragraph{Guides: 1-chains embedded in 3D}
+
+The \texttt{plan2Building} function takes as input the LAR model \texttt{V,EV}, and the coordinate representation of a 1-chain, i.e.~ the array \texttt{subsystem} of integer edge identifyiers, and returns the \texttt{Vs,EVs} LAR model of the input 1-chain.
+
+%-------------------------------------------------------------------------------
+@D Guides: 1-chains embedded in 3D
+@{""" Guides: 1-chains embedded in 3D """
+
+def plan2Building(V,EV):
+    def plan2Building0(subsystem):
+        subsystemEV = [EV[k] for k in subsystem]
+        subsystemModel = Struct([([v+[0.] for v in V],subsystemEV)])
+        subsystemModels = Struct(4*[subsystemModel,t(0,0,3)])
+        Vs,EVs = struct2lar(subsystemModels)
+        return Vs,EVs
+    return plan2Building0
+
+Vc,EVc = plan2Building(V,EV)(corridorEdges)
+Vi,EVi = plan2Building(V,EV)(internalEdges)
+Vb,EVb = plan2Building(V,EV)(boundaryEdges)
+
+""" 3D visualization of different 1-chains embedded in 3D """
+VIEW(EXPLODE(1.2,1.2,1.2)(
+    AA(COLOR(CYAN))(MKPOLS((Vc,EVc))) + AA(COLOR(MAGENTA))(MKPOLS((Vi,EVi))) +
+    AA(COLOR(YELLOW))(MKPOLS((Vb,EVb))) ))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\subsection{2.5D chains of the whole building}
+%-------------------------------------------------------------------------------
+
+A \texttt{Struct} 2.5D mock-up of the whole 4-storey building is generated in the following, starting from the LAR \texttt{plan\_2D} of the single floor layout, assuming a inter-floor height of 3.0 meters. 
+
+\paragraph{2.5D chains of the whole building}
+%-------------------------------------------------------------------------------
+@D 2.5D chains of the whole building
+@{""" 2.5D chains of the whole building """
+
+plan_2D = V,FV[:2]+FV[3:-1],EV
+plan_25D = embedStruct(1)(Struct([plan_2D],"floor"))
+building = Struct(4*[plan_25D,t(0,0,3.0)])
+@}
+%-------------------------------------------------------------------------------
+
+
+
+%-------------------------------------------------------------------------------
+\subsection{Construction of 3D floor slabs (pyplasm)}
+%-------------------------------------------------------------------------------
+
+In this section the horizontal closures of the building system (i.e. the floor slabs) are computed.
+In particular, the 2-chain \texttt{emptyFaces} of empty spaces is first defined; \texttt{polVerts} i the suitably oriented polyline of the 1-boundary; \texttt{floor2D} is the solidified two-dimensional floor needed to obtain a 3D slab \texttt{floor} by Cartesian \texttt{PROD} times a 1D interval \texttt{Q(.3)} of size $0.3\ m$. Analogously, \texttt{voids} is an---unconnectd---3D polyhedron collecting the ``solid'' empty spaces; and finally \texttt{theFloor} is the model of 3D floor slabs with the cells of vertical communications removed. 
+
+\paragraph{Construction of 3D floor slabs (pyplasm)}
+%-------------------------------------------------------------------------------
+@D Construction of 3D floor slabs (pyplasm)
+@{""" Construction of 3D floor slabs (pyplasm) """
+"""
+emptyFaces = [36,63,93,80,64,91,44,22,104,97]
+faceChain = [k for k in range(len(FV[:-1])) if k not in emptyFaces+[2]]
+FW = [FV[k] for k in faceChain]
+VIEW(STRUCT(CAT([[MK(V[v]) for v in FV[f]] for f in faceChain])))
+edges = set(CAT([[e for e in FE[f]]  for f in faceChain ]))
+EW = [EV[e] for e in edges]
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES([v+[0] for v in V],FW,EW)+AA(COLOR(RED))(MKPOLS((V,EW)))))
+"""
+piano_2D = V,FV[:2]+FV[3:-1],EV
+piano_25D = embedStruct(1)(Struct([piano_2D],"floor"))
+
+pol = PolygonTessellator()
+polVerts =  REVERSE(boundaryPolylines(piano_25D)[0])
+vertices = [ vertex.Vertex( (x,y,0) ) for x,y,z in polVerts  ]
+verts = pol.tessellate(vertices)
+ps = [list(v.point) for v in verts]
+trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
+VIEW(STRUCT(AA(POLYLINE)(trias)))
+
+triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
+floor = STRUCT(CAT(AA(MKPOLS)(triangles)))
+theFloor = PROJECT(1)(floor)
+floor3D = PROD([theFloor,Q(.3)])
+VIEW(theFloor)
+@}
+%-------------------------------------------------------------------------------
+
+
+In the following we compute and visualize the building subsystem of vertical striped enclosures, i.e.~of the portion of the building fabric that vertically delimits and surrounds the built environment. Then we show the subsystem of blind internal partitions, i.e.~the internal walls without doors. Then the partitions with doors of internal walls are computed and displayed.
+
+The various building subsystems are finally assembled into a complete 3D virtual building model.
+This is shown from over the top, and without roof enclosures, in order to visualize the interior of the last storey.
+
+The client application used for parsing HIJSON cartographic documents for web modeling of Interactive Indoor Mapping~\cite{SpiniVSPMB-STAG2015,paoluzziMS:2014}, based on LAR and the server application we are discussing here, provides various visualization methods, including the building visit "in person", with associate visual tracking and monitoring of visitors, either virtual or real, when integrated with GNSS, RFID, or Wi-Fi survey solutions.
+
+\paragraph{Assembly of 3D model}
+%-------------------------------------------------------------------------------
+@D Assembly of 3D model
+@{""" Assembly of 3D model """
+
+""" reference lines """
+CVlines = [[Vb[h],Vb[k]] for h,k in EVb]
+PIlines = [[Vi[h],Vi[k]] for h,k in EVi]
+PClines = [[Vc[h],Vc[k]] for h,k in EVc]
+
+""" Orizontal Partitions """
+floors = STRUCT(4*[floor3D,T(3)(3)])
+VIEW(floors)
+
+""" Vertical Envelope """
+cv = INSR(PROD)([Q(0.3),Q(1),QUOTE([1.2,-1,0.8])])
+CV0 = STRUCT(AA(place(cv)())(CVlines))
+CV = STRUCT( [ CV0, T(3)(3.) ] )
+VIEW(CV)
+
+""" Blind internal partitions """
+pint = T(1)(-0.06)(STRUCT([CUBOID([0.12,1,3])]))
+PI0 = STRUCT(AA(place(pint)())(PIlines))
+PIa = STRUCT( [ PI0, T(3)(3) ] )
+VIEW(PIa)
+
+""" Horizontal communication system """
+door = T(2)(0.1)(CUBOID([0.8,0.8,2.2]))
+PI1 = STRUCT(AA(place(pint)(door))(PClines))
+PIb = STRUCT( [ PI1, T(3)(3) ] )
+VIEW(PIb)
+@}
+%-------------------------------------------------------------------------------
+
+The whole software application discussed in this section measures less than hundred lines of code, including comments. Of course it is a draft prototype to develop the actual server application, to be coupled with an interactive (even mobile) client, used for local editing, mainly for movement, insertion or deletion of empty 2-cells. Just notice that the whole construction process, starting from raster images of typical floor plans, and arriving to sufficiently detailed 3D virtual models of the whole building, is completely automatized, and can be easily customized for any kind of building and construction of "standard" shape, i.e. with vertical walls, even curved, and horizontal floors.
+
+\paragraph{Visualization of whole tower building}
+%-------------------------------------------------------------------------------
+@D Visualization of whole tower building
+@{""" Visualization of whole tower building """
+VIEW( STRUCT([ PIa,PIb,CV,T(3)(-.3)(floors) ]) )
+@}
+%-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.325\linewidth]{images/tower1} 
+   \includegraphics[width=0.325\linewidth]{images/tower2} 
+   \includegraphics[width=0.325\linewidth]{images/tower3} 
+   \caption{(a) Top view of the business tower building model; (b) exterior view; (c) close view.}
+   \label{fig:towerplan1}
+\end{figure}
+
+
+%-------------------------------------------------------------------------------
+\subsection{Exporting of test example}
+%-------------------------------------------------------------------------------
+
+\paragraph{Exporting of test example}
+%-------------------------------------------------------------------------------
+@O test/py/architectural/test06.py
+@{""" Construction and visualization of a business tower building """
+
+@< Input of floorplan wire-frame @>
+@< Generation of 2-cellular complexes @>
+@< Selection of specialized 1-chains @>
+@< Guides: 1-chains embedded in 3D @>
+@< 2.5D chains of the whole building @>
+@< Construction of 3D floor slabs (pyplasm) @>
+@< Assembly of 3D model @>
+@< Visualization of whole tower building @>
+@}
+%-------------------------------------------------------------------------------
 
 
 %-------------------------------------------------------------------------------
