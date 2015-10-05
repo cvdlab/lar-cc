@@ -469,7 +469,7 @@ We also note that whereas every $(d-1)$-facet is made by coherently oriented tri
 
 %-------------------------------------------------------------------------------
 @D 3D boundary triangulation of the space partition 
-@{from support import PolygonTessellator,vertex
+@{""" 3D boundary triangulation of the space partition """
 
 def orientTriangle(pointTriple):
     v1 = array(pointTriple[1])-pointTriple[0]
@@ -1188,6 +1188,7 @@ LAR model is generated. Then the unique polygonal face in \texttt{FV} is embedde
 @O test/py/bool/test07.py
 @{""" 2D polygon triangulation """
 from larlib import *
+#from support import PolygonTessellator,vertex
 
 filename = "test/svg/bool/interior.svg"
 lines = svg2lines(filename)    

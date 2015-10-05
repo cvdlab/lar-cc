@@ -407,7 +407,7 @@ def pointInPolygonClassification(p,pol):
     else: return "p_out"
 
 
-from support import PolygonTessellator,vertex
+""" 3D boundary triangulation of the space partition """
 
 def orientTriangle(pointTriple):
     v1 = array(pointTriple[1])-pointTriple[0]

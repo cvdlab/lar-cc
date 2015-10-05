@@ -11,9 +11,9 @@ _,BE = larFacets((V,BF),dim=2)
 cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
 """
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
-cubeGrids = Struct(2*[cubeGrid,r(.0,.0,.1)])
+cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5)])
 
-V,FV,EV = larSimplify(struct2lar(cubeGrids))
+V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 V,CV,FV,EV,CF,CE,COE,FE = thePartition(V,FV,EV)
 

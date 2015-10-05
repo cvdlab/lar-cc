@@ -4,6 +4,7 @@ import pyplasm
 from scipy import *
 from pyplasm import *
 from triangle import *
+from support import *
 
 from myfont import *
 from larstruct import *
