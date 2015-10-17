@@ -610,7 +610,7 @@ FW = [FV[k] for k in faceChain]
 VIEW(STRUCT(CAT([[MK(V[v]) for v in FV[f]] for f in faceChain])))
 edges = set(CAT([[e for e in FE[f]]  for f in faceChain ]))
 EW = [EV[e] for e in edges]
-VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES([v+[0] for v in V],FW,EW)+AA(COLOR(RED))(MKPOLS((V,EW)))))
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES(([v+[0] for v in V],FW,EW)+AA(COLOR(RED))(MKPOLS((V,EW))))))
 """
 piano_2D = V,FV[:2]+FV[3:-1],EV
 piano_25D = embedStruct(1)(Struct([piano_2D],"floor"))
@@ -854,6 +854,38 @@ if __name__=="__main__":
 @}
 %-------------------------------------------------------------------------------
 
+
+
+%-------------------------------------------------------------------------------
+@D Edge cycles associated to a closed chain of edges
+@{""" Edge cycles associated to a closed chain of edges """
+def boundaryCycles(edgeBoundary,EV):
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    
+    cbe = copy.copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
+@}
+%-------------------------------------------------------------------------------
+
+
 %-------------------------------------------------------------------------------
 \subsection{Exporting the library}
 %-------------------------------------------------------------------------------
@@ -866,6 +898,8 @@ if __name__=="__main__":
 @< Low-dimensional constructors: 1D and 0D @>
 @< Subdivide the 1-cells @>
 @< Boundary cells ($2D\to 1D$) computation @>
+@< Edge cycles associated to a closed chain of edges @>
+@< From Struct object to LAR boundary model @>
 @< Interior partitions ($2D\to 1D$) computation @>
 @< Move ($P\to Q$) operator @>
 @< Subdivide the 1-cells of the concept plan @>
@@ -957,6 +991,21 @@ VIEW(EXPLODE(1.2,1.2,1)(bU + MKPOLS(modIp2D) + MKPOLS(modEe2D)))
 (V,FV) = movePoint2point([ (V,FV),(W,FW) ])(V[20])(W[25])
 EV = face2edge(FV)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+
+lines = [[V[u],V[v]] for u,v in EV]
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV)))) # bug in triangulation!
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV))))) # bug in triangulation!
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,5))
+
+FE = crossRelation(FV,EV)
+W,FW,EW = (V,[FV[14]],[EV[e] for e in FE[14]])
+VIEW(STRUCT(MKPOLS((W,FW,EW))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((W,FW,EW)))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1011,5 +1060,41 @@ def place(obj):
 @}
 %-------------------------------------------------------------------------------
 
+
+\paragraph{From Struct object to LAR boundary model}
+%-------------------------------------------------------------------------------
+@D From Struct object to LAR boundary model
+@{""" From Struct object to LAR boundary model """
+def structFilter(obj):
+    if isinstance(obj,list):
+        if (len(obj) > 1):
+            return [structFilter(obj[0])] + structFilter(obj[1:])
+        return [structFilter(obj[0])]
+    if isinstance(obj,Struct):
+        if obj.category in ["external_wall", "internal_wall", "corridor_wall"]:
+            return
+        return Struct(structFilter(obj.body),obj.name,obj.category)
+    return obj
+
+
+def structBoundaryModel(struct):
+    print ">> struct =",struct
+    filteredStruct = structFilter(struct)
+    print ">> filteredStruct =",filteredStruct
+    #import pdb; pdb.set_trace()
+    V,FV,EV = struct2lar(filteredStruct)
+    edgeBoundary = boundaryCells(FV,EV)
+    cycles = boundaryCycles(edgeBoundary,EV)
+    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
+    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
+    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
+    if cells[0][0]==cells[1][0]: # bug badly patched! ... TODO better
+        temp0 = cells[0][0]
+        temp1 = cells[0][1]
+        cells[0] = [temp1, temp0]
+    return V,cells
+@}
+%-------------------------------------------------------------------------------
+    
 
 \end{document}

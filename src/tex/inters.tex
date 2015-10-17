@@ -1252,11 +1252,11 @@ def randomLines(numberOfLines=200,scaling=0.3):
 
 
 \paragraph{Generation of a random point}
-A single random point, codified in floating point format, and with a fixed (quite small) number of digits, is returned by the \texttt{rpoint()} function, with no input parameters.
+A single random point, codified in floating point format, and with a fixed (quite small) number of digits, is returned by the \texttt{rpoint2d()} function, with no input parameters.
 %-------------------------------------------------------------------------------
 @D Generation of a random point
 @{""" Generation of a random point """
-def rpoint():
+def rpoint2d():
     return eval( vcode([ random.random(), random.random() ]) )
 @}
 %-------------------------------------------------------------------------------
@@ -1267,9 +1267,9 @@ A single random segment, scaled about its centroid by the \texttt{scaling} param
 @D Generation of a random line segment
 @{""" Generation of a random line segment """
 def redge(scaling):
-    v1,v2 = array(rpoint()), array(rpoint())
+    v1,v2 = array(rpoint2d()), array(rpoint2d())
     c = (v1+v2)/2
-    pos = rpoint()
+    pos = rpoint2d()
     v1 = (v1-c)*scaling + pos
     v2 = (v2-c)*scaling + pos
     return tuple(eval(vcode(v1))), tuple(eval(vcode(v2)))

@@ -1,11 +1,12 @@
 """ Module for Boolean computations between geometric objects """
 from larlib import *
+from copy import copy
 DEBUG = False
 
 """ Coding utilities """
 global count
 """ Generation of a random 3D point """
-def rpoint():
+def rpoint3d():
     return eval( vcode([ random.random(), random.random(), random.random() ]) )
 
 """ Generation of random triangles """
@@ -28,9 +29,9 @@ def randomQuads(numberOfQuads=400,scaling=0.3):
 
 """ Generation of a single random triangle """
 def rtriangle(scaling):
-    v1,v2,v3 = array(rpoint()), array(rpoint()), array(rpoint())
+    v1,v2,v3 = array(rpoint3d()), array(rpoint3d()), array(rpoint3d())
     c = (v1+v2+v3)/3
-    pos = rpoint()
+    pos = rpoint3d()
     v1 = (v1-c)*scaling + pos
     v2 = (v2-c)*scaling + pos
     v3 = (v3-c)*scaling + pos
@@ -69,19 +70,10 @@ def lar2boxes(model,qualifier=0):
         boxes += [eval(vcode([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))+[(qualifier,k)]]
     return boxes
 
-""" Computation of the 1D centroid of a list of 3D boxes """    
-def centroid(boxes,coord):
-    delta,n = 0,len(boxes)
-    ncoords = len(boxes[0])/2
-    a = coord%ncoords
-    b = a+ncoords
-    for box in boxes:
-        delta += (box[a] + box[b])/2
-    return delta/n
-
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
-def MKTRIANGLES(*model): 
+def MKTRIANGLES(model): 
     V,FV,EV = model
+    if len(V[0]) == 2: V=[v+[0] for v in V]
     FE = crossRelation(FV,EV)
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
@@ -98,30 +90,6 @@ def MKSOLID(*model):
         for face in CAT(triangleSets) ])
 
 
-""" Split the boxes between the below,above subsets """
-def splitOnThreshold(boxes,subset,coord):
-    theBoxes = [boxes[k] for k in subset]
-    threshold = centroid(theBoxes,coord)
-    ncoords = len(boxes[0])/2
-    a = coord%ncoords
-    b = a+ncoords
-    below,above = [],[]
-    for k in subset:
-        if boxes[k][a] <= threshold: below += [k]
-    for k in subset:
-        if boxes[k][b] >= threshold: above += [k]
-    return below,above
-
-""" Test if bucket OK or append to splitting stack """
-def splitting(bucket,below,above, finalBuckets,splittingStack):
-    if (len(below)<4 and len(above)<4) or len(set(bucket).difference(below))<7 \
-        or len(set(bucket).difference(above))<7: 
-        finalBuckets.append(below)
-        finalBuckets.append(above)
-    else: 
-        splittingStack.append(below)
-        splittingStack.append(above)
-
 
 """ Remove subsets from bucket list """
 def removeSubsets(buckets):
@@ -135,15 +103,6 @@ def removeSubsets(buckets):
     out = [bucket for i,bucket in enumerate(buckets) if B[i]==1]
     return out
 
-def geomPartitionate(boxes,buckets):
-    geomInters = [set() for h in range(len(boxes))]
-    for bucket in buckets:
-        for k in bucket:
-            geomInters[k] = geomInters[k].union(bucket)
-    for h,inters in enumerate(geomInters):
-        geomInters[h] = geomInters[h].difference([h])
-    return AA(list)(geomInters)
-
 """ Iterate the splitting until \texttt{splittingStack} is empty """
 def boxTest(boxes,h,k):
     if len(boxes[0])==4:
@@ -155,7 +114,7 @@ def boxTest(boxes,h,k):
         b1,b2,b3,b4,b5,b6,_ = boxes[h]
         return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
 
-def boxBuckets(boxes):
+def boxBuckets3d(boxes):
     bucket = range(len(boxes))
     splittingStack = [bucket]
     finalBuckets = []
@@ -231,105 +190,75 @@ def submanifoldMapping(pivotFace):
     transform = mapping * transl
     return transform
 
-""" Set of line segments partitioning a facet """
-def intersection(V,FV,EV):
+""" Helper functions for spacePartition """
+def submodel(V,FV,EV):
     FE = crossRelation(FV,EV)
+    def submodel0(f,F):
+        fE = list(set(FE[f] + CAT([FE[g] for g in F])))
+        fF = [f]+F
+        return fF,fE
+    return submodel0
 
-    def intersection0(k,bundledFaces):
-        pivotFace = [V[v] for v in FV[k]]
-        transform = submanifoldMapping(pivotFace)  # submanifold transformation
-        transformedCells,edges,faces = [],[],[]
-        for face in bundledFaces:
-            edge = set(FE[k]).intersection(FE[face])  # common edge index
-            if edge == set():
-                candidateEdges = FE[face]
-                facet = []
-                for e in candidateEdges:
-                    cell = [V[v]+[1.0] for v in EV[e]]  # verts of incident face
-                    transformedCell = (transform * (mat(cell).T)).T.tolist()  
-                    # vertices in local frame
-                    facet += [[point[:-1] for point in transformedCell]]
-                faces += [facet]
-            else:  # boundary edges of face k
-                e, = edge
-                vs = [V[v]+[1.0] for v in EV[e]]
-                ws = (transform * (mat(vs).T)).T.tolist()
-                edges += [[p[:-1] for p in ws]]
-        return edges,faces,transform
-    return intersection0    
+def meetZero( sW, (w1,w2) ):
+    testValue = sW[w1][2] * sW[w2][2]
+    if testValue > 10**-4: 
+        return False
+    else: return True
 
-""" Check for superimposing edges """
-def edgeCheck(V,FV,EV):
-    VE = invertRelation(EV)
-    EF = crossRelation(EV,FV)
-    tripleVerts2e = defaultdict(list)
-    for e,(v1,v2) in enumerate(EV):
-        V1 = set(CAT([EV[edge] for edge in VE[v1]])) 
-        V2 = set(CAT([EV[edge] for edge in VE[v2]])) 
-        commonVerts = V1.intersection(V2)
-        tripleVerts2e[tuple(sorted(commonVerts))] += [e]
-    EW = []
-    for verts,edges in tripleVerts2e.items():
-        print verts,edges
-        if len(edges)==1:  EW += [verts]
-        elif len(edges)==3: 
-            sizes = [VECTNORM(VECTDIFF([V[v] for v in EV[e]])) for e in edges]
-            _,theEdge = max(zip(sizes,edges))
-            addedVert = list(set(verts).difference(EV[theEdge]))[0]
-            for face in EF[theEdge]:
-                if addedVert not in FV[face]:  
-                    newList = list(FV[face])+[addedVert]
-                    FV[face] = tuple(newList)
-            if sizes[0] == ABS(sizes[1]-sizes[2]): EW += [EV[edges[0]]]
-            if sizes[1] == ABS(sizes[2]-sizes[0]): EW += [EV[edges[1]]]
-            if sizes[2] == ABS(sizes[0]-sizes[1]): EW += [EV[edges[2]]]
-        else: print "error: in edgeCheck"
-    return FV,EW
-
-""" Take the two extremes of a set of aligned points """
-def takeExtremePoints(line):
-    [x1,y1,z1],[x2,y2,z1] = line[0], line[-1]
-    if x1 != x2: parameters = [(x-x1)/(x2-x1) for x,y,z in line]
-    elif y1 != y2: parameters = [(y-y1)/(y2-y1) for x,y,z in line]
-    pairs = sorted(zip(parameters,line))
-    """
-    p_first = pairs[0][1]
-    p_last = pairs[-1][1]
-    return [p_first,p_last]
-    """
-    edges = [[pairs[k][1],pairs[k+1][1]] for k,pair in enumerate(pairs[:-1])]
-    return edges
-
+def segmentIntersection(p1,p2):
+    (x1,y1,z1),(x2,y2,z2) = p1,p2
+    if abs(z1-z2) != 0.0:
+        alpha = z1/(z1-z2)
+        x = x1+alpha*(x2-x1)
+        y = y1+alpha*(y2-y1)
+        return x,y,0.0
+    else: return None
 
 """ Space partitioning via submanifold mapping """
 def spacePartition(V,FV,EV, parts):
-    transfFaces = []
-    splitting = intersection(V,FV,EV)
-    for k,bundledFaces in enumerate(parts):
-        edges,faces,transform = splitting(k,bundledFaces)
-        for face in faces:
-            line = []
-            for edge in face:
-                (x1,y1,z1),(x2,y2,z2) = edge
-                if not verySmall(z2-z1):
-                    x = (x2-x1)/(z2-z1) + x1
-                    y = (y2-y1)/(z2-z1) + y1
-                    p = [x,y,0]
-                    line += [eval(vcode(p))]
-            if line!=[]: 
-                if len(line)==2: edges += [line]
-                elif len(line)>2: edges += takeExtremePoints(line)
-                else: print "error: too few points in line"
-            
-        edges = [[point[:-1] for point in edge] for edge in edges]
-        edges = AA(AA(eval))(AA(AA(vcode))(edges))
-        v,fv,ev = larFromLines(edges) 
-        if len(fv)>1: fv = fv[:-1]   ## ??
-        lar = [w+[0.0] for w in v],fv,ev
-        transfFaces += [Struct([ larApply(transform.I)(lar) ])]
-    W,FW,EW  = struct2lar(Struct(transfFaces))
-    #W,FW,EW = larSimplify(W,FW,EW )
-    return W,FW,EW
+    submodel0 = submodel(V,FV,EV)
+    out = []
+    """ input: face index f; candidate incident faces F[f]; """
+    for f,F in enumerate(parts):
+        """ Selection of the LAR submodel S(f) := (V,FV,EV)(f) restricted to [f]+F[f] """    
+        fF,fE = submodel0(f,F)
+        subModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
+        sV,sFV,sEV = struct2lar(subModel)
+        """ Computation of submanifold map M moving f to z=0 """
+        pivotFace = [V[v] for v in FV[f]]
+        M = submanifoldMapping(pivotFace)  # submanifold transformation
+        """ Transformation of S(f) by M, giving S = (sW,sEW) := M(S(f)) """
+        sW,sFW,sEW = larApply(M)((sV,sFV,sEV))
+        """ filtering of EW edges traversing z=0, giving EZ edges and incident faces FZEZ """
+        sFE = crossRelation(sFW,sEW)    
+        edges = list(set([ e for k,face in enumerate(sFW)  for e in sFE[k] 
+                    if meetZero(sW, sEW[e]) ]))
+        edgesPerFace = [ [e for e in sFE[k] if meetZero(sW, sEW[e])] 
+                    for k,face in enumerate(sFW) ]
+        edges = list(set(CAT(edgesPerFace)))
+        WW = AA(LIST)(range(len(sW)))
+        wires = [sEW[e] for e in edges]
+        wireFrame = STRUCT(MKPOLS((sW,wires)))
+        """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
+        points = collections.OrderedDict()
+        lines = [[sW[w1],sW[w2]] for w1,w2 in wires]
+        for k,(p,q) in enumerate(lines): 
+            point = segmentIntersection(p,q)
+            if point != None: points[edges[k]] = point
+        pointsPerFace = [set(face).intersection(points.keys()) for face in edgesPerFace]
+        lines = [[points[e][:2] for e in face] for face in pointsPerFace]
+        lines = [line for line in lines if line!=[]]
+        vpoints = [[(vcode(point),k) for k,point in enumerate(line)] for line in lines]
+        lines = [AA(eval)(dict(line).keys()) for line in vpoints]
+        ### sorting of every aligned set FX, where X is the parameter along the intersection line
+        ### Check that every set FX has even cardinality
+        """ Construction of the planar set EX of lines """
+        z,fz,ez = larFromLines(lines)
+        w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))        
+        if len(fw)>1: fw = fw[:-1]
+        out += [Struct([(w,fw,ew)])]
+        #VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((w,ew))))
+    return struct2lar(Struct(out))
 
 
 """ Half-line crossing test """
@@ -407,6 +336,30 @@ def pointInPolygonClassification(p,pol):
     else: return "p_out"
 
 
+""" From structures to boundary polylines """
+def boundaryPolylines(struct):
+    V,boundaryEdges = structBoundaryModel(struct)
+    polylines = boundaryModel2polylines((V,boundaryEdges))
+    return polylines
+
+""" From LAR oriented boundary model to polylines """
+def boundaryModel2polylines(model):
+    V,EV = model
+    polylines = []
+    succDict = dict(EV)
+    visited = [False for k in range(len(V))]
+    nonVisited = [k for k in succDict.keys() if not visited[k]]
+    while nonVisited != []:
+        first = nonVisited[0]; v = first; polyline = []
+        while visited[v] == False:
+            visited[v] = True; 
+            polyline += V[v], 
+            v = succDict[v]
+        polyline += [V[first]]
+        polylines += [polyline]
+        nonVisited = [k for k in succDict.keys() if not visited[k]]
+    return polylines
+
 """ 3D boundary triangulation of the space partition """
 
 def orientTriangle(pointTriple):
@@ -415,30 +368,41 @@ def orientTriangle(pointTriple):
     if cross(v1,v2)[2] < 0: return REVERSE(pointTriple)
     else: return pointTriple
     
-from triangle import triangulate
 from copy import copy
-def boundaryTriangulation(W,FW,EW,FE):
-    triangleSet = []    
-    for f,face in enumerate(FW):
-        edges = FE[f]
-        pivotFace = [W[v] for v in face]
+
+def boundaryTriangulation(V,FV,EV,FE):
+    triangleSet = []  
+    
+    def mapVerts(inverseMap):
+        def mapVerts0(mappedVerts):
+            return (inverseMap * (mat(mappedVerts).T)).T.tolist()
+        return mapVerts0
+        
+    for f,face in enumerate(FV):
+        triangledFace = []
+        EW = [EV[e] for e in FE[f]]
+        pivotFace = [V[v] for v in face]
+        vertdict = dict([(w,v) for v,w in enumerate(face)])
+        EW = [[vertdict[w] for w in edge] for edge in EW]
         transform = submanifoldMapping(pivotFace)
         mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
-        verts2D = [point[:-2] for point in mappedVerts]  
-        pts = array(verts2D)
-        n = len(verts2D)
-        EdgeVerts = AA(list)(zip(range(n),range(1,n)+[0]))
-        tri = {    'vertices': pts, 'segments': EdgeVerts }
-        triangles = triangulate(tri)['triangles'].tolist()
-        pts = pts.tolist()
+        verts2D = [point[:-2] for point in mappedVerts] 
+              
+        # reconstruction of boundary polyline for LAR face
+        model = (verts2D,[range(len(verts2D))],EW)
+        struct = Struct([model])
+        points = boundaryModel2polylines(structBoundaryModel(struct))[0]
         
-        centers = [CCOMB([pts[v] for v in triangle]) for triangle in triangles]
-        triangles = [triangle for triangle,p in zip(triangles,centers) 
-         if pointInPolygonClassification(p,(pts,EdgeVerts))=="p_in"] 
-
-        points = (transform.I * (mat(mappedVerts).T)).T.tolist()
-        trias = [[points[k][:-1] for k in face]+[points[face[0]][:-1]] for face in triangles]
-        triangleSet += [AA(orientTriangle)(trias)]
+        # CDT triangulation with poly2tri
+        polyline = [Point(p[0],p[1]) for p in points[:-1]]  
+        cdt = CDT(REVERSE(polyline))
+        triangles = cdt.triangulate()
+        trias = [ [[t.c.x,t.c.y,0,1],[t.b.x,t.b.y,0,1],[t.a.x,t.a.y,0,1]] for t in triangles ]
+        inverseMap = transform.I
+        trias = AA(mapVerts(inverseMap))(trias)
+        
+        triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
+        triangleSet += [triangledFace]
     return triangleSet
 
 def triangleIndices(triangleSet,W):
@@ -461,16 +425,6 @@ def edgesTriangles(EF, FW, TW, EW):
                     ET[e] += [t]
     return ET
 
-""" Directional and orthogonal projection operators """
-def dirProject (e):
-    def dirProject0 (v):
-        return SCALARVECTPROD([ INNERPROD([ UNITVECT(e), v ]), UNITVECT(e) ])
-    return dirProject0
-
-def orthoProject (e):
-    def orthoProject0 (v):  
-        return VECTDIFF([ v, dirProject(UNITVECT(e))(v) ])
-    return orthoProject0
 
 
 """ Circular ordering of faces around edges """
@@ -519,7 +473,9 @@ def faceSlopeOrdering(model,FE):
         pairs = sorted(zip(et_angle,et,Tvs))
         sortedTrias = [pair[1] for pair in pairs]
         triasVerts = [pair[2] for pair in pairs]
-        tetraVerts = triasVerts[0]+[triasVerts[1][2]]
+        print "triasVerts =",triasVerts
+        #tetraVerts = triasVerts[0]+[triasVerts[1][2]]
+        #print "tetraVerts =",tetraVerts
         ET_angle += [sortedTrias]
     EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
     return EF_angle
@@ -576,30 +532,6 @@ def facesFromComponents(model,FE,EF_angle):
         CV += [list(cv)]
         CE += [list(ce)]
     return V,CV,FV,EV,CF,CE,COE
-
-""" Edge cycles associated to a closed chain of edges """
-def boundaryCycles(edgeBoundary,EV):
-    verts2edges = defaultdict(list)
-    for e in edgeBoundary:
-        verts2edges[EV[e][0]] += [e]
-        verts2edges[EV[e][1]] += [e]
-    cycles = []
-    cbe = copy(edgeBoundary)
-    while cbe != []:
-        e = cbe[0]
-        v = EV[e][0]
-        cycle = []
-        while True:
-            cycle += [(e,v)]
-            e = list(set(verts2edges[v]).difference([e]))[0]
-            cbe.remove(e)
-            v = list(set(EV[e]).difference([v]))[0]
-            if (e,v)==cycle[0]:
-                break
-        n = len(cycle)
-        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
-            for k,(e,v) in enumerate(cycle)]]
-    return cycles
 
 
 """ Cycles orientation """
@@ -672,7 +604,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
         cf += [nextFace] 
         face = nextFace
     if DEBUG: pass
-        #VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES(V,[FV[f] for f in cf]) ))
+        #VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES((V,[FV[f] for f in cf])) )) #add EV!
     return cf,coe
 
 """ Main procedure of arrangement partitioning """
@@ -697,9 +629,10 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
 
 def thePartition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
-    parts = boxBuckets(containmentBoxes(quadArray))
+    parts = boxBuckets3d(containmentBoxes(quadArray))
 
-    Z,FZ,EZ = spacePartition(W,FW,EW, parts)    
+    Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+    print "\n\nZ,FZ,EZ =",Z,FZ,EZ,"\n\n"
     EZ = [EZ[0]]+EZ
     model = Z,FZ,EZ
 
@@ -711,7 +644,7 @@ def thePartition(W,FW,EW):
     FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
     
     # remove 0 indices from FE relation
-    FE = [[f if f!=0 else 1 for f in face] for face in FE]
+    FE = [[f  if f!=0 else 1 for f in face] for face in FE]
     EF_angle = faceSlopeOrdering(model,FE)
     
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)

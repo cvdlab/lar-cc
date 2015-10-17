@@ -441,7 +441,7 @@ lone = struct2lar( Struct( AA(embedStruct(1))([OpenCourt10, OpenCourt20]) ))
 Z,FZ,EZ = struct2lar( embedStruct(1)(Fifth_floor) )
 ZZ = AA(SUM)(DISTR([Z,[0,0,6*4]]))
 
-VIEW(STRUCT( MKTRIANGLES(W,WF,WE) + AA(COLOR(CYAN))(MKTRIANGLES(ZZ,FZ,EZ)) + [T(3)(.2)] + [COLOR(GREEN)(STRUCT(MKPOLS(lone)))] + AA(COLOR(BLACK))(MKPOLS((W,WE))) + [COLOR(MAGENTA)(STRUCT(MKPOLS((ZZ,EZ))))] ))
+VIEW(STRUCT( MKTRIANGLES((W,WF,WE)) + AA(COLOR(CYAN))(MKTRIANGLES((ZZ,FZ,EZ))) + [T(3)(.2)] + [COLOR(GREEN)(STRUCT(MKPOLS(lone)))] + AA(COLOR(BLACK))(MKPOLS((W,WE))) + [COLOR(MAGENTA)(STRUCT(MKPOLS((ZZ,EZ))))] ))
 
 """ Project definitions """
 """ Project definition """

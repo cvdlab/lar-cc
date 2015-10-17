@@ -3,7 +3,7 @@ from larlib import *
 
 """ Visualization of indices of the boundary triangulation """
 
-V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
 """
 BF = [FV[f] for f in boundaryCells(CV,FV)]
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BF))))
@@ -24,7 +24,7 @@ BE = list({e for f in BF for e in FE[f]})
 
 #Volume((V,[FV[f] for f in CF[0]]))
 
-VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES(V,[FV[f] for f in BF],[EV[e] for e in BE]) ))
+VIEW(EXPLODE(1.5,1.5,1.5)( MKTRIANGLES((V,[FV[f] for f in BF],[EV[e] for e in BE])) ))
 VIEW(EXPLODE(2,2,2)([ MKSOLID(V,[FV[f] for f in cell],[EV[e] for e in set(CAT([FE[f] for f in cell]))]) for cell in CF]))
 VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in CE]))
 

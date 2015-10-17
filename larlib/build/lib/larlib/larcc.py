@@ -54,6 +54,7 @@ def csrCreate(BRCmatrix,lenV=0,shape=(0,0)):
    if shape == (0,0):
       CSRmatrix = coo2Csr(triples)
    else:
+      if lenV!=0 and shape==(0,0): shape = (0,lenV)
       CSRmatrix = scipy.sparse.csr_matrix(shape)
       for i,j,v in triples: CSRmatrix[i,j] = v
    return CSRmatrix
@@ -116,7 +117,7 @@ def invertRelation(CV):
     return VC
 
 def boundary(cells,facets):
-   lenV = max(max(cells),max(facets))
+   lenV = max(max(cells)+max(facets))+1
    csrCV = csrCreate(cells,lenV)
    csrFV = csrCreate(facets,lenV)
    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))

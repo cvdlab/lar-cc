@@ -69,7 +69,7 @@ FW = [FV[k] for k in faceChain]
 VIEW(STRUCT(CAT([[MK(V[v]) for v in FV[f]] for f in faceChain])))
 edges = set(CAT([[e for e in FE[f]]  for f in faceChain ]))
 EW = [EV[e] for e in edges]
-VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES([v+[0] for v in V],FW,EW)+AA(COLOR(RED))(MKPOLS((V,EW)))))
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES(([v+[0] for v in V],FW,EW)+AA(COLOR(RED))(MKPOLS((V,EW))))))
 """
 piano_2D = V,FV[:2]+FV[3:-1],EV
 piano_25D = embedStruct(1)(Struct([piano_2D],"floor"))

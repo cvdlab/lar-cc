@@ -3,7 +3,7 @@ from larlib import *
 
 """ Two unit cubes """
 from larlib import *
-V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
+V,[VV,EV,FV,CV] = larCuboids([2,2,2],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 twoCubes = Struct([cube1,t(.5,.5,.5),cube1])
 
@@ -19,7 +19,7 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 quadArray = [[V[v] for v in face] for face in FV]
 boxes = containmentBoxes(quadArray)
 hexas = AA(box2exa)(boxes)
-parts = boxBuckets(boxes)
+parts = boxBuckets3d(boxes)
 
     
 W,FW,EW = spacePartition(V,FV,EV, parts)

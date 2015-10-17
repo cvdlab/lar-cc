@@ -22,3 +22,18 @@ dwelling = [V,FV]
 (V,FV) = movePoint2point([ (V,FV),(W,FW) ])(V[20])(W[25])
 EV = face2edge(FV)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+
+lines = [[V[u],V[v]] for u,v in EV]
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV)))) # bug in triangulation!
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV))))) # bug in triangulation!
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,5))
+
+FE = crossRelation(FV,EV)
+W,FW,EW = (V,[FV[14]],[EV[e] for e in FE[14]])
+VIEW(STRUCT(MKPOLS((W,FW,EW))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((W,FW,EW)))))
