@@ -1,5 +1,4 @@
 """ test file """
-""" Initial import of modules """
 from larlib import *
 
 
@@ -33,7 +32,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,5))
 
-FE = crossRelation(FV,EV)
+FE = crossRelation(V,FV,EV)
 W,FW,EW = (V,[FV[14]],[EV[e] for e in FE[14]])
 VIEW(STRUCT(MKPOLS((W,FW,EW))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((W,FW,EW)))))

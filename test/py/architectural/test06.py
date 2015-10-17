@@ -22,7 +22,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
 """ Selection of specialized 1-chains """
 
 """ Classification of edges (boundary, interior, passage 1-chains) """
-FE = crossRelation(FV,EV)
+FE = crossRelation(V,FV,EV)
 boundaryEdges = boundaryCells(FV[:-1], EV)
 corridorEdges = list(set(CAT([FE[k] for k in [1,16,9,19,10]])).difference(boundaryEdges))
 internalEdges = set(range(len(EV))).difference(boundaryEdges+corridorEdges)
@@ -55,35 +55,9 @@ VIEW(EXPLODE(1.2,1.2,1.2)(
     AA(COLOR(CYAN))(MKPOLS((Vc,EVc))) + AA(COLOR(MAGENTA))(MKPOLS((Vi,EVi))) +
     AA(COLOR(YELLOW))(MKPOLS((Vb,EVb))) ))
 
-""" 2.5D chains of the whole building """
-
-plan_2D = V,FV[:2]+FV[3:-1],EV
-plan_25D = embedStruct(1)(Struct([plan_2D],"floor"))
-building = Struct(4*[plan_25D,t(0,0,3.0)])
-
 """ Construction of 3D floor slabs (pyplasm) """
-"""
-emptyFaces = [36,63,93,80,64,91,44,22,104,97]
-faceChain = [k for k in range(len(FV[:-1])) if k not in emptyFaces+[2]]
-FW = [FV[k] for k in faceChain]
-VIEW(STRUCT(CAT([[MK(V[v]) for v in FV[f]] for f in faceChain])))
-edges = set(CAT([[e for e in FE[f]]  for f in faceChain ]))
-EW = [EV[e] for e in edges]
-VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES(([v+[0] for v in V],FW,EW)+AA(COLOR(RED))(MKPOLS((V,EW))))))
-"""
-piano_2D = V,FV[:2]+FV[3:-1],EV
-piano_25D = embedStruct(1)(Struct([piano_2D],"floor"))
-
-pol = PolygonTessellator()
-polVerts =  REVERSE(boundaryPolylines(piano_25D)[0])
-vertices = [ vertex.Vertex( (x,y,0) ) for x,y,z in polVerts  ]
-verts = pol.tessellate(vertices)
-ps = [list(v.point) for v in verts]
-trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
-VIEW(STRUCT(AA(POLYLINE)(trias)))
-
-triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
-floor = STRUCT(CAT(AA(MKPOLS)(triangles)))
+plan_2D = V,FV[:2]+FV[3:-1],EV
+floor = STRUCT(MKTRIANGLES(plan_2D))
 theFloor = PROJECT(1)(floor)
 floor3D = PROD([theFloor,Q(.3)])
 VIEW(theFloor)

@@ -1,5 +1,4 @@
 """ test file """
-""" Initial import of modules """
 from larlib import *
 
 
@@ -40,7 +39,6 @@ VIEW(EXPLODE(1.2,1.2,1)(bU + MKPOLS(modIp2D) + eE1D))
 VIEW(EXPLODE(1.2,1.2,1)(bU + iP1D + MKPOLS(modEe2D)))
 VIEW(EXPLODE(1.2,1.2,1)(bU + MKPOLS(modIp2D) + MKPOLS(modEe2D)))
 """ Concept design """
-""" Initial import of modules """
 from larlib import *
 
 
@@ -58,10 +56,7 @@ FV = [
 [4,5,9,13,18,17,16,12,7,8],[17,18,25,24,23]]
 dwelling = [V,FV]
 
-# VIEW(STRUCT(AA(POLYLINE)(lar2polylines (model))))
-# VIEW(EXPLODE(1.2,1.2,1)(AA(POLYLINE)(lar2polylines (model))))
 bU = AA(SOLIDIFY)(AA(POLYLINE)(lar2polylines (dwelling)))
-# VIEW(EXPLODE(1.2,1.2,1)(bU))
 EV = face2edge(FV)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 

@@ -1,5 +1,4 @@
 """ architectural module """
-""" Initial import of modules """
 from larlib import *
 
 def face2edge(FV):
@@ -200,4 +199,17 @@ def place(obj):
             return outObj
         return place01
     return place0
+
+def larSolidHelicoid(thickness=.1,R=1.,r=0.5,pitch=1.,nturns=2.,steps=36):
+   def larSolidHelicoid0(shape=[steps*int(nturns),1,1]):
+      angle = nturns*2*PI
+      domain = larIntervals(shape)([angle,R-r,thickness])
+      V,CV = domain
+      V = larTranslate([0,r,0])(V)
+      domain = V,CV
+      x = lambda p : p[1]*COS(p[0])
+      y = lambda p : p[1]*SIN(p[0])
+      z = lambda p : (pitch/(2*PI))*p[0] + p[2]
+      return larMap([x,y,z])(domain)
+   return larSolidHelicoid0
 

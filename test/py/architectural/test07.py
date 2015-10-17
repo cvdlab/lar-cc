@@ -10,7 +10,7 @@ larModel = svg2lar(filename)
 """ Generation of 2-cellular complexes """
 
 """ Floor layout generation as LAR cellular complex """
-scaleFactor = 83.333
+scaleFactor = 20.
 larModel = larApply(s(scaleFactor,scaleFactor))(larModel)
 V,FV,EV = larModel
 
@@ -22,7 +22,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
 """ Selection of specialized 1-chains """
 
 """ Classification of edges (boundary, interior, passage 1-chains) """
-FE = crossRelation(FV,EV)
+FE = crossRelation(V,FV,EV)
 boundaryEdges = boundaryCells(FV[:-1], EV)
 corridorEdges = list(set(CAT([FE[k] for k in [4]])).difference(boundaryEdges))
 internalEdges = set(range(len(EV))).difference(boundaryEdges+corridorEdges)
@@ -55,30 +55,9 @@ VIEW(EXPLODE(1.2,1.2,1.2)(
     AA(COLOR(CYAN))(MKPOLS((Vc,EVc))) + AA(COLOR(MAGENTA))(MKPOLS((Vi,EVi))) +
     AA(COLOR(YELLOW))(MKPOLS((Vb,EVb))) ))
 
-""" 2.5D chains of the whole building """
-
+""" Construction of 3D floor slabs (pyplasm) """
 plan_2D = V,FV[:2]+FV[3:-1],EV
-plan_25D = embedStruct(1)(Struct([plan_2D],"floor"))
-building = Struct(4*[plan_25D,t(0,0,3.0)])
-
-
-def boundaryPolylines(struct):
-	V,FV,EV = struct2lar(struct)
-	boundaryEdges=boundaryCells(FV,EV)
-	#V,boundaryEdges = structBoundaryModel(struct)
-	polylines = boundaryModel2polylines((V,boundaryEdges))
-	return polylines
-
-pol = PolygonTessellator()
-polVerts =  REVERSE(boundaryPolylines(plan_25D)[0])
-vertices = [ vertex.Vertex( (x,y,0) ) for x,y,z in polVerts  ]
-verts = pol.tessellate(vertices)
-ps = [list(v.point) for v in verts]
-trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
-VIEW(STRUCT(AA(POLYLINE)(trias)))
-
-triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
-floor = STRUCT(CAT(AA(MKPOLS)(triangles)))
+floor = STRUCT(MKTRIANGLES(plan_2D))
 theFloor = PROJECT(1)(floor)
 floor3D = PROD([theFloor,Q(.3)])
 VIEW(theFloor)

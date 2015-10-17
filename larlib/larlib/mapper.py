@@ -1,64 +1,6 @@
 """ Mapping functions and primitive objects """
 from larlib import *
 
-def larTranslate (tvect):
-   def larTranslate0 (points):
-      return [VECTSUM([p,tvect]) for p in points]
-   return larTranslate0
-
-def larRotate (angle):     # 2-dimensional !! TODO: n-dim
-   def larRotate0 (points):
-      a = angle
-      return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
-   return larRotate0
-
-def larScale (svect):
-   def larScale0 (points):
-      print "\n points =",points
-      print "\n svect =",svect
-      return [AA(PROD)(TRANS([p,svect])) for p in points]
-   return larScale0
-
-""" cellular decomposition of the unit d-cube """
-def larDomain(shape, cell='cuboid'):
-   if cell=='simplex': V,CV = larSimplexGrid1(shape)
-   elif cell=='cuboid': V,CV = larCuboids(shape)
-   V = larScale( [1./d for d in shape])(V)
-   return [V,CV]
-
-def larIntervals(shape, cell='cuboid'):
-   def larIntervals0(size):
-      V,CV = larDomain(shape,cell)
-      V = larScale( size)(V)
-      return [V,CV]
-   return larIntervals0
-
-from collections import defaultdict
-def checkModel(model,dim=2):
-   V,CV = model; n = len(V)
-   vertDict = defaultdict(list)
-   for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
-   points,verts = TRANS(vertDict.items())
-   invertedindex = [None]*n
-   V = []
-   for k,value in enumerate(verts):
-      V.append(eval(points[k]))
-      for i in value:
-         invertedindex[i]=k   
-   CV = [[invertedindex[v] for v in cell] for cell in CV]
-   # filter out degenerate cells
-   CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
-   return [V, CV]
-
-def larMap(coordFuncs):
-   if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
-   def larMap0(domain,dim=2):
-      V,CV = domain
-      V = AA(coordFuncs)(V)  # plasm CONStruction
-      return [V,CV]
-      # checkModel([V,CV])  TODO
-   return larMap0
-
 """ Basic tests of mapper module """
 from larlib import *
 
@@ -201,18 +143,6 @@ def larBall(radius=1,angle1=PI,angle2=2*PI):
       return V,[range(len(V))]
    return larBall0
 
-def larSolidHelicoid(thickness=.1,R=1.,r=0.5,pitch=1.,nturns=2.,steps=36):
-   def larSolidHelicoid0(shape=[steps*int(nturns),1,1]):
-      angle = nturns*2*PI
-      domain = larIntervals(shape)([angle,R-r,thickness])
-      V,CV = domain
-      V = larTranslate([0,r,0])(V)
-      domain = V,CV
-      x = lambda p : p[1]*COS(p[0])
-      y = lambda p : p[1]*SIN(p[0])
-      z = lambda p : (pitch/(2*PI))*p[0] + p[2]
-      return larMap([x,y,z])(domain)
-   return larSolidHelicoid0
 
 def larRod(radius,height,angle=2*PI):
    def larRod0(shape=[36,1]):

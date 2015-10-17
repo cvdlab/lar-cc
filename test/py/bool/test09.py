@@ -7,7 +7,7 @@ sys.path.insert(0, 'test/py/bool/')
 from test08 import *
 
 model = W,FW,EW
-FE = crossRelation(FW,EW)
+FE = crossRelation(W,FW,EW)
 EF = invertRelation(FE)
 
 triangleSet = boundaryTriangulation(W,FW,EW,FE)

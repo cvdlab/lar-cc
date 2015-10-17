@@ -1,5 +1,4 @@
 """ 3D mock-up of apartment block """
-""" Initial import of modules """
 from larlib import *
 
 
@@ -24,10 +23,16 @@ dwelling = Struct([ t(3,0), dwelling ])
 V1 = [[0,0],[3,0],[3,4.5],[0,4.5],[3,9],[0,9],[3,13],[-3,13],[-3,0],[0,-3]]
 FV1 = [[0,1,2,3],[3,2,4,5],[0,3,5,4,6,7,8,9]]
 landing = V1,FV1
+
 plan = Struct([landing,dwelling,s(-1,1),dwelling])
 assembly2D = evalStruct(plan)
 assembly1D = larCells(face2edge)(assembly2D)
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))
+
+lines = CAT([[[V[u],V[v]] for u,v in EV] for V,EV in assembly1D])
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV)))))
 
 stair = spiralStair(width=0.2,R=3,r=0.25,riser=0.1,pitch=4.4,nturns=1.75,steps=36)
 stair = larApply(r(0,0,3*PI/4))(stair)

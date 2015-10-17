@@ -74,14 +74,14 @@ def lar2boxes(model,qualifier=0):
 def MKTRIANGLES(model): 
     V,FV,EV = model
     if len(V[0]) == 2: V=[v+[0] for v in V]
-    FE = crossRelation(FV,EV)
+    FE = crossRelation(V,FV,EV)
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
 
 def MKSOLID(*model): 
     V,FV,EV = model
-    FE = crossRelation(FV,EV)
+    FE = crossRelation(V,FV,EV)
     pivot = V[0]
     VF = invertRelation(FV) 
     faces = [face for face in FV if face not in VF[0]]
@@ -167,9 +167,9 @@ def faceTransformations(facet):
 
 
 """ Computation of topological relation """
-def crossRelation(XV,YV):
-    csrXV = csrCreate(XV)
-    csrYV = csrCreate(YV)
+def crossRelation(V,XV,YV):
+    csrXV = csrCreate(XV,lenV=len(V))
+    csrYV = csrCreate(YV,lenV=len(V))
     csrXY = matrixProduct(csrXV, csrYV.T)
     XY = [None for k in range(len(XV))]
     for k,face in enumerate(XV):
@@ -192,7 +192,7 @@ def submanifoldMapping(pivotFace):
 
 """ Helper functions for spacePartition """
 def submodel(V,FV,EV):
-    FE = crossRelation(FV,EV)
+    FE = crossRelation(V,FV,EV)
     def submodel0(f,F):
         fE = list(set(FE[f] + CAT([FE[g] for g in F])))
         fF = [f]+F
@@ -230,7 +230,7 @@ def spacePartition(V,FV,EV, parts):
         """ Transformation of S(f) by M, giving S = (sW,sEW) := M(S(f)) """
         sW,sFW,sEW = larApply(M)((sV,sFV,sEV))
         """ filtering of EW edges traversing z=0, giving EZ edges and incident faces FZEZ """
-        sFE = crossRelation(sFW,sEW)    
+        sFE = crossRelation(V,sFW,sEW)    
         edges = list(set([ e for k,face in enumerate(sFW)  for e in sFE[k] 
                     if meetZero(sW, sEW[e]) ]))
         edgesPerFace = [ [e for e in sFE[k] if meetZero(sW, sEW[e])] 
@@ -441,7 +441,7 @@ def faceSlopeOrdering(model,FE):
     triangleSet = boundaryTriangulation(V,FV,EV,FE)
     TV = triangleIndices(triangleSet,V)
     triangleVertices = CAT(TV)
-    TE = crossRelation(triangleVertices,EV)
+    TE = crossRelation(V,triangleVertices,EV)
     ET,ET_angle = invertRelation(TE),[]
     #import pdb; pdb.set_trace()
     for e,et in enumerate(ET):
@@ -640,7 +640,7 @@ def thePartition(W,FW,EW):
     submodel = STRUCT(MKPOLS((Z,EZ)))
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.4)) 
 
-    FE = crossRelation(FZ,EZ) ## to be double checked !!
+    FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
     FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
     
     # remove 0 indices from FE relation

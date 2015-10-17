@@ -316,7 +316,8 @@ The input to \texttt{bUnit\_to\_eEiP}, to compute the 1D external envelope and i
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test04.py
 @{""" D LAR model input and handling """
-@< Initial import of modules @>
+from larlib import *
+
 @< Input of LAR architectural plan @>
 @< Generation of the typical flat of apartment block @>
 @}
@@ -331,14 +332,38 @@ dwelling = Struct([ t(3,0), dwelling ])
 V1 = [[0,0],[3,0],[3,4.5],[0,4.5],[3,9],[0,9],[3,13],[-3,13],[-3,0],[0,-3]]
 FV1 = [[0,1,2,3],[3,2,4,5],[0,3,5,4,6,7,8,9]]
 landing = V1,FV1
+
 plan = Struct([landing,dwelling,s(-1,1),dwelling])
 assembly2D = evalStruct(plan)
 assembly1D = larCells(face2edge)(assembly2D)
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))
+
+lines = CAT([[[V[u],V[v]] for u,v in EV] for V,EV in assembly1D])
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV)))))
 @}
 %-------------------------------------------------------------------------------
 
 
+
+\paragraph{Solid helicoid}
+%-------------------------------------------------------------------------------
+@D Solid helicoid about the $z$ axis
+@{def larSolidHelicoid(thickness=.1,R=1.,r=0.5,pitch=1.,nturns=2.,steps=36):
+	def larSolidHelicoid0(shape=[steps*int(nturns),1,1]):
+		angle = nturns*2*PI
+		domain = larIntervals(shape)([angle,R-r,thickness])
+		V,CV = domain
+		V = larTranslate([0,r,0])(V)
+		domain = V,CV
+		x = lambda p : p[1]*COS(p[0])
+		y = lambda p : p[1]*SIN(p[0])
+		z = lambda p : (pitch/(2*PI))*p[0] + p[2]
+		return larMap([x,y,z])(domain)
+	return larSolidHelicoid0
+@}
+%-------------------------------------------------------------------------------
 
 
 \paragraph{Initial 3D assembly of apartment block}
@@ -346,7 +371,8 @@ VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test05.py
 @{""" 3D mock-up of apartment block """
-@< Initial import of modules @>
+from larlib import *
+
 @< Input of LAR architectural plan @>
 @< Generation of the typical flat of apartment block @>
 stair = spiralStair(width=0.2,R=3,r=0.25,riser=0.1,pitch=4.4,nturns=1.75,steps=36)
@@ -374,7 +400,8 @@ VIEW(STRUCT(CAT(AA(MKPOLS)(assembly3D)) + horClosures + [frame3D]))
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test01.py
 @{""" test file """
-@< Initial import of modules @>
+from larlib import *
+
 @< Input of LAR architectural plan @>
 bU = AA(SOLIDIFY)(AA(POLYLINE)(lar2polylines (dwelling)))
 EV = face2edge(FV)
@@ -524,7 +551,7 @@ Three types of 1-chains are computed, corresponding to the subsets of boundary e
 @{""" Selection of specialized 1-chains """
 
 """ Classification of edges (boundary, interior, passage 1-chains) """
-FE = crossRelation(FV,EV)
+FE = crossRelation(V,FV,EV)
 boundaryEdges = boundaryCells(FV[:-1], EV)
 corridorEdges = list(set(CAT([FE[k] for k in [1,16,9,19,10]])).difference(boundaryEdges))
 internalEdges = set(range(len(EV))).difference(boundaryEdges+corridorEdges)
@@ -574,21 +601,10 @@ VIEW(EXPLODE(1.2,1.2,1.2)(
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\subsection{2.5D chains of the whole building}
+\section{Whole building}
 %-------------------------------------------------------------------------------
 
 A \texttt{Struct} 2.5D mock-up of the whole 4-storey building is generated in the following, starting from the LAR \texttt{plan\_2D} of the single floor layout, assuming a inter-floor height of 3.0 meters. 
-
-\paragraph{2.5D chains of the whole building}
-%-------------------------------------------------------------------------------
-@D 2.5D chains of the whole building
-@{""" 2.5D chains of the whole building """
-
-plan_2D = V,FV[:2]+FV[3:-1],EV
-plan_25D = embedStruct(1)(Struct([plan_2D],"floor"))
-building = Struct(4*[plan_25D,t(0,0,3.0)])
-@}
-%-------------------------------------------------------------------------------
 
 
 
@@ -603,28 +619,8 @@ In particular, the 2-chain \texttt{emptyFaces} of empty spaces is first defined;
 %-------------------------------------------------------------------------------
 @D Construction of 3D floor slabs (pyplasm)
 @{""" Construction of 3D floor slabs (pyplasm) """
-"""
-emptyFaces = [36,63,93,80,64,91,44,22,104,97]
-faceChain = [k for k in range(len(FV[:-1])) if k not in emptyFaces+[2]]
-FW = [FV[k] for k in faceChain]
-VIEW(STRUCT(CAT([[MK(V[v]) for v in FV[f]] for f in faceChain])))
-edges = set(CAT([[e for e in FE[f]]  for f in faceChain ]))
-EW = [EV[e] for e in edges]
-VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES(([v+[0] for v in V],FW,EW)+AA(COLOR(RED))(MKPOLS((V,EW))))))
-"""
-piano_2D = V,FV[:2]+FV[3:-1],EV
-piano_25D = embedStruct(1)(Struct([piano_2D],"floor"))
-
-pol = PolygonTessellator()
-polVerts =  REVERSE(boundaryPolylines(piano_25D)[0])
-vertices = [ vertex.Vertex( (x,y,0) ) for x,y,z in polVerts  ]
-verts = pol.tessellate(vertices)
-ps = [list(v.point) for v in verts]
-trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
-VIEW(STRUCT(AA(POLYLINE)(trias)))
-
-triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
-floor = STRUCT(CAT(AA(MKPOLS)(triangles)))
+plan_2D = V,FV[:2]+FV[3:-1],EV
+floor = STRUCT(MKTRIANGLES(plan_2D))
 theFloor = PROJECT(1)(floor)
 floor3D = PROD([theFloor,Q(.3)])
 VIEW(theFloor)
@@ -707,7 +703,6 @@ VIEW( STRUCT([ PIa,PIb,CV,T(3)(-.3)(floors) ]) )
 @< Generation of 2-cellular complexes @>
 @< Selection of specialized 1-chains @>
 @< Guides: 1-chains embedded in 3D @>
-@< 2.5D chains of the whole building @>
 @< Construction of 3D floor slabs (pyplasm) @>
 @< Assembly of 3D model @>
 @< Visualization of whole tower building @>
@@ -892,7 +887,8 @@ def boundaryCycles(edgeBoundary,EV):
 
 @O larlib/larlib/architectural.py
 @{""" architectural module """
-@< Initial import of modules @>
+from larlib import *
+
 @< From faces FV to list of edges EV @>
 @< Some operators for assemblies @>
 @< Low-dimensional constructors: 1D and 0D @>
@@ -907,6 +903,7 @@ def boundaryCycles(edgeBoundary,EV):
 @< Specialized version of solidify operator for horizontal 3D polygons @>
 @< Horizontal closures generator @>
 @< Placing a 3D object (wall) with possible solid subtraction (door) @>
+@< Solid helicoid about the $z$ axis @>
 @}
 %===============================================================================
 \section{Conclusion}\label{sec:conclusion}
@@ -932,15 +929,6 @@ def boundaryCycles(edgeBoundary,EV):
 \section{Utility functions}
 %===============================================================================
 
-\paragraph{Initial import of modules}
-
-%-------------------------------------------------------------------------------
-@D Initial import of modules
-@{""" Initial import of modules """
-from larlib import *
-@}
-%-------------------------------------------------------------------------------
-
 \section{Tests}
 
 
@@ -949,12 +937,10 @@ from larlib import *
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test01.py
 @{""" Concept design """
-@< Initial import of modules @>
+from larlib import *
+
 @< Input of LAR architectural plan @>
-# VIEW(STRUCT(AA(POLYLINE)(lar2polylines (model))))
-# VIEW(EXPLODE(1.2,1.2,1)(AA(POLYLINE)(lar2polylines (model))))
 bU = AA(SOLIDIFY)(AA(POLYLINE)(lar2polylines (dwelling)))
-# VIEW(EXPLODE(1.2,1.2,1)(bU))
 EV = face2edge(FV)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 
@@ -984,7 +970,8 @@ VIEW(EXPLODE(1.2,1.2,1)(bU + MKPOLS(modIp2D) + MKPOLS(modEe2D)))
 %-------------------------------------------------------------------------------
 @O test/py/architectural/test02.py
 @{""" test file """
-@< Initial import of modules @>
+from larlib import *
+
 @< Input of LAR architectural plan @>
 (W,FW) = larApply(s(-1,-1))(dwelling)
 (V,FV) = dwelling
@@ -1002,7 +989,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,5))
 
-FE = crossRelation(FV,EV)
+FE = crossRelation(V,FV,EV)
 W,FW,EW = (V,[FV[14]],[EV[e] for e in FE[14]])
 VIEW(STRUCT(MKPOLS((W,FW,EW))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((W,FW,EW)))))

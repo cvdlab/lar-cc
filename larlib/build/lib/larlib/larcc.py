@@ -32,6 +32,24 @@ import numpy as np
 from scipy import zeros,arange,mat,amin,amax,array
 from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 
+def larTranslate (tvect):
+   def larTranslate0 (points):
+      return [VECTSUM([p,tvect]) for p in points]
+   return larTranslate0
+
+def larRotate (angle):     # 2-dimensional !! TODO: n-dim
+   def larRotate0 (points):
+      a = angle
+      return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+   return larRotate0
+
+def larScale (svect):
+   def larScale0 (points):
+      print "\n points =",points
+      print "\n svect =",svect
+      return [AA(PROD)(TRANS([p,svect])) for p in points]
+   return larScale0
+
 def triples2mat(triples,shape="csr"):
    n = len(triples)
    data = arange(n)
@@ -54,7 +72,6 @@ def csrCreate(BRCmatrix,lenV=0,shape=(0,0)):
    if shape == (0,0):
       CSRmatrix = coo2Csr(triples)
    else:
-      if lenV!=0 and shape==(0,0): shape = (0,lenV)
       CSRmatrix = scipy.sparse.csr_matrix(shape)
       for i,j,v in triples: CSRmatrix[i,j] = v
    return CSRmatrix
@@ -117,7 +134,7 @@ def invertRelation(CV):
     return VC
 
 def boundary(cells,facets):
-   lenV = max(max(cells)+max(facets))+1
+   lenV = max(max(cells),max(facets))
    csrCV = csrCreate(cells,lenV)
    csrFV = csrCreate(facets,lenV)
    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
@@ -382,6 +399,47 @@ def pivotSimplices(V,CV,d=3):
 def simplexOrientations(V,simplices):
    vcells = [[V[v]+[1.0] for v in simplex] for simplex in simplices]
    return [SIGN(np.linalg.det(vcell)) for vcell in vcells]
+
+""" cellular decomposition of the unit d-cube """
+def larDomain(shape, cell='cuboid'):
+   if cell=='simplex': V,CV = larSimplexGrid1(shape)
+   elif cell=='cuboid': V,CV = larCuboids(shape)
+   V = larScale( [1./d for d in shape])(V)
+   return [V,CV]
+
+def larIntervals(shape, cell='cuboid'):
+   def larIntervals0(size):
+      V,CV = larDomain(shape,cell)
+      V = larScale( size)(V)
+      return [V,CV]
+   return larIntervals0
+
+from collections import defaultdict
+def checkModel(model,dim=2):
+   V,CV = model; n = len(V)
+   vertDict = defaultdict(list)
+   for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
+   points,verts = TRANS(vertDict.items())
+   invertedindex = [None]*n
+   V = []
+   for k,value in enumerate(verts):
+      V.append(eval(points[k]))
+      for i in value:
+         invertedindex[i]=k   
+   CV = [[invertedindex[v] for v in cell] for cell in CV]
+   # filter out degenerate cells
+   CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
+   return [V, CV]
+
+def larMap(coordFuncs):
+   if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
+   def larMap0(domain,dim=2):
+      V,CV = domain
+      V = AA(coordFuncs)(V)  # plasm CONStruction
+      return [V,CV]
+      # checkModel([V,CV])  TODO
+   return larMap0
+
 
 
 if __name__ == "__main__": 

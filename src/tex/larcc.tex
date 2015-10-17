@@ -1414,6 +1414,116 @@ def simplexOrientations(V,simplices):
 %-------------------------------------------------------------------------------
 
 
+\paragraph{Affine transformations of points} Some primitive maps of points to points are given in the following, including translation, rotation and scaling of array of points via direct transformation of their coordinates. Second-order functions are used in order to employ their curried version to transform geometric assemblies.
+
+%------------------------------------------------------------------
+@D Affine transformations of $d$-points
+@{def larTranslate (tvect):
+	def larTranslate0 (points):
+		return [VECTSUM([p,tvect]) for p in points]
+	return larTranslate0
+
+def larRotate (angle):		# 2-dimensional !! TODO: n-dim
+	def larRotate0 (points):
+		a = angle
+		return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+	return larRotate0
+
+def larScale (svect):
+	def larScale0 (points):
+		print "\n points =",points
+		print "\n svect =",svect
+		return [AA(PROD)(TRANS([p,svect])) for p in points]
+	return larScale0
+@}
+%------------------------------------------------------------------
+
+
+%===============================================================================
+\section{Piecewise-linear mapping of topological spaces}
+%===============================================================================
+
+A very simple but foundational software subsystem is developed in this section, by giving a general mechanism to produce curved maps of topological spaces, via the simplicial decomposition of a chart, i.e.~of a planar embedding of the fundamental polygon of a $d$-dimensional manifold, and the definition of coordinate functions to be applied to its vertices ($0$-cells of the decomposition) to generate an embedding of the manifold.
+
+\subsection{Domain decomposition}
+%-------------------------------------------------------------------------------
+
+A simplicial map is a map between simplicial complexes with the property that the images of the vertices of a simplex always span a simplex.  Simplicial maps are thus determined by their effects on vertices, and provide a piecewise-linear approximation of their underlying polyhedra. 
+
+Since double simmeries are always present in the curved primitives generated in the module, an alternative cellular decomposition with cuboidal cells is provided.  The default choice is "cuboid".
+
+
+\paragraph{Standard and scaled decomposition of unit domain}
+The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimplexGrid1} as an hypercube of dimension $d \equiv\texttt{len(shape)}$, where the \texttt{shape} tuple provides the number or row, columns, pages, etc.~of the decomposition.
+
+%-------------------------------------------------------------------------------
+@D Generate a simplicial decomposition ot the $[0,1]^d$ domain
+@{""" cellular decomposition of the unit d-cube """
+def larDomain(shape, cell='cuboid'):
+	if cell=='simplex': V,CV = larSimplexGrid1(shape)
+	elif cell=='cuboid': V,CV = larCuboids(shape)
+	V = larScale( [1./d for d in shape])(V)
+	return [V,CV]
+@}
+%-------------------------------------------------------------------------------
+
+A scaled simplicial decomposition is provided by the second-order  \texttt{larIntervals} function, with \texttt{len(shape)} and \texttt{len(size)} parameters, where the $d$-dimensionale vector \texttt{len(size)} is assumed as the scaling vector to be applied to the point $\mathbf{1}\in\E^d$.
+
+%-------------------------------------------------------------------------------
+@D Scaled simplicial decomposition ot the $[0,1]^d$ domain
+@{def larIntervals(shape, cell='cuboid'):
+	def larIntervals0(size):
+		V,CV = larDomain(shape,cell)
+		V = larScale( size)(V)
+		return [V,CV]
+	return larIntervals0
+@}
+%-------------------------------------------------------------------------------
+
+\subsection{Mapping domain vertices}
+The second-order texttt{larMap} function is the LAR implementation of the PLaSM primitive \texttt{MAP}.
+It is applied to the array \texttt{coordFuncs} of coordinate functions and to the simplicially decomposed  \texttt{domain}, returning an embedded and/or curved \texttt{domain} instance.
+
+%-------------------------------------------------------------------------------
+@D Primitive mapping function 
+@{def larMap(coordFuncs):
+	if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
+	def larMap0(domain,dim=2):
+		V,CV = domain
+		V = AA(coordFuncs)(V)  # plasm CONStruction
+		return [V,CV]
+		# checkModel([V,CV])  TODO
+	return larMap0
+@}
+%-------------------------------------------------------------------------------
+
+\subsection{Identify close or coincident points}
+
+The function \texttt{checkModel}, applied to a \texttt{model} parameter, i.e.~to a (vertices, cells)  pair, returns the model after identification of vertices with coincident or very close position vectors.
+The \texttt{checkModel} function works as follows: first a dictionary \texttt{vertDict} is created, with key a suitably approximated position converted into a string by the \texttt{vcode} converter (given in the Appendix), and with value the list of vertex indices with the same (approximated) position. Then, an \texttt{invertedindex} array is created, associating each original vertex index with the new index produced by enumerating the (distinct) keys of the dictionary. Finally, a new list \texttt{CV} of cells is created, by substituting the new vertex indices for the old ones. 
+
+%-------------------------------------------------------------------------------
+@D Create a dictionary with key the point location
+@{from collections import defaultdict
+def checkModel(model,dim=2):
+	V,CV = model; n = len(V)
+	vertDict = defaultdict(list)
+	for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
+	points,verts = TRANS(vertDict.items())
+	invertedindex = [None]*n
+	V = []
+	for k,value in enumerate(verts):
+		V.append(eval(points[k]))
+		for i in value:
+			invertedindex[i]=k	
+	CV = [[invertedindex[v] for v in cell] for cell in CV]
+	# filter out degenerate cells
+	CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
+	return [V, CV]
+@}
+%-------------------------------------------------------------------------------
+
+
 
 \section{Exporting the library}
 
@@ -1466,6 +1576,7 @@ from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 """ Basic LARCC library """
 @< The MIT Licence @>
 @< Importing of modules or packages @>
+@< Affine transformations of $d$-points @>
 @< From list of triples to scipy.sparse @>
 @< Brc to Coo transformation @>
 @< Coo to Csr transformation @>
@@ -1490,6 +1601,11 @@ from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 @< Signed boundary matrix for polytopal complexes @>
 @< Signed boundary cells for polytopal complexes @>
 @<  Oriented boundary cells for simplicial models @>
+@< Generate a simplicial decomposition ot the $[0,1]^d$ domain @>
+@< Scaled simplicial decomposition ot the $[0,1]^d$ domain @>
+@< Create a dictionary with key the point location @>
+@< Primitive mapping function @>
+
 
 if __name__ == "__main__": 
 	@< Test examples @>
