@@ -409,7 +409,8 @@ def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
     for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
     for h,faceSetOfTriangles in enumerate(triangleSet):
-        trias = [[vertDict[vcode(p)] for p in triangle[:-1]] 
+        #trias = [[vertDict[vcode(p)] for p in triangle[:-1]] 
+        trias = [[vertDict[vcode(p)] for p in triangle] 
                     for triangle in faceSetOfTriangles]
         out += [trias]
     return out

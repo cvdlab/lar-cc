@@ -90,9 +90,7 @@ def structFilter(obj):
 
 
 def structBoundaryModel(struct):
-    print ">> struct =",struct
     filteredStruct = structFilter(struct)
-    print ">> filteredStruct =",filteredStruct
     #import pdb; pdb.set_trace()
     V,FV,EV = struct2lar(filteredStruct)
     edgeBoundary = boundaryCells(FV,EV)
