@@ -3,7 +3,7 @@ from larlib import *
 
 """ Visualization of indices of the boundary triangulation """
 
-V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
+V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
 """
 BF = [FV[f] for f in boundaryCells(CV,FV)]
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BF))))

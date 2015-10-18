@@ -5,14 +5,14 @@ DEBUG = True
 
 """ Coding utilities """
 """ Generation of a random point """
-def rpoint():
+def rpoint2d():
     return eval( vcode([ random.random(), random.random() ]) )
 
 """ Generation of a random line segment """
 def redge(scaling):
-    v1,v2 = array(rpoint()), array(rpoint())
+    v1,v2 = array(rpoint2d()), array(rpoint2d())
     c = (v1+v2)/2
-    pos = rpoint()
+    pos = rpoint2d()
     v1 = (v1-c)*scaling + pos
     v2 = (v2-c)*scaling + pos
     return tuple(eval(vcode(v1))), tuple(eval(vcode(v2)))
@@ -36,9 +36,9 @@ def centroid(boxes,coord):
 
 """ XOR of FAN of ordered points """ 
 def FAN(points): 
-   pairs = zip(points[1:-2],points[2:-1])
-   triangles = [MKPOL([[points[0],p1,p2],[[1,2,3]],None]) for p1,p2 in pairs]
-   return XOR(triangles)
+    pairs = zip(points[1:-2],points[2:-1])
+    triangles = [MKPOL([[points[0],p1,p2],[[1,2,3]],None]) for p1,p2 in pairs]
+    return XOR(triangles)
  
 if __name__=="__main__":
     pol = [[0.476,0.332],[0.461,0.359],[0.491,0.375],[0.512,0.375],[0.514,0.375],
@@ -160,10 +160,12 @@ def lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage):
 
 """ Accelerate intersection of lines """
 def lineIntersection(lineArray):
+    lineArray = [line for line in lineArray if len(line)>1]
 
     from collections import defaultdict
     pointStorage = defaultdict(list)
     for line in lineArray:
+        print "line =",line
         p1,p2 = line
         key = '['+ vcode(p1) +','+ vcode(p2) +']'
         pointStorage[key] = []
@@ -429,47 +431,48 @@ def larFromLines(lines):
 from scipy.spatial import cKDTree
 
 def pruneVertices(pts,radius=0.001):
-   tree = cKDTree(pts)
-   a = cKDTree.sparse_distance_matrix(tree,tree,radius)
-   print a.keys()
-   close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
-   import networkx as nx
-   G=nx.Graph()
-   G.add_nodes_from(range(len(pts)))
-   G.add_edges_from(close)
-   clusters, k, h = [], 0, 0
-   
-   subgraphs = list(nx.connected_component_subgraphs(G))
-   V = [None for subgraph in subgraphs]
-   vmap = [None for k in xrange(len(pts))]
-   for k,subgraph in enumerate(subgraphs):
-      group = subgraph.nodes()
-      if len(group)>1: 
-         V[k] = CCOMB([pts[v] for v in group])
-         for v in group: vmap[v] = k
-         clusters += [group]
-      else: 
-         oldNode = group[0]
-         V[k] = pts[oldNode]
-         vmap[oldNode] = k
-   return V,close,clusters,vmap
+    tree = cKDTree(pts)
+    a = cKDTree.sparse_distance_matrix(tree,tree,radius)
+    print a.keys()
+    close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
+    import networkx as nx
+    G=nx.Graph()
+    G.add_nodes_from(range(len(pts)))
+    G.add_edges_from(close)
+    clusters, k, h = [], 0, 0
+    
+    subgraphs = list(nx.connected_component_subgraphs(G))
+    V = [None for subgraph in subgraphs]
+    vmap = [None for k in xrange(len(pts))]
+    for k,subgraph in enumerate(subgraphs):
+        group = subgraph.nodes()
+        if len(group)>1: 
+            V[k] = CCOMB([pts[v] for v in group])
+            for v in group: vmap[v] = k
+            clusters += [group]
+        else: 
+            oldNode = group[0]
+            V[k] = pts[oldNode]
+            vmap[oldNode] = k
+    return V,close,clusters,vmap
 
 """ Return a simplified LAR model """
 def larSimplify(model,radius=0.001):
-   if len(model)==2: V,CV = model 
-   elif len(model)==3: V,CV,FV = model 
-   else: print "ERROR: model input"
-   
-   W,close,clusters,vmap = pruneVertices(V,radius)
-   celldim = DIM(MKPOL([V,[[v+1 for v in CV[0]]],None]))
-   newCV = [list(set([vmap[v] for v in cell])) for cell in CV]
-   CV = list(set([tuple(cell) for cell in newCV if len(cell) >= celldim+1]))
-   CV = sorted(CV,key=len) # to get the boundary cell as last one (in most cases)
+    if len(model)==2: V,CV = model 
+    elif len(model)==3: V,CV,FV = model 
+    else: print "ERROR: model input"
+    
+    W,close,clusters,vmap = pruneVertices(V,radius)
+    celldim = DIM(MKPOL([V,[[v+1 for v in CV[0]]],None]))
+    newCV = [list(set([vmap[v] for v in cell])) for cell in CV]
+    CV = list(set([tuple(cell) for cell in newCV if len(cell) >= celldim+1]))
+    CV = sorted(CV,key=len) # to get the boundary cell as last one (in most cases)
 
-   if len(model)==3:
-      celldim = DIM(MKPOL([V,[[v+1 for v in FV[0]]],None]))
-      newFV = [list(set([vmap[v] for v in facet])) for facet in FV]
-      FV = [facet for facet in newFV if len(facet) >= celldim]
-      return W,CV,FV
-   else: return W,CV
+    if len(model)==3:
+        celldim = DIM(MKPOL([V,[[v+1 for v in FV[0]]],None]))
+        newFV = [list(set([vmap[v] for v in facet])) for facet in FV]
+        FV = [facet for facet in newFV if len(facet) >= celldim]
+        FV = list(set(AA(tuple)(AA(sorted)(FV))))
+        return W,CV,FV
+    else: return W,CV
 

@@ -25,10 +25,10 @@ vert2forw_trap = dict()
 vert2back_trap = dict()
 
 for k,(a,b) in enumerate(trapezoids[1:-1]):
-   print k,(a,b)
-   vert2back_trap[a]=k
-   vert2forw_trap[a]=k+1
-   vert2back_trap[b]=k+1
-   vert2forw_trap[b]=k+2
+    print k,(a,b)
+    vert2back_trap[a]=k
+    vert2forw_trap[a]=k+1
+    vert2back_trap[b]=k+1
+    vert2forw_trap[b]=k+2
 vert2forw_trap[trapezoids[0][0]] = 0
 vert2back_trap[trapezoids[-1][1]] = len(trapezoids)-1

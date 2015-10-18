@@ -616,6 +616,9 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
     for f,face in enumerate(FE):
         n = len(FV[f])
         if len(FE[f]) > n:
+            # contains both edges coded 0 and 1 ... (how to solve?)
+            print "\nf =",f,"\nFE = ",FE,"\nV =",V,"\nFV =",FV,"\nEV =",EV
+            """
             verts = list(FV[f])+[FV[f][0]]
             edges = [sorted([verts[k],verts[k+1]]) for k in range(n)]
             edgeDict = dict()
@@ -623,6 +626,8 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
             orderedEdges = [edgeDict[tuple(edge)] for edge in edges]
             assert len(orderedEdges)==len(verts)-1
             FEout += [orderedEdges]
+            """
+            FEout += [list(set(face).difference([0]))]
         else:
             FEout += [face]
     return FEout
@@ -633,6 +638,8 @@ def thePartition(W,FW,EW):
     parts = boxBuckets3d(containmentBoxes(quadArray))
 
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+    print "\n\nZ,FZ,EZ =",Z,FZ,EZ,"\n\n"
+    Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.001)
     print "\n\nZ,FZ,EZ =",Z,FZ,EZ,"\n\n"
     EZ = [EZ[0]]+EZ
     model = Z,FZ,EZ
