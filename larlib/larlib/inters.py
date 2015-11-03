@@ -465,7 +465,7 @@ def larSimplify(model,radius=0.001):
     W,close,clusters,vmap = pruneVertices(V,radius)
     celldim = DIM(MKPOL([V,[[v+1 for v in CV[0]]],None]))
     newCV = [list(set([vmap[v] for v in cell])) for cell in CV]
-    CV = list(set([tuple(cell) for cell in newCV if len(cell) >= celldim+1]))
+    CV = list(set([tuple(sorted(cell)) for cell in newCV if len(cell) >= celldim+1]))
     CV = sorted(CV,key=len) # to get the boundary cell as last one (in most cases)
 
     if len(model)==3:

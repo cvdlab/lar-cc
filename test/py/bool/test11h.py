@@ -11,7 +11,7 @@ _,BE = larFacets((V,BF),dim=2)
 cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
 """
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
-cubeGrids = Struct(2*[cubeGrid,t(1.5,1.5,1.5)])
+cubeGrids = Struct(2*[cubeGrid,t(1.5,1.5,0),r(0,0,PI/6)])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))

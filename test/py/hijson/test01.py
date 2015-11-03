@@ -5,7 +5,7 @@ from larlib import *
 
 scaleFactor = 83.333
 
-filename = "test/py/inters/plan.svg"
+filename = "test/svg/inters/plan.svg"
 larModel = svg2lar(filename)
 larModel = larApply(s(scaleFactor,scaleFactor))(larModel)
 V,FV,EV = larModel
@@ -17,7 +17,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 #VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
 
-FE = crossRelation(FV,EV)
+FE = crossRelation(V,FV,EV)
 chainsToStruct = chain2structs(V,FV,EV,FE)
 
 """ Ala nord """

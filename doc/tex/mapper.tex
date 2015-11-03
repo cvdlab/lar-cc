@@ -545,7 +545,7 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \mbox{}\verb@@\hbox{$\langle\,$Solid pizza of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7c}{7c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Hollow cylinder of given radiuses and height\nobreak\ {\footnotesize \NWlink{nuweb6d}{6d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Hollow sphere of given radiuses\nobreak\ {\footnotesize \NWlink{nuweb7a}{7a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize \NWlink{nuweb11c}{11c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Remove the unused vertices from a LAR model pair\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -745,48 +745,6 @@ The various model generators given in Section~\ref{sec:generators} are tested he
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
-
-%===============================================================================
-\appendix
-\section{Utility functions}
-%===============================================================================
-
-
-
-\subsection{Numeric utilities}
-
-A small set of utilityy functions is used to transform a point representation as array of coordinates into a string of fixed format to be used as point key into python dictionaries.
-
-%------------------------------------------------------------------
-\begin{flushleft} \small \label{scrap24}
-\protect\makebox[0ex][r]{\NWtarget{nuweb11c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Symbolic utility to represent points as strings\nobreak\ {\footnotesize 11c}$\,\rangle\equiv$
-\vspace{-1ex}
-\begin{list}{}{} \item
-\mbox{}\verb@""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """@\\
-\mbox{}\verb@PRECISION = 4 @\\
-\mbox{}\verb@@\\
-\mbox{}\verb@def prepKey (args): return "["+", ".join(args)+"]"@\\
-\mbox{}\verb@@\\
-\mbox{}\verb@def fixedPrec(value):@\\
-\mbox{}\verb@   out = round(value*10**PRECISION)/10**PRECISION@\\
-\mbox{}\verb@   if out == -0.0: out = 0.0@\\
-\mbox{}\verb@   return str(out)@\\
-\mbox{}\verb@   @\\
-\mbox{}\verb@def vcode (vect): @\\
-\mbox{}\verb@   """@\\
-\mbox{}\verb@   To generate a string representation of a number array.@\\
-\mbox{}\verb@   Used to generate the vertex keys in PointSet dictionary, and other similar operations.@\\
-\mbox{}\verb@   """@\\
-\mbox{}\verb@   return prepKey(AA(fixedPrec)(vect))@\\
-\mbox{}\verb@@{\NWsep}
-\end{list}
-\vspace{-1ex}
-\footnotesize\addtolength{\baselineskip}{-1ex}
-\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb8a}{8a}.
-\end{list}
-\end{flushleft}
-%------------------------------------------------------------------
 
 
 \bibliographystyle{amsalpha}

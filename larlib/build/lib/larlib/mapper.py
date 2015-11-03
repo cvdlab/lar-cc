@@ -190,21 +190,5 @@ def larHollowSphere(r,R,angle1=PI,angle2=2*PI):
       return larMap([x,y,z])(domain)
    return larHollowSphere0
 
-""" TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
-PRECISION = 4 
-
-def prepKey (args): return "["+", ".join(args)+"]"
-
-def fixedPrec(value):
-   out = round(value*10**PRECISION)/10**PRECISION
-   if out == -0.0: out = 0.0
-   return str(out)
-   
-def vcode (vect): 
-   """
-   To generate a string representation of a number array.
-   Used to generate the vertex keys in PointSet dictionary, and other similar operations.
-   """
-   return prepKey(AA(fixedPrec)(vect))
 
 

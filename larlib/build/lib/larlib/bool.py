@@ -214,6 +214,17 @@ def segmentIntersection(p1,p2):
         return x,y,0.0
     else: return None
 
+""" Sorting of points along a line """
+def computeSegments(line):
+    p0 = line[0]
+    p1 = line[1]
+    p1_p0 = VECTDIFF([p1,p0])
+    h = sorted([(X_k,k) for k,X_k in enumerate(p1_p0) if X_k!=0.0], reverse=True)[0][1]
+    params = [(p[h]-p0[h])/p1_p0[h] for p in line]
+    sortedPoints = TRANS(sorted(zip(params,line)))[1]
+    segments = TRANS([sortedPoints[:-1],sortedPoints[1:]])
+    return segments
+
 """ Space partitioning via submanifold mapping """
 def spacePartition(V,FV,EV, parts):
     submodel0 = submodel(V,FV,EV)
@@ -238,7 +249,8 @@ def spacePartition(V,FV,EV, parts):
         edges = list(set(CAT(edgesPerFace)))
         WW = AA(LIST)(range(len(sW)))
         wires = [sEW[e] for e in edges]
-        wireFrame = STRUCT(MKPOLS((sW,wires)))
+        #wireFrame = EXPLODE(1.2,1.2,1.2)(MKPOLS((sW,wires)))
+        #VIEW(wireFrame)
         """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
         points = collections.OrderedDict()
         lines = [[sW[w1],sW[w2]] for w1,w2 in wires]
@@ -251,13 +263,22 @@ def spacePartition(V,FV,EV, parts):
         vpoints = [[(vcode(point),k) for k,point in enumerate(line)] for line in lines]
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
         ### sorting of every aligned set FX, where X is the parameter along the intersection line
+        theLines = []
+        for line in lines:
+            if len(line)>2: 
+                print '\a',"line =",line
+                segments = computeSegments(line)
+                print "segments =",segments
+                theLines += segments
+            else: theLines += [line]
         ### Check that every set FX has even cardinality
-        """ Construction of the planar set EX of lines """
-        z,fz,ez = larFromLines(lines)
-        w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))        
+        """ Construction of the planar set FX,EX of faces and lines """
+        z,fz,ez = larFromLines(theLines)
+        w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
+        print "\nw,fw,ew =",w,fw,ew    
         if len(fw)>1: fw = fw[:-1]
         out += [Struct([(w,fw,ew)])]
-        #VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((w,ew))))
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,ew))))
     return struct2lar(Struct(out))
 
 
@@ -407,12 +428,12 @@ def boundaryTriangulation(V,FV,EV,FE):
 
 def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
-    for k,vertex in enumerate(W):  vertDict[vcode(vertex)] = k
+    for k,vertex in enumerate(W):  vertDict[vcode(vertex,PRECISION=3)] = k
     for h,faceSetOfTriangles in enumerate(triangleSet):
-        #trias = [[vertDict[vcode(p)] for p in triangle[:-1]] 
-        trias = [[vertDict[vcode(p)] for p in triangle] 
+        trias = [[vertDict[vcode(p,PRECISION=3)] for p in triangle]
                     for triangle in faceSetOfTriangles]
         out += [trias]
+    assert len(W)==max(CAT(CAT(out)))+1
     return out
 
 
@@ -437,10 +458,10 @@ def planeProjection(normals):
     elif all(V[:,2]==0): V = np.delete(V, 2, 1)
     return V
 
-def faceSlopeOrdering(model,FE):
+def faceSlopeOrdering(model,FE,Z):
     V,FV,EV = model
     triangleSet = boundaryTriangulation(V,FV,EV,FE)
-    TV = triangleIndices(triangleSet,V)
+    TV = triangleIndices(triangleSet,Z)
     triangleVertices = CAT(TV)
     TE = crossRelation(V,triangleVertices,EV)
     ET,ET_angle = invertRelation(TE),[]
@@ -617,8 +638,8 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
         n = len(FV[f])
         if len(FE[f]) > n:
             # contains both edges coded 0 and 1 ... (how to solve?)
-            print "\nf =",f,"\nFE = ",FE,"\nV =",V,"\nFV =",FV,"\nEV =",EV
             """
+            print "\nf =",f,"\nFE = ",FE,"\nV =",V,"\nFV =",FV,"\nEV =",EV
             verts = list(FV[f])+[FV[f][0]]
             edges = [sorted([verts[k],verts[k+1]]) for k in range(n)]
             edgeDict = dict()
@@ -645,15 +666,19 @@ def thePartition(W,FW,EW):
     model = Z,FZ,EZ
 
     ZZ = AA(LIST)(range(len(Z)))
+    """
+    for k,face in enumerate(FZ):
+        submodel = STRUCT(MKPOLS((Z,[face]+EZ)))
+    """
     submodel = STRUCT(MKPOLS((Z,EZ)))
-    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.4)) 
+    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.1)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
     FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
     
     # remove 0 indices from FE relation
     FE = [[f  if f!=0 else 1 for f in face] for face in FE]
-    EF_angle = faceSlopeOrdering(model,FE)
+    EF_angle = faceSlopeOrdering(model,FE,Z)
     
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE

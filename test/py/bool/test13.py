@@ -28,7 +28,7 @@ triangles = cdt.triangulate()
 trias = [ [[t.a.x,t.a.y],[t.b.x,t.b.y],[t.c.x,t.c.y]] for t in triangles ]
 vdict = defaultdict(list)
 for k,point in enumerate(CAT(trias)): 
-   vdict[vcode(point)] += [k]
+    vdict[vcode(point)] += [k]
 vdict = OrderedDict(zip(vdict.keys(),range(len(vdict.keys()))))
 FV = [(vdict[vcode(a)], vdict[vcode(b)], vdict[vcode(c)]) for [a,b,c] in trias] 
 repeatedEdges = CAT([[[v1,v2],[v2,v3],[v3,v1]] for [v1,v2,v3] in FV])

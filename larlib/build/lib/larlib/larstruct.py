@@ -2,24 +2,26 @@
 from larlib import *
 
 """ TODO: use package Decimal (http://docs.python.org/2/library/decimal.html) """
-global PRECISION
-PRECISION = 4.
+#global PRECISION
+#PRECISION = 4.
 
 def verySmall(number): return abs(number) < 10**-(PRECISION)
 
 def prepKey (args): return "["+", ".join(args)+"]"
 
-def fixedPrec(value):
-    out = round(value*10**(PRECISION))/10**(PRECISION)
-    if out == -0.0: out = 0.0
-    return str(out)
+def fixedPrec(PRECISION):
+    def fixedPrec0(value):
+        out = round(value*10**(PRECISION))/10**(PRECISION)
+        if out == -0.0: out = 0.0
+        return str(out)
+    return fixedPrec0
     
-def vcode (vect): 
+def vcode (vect,PRECISION=4): 
     """
     To generate a string representation of a number array.
     Used to generate the vertex keys in PointSet dictionary, and other similar operations.
     """
-    return prepKey(AA(fixedPrec)(vect))
+    return prepKey(AA(fixedPrec(PRECISION))(vect))
 
 def t(*args): 
     d = len(args)

@@ -5,7 +5,7 @@ from larlib import *
 
 scaleFactor = 83.333
 
-filename = "test/py/inters/plan.svg"
+filename = "test/svg/inters/plan.svg"
 larModel = svg2lar(filename)
 larModel = larApply(s(scaleFactor,scaleFactor))(larModel)
 V,FV,EV = larModel
