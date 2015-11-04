@@ -17,7 +17,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 #VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
 
-FE = crossRelation(V,FV,EV)
+FE = crossRelation(FV,EV)
 chainsToStruct = chain2structs(V,FV,EV,FE)
 
 """ Ala nord """

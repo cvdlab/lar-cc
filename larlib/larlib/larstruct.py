@@ -16,7 +16,7 @@ def fixedPrec(PRECISION):
         return str(out)
     return fixedPrec0
     
-def vcode (vect,PRECISION=4): 
+def vcode (vect,PRECISION=3):
     """
     To generate a string representation of a number array.
     Used to generate the vertex keys in PointSet dictionary, and other similar operations.

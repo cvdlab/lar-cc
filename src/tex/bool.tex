@@ -304,6 +304,32 @@ def computeSegments(line):
 %-------------------------------------------------------------------------------
 
 
+\paragraph{Remove intersection points external to a submanifold face}
+When computing the LAR of each submanifold face embedded in $z=0$ hyperplane, it is necessary
+to remove every vertex that was generated, outside the considered input face, by intersection of (incident) edges. This would produce spurious topology, i.e.~cells that do not find adjacents cells incident to their boundaries.
+
+%-------------------------------------------------------------------------------
+@D Remove intersection points external to a submanifold face
+@{""" Remove intersection points external to a submanifold face """
+def removeExternals(M,V,EV,fe, z,fz,ez):
+    inputFace = Struct([(V,[EV[e] for e in fe])])
+    v,ev = larApply(M)(struct2lar(inputFace))
+    pol = [eval(vcode(w[:-1])) for w in v],ev
+    print "\npol =",pol
+    print "z =",z
+    #VIEW(STRUCT(MKPOLS(pol)))
+    #VIEW(STRUCT(MKPOLS((z,ez))))
+    out = []
+    classify = pointInPolygonClassification(pol)
+    for k,point in enumerate(z):
+        if classify(point)=="p_out":  out += [k]
+    print "out =",out
+    fz = [f for f in fz if not any([v in out for v in f])]
+    ez = [e for e in ez if not any([v in out for v in e])]
+    return z,fz,ez
+@}
+%-------------------------------------------------------------------------------
+
 \paragraph{Space partitioning via submanifold mapping}
 
 the function \texttt{spacePartition}, given in the below script, takes as input a \emph{non-valid} (with the meaning used in solid modeling field --- see~\cite{Requicha:1980:RRS:356827.356833}) \texttt{LAR} model of dimension $d-1$, i.e.~a triple \texttt{(V,FV,EV)}, and an array \texttt{parts} indexed on faces, and containing the subset of faces with greatest probability of intersecting each indexing face, respectively. The \texttt{spacePartition} function returns the \emph{valid} \texttt{LAR} boundary model \texttt{(W,FW,EW)} of the space partition induced by \texttt{FV}.
@@ -312,6 +338,7 @@ the function \texttt{spacePartition}, given in the below script, takes as input 
 @D Space partitioning via submanifold mapping
 @{""" Space partitioning via submanifold mapping """
 def spacePartition(V,FV,EV, parts):
+    FE = crossRelation(V,FV,EV)
     submodel0 = submodel(V,FV,EV)
     out = []
     """ input: face index f; candidate incident faces F[f]; """
@@ -359,11 +386,13 @@ def spacePartition(V,FV,EV, parts):
         ### Check that every set FX has even cardinality
         """ Construction of the planar set FX,EX of faces and lines """
         z,fz,ez = larFromLines(theLines)
+        """ Remove external vertices """
+        z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
         print "\nw,fw,ew =",w,fw,ew    
         if len(fw)>1: fw = fw[:-1]
         out += [Struct([(w,fw,ew)])]
-        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,ew))))
+        VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,ew))))
     return struct2lar(Struct(out))
 @}
 %-------------------------------------------------------------------------------
@@ -870,6 +899,7 @@ DEBUG = False
 @< Submanifold mapping computation @>
 @< Helper functions for spacePartition @>
 @< Sorting of points along a line @>
+@< Remove intersection points external to a submanifold face @>
 @< Space partitioning via submanifold mapping @>
 @< Point in polygon testing @>
 @< From structures to boundary polylines @>
@@ -1337,26 +1367,22 @@ VIEW(EXPLODE(1.5,1.5,1.5)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in
 """ Testing of point-in-polygon classification algorithm """
 from larlib import *
 
-sys.path.insert(0, 'test/py/inters/')
-from test10 import *
+filename = "test/svg/inters/tile.svg"
+lines = svg2lines(filename)
+V,EV = lines2lar(lines)
 
 @< Point in polygon testing @>
 
 result = []
+classify = pointInPolygonClassification((V,EV))
 for k in range(10000):
     queryPoint = [random.random(),random.random()]
-    inOut = pointInPolygonClassification(queryPoint,[V,EV])
+    inOut = classify(queryPoint)
     #print k,queryPoint,inOut
     if inOut=="p_in": result += [MK(queryPoint)]
     elif inOut=="p_out": result += [COLOR(RED)(MK(queryPoint))]
 
-VV = AA(LIST)(range(len(V)))
-submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(STRUCT([
-    POLYLINE([[queryPoint[0],0],[queryPoint[0],1]]),
-    POLYLINE([[0,queryPoint[1]],[1,queryPoint[1]]]),
-    larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.4)
-    ]+result))
+VIEW(STRUCT(MKPOLS((V,EV))+result))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1666,53 +1692,65 @@ def setTile(box):
 %-------------------------------------------------------------------------------
 @D Point-in-polygon classification algorithm
 @{""" Point in polygon classification """
-def pointInPolygonClassification(p,pol):
-    x,y = p
+def pointInPolygonClassification(pol):
+
     V,EV = pol
-    xmin,xmax,ymin,ymax = x,x,y,y
-    tilecode = setTile([ymax,ymin,xmax,xmin])
-    count,status = 0,0
-    for k,edge in enumerate(EV):
-        p1,p2 = V[edge[0]],V[edge[1]]
-        (x1,y1),(x2,y2) = p1,p2
-        c1,c2 = tilecode(p1),tilecode(p2)
-        k,c_edge, c_un, c_int = k,c1^c2, c1|c2, c1&c2
-        #print "k,c_edge, c_un, c_int =",k,c_edge, c_un, c_int
-        
-        if c_edge == 0 and c_un == 0: return "p_on"
-        elif c_edge == 12 and c_un == c_edge: return "p_on"
-        elif c_edge == 3:
-            if c_int == 0: return "p_on"
-            elif c_int == 4: count += 1
-        elif c_edge == 15:
-            x_int = ((y-y2)*(x1-x2)/(y1-y2))+x2 
-            if x_int > x: count += 1
-            elif x_int == x: return "p_on"
-        elif c_edge == 13 and ((c1==4) or (c2==4)):
-                count,status = crossingTest(1,2,count,status)
-        elif c_edge == 14 and (c1==4) or (c2==4):
-                count,status = crossingTest(2,1,count,status)
-        elif c_edge == 7: count += 1
-        elif c_edge == 11: count = count
-        elif c_edge == 1:
-            if c_int == 0: return "p_on"
-            elif c_int == 4: count,status = crossingTest(1,2,count,status)
-        elif c_edge == 2:
-            if c_int == 0: return "p_on"
-            elif c_int == 4: count,status = crossingTest(2,1,count,status)
-        elif c_edge == 4 and c_un == c_edge: return "p_on"
-        elif c_edge == 8 and c_un == c_edge: return "p_on"
-        elif c_edge == 5:
-            if (c1==0) or (c2==0): return "p_on"
-            else: count,status = crossingTest(1,2,count,status)
-        elif c_edge == 6:
-            if (c1==0) or (c2==0): return "p_on"
-            else: count,status = crossingTest(2,1,count,status)
-        elif c_edge == 9 and ((c1==0) or (c2==0)): return "p_on"
-        elif c_edge == 10 and ((c1==0) or (c2==0)): return "p_on"
-        #print "count,p1,p2 =",count,p1,p2        
-    if (round(count)%2)==1: return "p_in"
-    else: return "p_out"
+    # edge orientation
+    FV = [sorted(set(CAT(EV)))]
+    orientedCycles = boundaryPolylines(Struct([(V,FV,EV)]))
+    EV = []
+    for cycle in orientedCycles:
+        EV += zip(cycle[:-1],cycle[1:])
+
+    def pointInPolygonClassification0(p):
+        x,y = p
+        xmin,xmax,ymin,ymax = x,x,y,y
+        tilecode = setTile([ymax,ymin,xmax,xmin])
+        count,status = 0,0
+    
+        for k,edge in enumerate(EV):
+            p1,p2 = edge[0],edge[1]
+            (x1,y1),(x2,y2) = p1,p2
+            c1,c2 = tilecode(p1),tilecode(p2)
+            #print "\np1,c1,p2,c2 =",p1,c1,p2,c2
+            c_edge, c_un, c_int = c1^c2, c1|c2, c1&c2
+            #print "c_edge, c_un, c_int =",c_edge, c_un, c_int
+            
+            if c_edge == 0 and c_un == 0: return "p_on"
+            elif c_edge == 12 and c_un == c_edge: return "p_on"
+            elif c_edge == 3:
+                if c_int == 0: return "p_on"
+                elif c_int == 4: count += 1
+            elif c_edge == 15:
+                x_int = ((y-y2)*(x1-x2)/(y1-y2))+x2 
+                if x_int > x: count += 1
+                elif x_int == x: return "p_on"
+            elif c_edge == 13 and ((c1==4) or (c2==4)):
+                    crossingTest(1,2,status,count)
+            elif c_edge == 14 and (c1==4) or (c2==4):
+                    crossingTest(2,1,status,count)
+            elif c_edge == 7: count += 1
+            elif c_edge == 11: count = count
+            elif c_edge == 1:
+                if c_int == 0: return "p_on"
+                elif c_int == 4: crossingTest(1,2,status,count)
+            elif c_edge == 2:
+                if c_int == 0: return "p_on"
+                elif c_int == 4: crossingTest(2,1,status,count)
+            elif c_edge == 4 and c_un == c_edge: return "p_on"
+            elif c_edge == 8 and c_un == c_edge: return "p_on"
+            elif c_edge == 5:
+                if (c1==0) or (c2==0): return "p_on"
+                else: crossingTest(1,2,status,count)
+            elif c_edge == 6:
+                if (c1==0) or (c2==0): return "p_on"
+                else: crossingTest(2,1,status,count)
+            elif c_edge == 9 and ((c1==0) or (c2==0)): return "p_on"
+            elif c_edge == 10 and ((c1==0) or (c2==0)): return "p_on"
+            #print "count,status =",count,status        
+        if ((round(count)%2)==1): return "p_in"
+        else: return "p_out"
+    return pointInPolygonClassification0
 @}
 %-------------------------------------------------------------------------------
 
@@ -1728,7 +1766,6 @@ def crossingTest(new,old,count,status):
         if status == old: count += 0.5
         else: count -= 0.5
         status = 0
-    return count,status
 @}
 %-------------------------------------------------------------------------------
 

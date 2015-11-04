@@ -127,9 +127,11 @@ def subComplexAroundPoint(V,FV,EV,FE,queryPoint):
     dist,closestVertex = tree.query(pts)
     VF = invertRelation(FV)
     closestFaces = VF[closestVertex]
+
     for face in closestFaces:
         faceEdges = [EV[e] for e in FE[face]]
-        if pointInPolygonClassification(queryPoint, (V,faceEdges)) == "p_in":
+        classify = pointInPolygonClassification((V,faceEdges))
+        if classify(queryPoint) == "p_in":
             break
     vertexSubset = FV[face]
     edgeSubset = [EV[e] for e in FE[face]]
