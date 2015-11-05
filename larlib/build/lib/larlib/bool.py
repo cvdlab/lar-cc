@@ -297,9 +297,9 @@ def spacePartition(V,FV,EV, parts):
         z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
         print "\nw,fw,ew =",w,fw,ew    
-        if len(fw)>1: fw = fw[:-1]
+        #if len(fw)>1: fw = fw[:-1]
         out += [Struct([(w,fw,ew)])]
-        VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,ew))))
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,ew))))
     return struct2lar(Struct(out))
 
 
@@ -460,9 +460,9 @@ def boundaryTriangulation(V,FV,EV,FE):
 
 def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
-    for k,vertex in enumerate(W):  vertDict[vcode(vertex,PRECISION=3)] = k
+    for k,vertex in enumerate(W):  vertDict[vcode(vertex,PRECISION=4)] = k
     for h,faceSetOfTriangles in enumerate(triangleSet):
-        trias = [[vertDict[vcode(p,PRECISION=3)] for p in triangle]
+        trias = [[vertDict[vcode(p,PRECISION=4)] for p in triangle]
                     for triangle in faceSetOfTriangles]
         out += [trias]
     assert len(W)==max(CAT(CAT(out)))+1
