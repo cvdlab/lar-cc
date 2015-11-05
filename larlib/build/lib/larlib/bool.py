@@ -281,7 +281,7 @@ def spacePartition(V,FV,EV, parts):
         lines = [line for line in lines if line!=[]]
         vpoints = [[(vcode(point),k) for k,point in enumerate(line)] for line in lines]
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
-        ### sorting of every aligned set FX, where X is the parameter along the intersection line
+        """ sorting of every aligned set FX, where X is the parameter along the intersection line """
         theLines = []
         for line in lines:
             if len(line)>2: 
@@ -294,9 +294,12 @@ def spacePartition(V,FV,EV, parts):
         """ Construction of the planar set FX,EX of faces and lines """
         z,fz,ez = larFromLines(theLines)
         """ Remove external vertices """
+        print "\n\nf =",f,"\n"
+        print "\nz,fz,ez =",z,fz,ez    
         z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
         print "\nw,fw,ew =",w,fw,ew    
+        #VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez)) + AA(MK)(z))))
         #if len(fw)>1: fw = fw[:-1]
         out += [Struct([(w,fw,ew)])]
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,ew))))

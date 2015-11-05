@@ -422,10 +422,9 @@ def larFromLines(lines):
     V,EV = larRemoveVertices(V,EV)
     V,FV,EV = facesFromComps((V,EV))
     areas = integr.surfIntegration((V,FV,EV))
-    boundaryArea = max(areas)
-    interiorFaces = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea and len(areas)>2]
-    boundaryFace = FV[areas.index(boundaryArea)]
-    return V,interiorFaces+[boundaryFace],EV
+    orderedFaces = sorted([[area,FV[f]] for f,area in enumerate(areas)])
+    interiorFaces = [face for area,face in orderedFaces[:-1]]
+    return V,interiorFaces,EV
 
 """ Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree
