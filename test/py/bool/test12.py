@@ -52,9 +52,7 @@ def pointInPolygonClassification(pol):
             p1,p2 = edge[0],edge[1]
             (x1,y1),(x2,y2) = p1,p2
             c1,c2 = tilecode(p1),tilecode(p2)
-            #print "\np1,c1,p2,c2 =",p1,c1,p2,c2
             c_edge, c_un, c_int = c1^c2, c1|c2, c1&c2
-            #print "c_edge, c_un, c_int =",c_edge, c_un, c_int
             
             if c_edge == 0 and c_un == 0: return "p_on"
             elif c_edge == 12 and c_un == c_edge: return "p_on"
@@ -87,7 +85,6 @@ def pointInPolygonClassification(pol):
                 else: crossingTest(2,1,status,count)
             elif c_edge == 9 and ((c1==0) or (c2==0)): return "p_on"
             elif c_edge == 10 and ((c1==0) or (c2==0)): return "p_on"
-            #print "count,status =",count,status        
         if ((round(count)%2)==1): return "p_in"
         else: return "p_out"
     return pointInPolygonClassification0

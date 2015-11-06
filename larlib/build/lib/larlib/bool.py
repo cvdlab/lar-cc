@@ -140,6 +140,8 @@ def boxBuckets3d(boxes):
     return AA(sorted)(parts)
 
 """ Computation of affine face transformations """
+from numpy import array
+from scipy.linalg import lu
 from scipy.linalg.basic import det
 
 def COVECTOR(points):
@@ -156,10 +158,10 @@ def faceTransformations(facet):
     # linear transformation: boundaryFacet -> standard (d-1)-simplex
     d = len(facet[0])
     m = mat( newFacet[1:d] + [covector[1:]] )
-    if det(m)==0.0:
+    if abs(det(m))<0.0001:
         for k in range(len(facet)-2):
             m = mat( newFacet[1+k+1:d+k+1] + [covector[1:]] )
-            if det(m)!=0.0: break
+            if abs(det(m))>0.0001: break
     transformMat = m.T.I
     # transformation in the subspace x_d = 0
     out = (transformMat * (mat(newFacet).T)).T.tolist()
@@ -230,15 +232,10 @@ def removeExternals(M,V,EV,fe, z,fz,ez):
     inputFace = Struct([(V,[EV[e] for e in fe])])
     v,ev = larApply(M)(struct2lar(inputFace))
     pol = [eval(vcode(w[:-1])) for w in v],ev
-    print "\npol =",pol
-    print "z =",z
-    #VIEW(STRUCT(MKPOLS(pol)))
-    #VIEW(STRUCT(MKPOLS((z,ez))))
     out = []
     classify = pointInPolygonClassification(pol)
     for k,point in enumerate(z):
         if classify(point)=="p_out":  out += [k]
-    print "out =",out
     fz = [f for f in fz if not any([v in out for v in f])]
     ez = [e for e in ez if not any([v in out for v in e])]
     return z,fz,ez
@@ -268,8 +265,6 @@ def spacePartition(V,FV,EV, parts):
         edges = list(set(CAT(edgesPerFace)))
         WW = AA(LIST)(range(len(sW)))
         wires = [sEW[e] for e in edges]
-        #wireFrame = EXPLODE(1.2,1.2,1.2)(MKPOLS((sW,wires)))
-        #VIEW(wireFrame)
         """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
         points = collections.OrderedDict()
         lines = [[sW[w1],sW[w2]] for w1,w2 in wires]
@@ -287,22 +282,15 @@ def spacePartition(V,FV,EV, parts):
             if len(line)>2: 
                 print '\a',"line =",line
                 segments = computeSegments(line)
-                print "segments =",segments
                 theLines += segments
             else: theLines += [line]
         ### Check that every set FX has even cardinality
         """ Construction of the planar set FX,EX of faces and lines """
         z,fz,ez = larFromLines(theLines)
         """ Remove external vertices """
-        print "\n\nf =",f,"\n"
-        print "\nz,fz,ez =",z,fz,ez    
         z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
-        print "\nw,fw,ew =",w,fw,ew    
-        #VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez)) + AA(MK)(z))))
-        #if len(fw)>1: fw = fw[:-1]
         out += [Struct([(w,fw,ew)])]
-        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,ew))))
     return struct2lar(Struct(out))
 
 
@@ -351,9 +339,7 @@ def pointInPolygonClassification(pol):
             p1,p2 = edge[0],edge[1]
             (x1,y1),(x2,y2) = p1,p2
             c1,c2 = tilecode(p1),tilecode(p2)
-            #print "\np1,c1,p2,c2 =",p1,c1,p2,c2
             c_edge, c_un, c_int = c1^c2, c1|c2, c1&c2
-            #print "c_edge, c_un, c_int =",c_edge, c_un, c_int
             
             if c_edge == 0 and c_un == 0: return "p_on"
             elif c_edge == 12 and c_un == c_edge: return "p_on"
@@ -386,7 +372,6 @@ def pointInPolygonClassification(pol):
                 else: crossingTest(2,1,status,count)
             elif c_edge == 9 and ((c1==0) or (c2==0)): return "p_on"
             elif c_edge == 10 and ((c1==0) or (c2==0)): return "p_on"
-            #print "count,status =",count,status        
         if ((round(count)%2)==1): return "p_in"
         else: return "p_out"
     return pointInPolygonClassification0
@@ -463,9 +448,9 @@ def boundaryTriangulation(V,FV,EV,FE):
 
 def triangleIndices(triangleSet,W):
     vertDict,out = defaultdict(),[]
-    for k,vertex in enumerate(W):  vertDict[vcode(vertex,PRECISION=4)] = k
+    for k,vertex in enumerate(W):  vertDict[vcode(vertex,PRECISION=3)] = k
     for h,faceSetOfTriangles in enumerate(triangleSet):
-        trias = [[vertDict[vcode(p,PRECISION=4)] for p in triangle]
+        trias = [[vertDict[vcode(p,PRECISION=3)] for p in triangle]
                     for triangle in faceSetOfTriangles]
         out += [trias]
     assert len(W)==max(CAT(CAT(out)))+1
@@ -530,9 +515,6 @@ def faceSlopeOrdering(model,FE,Z):
         pairs = sorted(zip(et_angle,et,Tvs))
         sortedTrias = [pair[1] for pair in pairs]
         triasVerts = [pair[2] for pair in pairs]
-        print "triasVerts =",triasVerts
-        #tetraVerts = triasVerts[0]+[triasVerts[1][2]]
-        #print "tetraVerts =",tetraVerts
         ET_angle += [sortedTrias]
     EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
     return EF_angle
@@ -673,16 +655,6 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
         n = len(FV[f])
         if len(FE[f]) > n:
             # contains both edges coded 0 and 1 ... (how to solve?)
-            """
-            print "\nf =",f,"\nFE = ",FE,"\nV =",V,"\nFV =",FV,"\nEV =",EV
-            verts = list(FV[f])+[FV[f][0]]
-            edges = [sorted([verts[k],verts[k+1]]) for k in range(n)]
-            edgeDict = dict()
-            for e in FE[f]: edgeDict[EV[e]] = e
-            orderedEdges = [edgeDict[tuple(edge)] for edge in edges]
-            assert len(orderedEdges)==len(verts)-1
-            FEout += [orderedEdges]
-            """
             FEout += [list(set(face).difference([0]))]
         else:
             FEout += [face]
@@ -692,11 +664,8 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
 def thePartition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets3d(containmentBoxes(quadArray))
-
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
-    print "\n\nZ,FZ,EZ =",Z,FZ,EZ,"\n\n"
     Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.001)
-    print "\n\nZ,FZ,EZ =",Z,FZ,EZ,"\n\n"
     EZ = [EZ[0]]+EZ
     model = Z,FZ,EZ
 
