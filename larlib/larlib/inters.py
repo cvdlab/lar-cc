@@ -182,6 +182,203 @@ def lineIntersection(lineArray):
         
     return intersectionPoints,params,frags  ### GOOD: 1, WRONG: 2 !!!
 
+""" Edge cycles associated to a closed chain of edges """
+def boundaryCycles(edgeBoundary,EV):
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    
+    cbe = copy.copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
+
+""" From Struct object to LAR boundary model """
+def structFilter(obj):
+    if isinstance(obj,list):
+        if (len(obj) > 1):
+            return [structFilter(obj[0])] + structFilter(obj[1:])
+        return [structFilter(obj[0])]
+    if isinstance(obj,Struct):
+        if obj.category in ["external_wall", "internal_wall", "corridor_wall"]:
+            return
+        return Struct(structFilter(obj.body),obj.name,obj.category)
+    return obj
+
+def structBoundaryModel(struct):
+    filteredStruct = structFilter(struct)
+    #import pdb; pdb.set_trace()
+    V,FV,EV = struct2lar(filteredStruct)
+    edgeBoundary = boundaryCells(FV,EV)
+    cycles = boundaryCycles(edgeBoundary,EV)
+    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
+    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
+    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
+    if cells[0][0]==cells[1][0]: # bug badly patched! ... TODO better
+        temp0 = cells[0][0]
+        temp1 = cells[0][1]
+        cells[0] = [temp1, temp0]
+    return V,cells
+
+""" From structures to boundary polylines """
+def boundaryPolylines(struct):
+    V,boundaryEdges = structBoundaryModel(struct)
+    polylines = boundaryModel2polylines((V,boundaryEdges))
+    return polylines
+
+""" From LAR oriented boundary model to polylines """
+def boundaryModel2polylines(model):
+    V,EV = model
+    polylines = []
+    succDict = dict(EV)
+    visited = [False for k in range(len(V))]
+    nonVisited = [k for k in succDict.keys() if not visited[k]]
+    while nonVisited != []:
+        first = nonVisited[0]; v = first; polyline = []
+        while visited[v] == False:
+            visited[v] = True; 
+            polyline += V[v], 
+            v = succDict[v]
+        polyline += [V[first]]
+        polylines += [polyline]
+        nonVisited = [k for k in succDict.keys() if not visited[k]]
+    return polylines
+
+
+""" Half-line crossing test """
+def crossingTest(new,old,count,status):
+    if status == 0:
+        status = new
+        count += 0.5
+    else:
+        if status == old: count += 0.5
+        else: count -= 0.5
+        status = 0
+
+""" Tile codes computation """
+def setTile(box):
+    tiles = [[9,1,5],[8,0,4],[10,2,6]]
+    b1,b2,b3,b4 = box
+    def tileCode(point):
+        x,y = point
+        code = 0
+        if y>b1: code=code|1
+        if y<b2: code=code|2
+        if x>b3: code=code|4
+        if x<b4: code=code|8
+        return code 
+    return tileCode
+
+""" Point in polygon classification """
+def pointInPolygonClassification(pol):
+
+    V,EV = pol
+    # edge orientation
+    FV = [sorted(set(CAT(EV)))]
+    orientedCycles = boundaryPolylines(Struct([(V,FV,EV)]))
+    EV = []
+    for cycle in orientedCycles:
+        EV += zip(cycle[:-1],cycle[1:])
+
+    def pointInPolygonClassification0(p):
+        x,y = p
+        xmin,xmax,ymin,ymax = x,x,y,y
+        tilecode = setTile([ymax,ymin,xmax,xmin])
+        count,status = 0,0
+    
+        for k,edge in enumerate(EV):
+            p1,p2 = edge[0],edge[1]
+            (x1,y1),(x2,y2) = p1,p2
+            c1,c2 = tilecode(p1),tilecode(p2)
+            c_edge, c_un, c_int = c1^c2, c1|c2, c1&c2
+            
+            if c_edge == 0 and c_un == 0: return "p_on"
+            elif c_edge == 12 and c_un == c_edge: return "p_on"
+            elif c_edge == 3:
+                if c_int == 0: return "p_on"
+                elif c_int == 4: count += 1
+            elif c_edge == 15:
+                x_int = ((y-y2)*(x1-x2)/(y1-y2))+x2 
+                if x_int > x: count += 1
+                elif x_int == x: return "p_on"
+            elif c_edge == 13 and ((c1==4) or (c2==4)):
+                    crossingTest(1,2,status,count)
+            elif c_edge == 14 and (c1==4) or (c2==4):
+                    crossingTest(2,1,status,count)
+            elif c_edge == 7: count += 1
+            elif c_edge == 11: count = count
+            elif c_edge == 1:
+                if c_int == 0: return "p_on"
+                elif c_int == 4: crossingTest(1,2,status,count)
+            elif c_edge == 2:
+                if c_int == 0: return "p_on"
+                elif c_int == 4: crossingTest(2,1,status,count)
+            elif c_edge == 4 and c_un == c_edge: return "p_on"
+            elif c_edge == 8 and c_un == c_edge: return "p_on"
+            elif c_edge == 5:
+                if (c1==0) or (c2==0): return "p_on"
+                else: crossingTest(1,2,status,count)
+            elif c_edge == 6:
+                if (c1==0) or (c2==0): return "p_on"
+                else: crossingTest(2,1,status,count)
+            elif c_edge == 9 and ((c1==0) or (c2==0)): return "p_on"
+            elif c_edge == 10 and ((c1==0) or (c2==0)): return "p_on"
+        if ((round(count)%2)==1): return "p_in"
+        else: return "p_out"
+    return pointInPolygonClassification0
+
+
+""" Classification of non intersecting cycles """
+def latticeArray(V,EVs):
+    n = len(EVs)
+    testArray = []
+    for k,ev in enumerate(EVs):
+        row = []
+        classify = pointInPolygonClassification((V,ev))
+        for h in range(0,n):
+            i = EVs[h][0][0]
+            point = V[i]
+            test = classify(point)
+            if test=="p_in": row += [1]
+            elif test=="p_out": row += [0]
+            elif test=="p_on": row += [-1]
+            else: print "error: in cycle classification"
+        testArray += [row]
+    return testArray
+
+""" Extraction of path-connected boundaries """
+def cellsFromCycles (testArray):
+    n = len(testArray)
+    sons = [[h]+[k for k in range(n) if row[k]==1] for h,row in enumerate(testArray)]
+    level = [sum(col) for col in TRANS(testArray)]
+    
+    def rank(sons): return [level[x] for x in sons]
+    preCells = sorted(sons,key=rank)
+
+    def levelDifference(son,father): return level[son]-level[father]
+    root = preCells[0][0]
+    out = [[son for son in preCells[0] if (levelDifference(son,root)<=1) ]]
+    for k in range(1,n):
+        father = preCells[k][0]
+        inout = [son for son in preCells[k] if levelDifference(son,father)<=1 ]
+        if not (inout[0] in CAT(out)):
+            out += [inout]
+    return out        
+
 """ Create the LAR of fragmented lines """
 from scipy import spatial
 
@@ -417,14 +614,17 @@ def svg2lines(filename,containmentBox=[],rect2lines=True):
 """ Transformation of an array of lines in a 2D LAR complex """
 def larFromLines(lines):
     V,EV = lines2lar(lines)
+    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
     V,EVs = biconnectedComponent((V,EV))
-    EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
-    V,EV = larRemoveVertices(V,EV)
-    V,FV,EV = facesFromComps((V,EV))
-    areas = integr.surfIntegration((V,FV,EV))
-    orderedFaces = sorted([[area,FV[f]] for f,area in enumerate(areas)])
-    interiorFaces = [face for area,face in orderedFaces[:-1]]
-    return V,interiorFaces,EV
+    if EVs != []:
+        EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
+        V,EV = larRemoveVertices(V,EV)
+        V,FV,EV = facesFromComps((V,EV))
+        areas = integr.surfIntegration((V,FV,EV))
+        orderedFaces = sorted([[area,FV[f]] for f,area in enumerate(areas)])
+        interiorFaces = [face for area,face in orderedFaces[:-1]]
+        return V,interiorFaces,EV
+    else: return None
 
 """ Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree

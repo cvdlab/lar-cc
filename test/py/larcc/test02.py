@@ -17,7 +17,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS(boundary)))
 print "\nboundaryCells_2 =\n", boundaryCells_2
 
 boundaryCells_2 = signedBoundaryCells(V,CV,FV)
-boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
+boundaryFV = [list(FV[-k]) if k<0 else swap(list(FV[k])) for k in boundaryCells_2]
 
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))
 print "\nboundaryCells_2 =\n", boundaryFV

@@ -51,59 +51,6 @@ def lar2boundaryEdges(FV,EV):
     """ Boundary cells computation """
     return boundaryCells(FV,EV)
 
-""" Edge cycles associated to a closed chain of edges """
-def boundaryCycles(edgeBoundary,EV):
-    verts2edges = defaultdict(list)
-    for e in edgeBoundary:
-        verts2edges[EV[e][0]] += [e]
-        verts2edges[EV[e][1]] += [e]
-    cycles = []
-    
-    cbe = copy.copy(edgeBoundary)
-    while cbe != []:
-        e = cbe[0]
-        v = EV[e][0]
-        cycle = []
-        while True:
-            cycle += [(e,v)]
-            e = list(set(verts2edges[v]).difference([e]))[0]
-            cbe.remove(e)
-            v = list(set(EV[e]).difference([v]))[0]
-            if (e,v)==cycle[0]:
-                break
-        n = len(cycle)
-        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
-            for k,(e,v) in enumerate(cycle)]]
-    return cycles
-
-""" From Struct object to LAR boundary model """
-def structFilter(obj):
-    if isinstance(obj,list):
-        if (len(obj) > 1):
-            return [structFilter(obj[0])] + structFilter(obj[1:])
-        return [structFilter(obj[0])]
-    if isinstance(obj,Struct):
-        if obj.category in ["external_wall", "internal_wall", "corridor_wall"]:
-            return
-        return Struct(structFilter(obj.body),obj.name,obj.category)
-    return obj
-
-
-def structBoundaryModel(struct):
-    filteredStruct = structFilter(struct)
-    #import pdb; pdb.set_trace()
-    V,FV,EV = struct2lar(filteredStruct)
-    edgeBoundary = boundaryCells(FV,EV)
-    cycles = boundaryCycles(edgeBoundary,EV)
-    edges = [signedEdge for cycle in cycles for signedEdge in cycle]
-    orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
-    cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
-    if cells[0][0]==cells[1][0]: # bug badly patched! ... TODO better
-        temp0 = cells[0][0]
-        temp1 = cells[0][1]
-        cells[0] = [temp1, temp0]
-    return V,cells
-
 def lar2InteriorEdges(FV,EV):
     """ Boundary cells computation """
     boundarychain1 = boundaryCells(FV,EV)

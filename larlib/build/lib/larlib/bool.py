@@ -83,8 +83,9 @@ def MKSOLID(*model):
     V,FV,EV = model
     FE = crossRelation(V,FV,EV)
     pivot = V[0]
-    VF = invertRelation(FV) 
-    faces = [face for face in FV if face not in VF[0]]
+    #VF = invertRelation(FV) 
+    #faces = [face for face in FV if face not in VF[0]]
+    faces = [face for face in FV]
     triangleSets = boundaryTriangulation(V,faces,EV,FE)
     return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
         for face in CAT(triangleSets) ])
@@ -286,120 +287,14 @@ def spacePartition(V,FV,EV, parts):
             else: theLines += [line]
         ### Check that every set FX has even cardinality
         """ Construction of the planar set FX,EX of faces and lines """
-        z,fz,ez = larFromLines(theLines)
-        """ Remove external vertices """
-        z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
-        w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
-        out += [Struct([(w,fw,ew)])]
+        lar = larFromLines(theLines)
+        if lar != None: 
+            z,fz,ez = larFromLines(theLines)
+            """ Remove external vertices """
+            z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
+            w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
+            out += [Struct([(w,fw,ew)])]
     return struct2lar(Struct(out))
-
-
-""" Half-line crossing test """
-def crossingTest(new,old,count,status):
-    if status == 0:
-        status = new
-        count += 0.5
-    else:
-        if status == old: count += 0.5
-        else: count -= 0.5
-        status = 0
-
-""" Tile codes computation """
-def setTile(box):
-    tiles = [[9,1,5],[8,0,4],[10,2,6]]
-    b1,b2,b3,b4 = box
-    def tileCode(point):
-        x,y = point
-        code = 0
-        if y>b1: code=code|1
-        if y<b2: code=code|2
-        if x>b3: code=code|4
-        if x<b4: code=code|8
-        return code 
-    return tileCode
-
-""" Point in polygon classification """
-def pointInPolygonClassification(pol):
-
-    V,EV = pol
-    # edge orientation
-    FV = [sorted(set(CAT(EV)))]
-    orientedCycles = boundaryPolylines(Struct([(V,FV,EV)]))
-    EV = []
-    for cycle in orientedCycles:
-        EV += zip(cycle[:-1],cycle[1:])
-
-    def pointInPolygonClassification0(p):
-        x,y = p
-        xmin,xmax,ymin,ymax = x,x,y,y
-        tilecode = setTile([ymax,ymin,xmax,xmin])
-        count,status = 0,0
-    
-        for k,edge in enumerate(EV):
-            p1,p2 = edge[0],edge[1]
-            (x1,y1),(x2,y2) = p1,p2
-            c1,c2 = tilecode(p1),tilecode(p2)
-            c_edge, c_un, c_int = c1^c2, c1|c2, c1&c2
-            
-            if c_edge == 0 and c_un == 0: return "p_on"
-            elif c_edge == 12 and c_un == c_edge: return "p_on"
-            elif c_edge == 3:
-                if c_int == 0: return "p_on"
-                elif c_int == 4: count += 1
-            elif c_edge == 15:
-                x_int = ((y-y2)*(x1-x2)/(y1-y2))+x2 
-                if x_int > x: count += 1
-                elif x_int == x: return "p_on"
-            elif c_edge == 13 and ((c1==4) or (c2==4)):
-                    crossingTest(1,2,status,count)
-            elif c_edge == 14 and (c1==4) or (c2==4):
-                    crossingTest(2,1,status,count)
-            elif c_edge == 7: count += 1
-            elif c_edge == 11: count = count
-            elif c_edge == 1:
-                if c_int == 0: return "p_on"
-                elif c_int == 4: crossingTest(1,2,status,count)
-            elif c_edge == 2:
-                if c_int == 0: return "p_on"
-                elif c_int == 4: crossingTest(2,1,status,count)
-            elif c_edge == 4 and c_un == c_edge: return "p_on"
-            elif c_edge == 8 and c_un == c_edge: return "p_on"
-            elif c_edge == 5:
-                if (c1==0) or (c2==0): return "p_on"
-                else: crossingTest(1,2,status,count)
-            elif c_edge == 6:
-                if (c1==0) or (c2==0): return "p_on"
-                else: crossingTest(2,1,status,count)
-            elif c_edge == 9 and ((c1==0) or (c2==0)): return "p_on"
-            elif c_edge == 10 and ((c1==0) or (c2==0)): return "p_on"
-        if ((round(count)%2)==1): return "p_in"
-        else: return "p_out"
-    return pointInPolygonClassification0
-
-
-""" From structures to boundary polylines """
-def boundaryPolylines(struct):
-    V,boundaryEdges = structBoundaryModel(struct)
-    polylines = boundaryModel2polylines((V,boundaryEdges))
-    return polylines
-
-""" From LAR oriented boundary model to polylines """
-def boundaryModel2polylines(model):
-    V,EV = model
-    polylines = []
-    succDict = dict(EV)
-    visited = [False for k in range(len(V))]
-    nonVisited = [k for k in succDict.keys() if not visited[k]]
-    while nonVisited != []:
-        first = nonVisited[0]; v = first; polyline = []
-        while visited[v] == False:
-            visited[v] = True; 
-            polyline += V[v], 
-            v = succDict[v]
-        polyline += [V[first]]
-        polylines += [polyline]
-        nonVisited = [k for k in succDict.keys() if not visited[k]]
-    return polylines
 
 """ 3D boundary triangulation of the space partition """
 
