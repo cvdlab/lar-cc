@@ -56,7 +56,7 @@ This module contains the first experiments of a parallel implementation of the i
 \section{Introduction}
 %===============================================================================
 
-An easily parallelizable implementation of the accelerated intersection of geometric objects is given in this module. Our first aim is to implement a specialized version for simplices, that generalizes the $nD$-trees of points (that are 0-simplices), to $(d-1)$-dimensional simplices in $d$-space, starting with the intersection of line segments in the plane. Our plan is to follow with an implementation for intersection of general convex sets.
+An easily parallelizable implementation of the accelerated intersection of geometric objects is given in this module. Our first aim is to implement a specialized version for simplices, that generalizes the $nD$-trees of points (that are 0-simplices), to $(d-1)$-dimensional simplices in $d$-space, starting with the intersection of line segments in the plane. Our plan is to follow with an implementation for intersection of general \emph{non convex} sets.
 
 
 %===============================================================================
@@ -671,7 +671,61 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FVs],submodel,0.15))
    \label{fig:example}
 \end{figure}
 
+
+\subsection{Reduction of multiple cycles to a single polyline}
+\label{sec:singlepolyline}
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The reduction of a lattice of non-intersecting 1-cycles on the boundary of a 2-cell into a single polyline is performed using a scan-line algorithm.
+
+In order to filter the complications induced by edges aligned with the reference axes, first we perform a transformation of vertices from Cartesian to polar coordinates (see Figure~\ref{fig:polarholes}).
+
+Then a specialized scan-line algorithm is executed, producing a set of \emph{bridge-edges}~\cite{Yamaguchi:85} that, added in double instance to the set \texttt{EV} of the LAR of the 2-cell, allow for a triangulation of its interior using the algorithm provided by the \texttt{poly2tria} module.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.33\linewidth,width=0.33\linewidth]{images/lattice1} 
+   \includegraphics[height=0.33\linewidth,width=0.33\linewidth]{images/polarholes} 
+   \caption{A set of non-intersecting boundary cycles in Cartesian and polar coordinates, using (improperly) an Euclidean metric in the transformed space.}
+   \label{fig:polarholes}
+\end{figure}
+
+
+\paragraph{Transforming to polar coordinates}
+
+The transformation from Cartesian to polar coordinates of the vertices of a two-dimensional LAR model is given in the following script. An image of such transformation is shown in Figure~\ref{fig:polarholes}. It is only used here to put the vertex coordinates in general position, so simplifying the scan-line algorithm.
+%-------------------------------------------------------------------------------
+@D Transforming to polar coordinates 
+@{""" Transforming to polar coordinates """
+def cartesian2polar(V):    
+    Z = [[sqrt(x*x + y*y),math.atan2(y,x)] for x,y in V]
+    VIEW(STRUCT(MKPOLS((Z,EV))))
+    return Z
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Scan line algorithm}
+%-------------------------------------------------------------------------------
+@D Scan line algorithm 
+@{""" Scan line algorithm """
+
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Generation of a single polyline}
+%-------------------------------------------------------------------------------
+@D Generation of a single polyline 
+@{""" Generation of a single polyline """
+
+@}
+%-------------------------------------------------------------------------------
+
+
+
 \subsection{Transformation of an array of lines in a 2D LAR complex}
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 \paragraph{Transformation of an array of lines in a 2D LAR complex}
 
@@ -939,10 +993,7 @@ def crossingTest(new,old,count,status):
 
 A multiply-connected boundary polyline gives the boundary edges of a 2-cell.
 In LAR, 2-cells must be connected, but not necessarily simply-connected (or path-connected, or homotopic to a point). The ``solid'' drawing of such a generally non-convex 2-cells is not easy.
-In particular, they must be decomposed into a coherently-oriented simplicial 2-complex, i.e.~into a set of equioriented triangles. The library function used at this purpose (), contained in the \texttt{poly2tria} module, only accepts a single boundary polyline. Hence the purpose of this section is to transform a list of cycles, corresponding orderly to the exterior and the interior boundaries of a 2-cell, into a single polyline, using the so-called \emph{bridge-edges}~\cite{Yamaguchi:85} mechanism. 
-
-\paragraph{Construction of bridge-edges}
-
+In particular, they must be decomposed into a coherently-oriented simplicial 2-complex, i.e.~into a set of equioriented triangles. The library function used at this purpose (), contained in the \texttt{poly2tria} module, only accepts a single boundary polyline. Hence the purpose of this section is to transform a list of cycles, corresponding orderly to the exterior and the interior boundaries of a 2-cell, into a single polyline, using the so-called \emph{bridge-edges}~\cite{Yamaguchi:85} mechanism. The transformation from a set of non-intersecting boundary cycles to a single connected polyline is given in Section~\ref{sec:singlepolyline}.
 
 
 \paragraph{Generation of the triangulation}
