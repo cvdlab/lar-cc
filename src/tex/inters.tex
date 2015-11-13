@@ -996,15 +996,39 @@ In LAR, 2-cells must be connected, but not necessarily simply-connected (or path
 In particular, they must be decomposed into a coherently-oriented simplicial 2-complex, i.e.~into a set of equioriented triangles. The library function used at this purpose (), contained in the \texttt{poly2tria} module, only accepts a single boundary polyline. Hence the purpose of this section is to transform a list of cycles, corresponding orderly to the exterior and the interior boundaries of a 2-cell, into a single polyline, using the so-called \emph{bridge-edges}~\cite{Yamaguchi:85} mechanism. The transformation from a set of non-intersecting boundary cycles to a single connected polyline is given in Section~\ref{sec:singlepolyline}.
 
 
-\paragraph{Generation of the triangulation}
+\paragraph{Generating the LAR of a set of non-intersecting cycle}
 
-\paragraph{Test examples}
-
-Once again we use the \texttt{test/svg/lattice.svg} file to test the triangulation algorithm.
+We use the \texttt{test/svg/lattice.svg} file to test the exporting of fifferent boundary chains.
 
 %-------------------------------------------------------------------------------
 @O test/py/inters/test16.py
-@{""" Drawing multiply-connected boundary polylines """
+@{""" Generating the LAR of a set of non-intersecting cycle """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test15 import *
+
+cells = cellsFromCycles(testArray)
+CV = AA(COMP([list,set,CAT]))(EVs)
+EVdict = dict(zip(EV,range(len(EV))))
+FE = [[EVdict[edge] for edge in cycle] for cycle in EVs] 
+edges = [CAT([FE[cycle] for cycle in cell]) for cell in cells]
+FVs = [[CV[cycle] for cycle in cell] for cell in cells]
+FV = AA(CAT)(FVs)
+
+chains = [[1,0,0]]
+chains += [[0,1,0]]
+chains += [[0,0,1]]
+chains += [[1,1,0]]
+chains += [[0,1,1]]
+chains += [[1,0,1]]
+chains += [[1,1,1]]
+
+cycles = STRUCT(MKPOLS((V,EV)))
+for chain in chains:
+    chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
+                        for e in chain2BoundaryChain(FV,EV)(chain)]))))
+    VIEW(STRUCT([cycles, chainBoundary]))
 @}
 %-------------------------------------------------------------------------------
 
