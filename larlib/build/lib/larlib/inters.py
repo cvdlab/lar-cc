@@ -379,6 +379,49 @@ def cellsFromCycles (testArray):
             out += [inout]
     return out        
 
+""" Scan line algorithm """
+def scan(V,FVs, group,cycleGroup,cycleVerts):
+    bridgeEdges = []
+    scannedCycles = []
+    for k,(point,cycle,v) in enumerate(cycleGroup[:-2]):
+      
+        nextCycle = cycleGroup[k+1][1]
+        n = len(FVs[group][cycle])
+        if nextCycle != cycle: 
+            if not ((nextCycle in scannedCycles) and (cycle in scannedCycles)):
+                print "k =",k
+                scannedCycles += [nextCycle]
+                m = len(FVs[group][nextCycle])
+                v1,v2 = v,cycleGroup[k+1][2]
+                minDist = VECTNORM(VECTDIFF([V[v1],V[v2]]))
+                for i in FVs[group][cycle]:
+                    for j in FVs[group][nextCycle]:
+                        dist = VECTNORM(VECTDIFF([V[i],V[j]]))
+                        if  dist < minDist: 
+                            minDist = dist
+                            v1,v2 = i,j
+                bridgeEdges += [(v1,v2)]
+    return bridgeEdges[:-1]
+
+""" Scan line algorithm input/output """
+def connectTheDots(model):
+    V,EV = model
+    V,EVs = biconnectedComponent((V,EV))
+    FV = AA(COMP([list,set,CAT]))(EVs)
+    testArray = latticeArray(V,EVs)
+    cells = cellsFromCycles(testArray)
+    FVs = [[FV[cycle] for cycle in cell] for cell in cells]
+    
+    indexedCycles = [zip(FVs[h],range(len(FVs[h])))   for h,cell in enumerate(cells)]
+    indexedVerts = [CAT(AA(DISTR)(cell)) for cell in indexedCycles]
+    sortedVerts = [sorted([(V[v],c,v) for v,c in cell]) for cell in indexedVerts]
+    
+    for (group,cycleGroup,cycleVerts) in zip(range(len(cells)),sortedVerts,indexedVerts):
+        bridgeEdges = scan(V,FVs, group,cycleGroup,cycleVerts)
+        VV = AA(LIST)(range(len(V)))
+        submodel = STRUCT(MKPOLS((V,EV+bridgeEdges)))
+        VIEW(larModelNumbering(1,1,1)(V,[VV,EV+bridgeEdges],submodel,0.25))
+
 """ Create the LAR of fragmented lines """
 from scipy import spatial
 

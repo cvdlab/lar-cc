@@ -1,7 +1,7 @@
 """ Testing containments between non intersecting cycles """
 from larlib import *
 
-filename = "test/svg/inters/facade2.svg"
+filename = "test/svg/inters/facade.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
