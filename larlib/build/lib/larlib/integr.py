@@ -106,14 +106,14 @@ def TT(tau, alpha, beta, gamma, signed=False):
 
 from integr import *
 """ Surface integration """
-def surfIntegration(model):
+def surfIntegration(model,signed=False):
     V,FV,EV = model
     V = [v+[0.0] for v in V]
     cochain = []
     for face in FV:
         triangles = AA(C(AL)(face[0]))(TRANS([face[1:-1],face[2:]]))
         P = V,triangles
-        area = Surface(P,signed=True) 
-        cochain += [abs(area)]
+        area = Surface(P,signed) 
+        cochain += [area]
     return cochain
 
