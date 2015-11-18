@@ -407,7 +407,7 @@ def scan(V,FVs, group,cycleGroup,cycleVerts):
 def connectTheDots(model):
     V,EV = model
     V,EVs = biconnectedComponent((V,EV))
-    FV = AA(COMP([list,set,CAT]))(EVs)
+    FV = AA(COMP([sorted,set,CAT]))(EVs)
     testArray = latticeArray(V,EVs)
     cells = cellsFromCycles(testArray)
     FVs = [[FV[cycle] for cycle in cell] for cell in cells]
@@ -416,11 +416,89 @@ def connectTheDots(model):
     indexedVerts = [CAT(AA(DISTR)(cell)) for cell in indexedCycles]
     sortedVerts = [sorted([(V[v],c,v) for v,c in cell]) for cell in indexedVerts]
     
+    bridgeEdges = []
     for (group,cycleGroup,cycleVerts) in zip(range(len(cells)),sortedVerts,indexedVerts):
-        bridgeEdges = scan(V,FVs, group,cycleGroup,cycleVerts)
-        VV = AA(LIST)(range(len(V)))
-        submodel = STRUCT(MKPOLS((V,EV+bridgeEdges)))
-        VIEW(larModelNumbering(1,1,1)(V,[VV,EV+bridgeEdges],submodel,0.25))
+        bridgeEdges += [scan(V,FVs, group,cycleGroup,cycleVerts)]
+    return cells,bridgeEdges
+
+""" Orientation of component cycles of unconnected boundaries """
+def rotatePermutation(inputPermutation,transpositionNumber):
+    n = transpositionNumber
+    perm = inputPermutation
+    permutation = range(n,len(perm))+range(n) 
+    return [perm[k] for k in permutation]
+
+def canonicalRotation(permutation):
+    n = permutation.index(min(permutation))
+    return rotatePermutation(permutation,n)
+
+def setCounterClockwise(h,k,cycle,areas,CVs):
+    if areas[cycle] < 0.0: 
+        chain = copy.copy(CVs[h][k])
+        CVs[h][k] = canonicalRotation(REVERSE(chain))
+
+def setClockwise(h,k,cycle,areas,CVs):
+    if areas[cycle] > 0.0: 
+        chain = copy.copy(CVs[h][k])
+        CVs[h][k] = canonicalRotation(REVERSE(chain))
+
+def orientBoundaryCycles(model,cells):
+    V,EV = model
+    edgeBoundary = range(len(EV))
+    edgeCycles = boundaryCycles(edgeBoundary,EV)
+    vertexCycles = [[ EV[e][1] if e>0 else EV[-e][0] for e in cycle ] for cycle in edgeCycles]
+    rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
+    theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
+    CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
+    areas = surfIntegration((V,theCycles,EV),signed=True)
+    
+    for h,cell in enumerate(cells):
+        for k,cycle in enumerate(cell):
+            if k == 0: setCounterClockwise(h,k,cycle,areas,CVs)
+            else: setClockwise(h,k,cycle,areas,CVs)
+    return CVs
+
+""" Generation of 1-boundaries as vertex permutation """
+def boundaryCycles2vertexPermutation( model ):
+    V,EV = model
+    cells,bridgeEdges = connectTheDots(model)
+    CVs = orientBoundaryCycles(model,cells)
+    
+    verts = CAT(CAT( CVs ))
+    n = len(verts)
+    W = copy.copy(V)
+    assert len(verts) == sorted(verts)[n-1]-sorted(verts)[0]+1
+    nextVert = dict([(v,cycle[(k+1)%(len(cycle))]) for cell in CVs for cycle in cell 
+                   for k,v in enumerate(cycle)])
+    for k,(u,v) in enumerate(CAT(bridgeEdges)):
+        x,y = nextVert[u],nextVert[v]
+        nextVert[u] = n+2*k+1
+        nextVert[v] = n+2*k      
+        nextVert[n+2*k] = x
+        nextVert[n+2*k+1] = y
+        W += [W[u]]
+        W += [W[v]]
+        EW = nextVert.items()
+    return W,EW
+
+""" lar2boundaryPolygons """
+def lar2boundaryPolygons(model):
+    W,EW = boundaryCycles2vertexPermutation( model )
+    EW = AA(list)(EW)
+    polygons = []
+    for k,edge in enumerate(EW):
+        if edge[0]>=0:
+            polygon = []
+            first = edge[0]
+        while edge[0] >= 0:
+            polygon += [edge[0]]
+            edge[0] = -edge[0]
+            edge = EW[edge[1]]
+            if len(polygon)>1 and polygon[-1] == first: 
+                EW[first][0] = -float(first)
+                break 
+        polygons += [polygon]
+    return W,polygons
 
 """ Create the LAR of fragmented lines """
 from scipy import spatial

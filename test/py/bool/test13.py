@@ -16,7 +16,7 @@ def load_points(file_name):
     return points
 
 """ input polyline visualization """
-points = load_points("test/data/nazca_monkey.dat")
+points = load_points("test/data/dude.dat")
 VIEW(POLYLINE(points))
 
 """ CDT triangulation with poly2tri """

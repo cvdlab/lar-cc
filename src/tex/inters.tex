@@ -744,7 +744,7 @@ The two-dimensional LAR \texttt{model} $\equiv$ \texttt{V,EV} was previously cre
 def connectTheDots(model):
     V,EV = model
     V,EVs = biconnectedComponent((V,EV))
-    FV = AA(COMP([list,set,CAT]))(EVs)
+    FV = AA(COMP([sorted,set,CAT]))(EVs)
     testArray = latticeArray(V,EVs)
     cells = cellsFromCycles(testArray)
     FVs = [[FV[cycle] for cycle in cell] for cell in cells]
@@ -753,23 +753,126 @@ def connectTheDots(model):
     indexedVerts = [CAT(AA(DISTR)(cell)) for cell in indexedCycles]
     sortedVerts = [sorted([(V[v],c,v) for v,c in cell]) for cell in indexedVerts]
     
+    bridgeEdges = []
     for (group,cycleGroup,cycleVerts) in zip(range(len(cells)),sortedVerts,indexedVerts):
-        bridgeEdges = scan(V,FVs, group,cycleGroup,cycleVerts)
-        VV = AA(LIST)(range(len(V)))
-        submodel = STRUCT(MKPOLS((V,EV+bridgeEdges)))
-        VIEW(larModelNumbering(1,1,1)(V,[VV,EV+bridgeEdges],submodel,0.25))
+        bridgeEdges += [scan(V,FVs, group,cycleGroup,cycleVerts)]
+    return cells,bridgeEdges
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Orientation of component cycles of unconnected boundaries}
 
-\paragraph{Generation of a single polyline}
+This step of the algorithm needs some preliminary computation, starting from the list \texttt{EV} of edges by vertices. Just notice that, at this point of the implementation (as the edges of a set of non intersecting cycles) they all are boundary edges, and hence the \texttt{edgeBoundary} variable can be filled with consecutive integers. The \texttt{edgeCycles} returned by \texttt{boundaryCycles} are very well characterized, according to how discussed in the description of the \texttt{Edge cycles associated to a closed chain of edges} paragraph.
+The corresponding \texttt{vertexCycles} are first oriented accordingly to \texttt{boundaryCycles}, then rotated (as equivalent permutations) in order to put their element of minimum index in first position (accordingly to the numeration of cycles used in the variable \texttt{FVs}). Then, the \texttt{CVs} will be set to contain the circularly ordered vertices of the various boundary cycles of each LAR 2-cell, in a manner analogous to FVs, where the vertices are not circularly ordered. Finally, the first (i.e.~the \emph{external}) cycle of each cell is counterclockwise oriented, whereas the other cycles (i.e.~the \emph{internal} ones), are oriented clockwise.
+
 %-------------------------------------------------------------------------------
-@D Generation of a single polyline 
-@{""" Generation of a single polyline """
+@D Orientation of component cycles of unconnected boundaries 
+@{""" Orientation of component cycles of unconnected boundaries """
+def rotatePermutation(inputPermutation,transpositionNumber):
+    n = transpositionNumber
+    perm = inputPermutation
+    permutation = range(n,len(perm))+range(n) 
+    return [perm[k] for k in permutation]
 
+def canonicalRotation(permutation):
+    n = permutation.index(min(permutation))
+    return rotatePermutation(permutation,n)
+
+def setCounterClockwise(h,k,cycle,areas,CVs):
+    if areas[cycle] < 0.0: 
+        chain = copy.copy(CVs[h][k])
+        CVs[h][k] = canonicalRotation(REVERSE(chain))
+
+def setClockwise(h,k,cycle,areas,CVs):
+    if areas[cycle] > 0.0: 
+        chain = copy.copy(CVs[h][k])
+        CVs[h][k] = canonicalRotation(REVERSE(chain))
+
+def orientBoundaryCycles(model,cells):
+    V,EV = model
+    edgeBoundary = range(len(EV))
+    edgeCycles = boundaryCycles(edgeBoundary,EV)
+    vertexCycles = [[ EV[e][1] if e>0 else EV[-e][0] for e in cycle ] for cycle in edgeCycles]
+    rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
+    theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
+    CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
+    areas = surfIntegration((V,theCycles,EV),signed=True)
+    
+    for h,cell in enumerate(cells):
+        for k,cycle in enumerate(cell):
+            if k == 0: setCounterClockwise(h,k,cycle,areas,CVs)
+            else: setClockwise(h,k,cycle,areas,CVs)
+    return CVs
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Generation of 1-boundaries as vertex permutation}
+In algebraic topology a $k$-cycle is a $k$-chain whose boundary is empty. Also, an unconnected $k$-cycle is the direct sum of two or more $k$-cycles. A good formal representation of every simplicial $k$-cycle, where \emph{each} component $k$-simplex has $k+1$ $(k-1)$-adjacent $k$-simplices is a $(k+1)$-array, indexed by $k$-simplices, i.e.~the \emph{Winged Representation}~\cite{Paoluzzi:1993:DMS:169728.169719}. 
+
+In the case of oriented $1$-cycles, a good representation is given by considering the (ordering of) 0-faces (vertices) as a permutation of $n$ integers, i.e.~as a bijective function $\pi :[0,n]\to[0,n]$ that can be represented as an array \texttt{verts} of integers indexed on integers, and the 1-faces (edges) as a dictionary (mapping) \texttt{nextVert} $verts\to verts$.
+
+In order to join two component cycles using one of \texttt{bridgeEdges}, say $(u,v)$, computed by the function \texttt{connectTheDots} previously given, we must save $\pi(u)$ and $\pi(v)$, say, within $x$ and $y$, respectively
+%-------------------------------------------------------------------------------
+@D Generation of 1-boundaries as vertex permutation 
+@{""" Generation of 1-boundaries as vertex permutation """
+def boundaryCycles2vertexPermutation( model ):
+    V,EV = model
+    cells,bridgeEdges = connectTheDots(model)
+    CVs = orientBoundaryCycles(model,cells)
+    
+    verts = CAT(CAT( CVs ))
+    n = len(verts)
+    W = copy.copy(V)
+    assert len(verts) == sorted(verts)[n-1]-sorted(verts)[0]+1
+    nextVert = dict([(v,cycle[(k+1)%(len(cycle))]) for cell in CVs for cycle in cell 
+                   for k,v in enumerate(cycle)])
+    for k,(u,v) in enumerate(CAT(bridgeEdges)):
+        x,y = nextVert[u],nextVert[v]
+        nextVert[u] = n+2*k+1
+        nextVert[v] = n+2*k      
+        nextVert[n+2*k] = x
+        nextVert[n+2*k+1] = y
+        W += [W[u]]
+        W += [W[v]]
+        EW = nextVert.items()
+    return W,EW
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Wire-frame LAR to boundary polygons}
+The 2-dimensional LAR model \texttt{(W,EW)} returned by the function \texttt{boundaryCycles2vertexPermutation} is pretty special, since it is at the same time both a standard LAR model, i.e.~a pair (vertices, edges_by_vertices), and a permutation of vertex indices providing implicitly the ordered cycles on the boundary of a 2-complex. In other words, \texttt{EW} is both a (possibly unconnected) 1-cycle and an 1-boundary.
+
+In the following script we extract the list of connected boundaries (including bridge-edges) from the \texttt{EW} permutation of the first $m$ integers.
+
+%-------------------------------------------------------------------------------
+@D lWire-frame LAR to boundary polygons 
+@{""" lar2boundaryPolygons """
+def lar2boundaryPolygons(model):
+    W,EW = boundaryCycles2vertexPermutation( model )
+    EW = AA(list)(EW)
+    polygons = []
+    for k,edge in enumerate(EW):
+        polygon = []
+        if edge[0]>=0:
+            first = edge[0]
+            done = False
+        while (not done) and edge[0] >= 0:
+            polygon += [edge[0]]
+            edge[0] = -edge[0]
+            edge = EW[edge[1]]
+            if len(polygon)>1 and polygon[-1] == first: 
+                EW[first][0] = -float(first)
+                break 
+        if polygon != []: 
+            if polygon[0]==polygon[-1]: polygon=polygon[:-1]
+            polygons += [polygon]
+    return W,polygons
+
+W,FW = lar2boundaryPolygons(model)
+polygons = [[W[u] for u in poly] for poly in FW]
+VIEW(STRUCT(AA(POLYLINE)(polygons)))
+@        
+%-------------------------------------------------------------------------------
 
 
 \subsection{Transformation of an array of lines in a 2D LAR complex}
@@ -1160,13 +1263,54 @@ for chain in chains:
 
 %-------------------------------------------------------------------------------
 @O test/py/inters/test18.py
+@{""" Orienting a set of non-intersecting cycles """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test17 import *
+
+cells,bridgeEdges = connectTheDots((V,EV))
+CVs = orientBoundaryCycles((V,EV),cells)
+
+print "\nCVs =",CVs
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test19.py
 @{""" Generating the LAR of a set of non-intersecting cycles """
 from larlib import *
 
 sys.path.insert(0, 'test/py/inters/')
 from test17 import *
 
-connectTheDots((V,EV))
+W,EW = boundaryCycles2vertexPermutation( (V,EV) )
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,EW))))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test20.py
+@{""" Generating the Triangulation of a set of non-intersecting cycles """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test17 import *
+
+model = V,EV
+W,FW = lar2boundaryPolygons(model)
+polygons = [[W[u] for u in poly] for poly in FW]
+VIEW(STRUCT(AA(POLYLINE)(polygons)))
+
+triangleSet,triangledFace = [],[]
+for polygon in polygons:  
+    polyline = [Point(p[0],p[1]) for p in polygon]
+    cdt = CDT(polyline)
+    triangles = cdt.triangulate()
+    trias = [ [[t.c.x,t.c.y,0,1],[t.b.x,t.b.y,0,1],[t.a.x,t.a.y,0,1]] for t in triangles ]
+
+    triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
+    triangleSet += [triangledFace]
 @}
 %-------------------------------------------------------------------------------
 
@@ -1243,6 +1387,9 @@ def structBoundaryModel(struct):
 
 \paragraph{Edge cycles associated to a closed chain of edges}
 
+The output \texttt{cycles} are returned as lists of oriented edges, given in consecutive  sequence in each list. Each cycle is given in the opposite ordering of its first edge.
+The first edge of each cycle is the one of minimum index in the cycle. The list of output cycles is returned ordered for increasing (or better, in decreasing order, since negative) order of its first element. The first output cycle starts from index 0, that cannot oriented directly, since -0 is not allowed for integer indices. It must be considered as negative, i.e. as oriented as the opposite of its canonical orientation. 
+
 %-------------------------------------------------------------------------------
 @D Edge cycles associated to a closed chain of edges
 @{""" Edge cycles associated to a closed chain of edges """
@@ -1304,6 +1451,9 @@ DEBUG = True
 @< Extraction of path-connected boundaries @>
 @< Scan line algorithm @>
 @< Scan line algorithm input/output @>
+@< Orientation of component cycles of unconnected boundaries @>
+@< Generation of 1-boundaries as vertex permutation @>
+@< Wire-frame LAR to boundary polygons @>
 @< Create the LAR of fragmented lines @>
 @< Biconnected components @>
 @< Slope of edges @>
