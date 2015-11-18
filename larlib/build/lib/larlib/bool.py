@@ -76,7 +76,7 @@ def MKTRIANGLES(model):
     if len(V[0]) == 2: V=[v+[0] for v in V]
     FE = crossRelation(V,FV,EV)
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
-    return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
+    return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
 
 def MKSOLID(*model): 
@@ -447,6 +447,7 @@ def facesFromComponents(model,FE,EF_angle):
     CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
     
     # main loop
+    #import pdb; pdb.set_trace()
     while True:
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
@@ -525,6 +526,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
 
     coe = [orientFace(face,boundaryLoop)]
     cf = [face] 
+    #import pdb; pdb.set_trace()
     while boundaryLoop != []:
         edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
         if edge > 0: edgeFaces = EF_angle[edge]

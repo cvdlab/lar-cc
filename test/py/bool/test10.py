@@ -7,7 +7,7 @@ from test09 import *
 
 model = W,FW,EW
 FE = crossRelation(W,FW,EW)
-EF_angle = faceSlopeOrdering(model,FE)
+EF_angle = faceSlopeOrdering(model,FE,W)
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))

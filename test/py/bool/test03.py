@@ -20,8 +20,8 @@ VIEW(STRUCT([ glass(STRUCT(MKPOLS((V1,FV1)))), glass(STRUCT(MKPOLS((V2,FV2)))) ]
 lines = lines1 + lines2
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
-global precision
-PRECISION -= 2
+#global precision
+#PRECISION -= 2
 V,FV,EV = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 
