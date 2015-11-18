@@ -806,6 +806,47 @@ def orientBoundaryCycles(model,cells):
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{From nested boundary cycles to triangulation}
+%-------------------------------------------------------------------------------
+@D From nested boundary cycles to triangulation 
+@{""" From nested boundary cycles to triangulation """
+def boundaryCycles2triangulation( (V,EV) ):
+    model = V,EV
+    cells,bridgeEdges = connectTheDots(model)
+    CVs = orientBoundaryCycles(model,cells)
+    
+    polygons = [[[V[u] for u in cycle] for cycle in cell] for cell in CVs]
+    triangleSet = []   
+    
+    for polygon in polygons:
+        triangledPolygon = []
+        externalCycle = polygon[0]
+        polyline = []
+        for p in externalCycle:
+            polyline.append(Point(p[0],p[1]))
+        cdt = CDT(polyline)
+        
+        internalCycles = polygon[1:]
+        for cycle in internalCycles:
+            hole = []
+            for p in cycle:
+                hole.append(Point(p[0],p[1]))
+            cdt.add_hole(hole)
+            
+        triangles = cdt.triangulate()
+        trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
+        triangleSet += [AA(REVERSE)(trias)]
+    return triangleSet
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsection{Monocyclic polygons using bridge-edges}
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This subsection, even if correct, is not currently used, since the used triangulation algorithm, from the \texttt{poly2tri} package, cannot handle repeated vertices.
+
 \paragraph{Generation of 1-boundaries as vertex permutation}
 In algebraic topology a $k$-cycle is a $k$-chain whose boundary is empty. Also, an unconnected $k$-cycle is the direct sum of two or more $k$-cycles. A good formal representation of every simplicial $k$-cycle, where \emph{each} component $k$-simplex has $k+1$ $(k-1)$-adjacent $k$-simplices is a $(k+1)$-array, indexed by $k$-simplices, i.e.~the \emph{Winged Representation}~\cite{Paoluzzi:1993:DMS:169728.169719}. 
 
@@ -840,12 +881,12 @@ def boundaryCycles2vertexPermutation( model ):
 %-------------------------------------------------------------------------------
 
 \paragraph{Wire-frame LAR to boundary polygons}
-The 2-dimensional LAR model \texttt{(W,EW)} returned by the function \texttt{boundaryCycles2vertexPermutation} is pretty special, since it is at the same time both a standard LAR model, i.e.~a pair (vertices, edges_by_vertices), and a permutation of vertex indices providing implicitly the ordered cycles on the boundary of a 2-complex. In other words, \texttt{EW} is both a (possibly unconnected) 1-cycle and an 1-boundary.
+The 2-dimensional LAR model \texttt{(W,EW)} returned by the function \texttt{boundaryCycles2vertexPermutation} is pretty special, since it is at the same time both a standard LAR model, i.e.~a pair (vertices, edges\_by\_vertices), and a permutation of vertex indices providing implicitly the ordered cycles on the boundary of a 2-complex. In other words, \texttt{EW} is both a (possibly unconnected) 1-cycle and an 1-boundary.
 
 In the following script we extract the list of connected boundaries (including bridge-edges) from the \texttt{EW} permutation of the first $m$ integers.
 
 %-------------------------------------------------------------------------------
-@D lWire-frame LAR to boundary polygons 
+@D Wire-frame LAR to boundary polygons 
 @{""" lar2boundaryPolygons """
 def lar2boundaryPolygons(model):
     W,EW = boundaryCycles2vertexPermutation( model )
@@ -867,12 +908,17 @@ def lar2boundaryPolygons(model):
             if polygon[0]==polygon[-1]: polygon=polygon[:-1]
             polygons += [polygon]
     return W,polygons
-
-W,FW = lar2boundaryPolygons(model)
-polygons = [[W[u] for u in poly] for poly in FW]
-VIEW(STRUCT(AA(POLYLINE)(polygons)))
-@        
+@}       
 %-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/holes1}
+   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/holes3} 
+   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/holes2} 
+   \caption{(a) Closed 1-chain $c$, i.e.~such that $\partial c = 0$, that it is both cycle and boundary at the same time; (b) corresponding 2-chain $h = \partial\, c$; (c) 1-skeleton of a triangulation of $h$.}
+   \label{fig:cycles}
+\end{figure}
 
 
 \subsection{Transformation of an array of lines in a 2D LAR complex}
@@ -1297,6 +1343,12 @@ from larlib import *
 sys.path.insert(0, 'test/py/inters/')
 from test17 import *
 
+triangleSet = boundaryCycles2triangulation( (V,EV) )
+
+VIEW(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))))
+VIEW(SKEL_1(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet))))))
+
+"""
 model = V,EV
 W,FW = lar2boundaryPolygons(model)
 polygons = [[W[u] for u in poly] for poly in FW]
@@ -1304,13 +1356,16 @@ VIEW(STRUCT(AA(POLYLINE)(polygons)))
 
 triangleSet,triangledFace = [],[]
 for polygon in polygons:  
-    polyline = [Point(p[0],p[1]) for p in polygon]
+    triangledPolygon = []
+    polyline = []
+    for p in polygon:
+        polyline.append(Point(p[0],p[1]))
     cdt = CDT(polyline)
-    triangles = cdt.triangulate()
-    trias = [ [[t.c.x,t.c.y,0,1],[t.b.x,t.b.y,0,1],[t.a.x,t.a.y,0,1]] for t in triangles ]
 
-    triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
-    triangleSet += [triangledFace]
+    triangles = cdt.triangulate()
+    trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
+    triangleSet += [AA(REVERSE)(trias)]
+"""
 @}
 %-------------------------------------------------------------------------------
 
@@ -1452,6 +1507,7 @@ DEBUG = True
 @< Scan line algorithm @>
 @< Scan line algorithm input/output @>
 @< Orientation of component cycles of unconnected boundaries @>
+@< From nested boundary cycles to triangulation @>
 @< Generation of 1-boundaries as vertex permutation @>
 @< Wire-frame LAR to boundary polygons @>
 @< Create the LAR of fragmented lines @>

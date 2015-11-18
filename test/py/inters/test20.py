@@ -4,12 +4,18 @@ from larlib import *
 sys.path.insert(0, 'test/py/inters/')
 from test17 import *
 
+triangleSet = boundaryCycles2triangulation( (V,EV) )
+
+VIEW(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))))
+VIEW(SKEL_1(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet))))))
+
+"""
 model = V,EV
 W,FW = lar2boundaryPolygons(model)
 polygons = [[W[u] for u in poly] for poly in FW]
 VIEW(STRUCT(AA(POLYLINE)(polygons)))
 
-triangleSet = []  
+triangleSet,triangledFace = [],[]
 for polygon in polygons:  
     polyline = [Point(p[0],p[1]) for p in polygon]
     cdt = CDT(polyline)
@@ -18,3 +24,4 @@ for polygon in polygons:
 
     triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
     triangleSet += [triangledFace]
+"""

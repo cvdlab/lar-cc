@@ -458,6 +458,34 @@ def orientBoundaryCycles(model,cells):
             else: setClockwise(h,k,cycle,areas,CVs)
     return CVs
 
+""" From nested boundary cycles to triangulation """
+def boundaryCycles2triangulation( (V,EV) ):
+    model = V,EV
+    cells,bridgeEdges = connectTheDots(model)
+    CVs = orientBoundaryCycles(model,cells)
+    
+    polygons = [[[V[u] for u in cycle] for cycle in cell] for cell in CVs]
+    triangleSet = []   
+    
+    for polygon in polygons:
+        triangledPolygon = []
+        externalCycle = polygon[0]
+        polyline = []
+        for p in externalCycle:
+            polyline.append(Point(p[0],p[1]))
+        cdt = CDT(polyline)
+        
+        internalCycles = polygon[1:]
+        for cycle in internalCycles:
+            hole = []
+            for p in cycle:
+                hole.append(Point(p[0],p[1]))
+            cdt.add_hole(hole)
+        triangles = cdt.triangulate()
+        trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
+        triangleSet += [AA(REVERSE)(trias)]
+    return triangleSet
+
 """ Generation of 1-boundaries as vertex permutation """
 def boundaryCycles2vertexPermutation( model ):
     V,EV = model
@@ -487,17 +515,20 @@ def lar2boundaryPolygons(model):
     EW = AA(list)(EW)
     polygons = []
     for k,edge in enumerate(EW):
+        polygon = []
         if edge[0]>=0:
-            polygon = []
             first = edge[0]
-        while edge[0] >= 0:
+            done = False
+        while (not done) and edge[0] >= 0:
             polygon += [edge[0]]
             edge[0] = -edge[0]
             edge = EW[edge[1]]
             if len(polygon)>1 and polygon[-1] == first: 
                 EW[first][0] = -float(first)
                 break 
-        polygons += [polygon]
+        if polygon != []: 
+            if polygon[0]==polygon[-1]: polygon=polygon[:-1]
+            polygons += [polygon]
     return W,polygons
 
 """ Create the LAR of fragmented lines """
