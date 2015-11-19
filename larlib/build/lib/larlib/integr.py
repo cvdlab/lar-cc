@@ -117,3 +117,14 @@ def surfIntegration(model):
         cochain += [abs(area)]
     return cochain
 
+def signedSurfIntegration(model,signed=False):
+    V,FV,EV = model
+    V = [v+[0.0] for v in V]
+    cochain = []
+    for face in FV:
+        triangles = AA(C(AL)(face[0]))(TRANS([face[1:-1],face[2:]]))
+        P = V,triangles
+        area = Surface(P,signed) 
+        cochain += [area]
+    return cochain
+
