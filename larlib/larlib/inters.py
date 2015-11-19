@@ -451,7 +451,7 @@ def orientBoundaryCycles(model,cells):
     theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
     CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
     areas = signedSurfIntegration((V,theCycles,EV),signed=True)
-	
+    
     for h,cell in enumerate(cells):
         for k,cycle in enumerate(cell):
             if k == 0: setCounterClockwise(h,k,cycle,areas,CVs)
@@ -481,6 +481,7 @@ def boundaryCycles2triangulation( (V,EV) ):
             for p in cycle:
                 hole.append(Point(p[0],p[1]))
             cdt.add_hole(hole)
+            
         triangles = cdt.triangulate()
         trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
         triangleSet += [AA(REVERSE)(trias)]
