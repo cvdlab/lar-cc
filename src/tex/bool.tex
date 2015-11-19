@@ -660,6 +660,7 @@ def facesFromComponents(model,FE,EF_angle):
     CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
     
     # main loop
+    #import pdb; pdb.set_trace()
     while True:
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
@@ -742,6 +743,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
 
     coe = [orientFace(face,boundaryLoop)]
     cf = [face] 
+    #import pdb; pdb.set_trace()
     while boundaryLoop != []:
         edge,face = faceOrientation(boundaryLoop,face,FE,EV,cf)
         if edge > 0: edgeFaces = EF_angle[edge]
@@ -942,8 +944,8 @@ VIEW(STRUCT([ glass(STRUCT(MKPOLS((V1,FV1)))), glass(STRUCT(MKPOLS((V2,FV2)))) ]
 lines = lines1 + lines2
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
-global precision
-PRECISION -= 2
+#global precision
+#PRECISION -= 2
 V,FV,EV = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 
@@ -1095,7 +1097,7 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
 
 \paragraph{2D polygon triangulation}
 Here a 2D polygon is imported from an SVG file made of boundary lines, and the \texttt{V,FV,EV}
-LAR model is generated. Then the unique polygonal face in \texttt{FV} is embedded in 3D ($z=0$), and triangulated using the tassellation algorithm extracted from pyOpenGL and pyGLContext, stored in the \texttt{lib/py/support.py} file. The generated triangles are finally coherently oriented, by testing the $z$-component of their normal vector.
+LAR model is generated. 
 
 %-------------------------------------------------------------------------------
 @O test/py/bool/test07.py
@@ -1108,16 +1110,7 @@ lines = svg2lines(filename)
 V,FV,EV = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
-pivotFace = [V[v] for v in FV[0]+[FV[0][0]]]
-pol = PolygonTessellator()
-vertices = [ vertex.Vertex( (x,y,0) ) for (x,y) in pivotFace  ]
-verts = pol.tessellate(vertices)
-ps = [list(v.point) for v in verts]
-trias = [[ps[k],ps[k+1],ps[k+2],ps[k]] for k in range(0,len(ps),3)]
-VIEW(STRUCT(AA(POLYLINE)(trias)))
-
-triangles = DISTR([AA(orientTriangle)(trias),[[0,1,2]]])
-VIEW(STRUCT(CAT(AA(MKPOLS)(triangles))))
+VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV,EV)) ))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1269,13 +1262,6 @@ cubeGrids = Struct(3*[cubeGrid,@1])
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 V,CV,FV,EV,CF,CE,COE,FE = thePartition(V,FV,EV)
-
-"""
-boundaryCells_2 = signedBoundaryCells(V,CV,FV)
-boundaryFV = [list(FV[-k]) if k<0 else swap(list(FV[k])) for k in boundaryCells_2]
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))
-VIEW(EXPLODE(1.5,1.5,1.5)(MKTRIANGLES((V,boundaryFV,EV))))
-"""
 
 cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))
@@ -1481,7 +1467,7 @@ def MKTRIANGLES(model):
     if len(V[0]) == 2: V=[v+[0] for v in V]
     FE = crossRelation(V,FV,EV)
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
-    return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace]) 
+    return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
 
 def MKSOLID(*model): 

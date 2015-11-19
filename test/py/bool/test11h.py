@@ -17,13 +17,6 @@ V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
 V,CV,FV,EV,CF,CE,COE,FE = thePartition(V,FV,EV)
 
-"""
-boundaryCells_2 = signedBoundaryCells(V,CV,FV)
-boundaryFV = [list(FV[-k]) if k<0 else swap(list(FV[k])) for k in boundaryCells_2]
-VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,boundaryFV))))
-VIEW(EXPLODE(1.5,1.5,1.5)(MKTRIANGLES((V,boundaryFV,EV))))
-"""
-
 cellLengths = AA(len)(CF)
 boundaryPosition = cellLengths.index(max(cellLengths))
 BF = CF[boundaryPosition]; del CF[boundaryPosition]; del CE[boundaryPosition]
