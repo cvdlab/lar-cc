@@ -17,11 +17,13 @@ VIEW(STRUCT(AA(POLYLINE)(polygons)))
 
 triangleSet,triangledFace = [],[]
 for polygon in polygons:  
-    polyline = [Point(p[0],p[1]) for p in polygon]
+    triangledPolygon = []
+    polyline = []
+    for p in polygon:
+        polyline.append(Point(p[0],p[1]))
     cdt = CDT(polyline)
-    triangles = cdt.triangulate()
-    trias = [ [[t.c.x,t.c.y,0,1],[t.b.x,t.b.y,0,1],[t.a.x,t.a.y,0,1]] for t in triangles ]
 
-    triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
-    triangleSet += [triangledFace]
+    triangles = cdt.triangulate()
+    trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
+    triangleSet += [AA(REVERSE)(trias)]
 """

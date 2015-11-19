@@ -450,8 +450,8 @@ def orientBoundaryCycles(model,cells):
     rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
     theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
     CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
-    areas = surfIntegration((V,theCycles,EV),signed=True)
-    
+    areas = signedSurfIntegration((V,theCycles,EV),signed=True)
+	
     for h,cell in enumerate(cells):
         for k,cycle in enumerate(cell):
             if k == 0: setCounterClockwise(h,k,cycle,areas,CVs)

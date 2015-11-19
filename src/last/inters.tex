@@ -796,7 +796,7 @@ def orientBoundaryCycles(model,cells):
     rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
     theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
     CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
-    areas = signedSurfIntegration((V,theCycles,EV),signed=True)
+    areas = surfIntegration((V,theCycles,EV),signed=True)
     
     for h,cell in enumerate(cells):
         for k,cycle in enumerate(cell):
@@ -839,6 +839,7 @@ def boundaryCycles2triangulation( (V,EV) ):
     return triangleSet
 @}
 %-------------------------------------------------------------------------------
+
 
 
 \subsection{Monocyclic polygons using bridge-edges}
@@ -910,7 +911,6 @@ def lar2boundaryPolygons(model):
 @}       
 %-------------------------------------------------------------------------------
 
-<<<<<<< HEAD
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
    \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/holes1}
@@ -919,17 +919,6 @@ def lar2boundaryPolygons(model):
    \caption{(a) Closed 1-chain $c$, i.e.~such that $\partial c = 0$, that it is both cycle and boundary at the same time; (b) corresponding 2-chain $h = \partial\, c$; (c) 1-skeleton of a triangulation of $h$.}
    \label{fig:cycles}
 \end{figure}
-=======
-
-%\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-%   \centering
-%   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/holes1}
-%   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/holes3} 
-%   \includegraphics[height=0.32\linewidth,width=0.32\linewidth]{images/holes2} 
-%   \caption{(a) Closed 1-chain $c$, i.e.~such that $\partial c = 0$, that it is both cycle and boundary at the same time; (b) corresponding 2-chain $h = \partial\, c$; (c) 1-skeleton of a triangulation of $h$.}
-%   \label{fig:cycles}
-%\end{figure}
->>>>>>> old-state-Nov-15a
 
 
 \subsection{Transformation of an array of lines in a 2D LAR complex}
