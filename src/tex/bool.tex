@@ -179,27 +179,6 @@ def boxBuckets3d(boxes):
 %===============================================================================
 
 In this section we implement the splitting of $(d-1)$-faces, stored in \texttt{FV}, induced by the buckets of $(d-1)$-faces, stored in \texttt{parts}, and one-to-one associated to them. Of course, (a) both such arrays have the same number of elements, and (b) whereas \texttt{FV} contains the indices of incident vertices for each face, \texttt{parts}  contains the indices of adjacent faces for each face, with the further constraint that $i \not\in \texttt{parts}(i)$.
-
-\paragraph{Computation of topological relations} 
-The function \texttt{crossRelation} is used here to compute a topological relation starting from two characteristic matrices \texttt{XV} and \texttt{YV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively.
-The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sparse Row) format is used.
-
-%-------------------------------------------------------------------------------
-@D Computation of topological relation
-@{""" Computation of topological relation """
-def crossRelation(V,XV,YV):
-    csrXV = csrCreate(XV,lenV=len(V))
-    csrYV = csrCreate(YV,lenV=len(V))
-    csrXY = matrixProduct(csrXV, csrYV.T)
-    XY = [None for k in range(len(XV))]
-    for k,face in enumerate(XV):
-        data = csrXY[k].data
-        col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
-        # NOTE: val depends on the relation under consideration ...
-    return XY
-@}
-%-------------------------------------------------------------------------------
     
 \paragraph{Submanifold mapping computation}
 The $4\times 4$ (affine) scipy matrix \texttt{transform} of type \texttt{mat} is computed by the function \texttt{submanifoldMapping}, using as input the array \texttt{pivotFace} that contains the vertices of the so-called \emph{pivot} face, i.e.~of the face to be mapped to the coordinate subspace $z=0$ (in 3D).
@@ -775,7 +754,8 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
         n = len(FV[f])
         if len(FE[f]) > n:
             # contains both edges coded 0 and 1 ... (how to solve?)
-            FEout += [list(set(face).difference([0]))]
+            FEout += [face.remove(0)]
+            #FEout += [list(set(face).difference([0]))]
         else:
             FEout += [face]
     return FEout
@@ -808,7 +788,12 @@ def thePartition(W,FW,EW):
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.1)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
+    print "\nZ =",Z
+    print "\nFZ =",FZ
+    print "\nEZ =",EZ
+    print "\nFE_0 =",FE
     FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
+    print "\nFE_1 =",FE
     
     # remove 0 indices from FE relation
     FE = [[f  if f!=0 else 1 for f in face] for face in FE]
@@ -841,7 +826,6 @@ DEBUG = False
 @< Iterate the splitting until splittingStack is empty @>
 @< Computation of face transformations @>
 @< Computation of affine face transformations @>
-@< Computation of topological relation @>
 @< Submanifold mapping computation @>
 @< Helper functions for spacePartition @>
 @< Sorting of points along a line @>
@@ -1192,7 +1176,7 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,CAT(TW)],submodel,0.6))
 %-------------------------------------------------------------------------------
 @O test/py/bool/test11a.py @{
 from larlib import *
-@< testing example @(t(.5,.5,.5),r(0,0,PI/3)@) @>
+@< testing example @(t(.5,.5,.5),r(0,0,PI/6)@) @>
 @}
 %-------------------------------------------------------------------------------
 

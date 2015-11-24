@@ -169,19 +169,6 @@ def faceTransformations(facet):
     return transformMat
 
 
-""" Computation of topological relation """
-def crossRelation(V,XV,YV):
-    csrXV = csrCreate(XV,lenV=len(V))
-    csrYV = csrCreate(YV,lenV=len(V))
-    csrXY = matrixProduct(csrXV, csrYV.T)
-    XY = [None for k in range(len(XV))]
-    for k,face in enumerate(XV):
-        data = csrXY[k].data
-        col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
-        # NOTE: val depends on the relation under consideration ...
-    return XY
-
 """ Submanifold mapping computation """
 def submanifoldMapping(pivotFace):
     tx,ty,tz = pivotFace[0]
@@ -552,7 +539,8 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
         n = len(FV[f])
         if len(FE[f]) > n:
             # contains both edges coded 0 and 1 ... (how to solve?)
-            FEout += [list(set(face).difference([0]))]
+            FEout += [face.remove(0)]
+            #FEout += [list(set(face).difference([0]))]
         else:
             FEout += [face]
     return FEout
@@ -575,7 +563,12 @@ def thePartition(W,FW,EW):
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.1)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
+    print "\nZ =",Z
+    print "\nFZ =",FZ
+    print "\nEZ =",EZ
+    print "\nFE_0 =",FE
     FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
+    print "\nFE_1 =",FE
     
     # remove 0 indices from FE relation
     FE = [[f  if f!=0 else 1 for f in face] for face in FE]
