@@ -131,9 +131,9 @@ def larCrown(r,R,angle=2*PI):
    return larCrown0
 
 def larBox(minVect,maxVect):
-   size = DIFF([maxVect,minVect])
+   size = VECTDIFF([maxVect,minVect])
    print "size =",size
-   box = larApply(s(*size))(larCuboids([1,1,1]))
+   box = larApply(s(*size))(larCuboids([1]*len(size)))
    print "box =",box
    return larApply(t(*minVect))(box)
 

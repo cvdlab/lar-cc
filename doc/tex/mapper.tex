@@ -356,9 +356,9 @@ Some useful 2D primitive objects either in $\E^2$ or embedded in $\E^3$ are defi
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larBox(minVect,maxVect):@\\
-\mbox{}\verb@   size = DIFF([maxVect,minVect])@\\
+\mbox{}\verb@   size = VECTDIFF([maxVect,minVect])@\\
 \mbox{}\verb@   print "size =",size@\\
-\mbox{}\verb@   box = larApply(s(*size))(larCuboids([1,1,1]))@\\
+\mbox{}\verb@   box = larApply(s(*size))(larCuboids([1]*len(size)))@\\
 \mbox{}\verb@   print "box =",box@\\
 \mbox{}\verb@   return larApply(t(*minVect))(box)@\\
 \mbox{}\verb@@{\NWsep}

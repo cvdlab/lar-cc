@@ -810,7 +810,7 @@ def orientBoundaryCycles(model,cells):
 %-------------------------------------------------------------------------------
 @D From nested boundary cycles to triangulation 
 @{""" From nested boundary cycles to triangulation """
-def boundaryCycles2triangulation( (V,EV) ):
+def larTriangulation( (V,EV) ):
     model = V,EV
     cells,bridgeEdges = connectTheDots(model)
     CVs = orientBoundaryCycles(model,cells)
@@ -1342,7 +1342,7 @@ from larlib import *
 sys.path.insert(0, 'test/py/inters/')
 from test17 import *
 
-triangleSet = boundaryCycles2triangulation( (V,EV) )
+triangleSet = larTriangulation( (V,EV) )
 
 VIEW(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))))
 VIEW(SKEL_1(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet))))))

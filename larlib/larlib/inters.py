@@ -465,7 +465,7 @@ def orientBoundaryCycles(model,cells):
     return CVs
 
 """ From nested boundary cycles to triangulation """
-def boundaryCycles2triangulation( (V,EV) ):
+def larTriangulation( (V,EV) ):
     model = V,EV
     cells,bridgeEdges = connectTheDots(model)
     CVs = orientBoundaryCycles(model,cells)
