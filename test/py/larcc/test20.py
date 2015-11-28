@@ -13,5 +13,5 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,.5))
 
 csrBoundaryMat = boundary(FV,EV)
 print "wrong boundary matrix =",csrBoundaryMat.todense()
-csrBoundaryMat = boundary1(FV,EV,VV)
+csrBoundaryMat = boundary1(FV,EV,VV)  % <<<<< NOTE !!
 print "right boundary matrix =",csrBoundaryMat.todense()

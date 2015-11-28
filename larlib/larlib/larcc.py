@@ -208,8 +208,8 @@ def crossRelation(V,XV,YV):
         # NOTE: val depends on the relation under consideration ...
     return XY
 
-def crossRelation1(lenV,ZV,XV,YV):
-    if len(XV[0])==2 and len(YV[0])==1:  
+def crossRelation1(lenV,ZV,XV,YV,terminal=False):
+    if terminal:  
         print "\n****\nXV =",XV
         return XV
     else:

@@ -62,33 +62,18 @@ def cells2hpcs(V,FV,cells,k):
     return AA(COLOR(colors[k]))(MKPOLS((V,[FV[f] for f in cells])))
 
 """ From 2D chains to boundary chains """
-def chain2BoundaryChain(FV,EV):
-    csrBoundaryMat = boundary(FV,EV)
-    nedges,nfaces = csrBoundaryMat.shape   
-    def chain2BoundaryChain0(chain):
-        row = np.array(chain)
-        col = np.array([0 for k in range(len(chain))])
-        data = np.array([1 for k in range(len(chain))])
-        csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
-        csrEdgeVect = csrBoundaryMat*csrFaceVect
-        boundaryChain = [h for h,val in 
-            zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
-        return boundaryChain
-    return chain2BoundaryChain0
-
-def chain2BoundaryChain(FV,EV):
-	csrBoundaryMat = boundary(FV,EV)
-	nedges,nfaces = csrBoundaryMat.shape
-	def chain2BoundaryChain0(chain):
-		row = np.array(range(len(chain)))
-		col = np.array([0 for k in range(len(chain))])
-		data = np.array(chain)
-		csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
-		csrEdgeVect = csrBoundaryMat*csrFaceVect
-		boundaryChain = [h for h,val in
-			zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
-		return boundaryChain
-	return chain2BoundaryChain0
+def chain2BoundaryChain(csrBoundaryMat):
+   nedges,nfaces = csrBoundaryMat.shape
+   def chain2BoundaryChain0(chain):
+      row = np.array(range(len(chain)))
+      col = np.array([0 for k in range(len(chain))])
+      data = np.array(chain)
+      csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
+      csrEdgeVect = csrBoundaryMat*csrFaceVect
+      boundaryChain = [h for h,val in
+         zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
+      return boundaryChain
+   return chain2BoundaryChain0
 
 """ From chains to structures """
 def chain2structs(V,FV,EV,FE):

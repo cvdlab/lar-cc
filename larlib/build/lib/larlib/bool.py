@@ -73,8 +73,8 @@ def lar2boxes(model,qualifier=0):
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
 def MKTRIANGLES(model): 
     V,FV,EV = model
-    if len(V[0]) == 2: V=[v+[0] for v in V]
     FE = crossRelation(V,FV,EV)
+    if len(V[0]) == 2: V=[v+[0] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
@@ -295,6 +295,10 @@ from copy import copy
 
 def boundaryTriangulation(V,FV,EV,FE):
     triangleSet = []  
+    print "\nV =",V
+    print "FV =",FV
+    print "EV =",EV
+    print "FE =",FE
     
     def mapVerts(inverseMap):
         def mapVerts0(mappedVerts):
@@ -302,6 +306,8 @@ def boundaryTriangulation(V,FV,EV,FE):
         return mapVerts0
         
     for f,face in enumerate(FV):
+        print "\nf =",f
+        print "face =",face
         triangledFace = []
         EW = [EV[e] for e in FE[f]]
         pivotFace = [V[v] for v in face]
@@ -539,8 +545,7 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
         n = len(FV[f])
         if len(FE[f]) > n:
             # contains both edges coded 0 and 1 ... (how to solve?)
-            FEout += [face.remove(0)]
-            #FEout += [list(set(face).difference([0]))]
+            FEout += [list(set(face).difference([0]))]
         else:
             FEout += [face]
     return FEout
@@ -567,11 +572,9 @@ def thePartition(W,FW,EW):
     print "\nFZ =",FZ
     print "\nEZ =",EZ
     print "\nFE_0 =",FE
+    # remove 0 indices from FE relation
     FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
     print "\nFE_1 =",FE
-    
-    # remove 0 indices from FE relation
-    FE = [[f  if f!=0 else 1 for f in face] for face in FE]
     EF_angle = faceSlopeOrdering(model,FE,Z)
     
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)

@@ -4,6 +4,11 @@ from scipy import mat
 DEBUG = True
 
 """ Coding utilities """
+""" Generation of all binary subsets of lenght n """
+def allBinarySubsetsOfLenght(n):
+   out = [list(('{0:0'+str(n)+'b}').format(k)) for k in range(1,2**n)]
+   return AA(AA(int))(out)
+
 """ Generation of a random point """
 def rpoint2d():
     return eval( vcode([ random.random(), random.random() ]) )
@@ -242,7 +247,8 @@ def boundaryPolylines(struct):
 
 """ From LAR oriented boundary model to polylines """
 def boundaryModel2polylines(model):
-    V,EV = model
+    if len(model)==2: V,EV = model
+    elif len(model)==3: V,FV,EV = model
     polylines = []
     succDict = dict(EV)
     visited = [False for k in range(len(V))]

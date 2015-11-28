@@ -444,9 +444,9 @@ The more deep issue with LAR (that already appeared at the beginning of LAR expe
 The boundary operator (and the whole LAR approach) works well with convex cells, but MAY give errors (like $\partial\partial \not= 0$) with non-convex cells. At that time, we understood the source of the problem, due to the fact that ALL the vertices of a $(d-1)$-cell  EXTERNAL to a NON-CONVEX $d$-cell may belong to its boundary ... (e.g.~BOTH the vertices of a 1-cell external to a non-convex 2-cell)
 
 You might say: convexity is a geometric concept, boundary is topological, so what? 
-Because the input is certainly geometrical, via drawings and/or machine generated EV,FV starting from drawings, so the two aspects are strongly interconnected ... 
+Because the input is certainly geometrical, via drawings and/or machine generated \texttt{EV,FV} starting from drawings, so the two aspects are strongly interconnected ... 
 
-We implement here a general resolution strategy, since it is pretty  easy to discover the (d-1)-facets where the problem appears:  they are shared by MORE than TWO d-cells ... and this one is a topological ERROR. So, testing $\partial\partial$ on each face, we eliminate the problem.
+We implement here a general resolution strategy, since it is pretty  easy to discover the (d-1)-facets where the problem appears:  they are shared by MORE than TWO d-cells ... and this one is a topological ERROR. So, testing $\partial\partial$ on each face, we eliminate the problem \emph{within the boundary operator}, but not within the LAR data structure (to be marked in some way where the problem may appear ... TODO).
 
 My guess is that this source of errors might appear anytime the Boolean input becomes pretty complex, and that it was the greatest source of random errors. 
 
@@ -467,7 +467,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,.5))
 
 csrBoundaryMat = boundary(FV,EV)
 print "wrong boundary matrix =",csrBoundaryMat.todense()
-csrBoundaryMat = boundary1(FV,EV,VV)
+csrBoundaryMat = boundary1(FV,EV,VV)  % <<<<< NOTE !!
 print "right boundary matrix =",csrBoundaryMat.todense()
 @}
 %-------------------------------------------------------------------------------
@@ -510,33 +510,174 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],submodel,.5))
 @}
 %-------------------------------------------------------------------------------
 
+\subsection{Boundary operator on 3-complex with non-convex cells}
 
-csrBoundaryBoundaryMat.todense() =
-matrix([[0, 0, 0, 3],
-        [0, 0, 0, 3],
-        [0, 0, 0, 3],
-        [0, 0, 0, 3],
-        [0, 3, 0, 3],
-        [0, 3, 0, 3],
-        [0, 3, 0, 3],
-        [0, 3, 0, 3],
-        [0, 3, 0, 0],
-        [0, 3, 0, 0],
-        [0, 3, 0, 0],
-        [0, 3, 0, 0],
-        [0, 0, 3, 3],
-        [0, 0, 3, 3],
-        [0, 0, 3, 3],
-        [0, 0, 3, 3],
-        [3, 4, 3, 4],
-        [3, 4, 3, 4],
-        [3, 4, 3, 4],
-        [3, 4, 3, 4],
-        [3, 3, 0, 0],
-        [3, 3, 0, 0],
-        [3, 3, 0, 0],
-        [3, 3, 0, 0]])
+The test example exported in \texttt{test/py/larcc/test22.py} is aimed to check the working of LAR on chain complexes supported by cellular decompositions with non-convex but connected cells, possibly of topological genus $>1$, i.e.~with more than one hole in some face.
 
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test22.py
+@{""" Testing correction to boundary operator for general (non-convex) LAR """
+from larlib import *
+
+@< Input and visualization of a general cellular complex @>
+@< Visualization of the skeletons @>
+@< Computation of corrected boundary operator @>
+@< Visualization of some boundary chains @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Input and visualization of a general cellular complex}
+
+
+%-------------------------------------------------------------------------------
+@D Input and visualization of a general cellular complex
+@{""" Input and visualization of a general cellular complex """
+
+mod1 = larQuote1D([0.2,-0.2,0.2])
+mod2 = larQuote1D([0.5,0.5])
+mod3 = larQuote1D([0.5])
+mod = larModelProduct([larModelProduct([mod2,mod1]),mod3])
+
+mx = larQuote1D([1,1])
+my = larQuote1D([1])
+m = larModelProduct([larModelProduct([mx,my]),my])
+
+complex = Struct([m, t(.5,.2,.25), mod])
+V,CV0 = struct2lar(complex)
+CV = copy(CV0)
+CV[1] += CV[0] + CV[4]
+CV[3] += CV[2] + CV[5]
+VIEW(SKEL_1(STRUCT( MKPOLS((V,CV)))))
+@}
+%-------------------------------------------------------------------------------
+
+The LAR of the cellular decomposition shown in Figure~\ref{} is given in Figure~\ref{fig:3chains00}.
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=\linewidth]{images/3chains00} 
+   \caption{The cellular 3-complex defined below. Cells of different dimension are numbered in different colours.}
+   \label{fig:3chains00}
+\end{figure}
+
+We have 36 vertices, indexed from 0 to 35, and six 3-cells, numbered from 0 to 5.
+Notice that the subsets of integers  \texttt{CV[1]} and \texttt{CV[3]} provide the 
+description of the two non-convex cells.
+
+\begin{verbatim}
+V = [[0.0,0.0,0.0],[0.0,0.0,1.0],[0.0,1.0,0.0],[0.0,1.0,1.0], [1.0,0.0,0.0],
+[1.0,0.0,1.0],[1.0,1.0,0.0],[1.0,1.0,1.0], [2.0,0.0,0.0],[2.0,0.0,1.0],
+[2.0,1.0,0.0],[2.0,1.0,1.0], [0.5,0.2,0.25],[0.5,0.2,0.75],[0.5,0.4,0.25],
+[0.5,0.4,0.75], [1.0,0.2,0.25],[1.0,0.2,0.75],[1.0,0.4,0.25],[1.0,0.4,0.75], 
+[0.5,0.6,0.25],[0.5,0.6,0.75],[0.5,0.8,0.25],[0.5,0.8,0.75], [1.0,0.6,0.25],
+[1.0,0.6,0.75],[1.0,0.8,0.25],[1.0,0.8,0.75], [1.5,0.2,0.25],[1.5,0.2,0.75],
+[1.5,0.4,0.25],[1.5,0.4,0.75], [1.5,0.6,0.25],[1.5,0.6,0.75],[1.5,0.8,0.25],
+[1.5,0.8,0.75]]
+
+CV = [(24,25,26,27,32,33,34,35),(4,5,6,7,8,9,10,11,24,25,26,27,
+32,33,34,35,16,17,18,19,28,29,30,31),(20,21,22,23,24,25,26,27),
+(0,1,2,3,4,5,6,7,20,21,22,23,24,25,26,27,12,13,14,15,16,17,18,19),
+(16,17,18,19,28,29,30,31),(12,13,14,15,16,17,18,19)]
+\end{verbatim}
+
+
+\paragraph{Computation and visualization of the skeletons}
+%-------------------------------------------------------------------------------
+@D Visualization of the skeletons
+@{""" Visualization of the skeletons """
+
+def cubeFV(verts): 
+    [a,b,c,d,  e,f,g,h] = verts
+    return [[a,b,c,d],[e,f,g,h],[a,c,e,g],[b,d,f,h],[a,b,e,f],[c,d,g,h]]
+
+FV = COMP([sorted,set,AA(tuple),CAT,AA(cubeFV)])(CV0)
+V,EV = larFacets((V,FV),dim=2)
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],submodel,.25)) 
+FV[5] += FV[16] + FV[26]
+assert 30==len(boundaryCells(CV0,FV))  # assembly of 3 unrelated 3-complexes
+@}
+%-------------------------------------------------------------------------------
+
+\begin{verbatim}
+FV = [(0,1,2,3),(0,1,4,5),(0,2,4,6),(1,3,5,7),(2,3,6,7), 
+(4,5,6,7,16,17,18,19,24,25,26,27), 
+(4,5,8,9),(4,6,8,10),(5,7,9,11),(6,7,10,11),(8,9,10,11), (12,13,14,15),
+(12,13,16,17),(12,14,16,18),(13,15,17,19), (14,15,18,19),(16,17,18,19),
+(16,17,28,29),(16,18,28,30), (17,19,29,31),(18,19,30,31),(20,21,22,23),
+(20,21,24,25), (20,22,24,26),(21,23,25,27),(22,23,26,27),(24,25,26,27), 
+(24,25,32,33),(24,26,32,34),(25,27,33,35),(26,27,34,35), (28,29,30,31),
+(32,33,34,35)]
+\end{verbatim}
+
+
+\paragraph{Computation of corrected boundary operator}
+Of course, \texttt{totalChain = len(CV)*[1]} is the binary coordinate \texttt{[1,1,1,1,1,1]}
+of the cellular chain made by all the six 3-cells in \texttt{CV}.
+Analogously, \texttt{BF} is the list of integer indices of boundary 2-faces, corresponding to the coordinate representation given below, i.e.~~to the binary string of lenght 33, equating the size of the 2-skeleton of the cellular complex.
+\begin{verbatim}
+BF = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
+\texttt{[1,1,1,1,1,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
+\end{verbatim}
+Conversely, \texttt{BEV} is (a superset of) the 1-skeleton cells of the boundary, according to the image in Figure~\ref{}.
+
+%-------------------------------------------------------------------------------
+@D Computation of corrected boundary operator
+@{""" Computation of corrected boundary operator """
+
+totalChain = len(CV)*[1]
+BF = chain2BoundaryChain(boundary1(CV,FV,EV))(totalChain)
+BFV = [FV[f] for f in BF]
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,BFV))))
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+VIEW(STRUCT(AA(glass)(MKPOLS((V,BFV)))))
+VIEW(glass(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BFV)))))
+V,BEV = larFacets((V,BFV),dim=1)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[e for e in BEV if len(e)==2]))))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Visualization of some boundary chains}
+%-------------------------------------------------------------------------------
+@D Visualization of some boundary chains
+@{""" Visualization of some boundary chains """
+
+BF = chain2BoundaryChain(boundary1(CV,FV,EV))([1,0,1,1,0,0])
+BFV = [FV[f] for f in BF]
+V,BEV = larFacets((V,BFV),dim=1)
+BEV = [e for e in BEV if len(e)==2]
+VIEW(glass(STRUCT(MKPOLS((V,BFV)))))
+submodel = STRUCT(MKPOLS((V,BEV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,BEV,BFV],submodel,.25)) 
+
+
+obj = Struct([(V,BFV,BEV)])
+W,FW,EW = struct2lar(obj)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,EW))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((W,FW,EW)))))
+
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains1} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains5} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains6} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains9} 
+   \caption{example caption}
+   \label{fig:example}
+\end{figure}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains0} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains2} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains3} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains4} 
+   \caption{example caption}
+   \label{fig:example}
+\end{figure}
 
 \paragraph{Relational inversion (characteristic matrix transposition)}
 
@@ -1017,8 +1158,8 @@ def crossRelation(V,XV,YV):
         # NOTE: val depends on the relation under consideration ...
     return XY
 
-def crossRelation1(lenV,ZV,XV,YV):
-    if len(XV[0])==2 and len(YV[0])==1:  
+def crossRelation1(lenV,ZV,XV,YV,terminal=False):
+    if terminal:  
         print "\n****\nXV =",XV
         return XV
     else:

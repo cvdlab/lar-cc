@@ -168,8 +168,7 @@ def cells2hpcs(V,FV,cells,k):
 %-------------------------------------------------------------------------------
 @D From 2D chains to boundary chains
 @{""" From 2D chains to boundary chains """
-def chain2BoundaryChain(FV,EV):
-	csrBoundaryMat = boundary(FV,EV)
+def chain2BoundaryChain(csrBoundaryMat):
 	nedges,nfaces = csrBoundaryMat.shape
 	def chain2BoundaryChain0(chain):
 		row = np.array(range(len(chain)))

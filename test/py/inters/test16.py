@@ -12,15 +12,12 @@ edges = [CAT([FE[cycle] for cycle in cell]) for cell in cells]
 FVs = [[CV[cycle] for cycle in cell] for cell in cells]
 FV = AA(CAT)(FVs)
 
-def allBinarySubsetsOfLenght(n):
-   out = [list(('{0:0'+str(n)+'b}').format(k)) for k in range(1,2**n)]
-   return AA(AA(int))(out)
-
 n = len(cells)
 chains = allBinarySubsetsOfLenght(n)
 
 cycles = STRUCT(MKPOLS((V,EV)))
+csrBoundaryMat = boundary(FV,EV)
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
-                        for e in chain2BoundaryChain(FV,EV)(chain)]))))
+                        for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))
     VIEW(STRUCT([cycles, chainBoundary]))
