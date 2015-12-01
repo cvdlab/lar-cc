@@ -754,7 +754,8 @@ def connectTheDots(model):
     sortedVerts = [sorted([(V[v],c,v) for v,c in cell]) for cell in indexedVerts]
     
     bridgeEdges = []
-    for (group,cycleGroup,cycleVerts) in zip(range(len(cells)),sortedVerts,indexedVerts):
+    cellIndices = range(len(cells))
+    for (group,cycleGroup,cycleVerts) in zip(cellIndices,sortedVerts,indexedVerts):
         bridgeEdges += [scan(V,FVs, group,cycleGroup,cycleVerts)]
     return cells,bridgeEdges
 @}
@@ -792,6 +793,7 @@ def orientBoundaryCycles(model,cells):
     V,EV = model
     edgeBoundary = range(len(EV))
     edgeCycles = boundaryCycles(edgeBoundary,EV)
+    #vertexCycles = [[ EV[e][1] if e>0 else EV[-e][0] for e in cycle ] for cycle in edgeCycles]
     vertexCycles = [[ EV[e][1] if e>0 else EV[-e][0] for e in cycle ] for cycle in edgeCycles]
     rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
     theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
@@ -1471,9 +1473,64 @@ def boundaryCycles(edgeBoundary,EV):
         cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
             for k,(e,v) in enumerate(cycle)]]
     return cycles
+
+def boundaryCycles1(edgeBoundary,EV):
+    verts2edges = defaultdict(list)
+    for e in edgeBoundary:
+        verts2edges[EV[e][0]] += [e]
+        verts2edges[EV[e][1]] += [e]
+    cycles = []
+    
+    cbe = copy(edgeBoundary)
+    while cbe != []:
+        e = cbe[0]
+        v = EV[e][0]
+        cycle = []
+        while True:
+            cycle += [(e,v)]
+            e = list(set(verts2edges[v]).difference([e]))[0]
+            cbe.remove(e)
+            v = list(set(EV[e]).difference([v]))[0]
+            if (e,v)==cycle[0]:
+                break
+        n = len(cycle)
+        cycles += [[e if EV[e]==(cycle[(k-1)%n][1],cycle[k%n][1]) else -e 
+            for k,(e,v) in enumerate(cycle)]]
+    return cycles
 @}
 %-------------------------------------------------------------------------------
 
+
+
+
+\subsection{Visualization of a 2D complex and 2-chain}
+
+%-------------------------------------------------------------------------------
+@D Visualization of a 2D complex and 2-chain
+@{""" Visualization of a 2D complex and 2-chain """
+def larComplexChain(model):
+    V,FV,EV = model
+    VV = AA(LIST)(range(len(V)))
+    csrBoundaryMat = boundary(FV,EV)
+    def larComplexChain0(chain):
+        boundaryChain = chain2BoundaryChain(csrBoundaryMat)(chain)
+        outModel = V,[EV[e] for e in boundaryChain]
+        triangleSet = larTriangulation(outModel)
+        return boundaryChain,triangleSet
+    return larComplexChain0
+    
+def viewLarComplexChain(model):
+    V,FV,EV = model
+    operator = larComplexChain(model)
+    def viewLarComplexChain0(chain):
+        boundaryChain,triangleSet = operator(chain)
+        hpcChain = AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))
+        hpcChainBoundary = AA(COLOR(RED))(MKPOLS((V,[EV[e] for e in boundaryChain])))
+        VIEW(STRUCT( hpcChain + hpcChainBoundary ))
+        VIEW(EXPLODE(1.2,1.2,1.2)( hpcChain + hpcChainBoundary ))
+    return viewLarComplexChain0
+@}
+%-------------------------------------------------------------------------------
 
 
 
@@ -1508,6 +1565,7 @@ DEBUG = True
 @< Scan line algorithm input/output @>
 @< Orientation of component cycles of unconnected boundaries @>
 @< From nested boundary cycles to triangulation @>
+@< Visualization of a 2D complex and 2-chain @>
 @< Generation of 1-boundaries as vertex permutation @>
 @< Wire-frame LAR to boundary polygons @>
 @< Create the LAR of fragmented lines @>

@@ -507,6 +507,20 @@ def larMap(coordFuncs):
       # checkModel([V,CV])  TODO
    return larMap0
 
+""" From 2D chains to boundary chains """
+def chain2BoundaryChain(csrBoundaryMat):
+   nedges,nfaces = csrBoundaryMat.shape
+   def chain2BoundaryChain0(chain):
+      row = np.array(range(len(chain)))
+      col = np.array([0 for k in range(len(chain))])
+      data = np.array(chain)
+      csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
+      csrEdgeVect = csrBoundaryMat*csrFaceVect
+      boundaryChain = [h for h,val in
+         zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
+      return boundaryChain
+   return chain2BoundaryChain0
+
 
 
 if __name__ == "__main__": 
