@@ -1,26 +1,21 @@
-
+""" Testing containments between non intersecting cycles """
 from larlib import *
 
-""" random 1-boundary generation """
-import sys
-sys.path.insert(0, '/Users/paoluzzi/Documents/dev/lar-cc/test/py/larcc/')
-from test16 import *
+filename = "test/svg/inters/facade.svg"
+lines = svg2lines(filename)
+VIEW(STRUCT(AA(POLYLINE)(lines)))
 
-EV = AA(list)(cells)
+V,EV = lines2lar(lines)
 V,EVs = biconnectedComponent((V,EV))
-FV = AA(COMP([sorted,list,set,CAT]))(EVs)
-FV = sorted( FV,key=len,reverse=True )
-EVs = sorted( EVs,key=len,reverse=True )
-W = [eval(vcode(v)) for v in V]
-testArray = latticeArray(W,EVs)
+# candidate face
+FVs = AA(COMP([list,set,CAT]))(EVs)
 
-"""
-bcycles,bverts = boundaryCycles(range(len(EW)),EW)
-VIEW(STRUCT(AA(POLYLINE)([[V[v] for v in verts] for verts in bverts])))
-"""
-    
-colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, 
-         PURPLE, BROWN]
-components = [COLOR(colors[k%12])(STRUCT(MKPOLS((V,ev)))) for k,ev in enumerate(EVs)]
-VIEW(STRUCT(components))
+testArray = latticeArray(V,EVs)
 
+for k in range(len(testArray)):
+   print k,testArray[k]
+print "\ncells = ", cellsFromCycles(testArray),"\n"
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FVs],submodel,0.15)) 

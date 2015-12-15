@@ -1,7 +1,6 @@
 """ Module for pipelined intersection of geometric objects """
 from larlib import *
 from scipy import mat
-DEBUG = True
 
 """ Coding utilities """
 """ Generation of all binary subsets of lenght n """
