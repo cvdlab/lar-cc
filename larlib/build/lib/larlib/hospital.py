@@ -470,7 +470,7 @@ def manhattanTest(nodes,nDict,i,j):
     return nDict.setdefault((hi,kj),-1)!=-1 and nDict.setdefault((hj,ki),-1)!=-1
 
 """ Remove duplicates in structure frame """
-def removeDups(nodes,arcs1,arcs2,faces):
+def removeDuplicates(nodes,arcs1,arcs2,faces):
     ndict = defaultdict(list)
     index = [None for k in range(len(nodes))]
     for k,node in enumerate(nodes):
@@ -501,7 +501,7 @@ def structureGrid(loci):
     faces = [(node(i,j),node(i,j+1),node(i+1,j+1),node(i+1,j)) for (i,j) in nodes]
     faces = [face for face in faces if not any([v==-1 for v in face])]
     nodes = metric([[j,i] for i,j in nodes])
-    return removeDups(nodes,arcs1,arcs2,faces)
+    return removeDuplicates(nodes,arcs1,arcs2,faces)
 
 """ Instancing of structure frame by floor """
 nodes0, arcs10,arcs20, faces0 = structureGrid(mezaninePillars+bottomPillars)

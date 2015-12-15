@@ -354,7 +354,6 @@ def spacePartition(V,FV,EV, parts):
         theLines = []
         for line in lines:
             if len(line)>2: 
-                print '\a',"line =",line
                 segments = computeSegments(line)
                 theLines += segments
             else: theLines += [line]
@@ -598,7 +597,8 @@ passed through the \texttt{orientedEdges} variable. We can formalize the problem
 @{""" Cycles orientation """
 def cyclesOrient(pcycles,fcycle,EV):
     if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
-    ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
+    ofcycle,_ = boundaryCycles(fcycle,EV) # oriented 
+    ofcycle = ofcycle[0] # oriented 
     if type(pcycles[0])==list: opcycle = CAT(pcycles)
     else: opcycle = pcycles
     int = set(opcycle).intersection(ofcycle)
@@ -632,7 +632,8 @@ def facesFromComponents(model,FE,EF_angle):
     V,FV,EV = model
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
-    boundaryLoop = boundaryCycles(FE[face],EV)[0]
+    boundaryLoop,_ = boundaryCycles(FE[face],EV)
+    boundaryLoop = boundaryLoop[0]
     firstEdge = boundaryLoop[0]
     #import pdb; pdb.set_trace()
     cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
@@ -649,7 +650,8 @@ def facesFromComponents(model,FE,EF_angle):
     while True:
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
-        boundaryLoop = boundaryCycles(FE[face],EV)[0]
+        boundaryLoop,_ = boundaryCycles(FE[face],EV)
+        boundaryLoop = boundaryLoop[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
         cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
@@ -704,7 +706,8 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
     if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
         coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
         face = coboundaryFaces[0]            
-    faceLoop = boundaryCycles(FE[face],EV)[0]
+    faceLoop,_ = boundaryCycles(FE[face],EV)
+    faceLoop = faceLoop[0]
     commonEdges = set(faceLoop).intersection(boundaryLoop)
     if commonEdges == set() or commonEdges == {0}: 
         faceLoop = reverseOrientation(faceLoop)
@@ -1286,6 +1289,40 @@ VIEW(EXPLODE(1.2,1.2,1.2)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in
 %-------------------------------------------------------------------------------
 @O test/py/bool/test12.py @{
 """ Testing of point-in-polygon classification algorithm """
+from larlib import *
+
+filename = "test/svg/inters/tile.svg"
+lines = svg2lines(filename)
+V,EV = lines2lar(lines)
+
+@< Point in polygon testing @>
+
+result = []
+classify = pointInPolygonClassification((V,EV))
+for k in range(10000):
+    queryPoint = [random.random(),random.random()]
+    inOut = classify(queryPoint)
+    #print k,queryPoint,inOut
+    if inOut=="p_in": result += [MK(queryPoint)]
+    elif inOut=="p_out": result += [COLOR(RED)(MK(queryPoint))]
+
+VIEW(STRUCT(MKPOLS((V,EV))+result))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/pointInPolygon} 
+   \caption{Testing the point-in-polygon algorithm.}
+   \label{fig:pointInPolygon}
+\end{figure}
+
+
+\paragraph{Testing of point-in-polygon classification on a random polygon}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test14.py @{
+""" Testing of point-in-polygon classification  on a random polygon """
 from larlib import *
 
 filename = "test/svg/inters/tile.svg"

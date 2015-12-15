@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = larcc
+NAME = triangulation
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 

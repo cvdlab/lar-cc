@@ -16,6 +16,7 @@ from largrid import *
 from larcc import *
 from integr import *
 from inters import *
+from triangulation import *
 from architectural import *
 from bool import *
 from hijson import *

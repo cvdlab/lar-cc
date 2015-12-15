@@ -268,7 +268,6 @@ def spacePartition(V,FV,EV, parts):
         theLines = []
         for line in lines:
             if len(line)>2: 
-                print '\a',"line =",line
                 segments = computeSegments(line)
                 theLines += segments
             else: theLines += [line]
@@ -427,7 +426,8 @@ def facesFromComponents(model,FE,EF_angle):
     V,FV,EV = model
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
-    boundaryLoop = boundaryCycles(FE[face],EV)[0]
+    boundaryLoop,_ = boundaryCycles(FE[face],EV)
+    boundaryLoop = boundaryLoop[0]
     firstEdge = boundaryLoop[0]
     #import pdb; pdb.set_trace()
     cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
@@ -444,7 +444,8 @@ def facesFromComponents(model,FE,EF_angle):
     while True:
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
-        boundaryLoop = boundaryCycles(FE[face],EV)[0]
+        boundaryLoop,_ = boundaryCycles(FE[face],EV)
+        boundaryLoop = boundaryLoop[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
         cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
@@ -465,7 +466,8 @@ def facesFromComponents(model,FE,EF_angle):
 """ Cycles orientation """
 def cyclesOrient(pcycles,fcycle,EV):
     if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
-    ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
+    ofcycle,_ = boundaryCycles(fcycle,EV) # oriented 
+    ofcycle = ofcycle[0] # oriented 
     if type(pcycles[0])==list: opcycle = CAT(pcycles)
     else: opcycle = pcycles
     int = set(opcycle).intersection(ofcycle)
@@ -500,7 +502,8 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
     if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
         coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
         face = coboundaryFaces[0]            
-    faceLoop = boundaryCycles(FE[face],EV)[0]
+    faceLoop,_ = boundaryCycles(FE[face],EV)
+    faceLoop = faceLoop[0]
     commonEdges = set(faceLoop).intersection(boundaryLoop)
     if commonEdges == set() or commonEdges == {0}: 
         faceLoop = reverseOrientation(faceLoop)

@@ -956,7 +956,7 @@ def structureGrid(loci):
     faces = [(node(i,j),node(i,j+1),node(i+1,j+1),node(i+1,j)) for (i,j) in nodes]
     faces = [face for face in faces if not any([v==-1 for v in face])]
     nodes = metric([[j,i] for i,j in nodes])
-    return removeDups(nodes,arcs1,arcs2,faces)
+    return removeDuplicates(nodes,arcs1,arcs2,faces)
 @}
 %-------------------------------------------------------------------------------
 
@@ -968,7 +968,7 @@ For the sake of simplicity and speed, the user's input of sublattice definitions
 %-------------------------------------------------------------------------------
 @D Remove duplicates in structure frame 
 @{""" Remove duplicates in structure frame """
-def removeDups(nodes,arcs1,arcs2,faces):
+def removeDuplicates(nodes,arcs1,arcs2,faces):
     ndict = defaultdict(list)
     index = [None for k in range(len(nodes))]
     for k,node in enumerate(nodes):

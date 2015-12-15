@@ -1,10 +1,11 @@
 """ Boundary orientation of a random 2D triangulation """
 from larlib import *
 from random import random
+from scipy import linalg
 
 """ Vertices V generated as random point in the unit circle """
 verts = []
-npoints = 200
+npoints = 800
 for k in range(npoints):
    t = 2*pi*random()
    u = random()+random()
@@ -14,13 +15,13 @@ for k in range(npoints):
 VIEW(STRUCT(AA(MK)(verts)))
 
 """ Delaunay triangulation of the whole set V of points """
-triangles = Delaunay(verts)
+triangles = scipy.spatial.Delaunay(verts)
 def area(cell): return linalg.det([verts[v]+[1] for v in cell])/2
 cells = [ cell for cell in triangles.vertices.tolist() if area(cell)>PI/(3*npoints)]
 V, FV = AA(list)(verts), cells
 
 """ Fraction of triangles randomly discarded """
-fraction = 0.7
+fraction = 0.25
 cellSpan = len(FV)
 remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
 FV = [FV[k] for k in range(cellSpan) if not k in remove]
@@ -51,4 +52,7 @@ VIEW(STRUCT(MKPOLS((V,FV))))
 VIEW(STRUCT(
    MKPOLS((V,FV)) +
    [COLOR(RED)(mkSignedEdges((V,cells)))]  ))
+
+VIEW(STRUCT( MKPOLS((V,cells))  ))
+VIEW(STRUCT( [mkSignedEdges((V,cells))]  ))
 

@@ -21,6 +21,7 @@ larlib/splines.py
 larlib/splitcell.py
 larlib/support.py
 larlib/sysml.py
+larlib/triangulation.py
 larlib.egg-info/PKG-INFO
 larlib.egg-info/SOURCES.txt
 larlib.egg-info/dependency_links.txt

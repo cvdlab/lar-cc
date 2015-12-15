@@ -1430,6 +1430,7 @@ The boundary of whichever chain, here defined as the list of indices of its cell
 \begin{list}{}{} \item
 \mbox{}\verb@""" From 2D chains to boundary chains """@\\
 \mbox{}\verb@def chain2BoundaryChain(csrBoundaryMat):@\\
+\mbox{}\verb@   print ">>> chain2BoundaryChain"@\\
 \mbox{}\verb@   nedges,nfaces = csrBoundaryMat.shape@\\
 \mbox{}\verb@   def chain2BoundaryChain0(chain):@\\
 \mbox{}\verb@      row = np.array(range(len(chain)))@\\
@@ -1440,6 +1441,7 @@ The boundary of whichever chain, here defined as the list of indices of its cell
 \mbox{}\verb@      boundaryChain = [h for h,val in@\\
 \mbox{}\verb@         zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]@\\
 \mbox{}\verb@      return boundaryChain@\\
+\mbox{}\verb@   print "<<< chain2BoundaryChain"@\\
 \mbox{}\verb@   return chain2BoundaryChain0@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -1724,7 +1726,7 @@ The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sp
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap47}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of topological relation\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb29}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of topological relation\nobreak\ {\footnotesize 29}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Computation of topological relation """@\\
@@ -1772,7 +1774,7 @@ The \texttt{boundary} function below takes as parameters the \texttt{BRC} repres
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap48}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.0,0.0,0.0],[1.0,0.0,0.0],[0.0,1.0,0.0],[1.0,1.0,0.0],@\\
@@ -1801,7 +1803,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap49}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 30}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def boundary(cells,facets):@\\
@@ -1820,7 +1822,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \mbox{}\verb@   facetLengths = [csrCell.getnnz() for csrCell in csrCV]@\\
 \mbox{}\verb@   VV = AA(LIST)(range(lenV))@\\
 \mbox{}\verb@   csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)@\\
-\mbox{}\verb@   FE = crossRelation1(lenV,CV,FV,EV)@\\
+\mbox{}\verb@   FE = crossRelation1(lenV,CV,FV,EV,True)@\\
 \mbox{}\verb@   return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def coboundary(cells,facets):@\\
@@ -1952,7 +1954,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap53}
-\protect\makebox[0ex][r]{\NWtarget{nuweb33a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize 33a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb33}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize 33}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
@@ -1992,7 +1994,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap54}
-\protect\makebox[0ex][r]{\NWtarget{nuweb33b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize 33b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb34a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize 34a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed boundary matrix for polytopal complexes """@\\
@@ -2033,7 +2035,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap55}
-\protect\makebox[0ex][r]{\NWtarget{nuweb34}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize 34}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb34b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize 34b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed boundary cells for polytopal complexes """@\\
@@ -2066,7 +2068,7 @@ The \texttt{larCuboids} function, when applied to a \texttt{shape} parameter and
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap56}
-\protect\makebox[0ex][r]{\NWtarget{nuweb35a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test14.py"@\nobreak\ {\footnotesize 35a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb35}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test14.py"@\nobreak\ {\footnotesize 35 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary of a 2D cuboidal grid """@\\
@@ -2096,7 +2098,7 @@ In both cases the boundary matrix is computed by using the general polytopal app
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap57}
-\protect\makebox[0ex][r]{\NWtarget{nuweb35b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test15.py"@\nobreak\ {\footnotesize 35b }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb36a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test15.py"@\nobreak\ {\footnotesize 36a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented cuboidal and simplicial cells (same algorithm) """@\\
@@ -2127,7 +2129,7 @@ In both cases the boundary matrix is computed by using the general polytopal app
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap58}
-\protect\makebox[0ex][r]{\NWtarget{nuweb36a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test18.py"@\nobreak\ {\footnotesize 36a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb36b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test18.py"@\nobreak\ {\footnotesize 36b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented cuboidal cells """@\\
@@ -2175,7 +2177,7 @@ In both cases the boundary matrix is computed by using the general polytopal app
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap59}
-\protect\makebox[0ex][r]{\NWtarget{nuweb36b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test17.py"@\nobreak\ {\footnotesize 36b }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb37}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test17.py"@\nobreak\ {\footnotesize 37 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary orientation of a random 2D cubical complex """@\\
@@ -2974,11 +2976,11 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@@\hbox{$\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWlink{nuweb8}{8}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Characteristic matrix transposition\nobreak\ {\footnotesize \NWlink{nuweb17}{17}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb30}{30}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb31a}{31a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computation of topological relation\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computation of topological relation\nobreak\ {\footnotesize \NWlink{nuweb29}{29}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb32}{32}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize \NWlink{nuweb33a}{33a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize \NWlink{nuweb33}{33}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb19a}{19a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb18}{18}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Some incidence operators\nobreak\ {\footnotesize \NWlink{nuweb25a}{25a}}$\,\rangle$}\verb@@\\
@@ -2986,8 +2988,8 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@@\hbox{$\langle\,$Numbered visualization of a LAR model\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Drawing of oriented edges\nobreak\ {\footnotesize \NWlink{nuweb21b}{21b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Incidence chain computation\nobreak\ {\footnotesize \NWlink{nuweb27a}{27a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb33b}{33b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb34}{34}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb34a}{34a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb34b}{34b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb41b}{41b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb43}{43}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb44a}{44a}}$\,\rangle$}\verb@@\\
@@ -3020,7 +3022,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWlink{nuweb6b}{6b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb10a}{10a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb31b}{31b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb19c}{19c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb19b}{19b}}$\,\rangle$}\verb@@\\

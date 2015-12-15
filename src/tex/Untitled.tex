@@ -1,59 +1,88 @@
 from larlib import *
+from collections import defaultdict
 
-filename = "/Users/paoluzzi/Documents/RICERCA/vadim/LAST/SysML/images/appendix/scann01.svg"
-lines = svg2lines(filename)
-VIEW(STRUCT(AA(POLYLINE)(lines)))
+def detachManifolds(polygonVerts):
+    vertCycles = []
+    for vertexList in polygonVerts:
+        vertCount,counts = defaultdict(list),list
+        for v in vertexList: 
+            vertCount[v] += [1]
+        counts = [sum(vertCount[v]) for v in vertexList]
+        vertCycles += [counts]
+    return vertCycles
     
-V,FV,EV = larFromLines(lines)
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV)) + AA(MK)(V)))
+def splitManifolds(cycles,vertices,manifolds):
+    out = []
+    for cycle,verts,manifold in zip(cycles,vertices,manifolds):
+        if sum(manifold) == len(manifold):
+            out += [cycle] 
+        else:
+            transpositionNumbers = [n for n,k in enumerate(manifold) if k>1]
+            n = transpositionNumbers[0]
+            cycle = rotatePermutation(cycle,n) 
+            verts = rotatePermutation(verts,n) 
+            manifold = rotatePermutation(manifold,n) 
+            starts = AA(C(sum)(-n))(transpositionNumbers)+[len(manifold)]
+            pairs = [(start,starts[k+1]) for k,start in enumerate(starts[:-1])]
+            splitCycles = [[cycle[k] for k in range(*interval)] for interval in pairs]
+            splitVerts = [[verts[k] for k in range(*interval)] for interval in pairs]
+            out += splitCycles
+    return out
 
-VV = AA(LIST)(range(len(V)))
-submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.3))
+def boundaryCycles(edgeBoundary,EV):
+    cycles,cycle = [],[]
+    vertices = []
+    
+    def singleBoundaryCycle(edgeBoundary):
+        verts2edges = defaultdict(list)
+        for e in edgeBoundary:
+            verts2edges[EV[e][0]] += [e]
+            verts2edges[EV[e][1]] += [e]
+        cycle,verts = [],[]
+        
+        if edgeBoundary == []: return cycle,verts
+        e = edgeBoundary[0]
+        v,w = EV[e]
+        verts = [v,w]
+        while edgeBoundary != []:
+            cycle += [e]
+            edgeBoundary.remove(e)
+            v,w = EV[e]
+            verts2edges[v].remove(e)
+            verts2edges[w].remove(e)
+            w = list(set(EV[e]).difference([verts[-1]]))[0]
+            if verts2edges[w] == []: break
+            e = verts2edges[w][0]
+            verts += [w]
+        verts = verts[1:]
+        return cycle,verts
+        
+    while edgeBoundary != []:
+        edgeBoundary = list(set(edgeBoundary).difference(cycle))
+        cycle,verts = singleBoundaryCycle(edgeBoundary)
+        if cycle!= []: 
+            cycle = [e if verts[k]==EV[e][0] else -e for k,e in enumerate(cycle)]
+            cycles += [cycle]
+            vertices += [verts]
+    manifolds = detachManifolds(vertices)
+    cycles = splitManifolds(cycles,vertices,manifolds)
+    return cycles
+            
 
-verts,faces,edges = polyline2lar([[ V[v] for v in FV[-1] ]])
-VIEW(STRUCT(MKPOLS((verts,edges))))
+EV = [(10, 11), (5, 6), (7, 16), (2, 12), (0, 3), (1, 11), (3, 14), (0, 8), (4, 9), (8, 10), (4, 5), (13, 15), (9, 10), (5, 15), (2, 14), (0, 1), (6, 8), (1, 12), (5, 7), (0, 2), (6, 13), (3, 4), (6, 16)]
+boundaryChain1 = [3, 4, 7, 10, 11, 13, 15, 16, 17, 19, 20, 21]
+boundaryChain2 = [0, 2, 3, 5, 6, 8, 11, 12, 13, 14, 17, 18, 20, 21, 22]
 
-p1 = [11,3,4,9,10,-1,0,11]
-p2 = [5,6,1,-8,9,12,5]
-p3 = [3,4,9,12,5,6,1,0,2,-3]
 
-def neg(poly):
-	return [k for k,p in enumerate(poly) if p<0]
+cycles = boundaryCycles(boundaryChain2,EV)
+print "\ncycles =",cycles
 
-V1 = [V[abs(v)]+[0.01] for v in p1]
-V2 = [V[abs(v)]+[0.0] for v in p2]
-V3 = [V[abs(v)]+[-0.01] for v in p3]
 
-VIEW(STRUCT(AA(POLYLINE)([V1,V2,V3])))
+cycles = boundaryCycles(boundaryChain1,EV)
+print "\ncycles =",cycles,"\n"
 
-def signature(V,symbolDict,poly):
-	vect = [VECTDIFF((V[u],V[v])) for u,v in zip(poly[:-1],poly[1:])]
-	sizes = [VECTNORM(v) for v in vect]
-	cvect = AA(UNITVECT)(vect+[vect[0]])
-	vnormal = AA(VECTDIFF)(zip(cvect[:-1], cvect[1:]))
-	angles = [math.atan2(y,x)*180/PI for x,y in vnormal]
-	keys = AA(str)(eval(vcode((CAT(zip(sizes,angles))))))
-	vals = AA(C(ADD)(65))(range(len(keys)))
-	last = len(symbolDict)
-	for k,key in enumerate(keys): 
-		if symbolDict[key] == []:
-			last += 1
-			symbolDict[key] = [chr(64+last)]
-	v = neg(poly)[0]
-	symbolDict[keys[v+1]] = ["~"]
-	sign = CAT([symbolDict[key] for key in keys])
-	sign = "".join(sign)
-	first = min(sign)
-	twoSubStrings = sign.split(first)
-	sign = first + twoSubStrings[1] + twoSubStrings[0]
-	return symbolDict,"".join(sign)
+print ">>> larComplexChain"
 
-symbolDict = defaultdict(list)
-sign1 = signature(V,symbolDict,p1)
-sign2 = signature(V,symbolDict,p2)
-sign3 = signature(V,symbolDict,p3)
 
-print "\n",sign1[1],"\n",sign2[1],"\n",sign3[1]
 
 

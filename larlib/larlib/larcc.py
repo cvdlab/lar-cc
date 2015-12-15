@@ -172,7 +172,7 @@ def boundary1(CV,FV,EV):
    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
    VV = AA(LIST)(range(lenV))
    csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
-   FE = crossRelation1(lenV,CV,FV,EV)
+   FE = crossRelation1(lenV,CV,FV,EV,True)
    return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
 
 def coboundary(cells,facets):
@@ -509,6 +509,7 @@ def larMap(coordFuncs):
 
 """ From 2D chains to boundary chains """
 def chain2BoundaryChain(csrBoundaryMat):
+   print ">>> chain2BoundaryChain"
    nedges,nfaces = csrBoundaryMat.shape
    def chain2BoundaryChain0(chain):
       row = np.array(range(len(chain)))
@@ -519,6 +520,7 @@ def chain2BoundaryChain(csrBoundaryMat):
       boundaryChain = [h for h,val in
          zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
       return boundaryChain
+   print "<<< chain2BoundaryChain"
    return chain2BoundaryChain0
 
 
