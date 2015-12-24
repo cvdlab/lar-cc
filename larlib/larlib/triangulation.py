@@ -157,28 +157,47 @@ def pointInPolygonClassification(pol):
 
 
 """ Classification of non intersecting cycles """
-def latticeArray(V,EVs):
+def internalTo(V,ev):
+    classify = pointInPolygonClassification((V,ev))
+    ve = invertRelation(ev)
+    for v,edgeIndices in enumerate(ve):
+        if len(edgeIndices) == 2: break
+    v1,v2 = set(CAT([list(ev[e]) for e in edgeIndices])).symmetric_difference([v])
+    vect1 = VECTDIFF([V[v1],V[v]])
+    vect2 = VECTDIFF([V[v2],V[v]])
+    point = VECTSUM([ V[v], SCALARVECTPROD([ 0.05, VECTSUM([vect1,vect2]) ])])
+    if classify(point) == "p_out":
+        point = VECTSUM([ V[v], SCALARVECTPROD([ -0.05, VECTSUM([vect1,vect2]) ])])
+    return point
+    
+def computeCycleLattice(V,EVs):
     n = len(EVs)
-    testArray = []
+    latticeArray = []
+    interiorPoints = [internalTo(V,ev) for k,ev in enumerate(EVs)]
     for k,ev in enumerate(EVs):
         row = []
         classify = pointInPolygonClassification((V,ev))
-        for h in range(0,n):
+        for h in range(0,k):
             i = EVs[h][0][0]
-            point = V[i]
+            #point = V[i]
+            point = interiorPoints[h]
             test = classify(point)
             if test=="p_in": row += [1]
             elif test=="p_out": row += [0]
             elif test=="p_on": row += [-1]
             else: print "error: in cycle classification"
-        testArray += [row]
-    return testArray
+        row += [-1]
+        for h in range(k,n-1): 
+            row += [0]
+        latticeArray += [row]
+    return latticeArray
 
 """ Extraction of path-connected boundaries """
-def cellsFromCycles (testArray):
-    n = len(testArray)
-    sons = [[h]+[k for k in range(n) if row[k]==1] for h,row in enumerate(testArray)]
-    level = [sum(col) for col in TRANS(testArray)]
+def cellsFromCycles (latticeArray):
+    print "\nlatticeArray =\n",latticeArray,"\n"
+    n = len(latticeArray)
+    sons = [[h]+[k for k in range(n) if row[k]==1] for h,row in enumerate(latticeArray)]
+    level = [sum(col) for col in TRANS(latticeArray)]
     
     def rank(sons): return [level[x] for x in sons]
     preCells = sorted(sons,key=rank)
@@ -209,7 +228,6 @@ def scan(V,FVs, group,cycleGroup,cycleVerts):
         n = len(FVs[group][cycle])
         if nextCycle != cycle: 
             if not ((nextCycle in scannedCycles) and (cycle in scannedCycles)):
-                print "k =",k
                 scannedCycles += [nextCycle]
                 m = len(FVs[group][nextCycle])
                 v1,v2 = v,cycleGroup[k+1][2]
@@ -228,8 +246,8 @@ def connectTheDots(model):
     V,EV = model
     V,EVs = biconnectedComponent((V,EV))
     FV = AA(COMP([sorted,set,CAT]))(EVs)
-    testArray = latticeArray(V,EVs)
-    cells = cellsFromCycles(testArray)
+    latticeArray = computeCycleLattice(V,EVs)
+    cells = cellsFromCycles(latticeArray)
     FVs = [[FV[cycle] for cycle in cell] for cell in cells]
     
     indexedCycles = [zip(FVs[h],range(len(FVs[h])))   for h,cell in enumerate(cells)]
@@ -264,27 +282,19 @@ def setClockwise(h,k,cycle,areas,CVs):
         CVs[h][k] = canonicalRotation(REVERSE(chain))
 
 def orientBoundaryCycles(model,cells):
-    print "\nmodel =",model
-    print "\ncells =",cells
     V,EV = model
     edgeBoundary = range(len(EV))
     edgeCycles,_ = boundaryCycles(edgeBoundary,EV)
     vertexCycles = [[ EV[e][1] if e>0 else EV[-e][0] for e in cycle ] for cycle in edgeCycles]
-    print "vertexCycles =",vertexCycles
     rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
-    print "rotations =",rotations
     theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
-    print "theCycles =",theCycles
     CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
-    print "CVs =",CVs
     areas = signedSurfIntegration((V,theCycles,EV),signed=True)
-    print "areas =",areas,"\n"
     
     for h,cell in enumerate(cells):
         for k,cycle in enumerate(cell):
             if k == 0: setCounterClockwise(h,k,cycle,areas,CVs)
             else: setClockwise(h,k,cycle,areas,CVs)
-    print "CVs =",CVs
     return CVs
 
 """ From nested boundary cycles to triangulation """
@@ -325,7 +335,7 @@ def boundaryCycles2vertexPermutation( model ):
     verts = CAT(CAT( CVs ))
     n = len(verts)
     W = copy.copy(V)
-    assert len(verts) == sorted(verts)[n-1]-sorted(verts)[0]+1
+    #assert len(verts) == sorted(verts)[n-1]-sorted(verts)[0]+1
     nextVert = dict([(v,cycle[(k+1)%(len(cycle))]) for cell in CVs for cycle in cell 
                    for k,v in enumerate(cycle)])
     for k,(u,v) in enumerate(CAT(bridgeEdges)):
@@ -391,19 +401,13 @@ def structBoundaryModel(struct):
 """ From structures to boundary polylines """
 def boundaryPolylines(struct):
     V,boundaryEdges = structBoundaryModel(struct)
-    print "\nV =",V
-    print "\nboundaryEdges =",boundaryEdges
     if len(V) < len(boundaryEdges):
         EV = AA(sorted)(boundaryEdges)
         boundaryEdges = range(len(boundaryEdges))
         cycles,vertices = boundaryCycles(boundaryEdges,EV)
-        print "\ncycles =",cycles
-        print "\nvertices =",vertices
         polylines = [[V[v] for v in verts]+[V[verts[0]]] for verts in REVERSE(vertices)]
-        print "\npolylines =",polylines,"\n"
     else:
         polylines = boundaryModel2polylines((V,boundaryEdges))
-    print "\npolylines =",polylines,"\n"
     return polylines
 
 """ From LAR oriented boundary model to polylines """
@@ -443,6 +447,20 @@ def boundaryModel2polylines(model):
         nonVisited = [k for k in succDict.keys() if not visited[k]]
     return polylines
 
+""" Computing a LAR 2-complex from an arrangement of line segments"""
+def larFromLines(lines):
+    V,EV = lines2lar(lines)
+    V,cycles,EV = facesFromComps((V,EV))
+    areas = integr.surfIntegration((V,cycles,EV))
+    orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
+    interiorCycles = [face for area,face in orderedCycles[:-1]]
+    EdgeCyclesByVertices = [zip(cycle[:-1],cycle[1:])+[(cycle[-1],cycle[0])] 
+                        for cycle in interiorCycles]
+    latticeArray = computeCycleLattice(V,EdgeCyclesByVertices)
+    cells = cellsFromCycles(latticeArray)
+    FV = [list(set(CAT([interiorCycles[k] for k in cell]))) for cell in cells]
+    return V,FV,EV
+
 """ Visualization of a 2D complex and 2-chain """
 def larComplexChain(model):
     V,FV,EV = model
@@ -465,4 +483,20 @@ def viewLarComplexChain(model):
         VIEW(STRUCT( hpcChain + hpcChainBoundary ))
         VIEW(EXPLODE(1.2,1.2,1.2)( hpcChain + hpcChainBoundary ))
     return viewLarComplexChain0
+
+""" Solid PyPLaSM visualization of a 2-complex with non-contractible 
+      and non-manifold cells"""
+def MKFACES(model):
+    V,FV,EV = model
+    bmatrix = boundary(FV,EV)
+    boundaryOperator = chain2BoundaryChain(bmatrix)
+    chain = [0]*len(FV)
+    boundingEdges = []
+    for k,face in enumerate(FV):
+      unitChain = copy.copy(chain)
+      unitChain[k] = 1
+      boundingEdges += [boundaryOperator(unitChain)]
+    faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
+        for edges in boundingEdges]
+    return faces
 

@@ -305,8 +305,6 @@ def boundaryTriangulation(V,FV,EV,FE):
         return mapVerts0
         
     for f,face in enumerate(FV):
-        print "\nf =",f
-        print "face =",face
         triangledFace = []
         EW = [EV[e] for e in FE[f]]
         pivotFace = [V[v] for v in face]

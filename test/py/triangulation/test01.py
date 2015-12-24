@@ -10,11 +10,10 @@ V,EVs = biconnectedComponent((V,EV))
 # candidate face
 FVs = AA(COMP([list,set,CAT]))(EVs)
 
-testArray = latticeArray(V,EVs)
+latticeArray = computeCycleLattice(V,EVs)
 
-for k in range(len(testArray)):
-   print k,testArray[k]
-print "\ncells = ", cellsFromCycles(testArray),"\n"
+for k in range(len(latticeArray)):
+   print k,latticeArray[k]
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))

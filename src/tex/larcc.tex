@@ -1,10 +1,10 @@
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amsthm}
@@ -45,7 +45,7 @@
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{The LARCC team}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
@@ -104,9 +104,9 @@ The function \texttt{brc2Coo} transforms a \texttt{BRC} representation in a list
 %-------------------------------------------------------------------------------
 @D Brc to Coo transformation
 @{def brc2Coo(ListOfListOfInt):
-	COOm = [[k,col,1] for k,row in enumerate(ListOfListOfInt)
-			for col in row ]
-	return COOm
+    COOm = [[k,col,1] for k,row in enumerate(ListOfListOfInt)
+            for col in row ]
+    return COOm
 @}
 %-------------------------------------------------------------------------------
 
@@ -132,20 +132,20 @@ Then we give the function \texttt{triples2mat} to make the transformation from t
 %-------------------------------------------------------------------------------
 @D From list of triples to scipy.sparse
 @{def triples2mat(triples,shape="csr"):
-	n = len(triples)
-	data = arange(n)
-	ij = arange(2*n).reshape(2,n)
-	for k,item in enumerate(triples):
-		ij[0][k],ij[1][k],data[k] = item
-	return scipy.sparse.coo_matrix((data, ij)).asformat(shape)
+    n = len(triples)
+    data = arange(n)
+    ij = arange(2*n).reshape(2,n)
+    for k,item in enumerate(triples):
+        ij[0][k],ij[1][k],data[k] = item
+    return scipy.sparse.coo_matrix((data, ij)).asformat(shape)
 @}
 %-------------------------------------------------------------------------------
 The conversion from triples to \texttt{csr} format is provided below.
 %-------------------------------------------------------------------------------
 @D Coo to Csr transformation
 @{def coo2Csr(COOm):
-	CSRm = triples2mat(COOm,"csr")
-	return CSRm
+    CSRm = triples2mat(COOm,"csr")
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 Two CSR sparse matrices \texttt{csrFV} and \texttt{csrEV} are generated (by \emph{scipy.sparse})  in the following example:
@@ -162,9 +162,9 @@ The \emph{scipy} printout of the last two lines above is the following:
 {\small
 \begin{verbatim}
 csr(FV) = <4x6 sparse matrix of type '<type 'numpy.int64'>'
-		   with 12 stored elements in Compressed Sparse Row format>
+           with 12 stored elements in Compressed Sparse Row format>
 csr(EV) = <9x6 sparse matrix of type '<type 'numpy.int64'>'
-		   with 18 stored elements in Compressed Sparse Row format>
+           with 18 stored elements in Compressed Sparse Row format>
 \end{verbatim}}
 %-------------------------------------------------------------------------------
 
@@ -173,13 +173,13 @@ The transformation from BRC to CSR format is implemented slightly differently, a
 %-------------------------------------------------------------------------------
 @D Brc to Csr transformation
 @{def csrCreate(BRCmatrix,lenV=0,shape=(0,0)):
-	triples = brc2Coo(BRCmatrix)
-	if shape == (0,0):
-		CSRmatrix = coo2Csr(triples)
-	else:
-		CSRmatrix = scipy.sparse.csr_matrix(shape)
-		for i,j,v in triples: CSRmatrix[i,j] = v
-	return CSRmatrix
+    triples = brc2Coo(BRCmatrix)
+    if shape == (0,0):
+        CSRmatrix = coo2Csr(triples)
+    else:
+        CSRmatrix = scipy.sparse.csr_matrix(shape)
+        for i,j,v in triples: CSRmatrix[i,j] = v
+    return CSRmatrix
 @}
 %-------------------------------------------------------------------------------
 
@@ -218,12 +218,12 @@ Two utility functions allow to query the number of rows and columns of a CSR mat
 %-------------------------------------------------------------------------------
 @D Query Matrix shape
 @{def csrGetNumberOfRows(CSRmatrix):
-	Int = CSRmatrix.shape[0]
-	return Int
-	
+    Int = CSRmatrix.shape[0]
+    return Int
+    
 def csrGetNumberOfColumns(CSRmatrix):
-	Int = CSRmatrix.shape[1]
-	return Int
+    Int = CSRmatrix.shape[1]
+    return Int
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -243,13 +243,13 @@ The Scipy package provides the useful method \texttt{.todense()} in order to tra
 %-------------------------------------------------------------------------------
 @D Sparse to dense matrix transformation
 @{def csr2DenseMatrix(CSRm):
-	nrows = csrGetNumberOfRows(CSRm)
-	ncolumns = csrGetNumberOfColumns(CSRm)
-	ScipyMat = zeros((nrows,ncolumns),int)
-	C = CSRm.tocoo()
-	for triple in zip(C.row,C.col,C.data):
-		ScipyMat[triple[0],triple[1]] = triple[2]
-	return ScipyMat
+    nrows = csrGetNumberOfRows(CSRm)
+    ncolumns = csrGetNumberOfColumns(CSRm)
+    ScipyMat = zeros((nrows,ncolumns),int)
+    C = CSRm.tocoo()
+    for triple in zip(C.row,C.col,C.data):
+        ScipyMat[triple[0],triple[1]] = triple[2]
+    return ScipyMat
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -268,12 +268,12 @@ The following macro provides the IDE interface for the two main matrix operation
 %-------------------------------------------------------------------------------
 @D Matrix product and transposition
 @{def matrixProduct(CSRm1,CSRm2):
-	CSRm = CSRm1 * CSRm2
-	return CSRm
+    CSRm = CSRm1 * CSRm2
+    return CSRm
 
 def csrTranspose(CSRm):
-	CSRm = CSRm.T
-	return CSRm
+    CSRm = CSRm.T
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 
@@ -375,38 +375,38 @@ Some filtering operations on matrix elements are needed in the implementation of
 %-------------------------------------------------------------------------------
 @D Matrix filtering to produce the boundary matrix
 @{def csrBoundaryFilter(CSRm, facetLengths):
-	maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
-	inputShape = CSRm.shape
-	coo = CSRm.tocoo()
-	for k in range(len(coo.data)):
-		if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
-		else: coo.data[k] = 0
-	mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
-	out = mtx.tocsr()
-	return out
+    maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
+    inputShape = CSRm.shape
+    coo = CSRm.tocoo()
+    for k in range(len(coo.data)):
+        if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
+        else: coo.data[k] = 0
+    mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
+    out = mtx.tocsr()
+    return out
 
 def csrBoundaryFilter1(csrBoundaryBoundaryMat,cells,facets,faces,lenV,FE, CSRm, facetLengths):
-	maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
-	inputShape = CSRm.shape
-	coo = CSRm.tocoo()
-	for k in range(len(coo.data)):
-		if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
-		else: coo.data[k] = 0
-	mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
-	out = mtx.tocsr()
-	
-	unreliable = [k for k in range(out.shape[0]) if sum(out[k,:].todense()[0]) > 2]
-	if unreliable != []:
-		for row in unreliable:
-			for j in range(len(cells)):
-				if out[row,j] == 1:
-					csrCFE = csrBoundaryBoundaryMat[:,j]
-					cooCFE = csrCFE.tocoo()
-					flawedCells = [cooCFE.row[k] for k,datum in enumerate(cooCFE.data)
-						if datum>2]
-					if all([facet in flawedCells  for facet in FE[row]]):
-						out[row,j]=0
-	return out
+    maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
+    inputShape = CSRm.shape
+    coo = CSRm.tocoo()
+    for k in range(len(coo.data)):
+        if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
+        else: coo.data[k] = 0
+    mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
+    out = mtx.tocsr()
+    
+    unreliable = [k for k in range(out.shape[0]) if sum(out[k,:].todense()[0]) > 2]
+    if unreliable != []:
+        for row in unreliable:
+            for j in range(len(cells)):
+                if out[row,j] == 1:
+                    csrCFE = csrBoundaryBoundaryMat[:,j]
+                    cooCFE = csrCFE.tocoo()
+                    flawedCells = [cooCFE.row[k] for k,datum in enumerate(cooCFE.data)
+                        if datum>2]
+                    if all([facet in flawedCells  for facet in FE[row]]):
+                        out[row,j]=0
+    return out
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -421,13 +421,13 @@ print "\ncsrMaxFilter(csrFE) =\n", csr2DenseMatrix(CSRm)
 %-------------------------------------------------------------------------------
 @D Matrix filtering via a generic predicate
 @{def csrPredFilter(CSRm, pred):
-	# can be done in parallel (by rows)
-	coo = CSRm.tocoo()
-	triples = [[row,col,val] for row,col,val 
-				in zip(coo.row,coo.col,coo.data) if pred(val)]
-	i, j, data = TRANS(triples)
-	CSRm = scipy.sparse.coo_matrix((data,(i,j)),CSRm.shape).tocsr()
-	return CSRm
+    # can be done in parallel (by rows)
+    coo = CSRm.tocoo()
+    triples = [[row,col,val] for row,col,val 
+                in zip(coo.row,coo.col,coo.data) if pred(val)]
+    i, j, data = TRANS(triples)
+    CSRm = scipy.sparse.coo_matrix((data,(i,j)),CSRm.shape).tocsr()
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -820,32 +820,32 @@ The following \texttt{larFacets} function returns the LAR model \texttt{V,cellFa
 %-------------------------------------------------------------------------------
 @D Extraction of facets of a cell complex
 @{def setup(model,dim):
-	V, cells = model
-	csr = csrCreate(cells)
-	csrAdjSquareMat = larCellAdjacencies(csr)
-	csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
-	return V,cells,csr,csrAdjSquareMat
+    V, cells = model
+    csr = csrCreate(cells)
+    csrAdjSquareMat = larCellAdjacencies(csr)
+    csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
+    return V,cells,csr,csrAdjSquareMat
 
 def larFacets(model, dim=3, emptyCellNumber=0):
-	""" Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
-		Return (V, (d-1)-cellFacets)
-		"""
-	V,cells,csr,csrAdjSquareMat = setup(model,dim)
-	solidCellNumber = len(cells) - emptyCellNumber
-	cellFacets = []
-	# for each input cell i
-	for i in range(len(cells)):
-		adjCells = csrAdjSquareMat[i].tocoo()
-		cell1 = csr[i].tocoo().col
-		pairs = zip(adjCells.col,adjCells.data)
-		for j,v in pairs:
-			if (i<j) and (i<solidCellNumber):
-				cell2 = csr[j].tocoo().col
-				cell = list(set(cell1).intersection(cell2))
-				cellFacets.append(sorted(cell))
-	# sort and remove duplicates
-	cellFacets = sorted(AA(list)(set(AA(tuple)(cellFacets))))
-	return V,cellFacets
+    """ Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
+        Return (V, (d-1)-cellFacets)
+        """
+    V,cells,csr,csrAdjSquareMat = setup(model,dim)
+    solidCellNumber = len(cells) - emptyCellNumber
+    cellFacets = []
+    # for each input cell i
+    for i in range(len(cells)):
+        adjCells = csrAdjSquareMat[i].tocoo()
+        cell1 = csr[i].tocoo().col
+        pairs = zip(adjCells.col,adjCells.data)
+        for j,v in pairs:
+            if (i<j) and (i<solidCellNumber):
+                cell2 = csr[j].tocoo().col
+                cell = list(set(cell1).intersection(cell2))
+                cellFacets.append(sorted(cell))
+    # sort and remove duplicates
+    cellFacets = sorted(AA(list)(set(AA(tuple)(cellFacets))))
+    return V,cellFacets
 @}
 %-------------------------------------------------------------------------------
 
@@ -854,8 +854,8 @@ def larFacets(model, dim=3, emptyCellNumber=0):
 %-------------------------------------------------------------------------------
 @D Computation of cell adjacencies
 @{def larCellAdjacencies(CSRm):
-	CSRm = matrixProduct(CSRm,csrTranspose(CSRm))
-	return CSRm
+    CSRm = matrixProduct(CSRm,csrTranspose(CSRm))
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 
@@ -867,8 +867,8 @@ In both cases the \texttt{EV} relation is computed via the \texttt{larFacets} fu
 @{""" A first (simplicial) example """
 V = [[0.,0.],[3.,0.],[0.,3.],[3.,3.],[1.,2.],[2.,2.],[1.,1.],[2.,1.]]
 FV = [[0,1,3],[1,2,4],[2,4,5],[3,4,6],[4,6,7],[5,7,8], # full
-	[1,3,4],[4,5,7], # empty
-	[0,1,2],[6,7,8],[0,3,6],[2,5,8]] # exterior		
+    [1,3,4],[4,5,7], # empty
+    [0,1,2],[6,7,8],[0,3,6],[2,5,8]] # exterior        
 _,EV = larFacets((V,FV),dim=2)
 print "\nEV =",EV
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))
@@ -918,15 +918,15 @@ As already outlined, the \texttt{modelIndexing} function return the \emph{hpc} v
 from larlib import *
 
 def modelIndexing(shape):
-	V, bases = larCuboids(shape,True)
-	# bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
-	color = [ORANGE,CYAN,GREEN,WHITE]
-	nums = AA(range)(AA(len)(bases))
-	hpcs = []
-	for k in range(4):
-		hpcs += [SKEL_1(STRUCT(MKPOLS((V,bases[k]))))]
-		hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
-	return STRUCT(hpcs)
+    V, bases = larCuboids(shape,True)
+    # bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
+    color = [ORANGE,CYAN,GREEN,WHITE]
+    nums = AA(range)(AA(len)(bases))
+    hpcs = []
+    for k in range(4):
+        hpcs += [SKEL_1(STRUCT(MKPOLS((V,bases[k]))))]
+        hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
+    return STRUCT(hpcs)
 @}
 %-------------------------------------------------------------------------------
 
@@ -935,16 +935,16 @@ def modelIndexing(shape):
 @D Visualization of cell indices
 @{""" Numbered visualization of a LAR model """
 def larModelNumbering(scalx=1,scaly=1,scalz=1):
-	def  larModelNumbering0(V,bases,submodel,numberScaling=1):
-		color = [ORANGE,CYAN,GREEN,WHITE]
-		nums = AA(range)(AA(len)(bases))
-		hpcs = [submodel]
-		for k in range(len(bases)):
-			hpcs += [cellNumbering((V,bases[k]),submodel)
-						(nums[k],color[k],(0.5+0.1*k)*numberScaling)]
-		return STRUCT(hpcs)
-		#return EXPLODE(scalx,scaly,scalz)(hpcs)
-	return larModelNumbering0
+    def  larModelNumbering0(V,bases,submodel,numberScaling=1):
+        color = [ORANGE,CYAN,GREEN,WHITE]
+        nums = AA(range)(AA(len)(bases))
+        hpcs = [submodel]
+        for k in range(len(bases)):
+            hpcs += [cellNumbering((V,bases[k]),submodel)
+                        (nums[k],color[k],(0.5+0.1*k)*numberScaling)]
+        return STRUCT(hpcs)
+        #return EXPLODE(scalx,scaly,scalz)(hpcs)
+    return larModelNumbering0
 @}
 %-------------------------------------------------------------------------------
 
@@ -956,22 +956,22 @@ The following function return the \texttt{hpc} of the drawing with arrows of the
 @D Drawing of oriented edges
 @{""" Drawing of oriented edges (2D) """
 def mkSignedEdges (model,scalingFactor=1):
-	V,EV = model
-	assert len(V[0])==2
-	hpcs = []
-	times = C(SCALARVECTPROD)
-	frac = 0.06*scalingFactor
-	for e0,e1 in EV:
-		v0,v1 = V[e0], V[e1]
-		vx,vy = DIFF([ v1, v0 ])
-		nx,ny = [-vy, vx]
-		v2 = SUM([ v0, times(0.66)([vx,vy]) ])
-		v3 = SUM([ v0, times(0.6-frac)([vx,vy]), times(frac)([nx,ny]) ])
-		v4 = SUM([ v0, times(0.6-frac)([vx,vy]), times(-frac)([nx,ny]) ])
-		verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]
-		hpcs += [MKPOL([verts,cells,None])]
-	hpc = STRUCT(hpcs)
-	return hpc
+    V,EV = model
+    assert len(V[0])==2
+    hpcs = []
+    times = C(SCALARVECTPROD)
+    frac = 0.06*scalingFactor
+    for e0,e1 in EV:
+        v0,v1 = V[e0], V[e1]
+        vx,vy = DIFF([ v1, v0 ])
+        nx,ny = [-vy, vx]
+        v2 = SUM([ v0, times(0.66)([vx,vy]) ])
+        v3 = SUM([ v0, times(0.6-frac)([vx,vy]), times(frac)([nx,ny]) ])
+        v4 = SUM([ v0, times(0.6-frac)([vx,vy]), times(-frac)([nx,ny]) ])
+        verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]
+        hpcs += [MKPOL([verts,cells,None])]
+    hpc = STRUCT(hpcs)
+    return hpc
 @}
 %-------------------------------------------------------------------------------
 
@@ -1054,19 +1054,19 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[EV[k] for k in C_1] + [FV[k] for k in C_2])))
 @D From 2D chains to boundary chains
 @{""" From 2D chains to boundary chains """
 def chain2BoundaryChain(csrBoundaryMat):
-	print ">>> chain2BoundaryChain"
-	nedges,nfaces = csrBoundaryMat.shape
-	def chain2BoundaryChain0(chain):
-		row = np.array(range(len(chain)))
-		col = np.array([0 for k in range(len(chain))])
-		data = np.array(chain)
-		csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
-		csrEdgeVect = csrBoundaryMat*csrFaceVect
-		boundaryChain = [h for h,val in
-			zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
-		return boundaryChain
-	print "<<< chain2BoundaryChain"
-	return chain2BoundaryChain0
+    print ">>> chain2BoundaryChain"
+    nedges,nfaces = csrBoundaryMat.shape
+    def chain2BoundaryChain0(chain):
+        row = np.array(range(len(chain)))
+        col = np.array([0 for k in range(len(chain))])
+        data = np.array(chain)
+        csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
+        csrEdgeVect = csrBoundaryMat*csrFaceVect
+        boundaryChain = [h for h,val in
+            zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
+        return boundaryChain
+    print "<<< chain2BoundaryChain"
+    return chain2BoundaryChain0
 @}
 %-------------------------------------------------------------------------------
 
@@ -1100,12 +1100,12 @@ A high-level function \texttt{larIncidence} useful to compute the LAR representa
 @D Some incidence operators
 @{""" Some incidence operators """
 def larIncidence(cells,facets):
-	csrCellFacet = csrCellFaceIncidence(cells,facets)
-	cooCellFacet = csrCellFacet.tocoo()
-	larCellFacet = [[] for cell in range(len(cells))]
-	for i,j,val in zip(cooCellFacet.row,cooCellFacet.col,cooCellFacet.data):
-		if val == 1: larCellFacet[i] += [j]
-	return larCellFacet
+    csrCellFacet = csrCellFaceIncidence(cells,facets)
+    cooCellFacet = csrCellFacet.tocoo()
+    larCellFacet = [[] for cell in range(len(cells))]
+    for i,j,val in zip(cooCellFacet.row,cooCellFacet.col,cooCellFacet.data):
+        if val == 1: larCellFacet[i] += [j]
+    return larCellFacet
 
 @< Cell-Face incidence operator @>
 @< Cell-Edge incidence operator @>
@@ -1120,10 +1120,10 @@ The \texttt{csrCellFaceIncidence} and \texttt{larCellFace} functions are given b
 @D Cell-Face incidence operator
 @{""" Cell-Face incidence operator """
 def csrCellFaceIncidence(CV,FV):
-	return boundary(FV,CV)
+    return boundary(FV,CV)
 
 def larCellFace(CV,FV):
-	return larIncidence(CV,FV)
+    return larIncidence(CV,FV)
 @}
 %-------------------------------------------------------------------------------
 
@@ -1134,10 +1134,10 @@ Analogously, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} function
 @D Cell-Edge incidence operator
 @{""" Cell-Edge incidence operator """
 def csrCellEdgeIncidence(CV,EV):
-	 return boundary(EV,CV)
+     return boundary(EV,CV)
 
 def larCellEdge(CV,EV):
-	return larIncidence(CV,EV)
+    return larIncidence(CV,EV)
 @}
 %-------------------------------------------------------------------------------
 
@@ -1148,10 +1148,10 @@ Finally, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} functions ar
 @D Face-Edge incidence operator
 @{""" Face-Edge incidence operator """
 def csrFaceEdgeIncidence(FV,EV):
-	return boundary(EV,FV)
+    return boundary(EV,FV)
 
 def larFaceEdge(FV,EV):
-	return larIncidence(FV,EV)
+    return larIncidence(FV,EV)
 @}
 %-------------------------------------------------------------------------------
 
@@ -1202,11 +1202,11 @@ The function \texttt{incidenceChain}, given below, returns the full stack of \te
 @D Incidence chain computation
 @{""" Incidence chain computation """
 def incidenceChain(bases):
-	#print "\n len(bases) = ",len(bases),"\n"
-	pairsOfBases = zip(bases[1:],bases[:-1])
-	relations = [larIncidence(cells,facets) 
-					for cells,facets in pairsOfBases]
-	return REVERSE(relations)
+    #print "\n len(bases) = ",len(bases),"\n"
+    pairsOfBases = zip(bases[1:],bases[:-1])
+    relations = [larIncidence(cells,facets) 
+                    for cells,facets in pairsOfBases]
+    return REVERSE(relations)
 @}
 %-------------------------------------------------------------------------------
 
@@ -1223,7 +1223,7 @@ VV,EV,FV,CV = bases
 incidence = incidenceChain([VV,EV,FV,CV])
 relations = ["CF","FE","EV"]
 for k in range(3):
-	print "\n\n incidence", relations[k], "=\n", incidence[k],
+    print "\n\n incidence", relations[k], "=\n", incidence[k],
 print "\n\n"
 
 submodel = SKEL_1(STRUCT(MKPOLS((V,EV))))
@@ -1310,12 +1310,12 @@ The \texttt{boundary} function below takes as parameters the \texttt{BRC} repres
 %-------------------------------------------------------------------------------
 @D Test examples of From cells and facets to boundary operator
 @{V = [[0.0,0.0,0.0],[1.0,0.0,0.0],[0.0,1.0,0.0],[1.0,1.0,0.0],
-	   [0.0,0.0,1.0],[1.0,0.0,1.0],[0.0,1.0,1.0],[1.0,1.0,1.0]]
+       [0.0,0.0,1.0],[1.0,0.0,1.0],[0.0,1.0,1.0],[1.0,1.0,1.0]]
 CV = [[0,1,2,4],[1,2,4,5],[2,4,5,6],[1,2,3,5],[2,3,5,6],[3,5,6,7]]
 FV = [[0,1,2],[0,1,4],[0,2,4],[1,2,3],[1,2,4],[1,2,5],[1,3,5],[1,4,5],[2,3,5],
-	  [2,3,6],[2,4,5],[2,4,6],[2,5,6],[3,5,6],[3,5,7],[3,6,7],[4,5,6],[5,6,7]]
+      [2,3,6],[2,4,5],[2,4,6],[2,5,6],[3,5,6],[3,5,7],[3,6,7],[4,5,6],[5,6,7]]
 EV = [[0,1],[0,2],[0,4],[1,2],[1,3],[1,4],[1,5],[2,3],[2,4],[2,5],
-	  [2,6],[3,5],[3,6],[3,7],[4,5],[4,6],[5,6],[5,7],[6,7]]
+      [2,6],[3,5],[3,6],[3,7],[4,5],[4,6],[5,6],[5,7],[6,7]]
 VV = AA(LIST)(range(len(V)))
 
 print "\ncoboundary_2 =\n", csr2DenseMatrix(coboundary(CV,FV))
@@ -1329,46 +1329,46 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 %-------------------------------------------------------------------------------
 @D From cells and facets to boundary operator
 @{def boundary(cells,facets):
-	lenV = max(max(cells),max(facets))
-	csrCV = csrCreate(cells,lenV)
-	csrFV = csrCreate(facets,lenV)
-	csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-	facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-	return csrBoundaryFilter(csrFC,facetLengths)
+    lenV = max(max(CAT(cells)),max(CAT(facets)))
+    csrCV = csrCreate(cells,lenV)
+    csrFV = csrCreate(facets,lenV)
+    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
+    return csrBoundaryFilter(csrFC,facetLengths)
 
 def boundary1(CV,FV,EV):
-	lenV = max(list(CAT(CV))+list(CAT(FV)))+1
-	csrCV = csrCreate(CV,lenV)
-	csrFV = csrCreate(FV,lenV)
-	csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-	facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-	VV = AA(LIST)(range(lenV))
-	csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
-	FE = crossRelation1(lenV,CV,FV,EV,True)
-	return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
+    lenV = max(list(CAT(CV))+list(CAT(FV)))+1
+    csrCV = csrCreate(CV,lenV)
+    csrFV = csrCreate(FV,lenV)
+    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
+    VV = AA(LIST)(range(lenV))
+    csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
+    FE = crossRelation1(lenV,CV,FV,EV,True)
+    return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
 
 def coboundary(cells,facets):
-	Boundary = boundary(cells,facets)
-	return csrTranspose(Boundary)
+    Boundary = boundary(cells,facets)
+    return csrTranspose(Boundary)
 
 def coboundary1(cells,facets):
-	Boundary = boundary(cells,facets)
-	return csrTranspose(Boundary)
+    Boundary = boundary(cells,facets)
+    return csrTranspose(Boundary)
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 @D From cells and facets to boundary cells
 @{def totalChain(cells):
-	return csrCreate([[0] for cell in cells])  # ????  zero ??
+    return csrCreate([[0] for cell in cells])  # ????  zero ??
 
 def boundaryCells(cells,facets):
-	csrBoundaryMat = boundary(cells,facets)
-	csrChain = totalChain(cells)
-	csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
-	for k,value in enumerate(csrBoundaryChain.data):
-		if value % 2 == 0: csrBoundaryChain.data[k] = 0
-	out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-	return out
+    csrBoundaryMat = boundary(cells,facets)
+    csrChain = totalChain(cells)
+    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
+    for k,value in enumerate(csrBoundaryChain.data):
+        if value % 2 == 0: csrBoundaryChain.data[k] = 0
+    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+    return out
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -1407,23 +1407,23 @@ Finally, the $\pm 1$ (signed) incidence coefficients are computed and stored in 
 %-------------------------------------------------------------------------------
 @D Signed boundary matrix for simplicial models
 @{def signedSimplicialBoundary (CV,FV):
-	# compute the set of pairs of indices to [boundary face,incident coface]
-	coo = boundary(CV,FV).tocoo()
-	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
+    # compute the set of pairs of indices to [boundary face,incident coface]
+    coo = boundary(CV,FV).tocoo()
+    pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
 
-	# compute the [face, coface] pair as vertex lists
-	vertLists = [[FV[f], CV[c]] for f,c in pairs]
+    # compute the [face, coface] pair as vertex lists
+    vertLists = [[FV[f], CV[c]] for f,c in pairs]
 
-	# compute the local (interior to the coface) indices of missing vertices 
-	def missingVert(face,coface): return list(set(coface).difference(face))[0]
-	missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
+    # compute the local (interior to the coface) indices of missing vertices 
+    def missingVert(face,coface): return list(set(coface).difference(face))[0]
+    missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
 
-	# signed incidence coefficients
-	faceSigns = AA(C(POWER)(-1))(missingVertIndices)
+    # signed incidence coefficients
+    faceSigns = AA(C(POWER)(-1))(missingVertIndices)
 
-	# signed boundary matrix
-	csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
-	return csrSignedBoundaryMat
+    # signed boundary matrix
+    csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
+    return csrSignedBoundaryMat
 @}
 %-------------------------------------------------------------------------------
 
@@ -1442,26 +1442,26 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 @{def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def boundaryCellsCocells(cells,facets):
-	csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
-	csrTotalChain = totalChain(cells)
-	csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
-	cooCells = csrBoundaryChain.tocoo()	
-	boundaryCells = []
-	for k,v in enumerate(cooCells.data):
-		if abs(v) == 1:
-			boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]			
-	boundaryCocells = []
-	for k,v in enumerate(boundaryCells):
-		boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)		
-	return boundaryCells,boundaryCocells
+    csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
+    csrTotalChain = totalChain(cells)
+    csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
+    cooCells = csrBoundaryChain.tocoo()    
+    boundaryCells = []
+    for k,v in enumerate(cooCells.data):
+        if abs(v) == 1:
+            boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]            
+    boundaryCocells = []
+    for k,v in enumerate(boundaryCells):
+        boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)        
+    return boundaryCells,boundaryCocells
 
 def signedBoundaryCells(verts,cells,facets):
-	boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)		
-	boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
-	boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
-	orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
-	
-	return orientedBoundaryCells
+    boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)        
+    boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
+    boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
+    orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
+    
+    return orientedBoundaryCells
 @}
 %-------------------------------------------------------------------------------
 
@@ -1471,28 +1471,28 @@ def signedBoundaryCells(verts,cells,facets):
 @D Signed boundary matrix for polytopal complexes
 @{""" Signed boundary matrix for polytopal complexes """
 def signedCellularBoundary(V,bases):
-	coo = boundary(bases[-1],bases[-2]).tocoo()
-	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
-	signs = []
-	dim = len(bases)-1
-	chain = incidenceChain(bases)
-	
-	for pair in pairs:		# for each facet/coface pair
-		flag = REVERSE(pair) #  [c,f]
-		#print "flag 1 =",flag
-		for k in range(dim-1):
-			cell = flag[-1]
-			flag += [chain[k+1][cell][1]]
-		
-		verts = [CCOMB([V[v] for v in bases[dim-k][flag[k]]]) for k in range(dim+1)]
-		flagMat = [verts[v]+[1] for v in range(dim+1)]
-		flagSign = SIGN(np.linalg.det(flagMat))
-		signs += [flagSign]
-	
-	csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )
-	# numpy.set_printoptions(threshold=numpy.nan)
-	# print csrSignedBoundaryMat.todense()
-	return csrSignedBoundaryMat
+    coo = boundary(bases[-1],bases[-2]).tocoo()
+    pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
+    signs = []
+    dim = len(bases)-1
+    chain = incidenceChain(bases)
+    
+    for pair in pairs:        # for each facet/coface pair
+        flag = REVERSE(pair) #  [c,f]
+        #print "flag 1 =",flag
+        for k in range(dim-1):
+            cell = flag[-1]
+            flag += [chain[k+1][cell][1]]
+        
+        verts = [CCOMB([V[v] for v in bases[dim-k][flag[k]]]) for k in range(dim+1)]
+        flagMat = [verts[v]+[1] for v in range(dim+1)]
+        flagSign = SIGN(np.linalg.det(flagMat))
+        signs += [flagSign]
+    
+    csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )
+    # numpy.set_printoptions(threshold=numpy.nan)
+    # print csrSignedBoundaryMat.todense()
+    return csrSignedBoundaryMat
 @}
 %-------------------------------------------------------------------------------
 
@@ -1504,13 +1504,13 @@ def signedCellularBoundary(V,bases):
 from scipy.sparse import *
 
 def signedCellularBoundaryCells(verts,bases):
-	CV = bases[-1]
-	boundaryMat = signedCellularBoundary(verts,bases)
-	chainCoords = csc_matrix((len(CV), 1))
-	for cell in range(len(CV)): chainCoords[cell,0] = 1
-	boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
-	orientations = list((boundaryMat * chainCoords).tocoo().data)
-	return orientations,boundaryCells
+    CV = bases[-1]
+    boundaryMat = signedCellularBoundary(verts,bases)
+    chainCoords = csc_matrix((len(CV), 1))
+    for cell in range(len(CV)): chainCoords[cell,0] = 1
+    boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+    orientations = list((boundaryMat * chainCoords).tocoo().data)
+    return orientations,boundaryCells
 @}
 %-------------------------------------------------------------------------------
 
@@ -1645,17 +1645,17 @@ VIEW(mkSignedEdges((V,cells),2))
 Here we provide a 2D example of computation of the oriented boundary of a quite convoluted random cellular complex. The steps performed by the scripts in the following paragraphs are listed below:
 
 \begin{enumerate}
-\item	vertices are generated as random point in the unit circle
-\item	the Delaunay triangulation of the whole set of points is built.
-\item	spike-like triangles elimination
-\item	the 90\% of triangles is randomly discarded
-\item	the input LAR is provided by the remaining triangles
-\item	the 1-cells are computed, and —  if  $n_i < n_j$ -- oriented as $v_i \to v_j$
-\item	the 2-cells are "coherently oriented" via the sign of their 3x3 determinant 
-	using normalised homogeneous coordinates of vertices: ccw if $\det > 0$
-\item	the signed boundary matrix $[\partial_2]$ is built (with elements in $\{-1,0,1\}$ )
-\item	the signed boundary 1-chain (the red one) is computed by $[\partial_2][\mathbf{1}_2]$,
-	where $[\mathbf{1}_2]$ is the coordinate representation of the “total” 2-chain
+\item    vertices are generated as random point in the unit circle
+\item    the Delaunay triangulation of the whole set of points is built.
+\item    spike-like triangles elimination
+\item    the 90\% of triangles is randomly discarded
+\item    the input LAR is provided by the remaining triangles
+\item    the 1-cells are computed, and —  if  $n_i < n_j$ -- oriented as $v_i \to v_j$
+\item    the 2-cells are "coherently oriented" via the sign of their 3x3 determinant 
+    using normalised homogeneous coordinates of vertices: ccw if $\det > 0$
+\item    the signed boundary matrix $[\partial_2]$ is built (with elements in $\{-1,0,1\}$ )
+\item    the signed boundary 1-chain (the red one) is computed by $[\partial_2][\mathbf{1}_2]$,
+    where $[\mathbf{1}_2]$ is the coordinate representation of the “total” 2-chain
 \end{enumerate}
 
 
@@ -1687,13 +1687,14 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 @{""" Boundary orientation of a random 2D triangulation """
 from larlib import *
 from random import random
+from scipy import spatial,linalg
 
 @< Vertices V generated as random point in the unit circle @>
 @< Delaunay triangulation of the whole set V of points @>
 @< Fraction of triangles randomly discarded @>
 @< Coherently orient the input LAR model (V,FV)  @>
 @< Compute the 1-cell and 0-cell bases EV and VV @>
-@< Signed 2-boundary matrix and signed boundary 1-chain @>	
+@< Signed 2-boundary matrix and signed boundary 1-chain @>    
 @< Display the boundary 1-chain @>
 @}
 %-------------------------------------------------------------------------------
@@ -1703,13 +1704,13 @@ from random import random
 @D Vertices V generated as random point in the unit circle
 @{""" Vertices V generated as random point in the unit circle """
 verts = []
-npoints = 200
+npoints = 50
 for k in range(npoints):
-	t = 2*pi*random()
-	u = random()+random()
-	if u > 1: r = 2-u 
-	else: r = u
-	verts += [[r*cos(t), r*sin(t)]]
+    t = 2*pi*random()
+    u = random()+random()
+    if u > 1: r = 2-u 
+    else: r = u
+    verts += [[r*cos(t), r*sin(t)]]
 VIEW(STRUCT(AA(MK)(verts)))
 @}
 %-------------------------------------------------------------------------------
@@ -1718,7 +1719,7 @@ VIEW(STRUCT(AA(MK)(verts)))
 %-------------------------------------------------------------------------------
 @D Delaunay triangulation of the whole set V of points
 @{""" Delaunay triangulation of the whole set V of points """
-triangles = Delaunay(verts)
+triangles = spatial.Delaunay(verts)
 def area(cell): return linalg.det([verts[v]+[1] for v in cell])/2
 cells = [ cell for cell in triangles.vertices.tolist() if area(cell)>PI/(3*npoints)]
 V, FV = AA(list)(verts), cells
@@ -1729,7 +1730,7 @@ V, FV = AA(list)(verts), cells
 %-------------------------------------------------------------------------------
 @D Fraction of triangles randomly discarded
 @{""" Fraction of triangles randomly discarded """
-fraction = 0.7
+fraction = 0.25
 cellSpan = len(FV)
 remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
 FV = [FV[k] for k in range(cellSpan) if not k in remove]
@@ -1741,13 +1742,13 @@ FV = [FV[k] for k in range(cellSpan) if not k in remove]
 @D Coherently orient the input LAR model (V,FV)
 @{""" Coherently orient the input LAR model (V,FV) """
 def positiveOrientation(model):
-	V,simplices = model
-	out = []
-	for simplex in simplices:
-		theMat = [V[v]+[1] for v in simplex]
-		if sign(linalg.det(theMat)) > 0:  out += [simplex]
-		else: out += [REVERSE(simplex)]
-	return V,out
+    V,simplices = model
+    out = []
+    for simplex in simplices:
+        theMat = [V[v]+[1] for v in simplex]
+        if sign(linalg.det(theMat)) > 0:  out += [simplex]
+        else: out += [REVERSE(simplex)]
+    return V,out
 
 V,FV = positiveOrientation((V,FV))
 @}
@@ -1778,8 +1779,8 @@ cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBound
 @{""" Display the boundary 1-chain """
 VIEW(STRUCT(MKPOLS((V,FV))))
 VIEW(STRUCT(
-	MKPOLS((V,FV)) +
-	[COLOR(RED)(mkSignedEdges((V,cells)))]  ))
+    MKPOLS((V,FV)) +
+    [COLOR(RED)(mkSignedEdges((V,cells)))]  ))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1807,50 +1808,50 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 @D Oriented boundary cells for simplicial models
 @{def pivotSimplices(V,CV,d=3):
-	simplices = []
-	for cell in CV:
-		vcell = np.array([V[v] for v in cell])
-		m, simplex = len(cell), []
-		# translate the cell: for each k, vcell[k] -= vcell[0], and simplex[0] := cell[0]
-		for k in range(m-1,-1,-1): vcell[k] -= vcell[0]
-		# simplex = [0], basis = [], tensor = Id(d+1)
-		simplex += [cell[0]]
-		basis = []
-		tensor = np.array(IDNT(d))
-		# look for most distant cell vertex
-		dists = [SUM([SQR(x) for x in v])**0.5 for v in vcell]
-		maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
-		vector = np.array([vcell[maxDistIndex]])
-		# normalize vector
-		den=(vector**2).sum(axis=-1) **0.5
-		basis = [vector/den]
-		simplex += [cell[maxDistIndex]]
-		unUsedIndices = [h for h in cell if h not in simplex]
-		
-		# for k in {2,d+1}:
-		for k in range(2,d+1):
-			# update the orthonormal tensor
-			e = basis[-1]
-			tensor = tensor - np.dot(e.T, e)
-			# compute the index h of a best vector
-			# look for most distant cell vertex
-			dists = [SUM([SQR(x) for x in np.dot(tensor,v)])**0.5
-			if h in unUsedIndices else 0.0
-			for (h,v) in zip(cell,vcell)]
-			# insert the best vector index h in output simplex
-			maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
-			vector = np.array([vcell[maxDistIndex]])
-			# normalize vector
-			den=(vector**2).sum(axis=-1) **0.5
-			basis += [vector/den]
-			simplex += [cell[maxDistIndex]]
-			unUsedIndices = [h for h in cell if h not in simplex]
-		simplices += [simplex]
-	return simplices
+    simplices = []
+    for cell in CV:
+        vcell = np.array([V[v] for v in cell])
+        m, simplex = len(cell), []
+        # translate the cell: for each k, vcell[k] -= vcell[0], and simplex[0] := cell[0]
+        for k in range(m-1,-1,-1): vcell[k] -= vcell[0]
+        # simplex = [0], basis = [], tensor = Id(d+1)
+        simplex += [cell[0]]
+        basis = []
+        tensor = np.array(IDNT(d))
+        # look for most distant cell vertex
+        dists = [SUM([SQR(x) for x in v])**0.5 for v in vcell]
+        maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
+        vector = np.array([vcell[maxDistIndex]])
+        # normalize vector
+        den=(vector**2).sum(axis=-1) **0.5
+        basis = [vector/den]
+        simplex += [cell[maxDistIndex]]
+        unUsedIndices = [h for h in cell if h not in simplex]
+        
+        # for k in {2,d+1}:
+        for k in range(2,d+1):
+            # update the orthonormal tensor
+            e = basis[-1]
+            tensor = tensor - np.dot(e.T, e)
+            # compute the index h of a best vector
+            # look for most distant cell vertex
+            dists = [SUM([SQR(x) for x in np.dot(tensor,v)])**0.5
+            if h in unUsedIndices else 0.0
+            for (h,v) in zip(cell,vcell)]
+            # insert the best vector index h in output simplex
+            maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
+            vector = np.array([vcell[maxDistIndex]])
+            # normalize vector
+            den=(vector**2).sum(axis=-1) **0.5
+            basis += [vector/den]
+            simplex += [cell[maxDistIndex]]
+            unUsedIndices = [h for h in cell if h not in simplex]
+        simplices += [simplex]
+    return simplices
 
 def simplexOrientations(V,simplices):
-	vcells = [[V[v]+[1.0] for v in simplex] for simplex in simplices]
-	return [SIGN(np.linalg.det(vcell)) for vcell in vcells]
+    vcells = [[V[v]+[1.0] for v in simplex] for simplex in simplices]
+    return [SIGN(np.linalg.det(vcell)) for vcell in vcells]
 @}
 %-------------------------------------------------------------------------------
 
@@ -1860,22 +1861,22 @@ def simplexOrientations(V,simplices):
 %------------------------------------------------------------------
 @D Affine transformations of $d$-points
 @{def larTranslate (tvect):
-	def larTranslate0 (points):
-		return [VECTSUM([p,tvect]) for p in points]
-	return larTranslate0
+    def larTranslate0 (points):
+        return [VECTSUM([p,tvect]) for p in points]
+    return larTranslate0
 
-def larRotate (angle):		# 2-dimensional !! TODO: n-dim
-	def larRotate0 (points):
-		a = angle
-		return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
-	return larRotate0
+def larRotate (angle):        # 2-dimensional !! TODO: n-dim
+    def larRotate0 (points):
+        a = angle
+        return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+    return larRotate0
 
 def larScale (svect):
-	def larScale0 (points):
-		print "\n points =",points
-		print "\n svect =",svect
-		return [AA(PROD)(TRANS([p,svect])) for p in points]
-	return larScale0
+    def larScale0 (points):
+        print "\n points =",points
+        print "\n svect =",svect
+        return [AA(PROD)(TRANS([p,svect])) for p in points]
+    return larScale0
 @}
 %------------------------------------------------------------------
 
@@ -1901,10 +1902,10 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 @D Generate a simplicial decomposition ot the $[0,1]^d$ domain
 @{""" cellular decomposition of the unit d-cube """
 def larDomain(shape, cell='cuboid'):
-	if cell=='simplex': V,CV = larSimplexGrid1(shape)
-	elif cell=='cuboid': V,CV = larCuboids(shape)
-	V = larScale( [1./d for d in shape])(V)
-	return [V,CV]
+    if cell=='simplex': V,CV = larSimplexGrid1(shape)
+    elif cell=='cuboid': V,CV = larCuboids(shape)
+    V = larScale( [1./d for d in shape])(V)
+    return [V,CV]
 @}
 %-------------------------------------------------------------------------------
 
@@ -1913,11 +1914,11 @@ A scaled simplicial decomposition is provided by the second-order  \texttt{larIn
 %-------------------------------------------------------------------------------
 @D Scaled simplicial decomposition ot the $[0,1]^d$ domain
 @{def larIntervals(shape, cell='cuboid'):
-	def larIntervals0(size):
-		V,CV = larDomain(shape,cell)
-		V = larScale( size)(V)
-		return [V,CV]
-	return larIntervals0
+    def larIntervals0(size):
+        V,CV = larDomain(shape,cell)
+        V = larScale( size)(V)
+        return [V,CV]
+    return larIntervals0
 @}
 %-------------------------------------------------------------------------------
 
@@ -1928,13 +1929,13 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 %-------------------------------------------------------------------------------
 @D Primitive mapping function 
 @{def larMap(coordFuncs):
-	if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
-	def larMap0(domain,dim=2):
-		V,CV = domain
-		V = AA(coordFuncs)(V)  # plasm CONStruction
-		return [V,CV]
-		# checkModel([V,CV])  TODO
-	return larMap0
+    if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
+    def larMap0(domain,dim=2):
+        V,CV = domain
+        V = AA(coordFuncs)(V)  # plasm CONStruction
+        return [V,CV]
+        # checkModel([V,CV])  TODO
+    return larMap0
 @}
 %-------------------------------------------------------------------------------
 
@@ -1947,20 +1948,20 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 @D Create a dictionary with key the point location
 @{from collections import defaultdict
 def checkModel(model,dim=2):
-	V,CV = model; n = len(V)
-	vertDict = defaultdict(list)
-	for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
-	points,verts = TRANS(vertDict.items())
-	invertedindex = [None]*n
-	V = []
-	for k,value in enumerate(verts):
-		V.append(eval(points[k]))
-		for i in value:
-			invertedindex[i]=k	
-	CV = [[invertedindex[v] for v in cell] for cell in CV]
-	# filter out degenerate cells
-	CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
-	return [V, CV]
+    V,CV = model; n = len(V)
+    vertDict = defaultdict(list)
+    for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
+    points,verts = TRANS(vertDict.items())
+    invertedindex = [None]*n
+    V = []
+    for k,value in enumerate(verts):
+        V.append(eval(points[k]))
+        for i in value:
+            invertedindex[i]=k    
+    CV = [[invertedindex[v] for v in cell] for cell in CV]
+    # filter out degenerate cells
+    CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
+    return [V, CV]
 @}
 %-------------------------------------------------------------------------------
 
@@ -2147,7 +2148,7 @@ viewLarComplexChain(model)(chain4)
 """
 The MIT License
 ===============
-	
+    
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
 'Software'), to deal in the Software without restriction, including
@@ -2223,7 +2224,7 @@ from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 
 
 if __name__ == "__main__": 
-	@< Test examples @>
+    @< Test examples @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -2510,8 +2511,8 @@ verts = [AA(lambda x: 2*x)(VECTDIFF([vert,[0.5,0.5,0.5]])) for vert in verts]
 verts = [vert for vert in verts if VECTNORM(vert) < 1.0]
 tetra = Delaunay(verts)
 cells = [cell for cell in tetra.vertices.tolist()
-		 if  ((verts[cell[0]][2]<0) and (verts[cell[1]][2]<0) 
-		 		and (verts[cell[2]][2]<0) and (verts[cell[3]][2]<0) ) ]
+         if  ((verts[cell[0]][2]<0) and (verts[cell[1]][2]<0) 
+                 and (verts[cell[2]][2]<0) and (verts[cell[3]][2]<0) ) ]
 V, CV = verts, cells
 VIEW(MKPOL([V,AA(AA(lambda k:k+1))(CV),[]]))
 @}
@@ -2658,12 +2659,12 @@ from scipy.spatial import Delaunay
 @D Test for quasi-equilateral triangles
 @{""" Test for quasi-equilateral triangles """
 def quasiEquilateral(tria):
-	a = VECTNORM(VECTDIFF(tria[0:2]))
-	b = VECTNORM(VECTDIFF(tria[1:3]))
-	c = VECTNORM(VECTDIFF([tria[0],tria[2]]))
-	m = max(a,b,c)
-	if m/a < 1.7 and m/b < 1.7 and m/c < 1.7: return True
-	else: return False
+    a = VECTNORM(VECTDIFF(tria[0:2]))
+    b = VECTNORM(VECTDIFF(tria[1:3]))
+    c = VECTNORM(VECTDIFF([tria[0],tria[2]]))
+    m = max(a,b,c)
+    if m/a < 1.7 and m/b < 1.7 and m/c < 1.7: return True
+    else: return False
 @}
 %-------------------------------------------------------------------------------
 
@@ -2674,7 +2675,7 @@ verts = np.random.rand(50,2)
 verts = (verts - [0.5,0.5]) * 2
 triangles = Delaunay(verts)
 cells = [ cell for cell in triangles.vertices.tolist()
-		 if (not quasiEquilateral([verts[k] for k in cell])) ]
+         if (not quasiEquilateral([verts[k] for k in cell])) ]
 V, FV = AA(list)(verts), cells
 EV = larSimplexFacets(FV)
 pols2D = MKPOLS((V,FV))
@@ -2696,22 +2697,22 @@ VIEW(submodel)
 @D Decompose a permutation into cycles 
 @{""" Decompose a permutation into cycles """
 def permutationOrbits(List):
-	d = dict((i,int(x)) for i,x in enumerate(List))
-	out = []
-	while d:
-		x = list(d)[0]
-		orbit = []
-		while x in d:
-			orbit += [x],
-			x = d.pop(x)
-		out += [CAT(orbit)+orbit[0]]
-	return out
-		
+    d = dict((i,int(x)) for i,x in enumerate(List))
+    out = []
+    while d:
+        x = list(d)[0]
+        orbit = []
+        while x in d:
+            orbit += [x],
+            x = d.pop(x)
+        out += [CAT(orbit)+orbit[0]]
+    return out
+        
 if __name__ == "__main__":
-	print [2, 3, 4, 5, 6, 7, 0, 1]
-	print permutationOrbits([2, 3, 4, 5, 6, 7, 0, 1])
-	print [3,9,8,4,10,7,2,11,6,0,1,5]
-	print permutationOrbits([3,9,8,4,10,7,2,11,6,0,1,5])
+    print [2, 3, 4, 5, 6, 7, 0, 1]
+    print permutationOrbits([2, 3, 4, 5, 6, 7, 0, 1])
+    print [3,9,8,4,10,7,2,11,6,0,1,5]
+    print permutationOrbits([3,9,8,4,10,7,2,11,6,0,1,5])
 @}
 %-------------------------------------------------------------------------------
 
@@ -2753,7 +2754,7 @@ squares = larModelProduct([mod_0,mod_1])
 V,FV = squares
 simplices = pivotSimplices(V,FV,d=2)
 VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
-			  SKEL_1(STRUCT(MKPOLS((V,FV)))) ]))
+              SKEL_1(STRUCT(MKPOLS((V,FV)))) ]))
 @}
 %-------------------------------------------------------------------------------
 
@@ -2764,7 +2765,7 @@ cubes = larModelProduct([squares,mod_0])
 V,CV = cubes
 simplices = pivotSimplices(V,CV,d=3)
 VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
-			  SKEL_1(STRUCT(MKPOLS((V,CV)))) ]))
+              SKEL_1(STRUCT(MKPOLS((V,CV)))) ]))
 @}
 %-------------------------------------------------------------------------------
 

@@ -2,6 +2,8 @@
 from larlib import *
 
 """ random 1-boundary generation """
+from larlib import *
+
 import sys
 sys.path.insert(0, '/Users/paoluzzi/Documents/dev/lar-cc/test/py/larcc/')
 from test16 import *
@@ -12,7 +14,9 @@ FV = AA(COMP([sorted,list,set,CAT]))(EVs)
 FV = sorted( FV,key=len,reverse=True )
 EVs = sorted( EVs,key=len,reverse=True )
 W = [eval(vcode(v)) for v in V]
-testArray = latticeArray(W,EVs)
+latticeArray = computeCycleLattice(W,EVs)
+
+viewLarComplexChain((V,FV,EV))
 
 """
 bcycles,bverts = boundaryCycles(range(len(EW)),EW)

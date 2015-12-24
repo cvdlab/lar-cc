@@ -422,7 +422,7 @@ def larFromLines(lines):
     #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
     V,EVs = biconnectedComponent((V,EV))
     if EVs != []:
-        EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
+		#EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
         V,EV = larRemoveVertices(V,EV)
         V,FV,EV = facesFromComps((V,EV))
         areas = integr.surfIntegration((V,FV,EV))

@@ -1,21 +1,21 @@
 """ Boundary orientation of a random 2D triangulation """
 from larlib import *
 from random import random
-from scipy import linalg
+from scipy import spatial,linalg
 
 """ Vertices V generated as random point in the unit circle """
 verts = []
-npoints = 800
+npoints = 50
 for k in range(npoints):
-   t = 2*pi*random()
-   u = random()+random()
-   if u > 1: r = 2-u 
-   else: r = u
-   verts += [[r*cos(t), r*sin(t)]]
+    t = 2*pi*random()
+    u = random()+random()
+    if u > 1: r = 2-u 
+    else: r = u
+    verts += [[r*cos(t), r*sin(t)]]
 VIEW(STRUCT(AA(MK)(verts)))
 
 """ Delaunay triangulation of the whole set V of points """
-triangles = scipy.spatial.Delaunay(verts)
+triangles = spatial.Delaunay(verts)
 def area(cell): return linalg.det([verts[v]+[1] for v in cell])/2
 cells = [ cell for cell in triangles.vertices.tolist() if area(cell)>PI/(3*npoints)]
 V, FV = AA(list)(verts), cells
@@ -28,13 +28,13 @@ FV = [FV[k] for k in range(cellSpan) if not k in remove]
 
 """ Coherently orient the input LAR model (V,FV) """
 def positiveOrientation(model):
-   V,simplices = model
-   out = []
-   for simplex in simplices:
-      theMat = [V[v]+[1] for v in simplex]
-      if sign(linalg.det(theMat)) > 0:  out += [simplex]
-      else: out += [REVERSE(simplex)]
-   return V,out
+    V,simplices = model
+    out = []
+    for simplex in simplices:
+        theMat = [V[v]+[1] for v in simplex]
+        if sign(linalg.det(theMat)) > 0:  out += [simplex]
+        else: out += [REVERSE(simplex)]
+    return V,out
 
 V,FV = positiveOrientation((V,FV))
 
@@ -46,13 +46,10 @@ VIEW(mkSignedEdges((V,EV)))
 """ Signed 2-boundary matrix  and signed boundary 1-chain """
 orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])
 cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
-   
+    
 """ Display the boundary 1-chain """
 VIEW(STRUCT(MKPOLS((V,FV))))
 VIEW(STRUCT(
-   MKPOLS((V,FV)) +
-   [COLOR(RED)(mkSignedEdges((V,cells)))]  ))
-
-VIEW(STRUCT( MKPOLS((V,cells))  ))
-VIEW(STRUCT( [mkSignedEdges((V,cells))]  ))
+    MKPOLS((V,FV)) +
+    [COLOR(RED)(mkSignedEdges((V,cells)))]  ))
 

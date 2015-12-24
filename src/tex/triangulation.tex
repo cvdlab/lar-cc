@@ -37,6 +37,9 @@
 
 %----macros end-----------------------------------------------------------------
 
+\newtheorem{definition}{Definition}
+\newtheorem{statement}{Statement}
+
 \title{Triangulation of the boundary of a 2-chain
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
@@ -49,16 +52,245 @@
 
 \begin{abstract}
 In this module we perform the whole set of manipulations necessary to triangulate the boundary polygon of a 2-chain using a standard triangulation algorithm~\cite{} implemented by the \texttt{poly2tri} python package, largely diffuse in games applications.
-Notice that the input data may be of very general kind, corresponding to polygons that are non-connected, non-manifold w/o nested polygons of general kind. Conversely, the used library allows only for quite special polygons, with a simple exterior boundary and multiple (non-touching) internal holes, and without repeated vertices. The used package is based on the paper "Sweep-line algorithm for constrained Delaunay triangulation" by V.~Domiter and and B.~Zalik~\cite{poly2tri:2008}.
+Notice that the input data may be of very general kind, corresponding to polygons that are non-connected, non-manifold w/o nested polygons of general kind. Conversely, the used library allows only for quite special polygons, with a simple exterior boundary and multiple (non-touching) internal holes, and without repeated vertices. The used package is based on the paper "Sweep-line algorithm for constrained Delaunay triangulation" by V.~Domiter and B.~Zalik~\cite{poly2tri:2008}.
 \end{abstract}
 
 \tableofcontents
 
 
-\section{Introduction}
+\section{From a finite set of 2D segments to a regular 2-complex}
 %===============================================================================
 
-Let suppose that a  2-complex is given by a LAR triple \texttt{(V,FV,EV)} with the standard characteristics, and that a 2-chain $\texttt{chain}\in\Z_2^n$ is also given, with $\Z_2=\{0,1\}$ and $n = |\texttt{FV}|$.
+Let suppose that a  2-complex in the plane is given as a LAR triple \texttt{(V,FV,EV)}, and that a 2-chain $\texttt{chain}\in\Z_2^n$ is also given, with $\Z_2=\{0,1\}$ and $n = |\texttt{V}|$.
+The aim of this module is to develop a methodology and an implementation to compute a triangulation of any 2-chain extracted from a 2-complex. 
+
+This first section will concentrate on (1) how to generate a regular 2-complex starting from a finite set of 2D segments, i.e.~how to generate a LAR triple \texttt{(V,FV,EV)},  and (2)~how to triangulate \emph{any 2-chain}, and in particular a single 2-cell in 2D, using a standard CDT  (Constrained Delaunay Triangulation) algorithm that does not allow for polygons with repeated vertices. 
+
+The first point is not trivial, since a general 2-chain may contain 2-cells that are not contractible to a point (since they may contain any finite number of internal holes), and furthermore may be non-manifold, i.e.~with boundary vertices incident on more than 2 boundary edges. In addition, in the general case, holes of 2-cells may contain other 2-cells, possibly with holes, and so on. 
+
+In particular, the presence of non-manifold vertices is the common case in random generation of complexes of polygons in the plane, and/or for the typical 2-chain extracted from a general 2-complex. In order of preparing the input for the triangulation algorithm, the boundary 0-chain extracted from the general 2-chain must undergo to a  circular ordering, producing---in the non-manifold case---any finite number of vertex repetitions. Repeated vertices will be disambiguated by applying small local perturbations towards the interior of the cycle. Anyway, boundary cycles will be perturbed only for drawing solidly the 2-chain as a single polygon with holes, whereas the exact LAR of the 2-complex will not be modified.
+
+\subsection{Definitions and methodology}
+
+First we provide some definitions useful in what follows, then we formalize the implemented methods.
+
+\begin{definition}{(Regular complex)}
+A $d$-complex is \emph{regular} when any $k$-cell ($0 \leq k \leq d$) is contained in a $d$-cell.
+\end{definition}
+
+\begin{definition}{(Circular ordering)}
+A $0$-chain is \emph{circularly ordered} when every consecutive pair of its $0$-cells (module the lenght of the chain) maps to a $1$-cell of the boundary 1-chain of a 2-chain.
+\end{definition}
+
+
+
+\subsubsection{Input preprocessing}
+
+The input is given by $m$ line segments in the plane, with $p\leq 2m$ extreme points.
+
+First we compute all the $k$ intersection points internal to the lines, using adeguate data structures and algorithms to accelerate the search. This problem is developed within the \texttt{inters} module, and implemented in the \texttt{larlib} sub-package named \texttt{inters.py}. 
+
+The arrangement of lines is correspondingly updated---by splitting the input lines on their \emph{internal} intersection points---so that the splitted line segments may possibly intersect only on extreme points.
+
+Let consider the undirected graph $G=(N,A)$, where the set of nodes $N$ is given by the extreme points of splitted  segments, and compute the set  $\mathcal{G} = \{G_i\}_{i\in I}$ of maximal biconnected components of $G$.    Suppose $\mathcal{G}$ nonempty.
+
+\begin{definition}{(Vertices)}
+The union of node sets of biconnected components provides the \emph{vertex} set $\texttt{V} = \cup_{i\in I} N_i$.
+This one supplies the geometric embedding of the 0-cells of the 2-complex.
+\end{definition}
+
+\begin{definition}{(Edges)}
+The disjoint union of arcs of biconnected components provides the \emph{edge set} $\texttt{EV} = \cup_{i\in I} A_i$.
+It supplies an indexed array of pairs of node indices, i.e.~a LAR representation of the 1-cells of the 2-complex.
+\end{definition}
+
+
+\begin{definition}{(Cycles)}
+The \emph{boundaries} of 2-chains, corresponding one-to-one to the biconnected components $G_i \in \mathcal{G}$ considered as a plane partition, are \emph{closed} 1-chains called \emph{cicles} $\mathcal{C} = \{\partial G_i\}_{i\in I}$.
+\end{definition}
+
+A cycle may be represented either as an unordered set of 1-cells (1-chain) or as an ordered set of 0-cells (0-chain), that we call \emph{1-cycle} and \emph{0-cycle}, respectively.
+
+\begin{definition}{(Manifold and non-manifold cycles)}
+A boundary 1-chain with a number $n$ of both 1-cells and 0-cells may be represented as a permutation of vertex indices. We call it a \emph{manifold cycle}.  Conversely, if the number of its vertices is smaller than the number of its edges, then the cycle is a \emph{non-manifold}.
+\end{definition}
+
+A cycle may be decomposed into one or more loops of edges. In a cycle all loops are piecewise-linear curves; they share one or more common vertices in the case of non-manifold cycles. The set of loops, denoted in the following as $\mathcal{L}$, has cardinality $\ell = |\mathcal{L}|$ greater or equal to the cardinality $n = |\mathcal{G}|$, where the non-manifold vertices have even incidence number greater than 2.
+The cycles in $\mathcal{C}$ are boundaries of connected regions of the plane. The loops in $\mathcal{L}$ are boundaries of regions contractible to a point. 
+
+
+\subsubsection{Algorithm: LAR generation}
+\label{sec:larFromCycles}
+
+Every cycle in $\mathcal{C}$ subdivides the plane in 3 regions, of internal, external, and boundary points, respectively. The set union of $\mathcal{C}$ elements provides a \emph{cover} of the plane. Let us consider the collection $\mathring{\mathcal{C}}$ of the open sets of points internal to the cycles.
+
+\begin{definition}{(Faces)}
+A partition of the plane is given by the collection of closures of the set differences (\emph{regularized differences}) between every element of $\mathring{\mathcal{C}}$ and all the others. We call this set \texttt{F}, and its elements either \emph{faces} or 2-cells of the 2-complex.
+\end{definition}
+
+The triple \texttt{(V,E,F)}, as defined before, is a cellular 2-complex defined by the $d$-cells ($0\leq d\leq 2$) in \texttt{V,E,F}, that provide the 0-, 1-, and 2-cells, respectively. 
+
+\begin{statement}{(LAR)}
+Every cell of a 2-complex as a collection of point-sets is completely is represented discretely, in the sense that can be completely reconstructed, starting from the \texttt{V} subset of its boundary.
+\end{statement}
+
+The point now is how to construct the array \texttt{FV} starting from the arrays \texttt{V}, \texttt{EV}, and from the set $\mathcal{C}$ returned by the function \texttt{farFromLines()} implemented in the \texttt{larlib} module \texttt{inters.py}.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.328\linewidth]{images/linesToLAR0} 
+   \includegraphics[width=0.3285\linewidth]{images/linesToLAR1} 
+   \includegraphics[width=0.321\linewidth]{images/linesToLAR2} 
+   \caption{LAR cellular 2-complex generated by an arrangement of line segments: (a) drawing of numbered cells; (b) 2-complex with different colors; (c) exploded view of 2-cells. Notice that every cell is connected, but not necessarily  path-connected.}
+   \label{fig:linesToLAR}
+\end{figure}
+
+
+\paragraph{Computing a LAR 2-complex from an arrangement of line segments}
+
+The computational process discussed in Section~\ref{sec:larFromCycles} is implemented by the script below.
+First, the planar graph of edges is built by the \texttt{lines2lar} function, then the set of graph \texttt{cycles} corresponding to the partition of 2D plane induced by the graph is returned by the \texttt{facesFromComps} function. These are sorted in increasing order of the surrounded area, so getting at the end of the sorted list two copies of the exterior boundary cycle. The very last cycle is removed, so that every internal edge is used twice in some cycle, whereas the boundary edges are used only once. Finally the various cycles are checked pairwise for mutual containment, producing the \texttt{latticeArray} of their partial order.
+Finally, the reduced set of \texttt{cells} as lists of bounding cycles of vertices is produced by the \texttt{cellsFromCycles} function, finally removed by multiple vertices to produce the \texttt{FV} LAR representation.
+
+%-------------------------------------------------------------------------------
+@D Computing a LAR 2-complex from an arrangement of line segments
+@{""" Computing a LAR 2-complex from an arrangement of line segments"""
+def larFromLines(lines):
+    V,EV = lines2lar(lines)
+    V,cycles,EV = facesFromComps((V,EV))
+    areas = integr.surfIntegration((V,cycles,EV))
+    orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
+    interiorCycles = [face for area,face in orderedCycles[:-1]]
+    EdgeCyclesByVertices = [zip(cycle[:-1],cycle[1:])+[(cycle[-1],cycle[0])] 
+    							for cycle in interiorCycles]
+    latticeArray = computeCycleLattice(V,EdgeCyclesByVertices)
+    cells = cellsFromCycles(latticeArray)
+    FV = [list(set(CAT([interiorCycles[k] for k in cell]))) for cell in cells]
+    return V,FV,EV
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{LAR of a 2-complex of general type}
+
+The LAR of the complex in Figure~\ref{fig:linesToLAR}, and constructed starting from a set of line segmants in the plane, is given here. Notice that cells may have non connected boundaries (may contain holes) and/or non-manifold points.
+
+%-------------------------------------------------------------------------------
+@O test/py/triangulation/test08.py
+@{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
+from larlib import *
+
+V = [[0.0989,0.492],[0.5,0.492],[0.708,0.6068],[0.2966,0.6068],[1.0,0.0], 
+[0.0,0.0],[1.0,1.0],[0.0,1.0],[0.5,0.2614],[0.0989,0.2614],[0.8034,
+0.1273],[0.8034,0.0386],[0.0989,0.9068],[0.892,0.9068],[0.708,0.7886],
+[0.9375,0.1273],[0.0989,0.1273],[0.8034,0.492],[0.7693,0.4009],[0.892,
+0.492],[0.183,0.3097],[0.3193,0.4182],[0.6761,0.1773],[0.2966,0.7886]]
+
+FV = [[0,4,5,6,7,9,10,11,12,13,15,16,17,19],[10,11,15],[0,20,21],[8,18,
+22], [0,1,8,9,20,21],[1,8,9,10,16,17,18,22],[0,1,2,3,12,13,14,17,19,23],
+[2,3,14,23]]
+
+EV = [(18,22),(10,11),(10,17),(0,20),(1,17),(8,9),(0,21),(12,13),(14,23), 
+(17,19),(4,5),(3,23),(0,12),(9,16),(2,3),(13,19),(6,7),(2,14),(0,1),
+(10,15),(4,6),(8,22),(5,7),(20,21),(1,8),(8,18),(10,16),(0,9),(11,15)]
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))        
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.3)) 
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Generation of LAR of a 2-complex from line segments}
+The LAR model \texttt{(V,FV,EV)} displayed in Figure~fig:linesToLAR and listed in the Script above, 
+i.e.~ in the \texttt{test08.py} file, can be generated as below.
+%-------------------------------------------------------------------------------
+@O test/py/triangulation/test09.py
+@{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
+from larlib import *
+
+filename = "test/svg/inters/test0.svg"
+lines = svg2lines(filename)
+V,FV,EV = larFromLines(lines)
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))        
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.3)) 
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Solid PyPLaSM visualization of a 2-complex}
+
+A PyPLaSM visualization of a 2-complex of very general kind may be obtained with the \texttt{MKFACES} function, implemented by the \texttt{SOLIDIFY} of geometric values of \emph{HPC} type, starting from the LAR model of the 2-complex to be displayed. Of course, a \texttt{boundaryOperator} is built using the LAR representation of 2-cells and 1-cells, i.e.~\texttt{FV} and \texttt{EV}, respectively.
+
+%-------------------------------------------------------------------------------
+@D Solid PyPLaSM visualization of a 2-complex
+@{""" Solid PyPLaSM visualization of a 2-complex with non-contractible 
+      and non-manifold cells"""
+def MKFACES(model):
+    V,FV,EV = model
+    bmatrix = boundary(FV,EV)
+    boundaryOperator = chain2BoundaryChain(bmatrix)
+    chain = [0]*len(FV)
+    boundingEdges = []
+    for k,face in enumerate(FV):
+    	unitChain = copy.copy(chain)
+    	unitChain[k] = 1
+    	boundingEdges += [boundaryOperator(unitChain)]
+    faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
+        for edges in boundingEdges]
+    return faces
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Color visualization}
+A color visualization of the 2-cells of the previous cellular complex is produced by the \texttt{test09.py} file.
+%-------------------------------------------------------------------------------
+@O test/py/triangulation/test10.py
+@{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
+from larlib import *
+sys.path.insert(0, 'test/py/triangulation/')
+from test09 import *
+
+model = V,FV,EV
+faces = MKFACES(model)
+colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLACK,BLUE,PURPLE,BROWN]
+components = [COLOR(colors[k%12])(face) for k,face in enumerate(faces)]
+VIEW(STRUCT(components))
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsection{Construction of LAR of 2-faces}
+
+The contruction of faces in \texttt{FV} begins by computing the containment relation between all pairs of cycles in $\mathcal{C}$.
+
+Since they are boundary 1-chains of 2-chains corresponding to maximal biconnected components of (\texttt{V}, \texttt{EV}) graph, the cycles in $\mathcal{C}$ cannot have intersection, except possibly on common vertices, corresponding to \emph{separation nodes} of the graph.
+In order to test if $c_h$ is either \emph{internal} or \emph{external} to $c_k$, for $c_h, c_k \in \mathcal{C}$, it is sufficient to test the containment in $c_k$ of a single point \emph{internal} to $c_h$. 
+
+We construct the binary matrix of the containment relation, which is anti-symmetric, reflexive and transitive.
+Therefore the containment relation is a partial order, that can be represented as the DAG (Directed Acyclic Graph) of its transitive reduction,  often called \emph{Hasse diagram}.
+
+The Hasse diagram of this relation is either a single tree or a forest, i.e.~a set of trees without common nodes, depending on the connection of the domain.
+By numerating the nodes with their level number, defined as the integer distance of the node from the tree roots, and by deleting the arcs with starting node odd, we get a forest of trees with two levels, whose root(s) correspond to the exterior cycle(s) and whose leaves correspond to the internal holes of the faces.
+
+Every such small tree (``sapling") of cycles, possibly reduced to the only root, in case of a face without holes, 
+will correspond to a 2-cell of the 2-complex.
+
+
+\subsection{Solid display of a 2-complex}
+
+Let we start with a triple LAR model \texttt{(V,FV,EV)}.
+
+First we compute the signed boundary operator. Then for each cycle $c$ in $\mathcal{C}$ we have a list of signed boundary edges. The loops of each cycle are extracted and classified as external or internal loops, and returned  as circularly ordered sequences of vertex indices.  Then the kind as manifold or non-manifold of $c$ is computed, by comparing the number of edges with the number of vertices. 
+
+The non-manifold vertices are possibly signed, and the transformation from a list of vertex indices to a list of vertices (i.e.~list of lists of real coordinates) is applied.
+
+Finally, every non-manifold vertex is moved in general position by applying to it a small translation perturbation towards the \emph{interior} of the cycle. The translation vector is computed by vector summation of the two adjacent tangent vectors incident to the vertex. Each incident vector is computed by properly orienting the vector difference between two consecutive vertices. 
+
+For each set of disentangled loops, given as arrays of points without repetition, the appropriate functions of the python package \emph{Poly2tri}, named \texttt{p2t}, are called, returning a list of triples of 2D points corresponding to the generated triangulation of the face, possibly holding holes corresponding to the interior loops, if any.
 
 
 
@@ -72,43 +304,66 @@ Let suppose that a  2-complex is given by a LAR triple \texttt{(V,FV,EV)} with t
 
 In this section we compute the containment relation between non-intersecting cycles generated on 2-faces by the incident faces. This step is preparatory to the representation of fragmented 2-faces --- embedded in 2D --- as LAR data structures, to be subsequently restored in the ambient 3D and sticked together to generate the the 2-skeleton of the Boolean complex.
 
-For this purpose, the set of non-intersecting cycles, as lists of edges, are returned in the \texttt{EVs} array by the \texttt{biconnectedComponent} function. The pair \texttt{V,EVs} is therefore passed as input to the \texttt{latticeArray} function, that returns a dense matrix with elements in $\{-1,0,1\}$, where the element $i,j$ either contains $0$ if anyone (and hence all) of vertices of cycle $j$-th is \emph{external} to cycle $i$-th, or contains $1$ if anyone (and hence all) of vertices of cycle $j$-th is \emph{internal} to cycle $i$-th, or finally contains $-1$ if anyone (and hence all) of vertices of cycle $j$-th is \emph{on boundary} of cycle $i$-th. The last condition may hold only for diagonal elements $i,j$ where $i=j$.
+For this purpose, the set of non-intersecting cycles, as lists of edges, are returned in the \texttt{EVs} array by the \texttt{biconnectedComponent} function. The pair \texttt{V,EVs} is therefore passed as input to the \texttt{computeCycleLattice} function, that returns a dense matrix with elements in $\{-1,0,1\}$, where the element $i,j$ either contains $0$ if anyone (and hence all) of vertices of cycle $j$-th is \emph{external} to cycle $i$-th, or contains $1$ if anyone (and hence all) of vertices of cycle $j$-th is \emph{internal} to cycle $i$-th, or finally contains $-1$ if anyone (and hence all) of vertices of cycle $j$-th is \emph{on boundary} of cycle $i$-th. The last condition may hold only for diagonal elements $i,j$ where $i=j$.
 
-The returned \texttt{testArray} matrix of dimension $n\times n$, where $n$ is the number of non-intersecting cycles on a fragmented 2D face, is the used by the \texttt{cellsFromCycles} function, that return a list of lists of cycles, each one defining the boundary of a single connected but possibly non path-connected 2-cell in the LAR representation of the fragmented 2-complex. 
+The returned \texttt{latticeArray} matrix of dimension $n\times n$, where $n$ is the number of non-intersecting cycles on a fragmented 2D face, is the used by the \texttt{cellsFromCycles} function, that return a list of lists of cycles, each one defining the boundary of a single connected but possibly non path-connected 2-cell in the LAR representation of the fragmented 2-complex. 
 
 \paragraph{Classification of non intersecting cycles}
 
-The function \texttt{latticeArray} takes as input the pair \texttt{V,EVs}, where $V$ is the list of vertices and \texttt{EVs} is the list of cycles of a fragmented 2-cell in 2D. Each \texttt{EVs} element is given as a list of edges, given os pairs of integer vertex indices.
-The returned \texttt{testArray} matrix --- characterizing the incidences between cycles --- has dimension $n\times n$.
+The function \texttt{computeCycleLattice} takes as input the pair \texttt{V,EVs}, where $V$ is the list of vertices and \texttt{EVs} is the list of cycles of a fragmented 2-cell in 2D. Each \texttt{EVs} element is given as a list of edges, given os pairs of integer vertex indices.
+The returned \texttt{latticeArray} matrix --- characterizing the incidences between cycles --- has dimension $n\times n$.
 
-\paragraph{Remark on interior point classification}
+\paragraph{Remark on interior point vs cycle's vertex classification }
 
+When reconstructing the containment lattice of component cycles of a boundary chain the strategy of testing a single vertex of cycle for containment does not work, since the tested vertex might stay in non-manifold position, so that---even if internal points stay either internal or external to the target cycle, the result of the containment test would be of type \texttt{.on.}, corresponding of test point on the boundary of the target cycle, so producing a wrong containment lattice.
+
+So, in computing the $(k,h)$ term of the containment matrix, stored witin the \texttt{latticeArray} below, we cannot in general use the simpler testing \texttt{point = V[i]}, but another \texttt{point} guaranteed to belong to a close neighborhood of it, in the interior of \texttt{EVs[h]}.
+
+For this reason the \texttt{internalTo} function is introduced, that returns a \texttt{point} that is internal to the \texttt{ev} cycle, and in particular internal to the plane sector interior to the angle formed by the first vertex, named \texttt{v}, of \texttt{ve} (edges incident on vertices) array, that is incident only to two edges (and hence is not in non-manifold position). The function will work with both acute and ottuse interior angles incident on \texttt{v}.
 
 %-------------------------------------------------------------------------------
 @D Classification of non intersecting cycles
 @{""" Classification of non intersecting cycles """
-def latticeArray(V,EVs):
+def internalTo(V,ev):
+    classify = pointInPolygonClassification((V,ev))
+    ve = invertRelation(ev)
+    for v,edgeIndices in enumerate(ve):
+        if len(edgeIndices) == 2: break
+    v1,v2 = set(CAT([list(ev[e]) for e in edgeIndices])).symmetric_difference([v])
+    vect1 = VECTDIFF([V[v1],V[v]])
+    vect2 = VECTDIFF([V[v2],V[v]])
+    point = VECTSUM([ V[v], SCALARVECTPROD([ 0.05, VECTSUM([vect1,vect2]) ])])
+    if classify(point) == "p_out":
+        point = VECTSUM([ V[v], SCALARVECTPROD([ -0.05, VECTSUM([vect1,vect2]) ])])
+    return point
+    
+def computeCycleLattice(V,EVs):
     n = len(EVs)
-    testArray = []
+    latticeArray = []
+    interiorPoints = [internalTo(V,ev) for k,ev in enumerate(EVs)]
     for k,ev in enumerate(EVs):
         row = []
         classify = pointInPolygonClassification((V,ev))
-        for h in range(0,n):
+        for h in range(0,k):
             i = EVs[h][0][0]
-            point = V[i]
+            #point = V[i]
+            point = interiorPoints[h]
             test = classify(point)
             if test=="p_in": row += [1]
             elif test=="p_out": row += [0]
             elif test=="p_on": row += [-1]
             else: print "error: in cycle classification"
-        testArray += [row]
-    return testArray
+        row += [-1]
+        for h in range(k,n-1): 
+            row += [0]
+        latticeArray += [row]
+    return latticeArray
 @}
 %-------------------------------------------------------------------------------
 
 \paragraph{Extraction of path-connected boundaries}
 
-The function \texttt{cellsFromCycles}, given by the script below, takes as input the cycle-incidence matrix \texttt{testArray}, and return the list \texttt{out} of lists of cycles, providing the boundaries of a decomposition into connected (but possibly non path-connected) 2-cells of the fragmented 2-face whose non-intersecting cycles were computed as output of the \texttt{biconnectedComponent} function. 
+The function \texttt{cellsFromCycles}, given by the script below, takes as input the cycle-incidence matrix \texttt{latticeArray}, and return the list \texttt{out} of lists of cycles, providing the boundaries of a decomposition into connected (but possibly non path-connected) 2-cells of the fragmented 2-face whose non-intersecting cycles were computed as output of the \texttt{biconnectedComponent} function. 
 
 First the \texttt{sons} of each cycle are computed, i.e. the indices of cycles containd in it, as well as the \texttt{level} of every cycle, i.e.~their position within the lattice of the containment relation (that is a partial order). 
 The level of a cycle is computed as the sum of elements in its matrix column. The roots of the lattice, i.e.~the more external cycles have level -1; the following levels have values $0,1,2,...$, respectively.
@@ -120,10 +375,11 @@ Finally the sublists are pruned, by eliminating those whose first element has be
 %-------------------------------------------------------------------------------
 @D Extraction of path-connected boundaries
 @{""" Extraction of path-connected boundaries """
-def cellsFromCycles (testArray):
-    n = len(testArray)
-    sons = [[h]+[k for k in range(n) if row[k]==1] for h,row in enumerate(testArray)]
-    level = [sum(col) for col in TRANS(testArray)]
+def cellsFromCycles (latticeArray):
+    print "\nlatticeArray =\n",latticeArray,"\n"
+    n = len(latticeArray)
+    sons = [[h]+[k for k in range(n) if row[k]==1] for h,row in enumerate(latticeArray)]
+    level = [sum(col) for col in TRANS(latticeArray)]
     
     def rank(sons): return [level[x] for x in sons]
     preCells = sorted(sons,key=rank)
@@ -158,11 +414,10 @@ V,EVs = biconnectedComponent((V,EV))
 # candidate face
 FVs = AA(COMP([list,set,CAT]))(EVs)
 
-testArray = latticeArray(V,EVs)
+latticeArray = computeCycleLattice(V,EVs)
 
-for k in range(len(testArray)):
-	print k,testArray[k]
-print "\ncells = ", cellsFromCycles(testArray),"\n"
+for k in range(len(latticeArray)):
+	print k,latticeArray[k]
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
@@ -228,7 +483,6 @@ def scan(V,FVs, group,cycleGroup,cycleVerts):
         n = len(FVs[group][cycle])
         if nextCycle != cycle: 
             if not ((nextCycle in scannedCycles) and (cycle in scannedCycles)):
-                print "k =",k
                 scannedCycles += [nextCycle]
                 m = len(FVs[group][nextCycle])
                 v1,v2 = v,cycleGroup[k+1][2]
@@ -255,8 +509,8 @@ def connectTheDots(model):
     V,EV = model
     V,EVs = biconnectedComponent((V,EV))
     FV = AA(COMP([sorted,set,CAT]))(EVs)
-    testArray = latticeArray(V,EVs)
-    cells = cellsFromCycles(testArray)
+    latticeArray = computeCycleLattice(V,EVs)
+    cells = cellsFromCycles(latticeArray)
     FVs = [[FV[cycle] for cycle in cell] for cell in cells]
     
     indexedCycles = [zip(FVs[h],range(len(FVs[h])))   for h,cell in enumerate(cells)]
@@ -300,27 +554,19 @@ def setClockwise(h,k,cycle,areas,CVs):
         CVs[h][k] = canonicalRotation(REVERSE(chain))
 
 def orientBoundaryCycles(model,cells):
-    print "\nmodel =",model
-    print "\ncells =",cells
     V,EV = model
     edgeBoundary = range(len(EV))
     edgeCycles,_ = boundaryCycles(edgeBoundary,EV)
     vertexCycles = [[ EV[e][1] if e>0 else EV[-e][0] for e in cycle ] for cycle in edgeCycles]
-    print "vertexCycles =",vertexCycles
     rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
-    print "rotations =",rotations
     theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
-    print "theCycles =",theCycles
     CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
-    print "CVs =",CVs
     areas = signedSurfIntegration((V,theCycles,EV),signed=True)
-    print "areas =",areas,"\n"
     
     for h,cell in enumerate(cells):
         for k,cycle in enumerate(cell):
             if k == 0: setCounterClockwise(h,k,cycle,areas,CVs)
             else: setClockwise(h,k,cycle,areas,CVs)
-    print "CVs =",CVs
     return CVs
 @}
 %-------------------------------------------------------------------------------
@@ -382,7 +628,7 @@ def boundaryCycles2vertexPermutation( model ):
     verts = CAT(CAT( CVs ))
     n = len(verts)
     W = copy.copy(V)
-    assert len(verts) == sorted(verts)[n-1]-sorted(verts)[0]+1
+    #assert len(verts) == sorted(verts)[n-1]-sorted(verts)[0]+1
     nextVert = dict([(v,cycle[(k+1)%(len(cycle))]) for cell in CVs for cycle in cell 
                    for k,v in enumerate(cycle)])
     for k,(u,v) in enumerate(CAT(bridgeEdges)):
@@ -564,19 +810,13 @@ boundary cases.
 @{""" From structures to boundary polylines """
 def boundaryPolylines(struct):
     V,boundaryEdges = structBoundaryModel(struct)
-    print "\nV =",V
-    print "\nboundaryEdges =",boundaryEdges
     if len(V) < len(boundaryEdges):
         EV = AA(sorted)(boundaryEdges)
         boundaryEdges = range(len(boundaryEdges))
         cycles,vertices = boundaryCycles(boundaryEdges,EV)
-        print "\ncycles =",cycles
-        print "\nvertices =",vertices
         polylines = [[V[v] for v in verts]+[V[verts[0]]] for verts in REVERSE(vertices)]
-        print "\npolylines =",polylines,"\n"
     else:
         polylines = boundaryModel2polylines((V,boundaryEdges))
-    print "\npolylines =",polylines,"\n"
     return polylines
 @}
 %-------------------------------------------------------------------------------
@@ -793,7 +1033,9 @@ from larlib import *
 @< From Struct object to LAR boundary model @>
 @< From structures to boundary polylines @>
 @< From LAR boundary model to polylines @>
+@< Computing a LAR 2-complex from an arrangement of line segments @>
 @< Visualization of a 2D complex and 2-chain @>
+@< Solid PyPLaSM visualization of a 2-complex @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -833,11 +1075,10 @@ V,EVs = biconnectedComponent((V,EV))
 # candidate face
 FVs = AA(COMP([list,set,CAT]))(EVs)
 
-testArray = latticeArray(V,EVs)
+latticeArray = computeCycleLattice(V,EVs)
 
-for k in range(len(testArray)):
-   print k,testArray[k]
-print "\ncells = ", cellsFromCycles(testArray),"\n"
+for k in range(len(latticeArray)):
+   print k,latticeArray[k]
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
@@ -854,7 +1095,7 @@ from larlib import *
 sys.path.insert(0, 'test/py/triangulation/')
 from test01 import *
 
-cells = cellsFromCycles(testArray)
+cells = cellsFromCycles(latticeArray)
 CV = AA(COMP([list,set,CAT]))(EVs)
 EVdict = dict(zip(EV,range(len(EV))))
 FE = [[EVdict[edge] for edge in cycle] for cycle in EVs] 
@@ -959,8 +1200,6 @@ from test03 import *
 
 cells,bridgeEdges = connectTheDots((V,EV))
 CVs = orientBoundaryCycles((V,EV),cells)
-
-print "\nCVs =",CVs
 @}
 %-------------------------------------------------------------------------------
 
@@ -1039,6 +1278,8 @@ from larlib import *
 %-------------------------------------------------------------------------------
 @D random 1-boundary generation
 @{""" random 1-boundary generation """
+from larlib import *
+
 import sys
 sys.path.insert(0, '/Users/paoluzzi/Documents/dev/lar-cc/test/py/larcc/')
 from test16 import *
@@ -1049,7 +1290,9 @@ FV = AA(COMP([sorted,list,set,CAT]))(EVs)
 FV = sorted( FV,key=len,reverse=True )
 EVs = sorted( EVs,key=len,reverse=True )
 W = [eval(vcode(v)) for v in V]
-testArray = latticeArray(W,EVs)
+latticeArray = computeCycleLattice(W,EVs)
+
+viewLarComplexChain((V,FV,EV))
 
 """
 bcycles,bverts = boundaryCycles(range(len(EW)),EW)

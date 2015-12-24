@@ -6,5 +6,3 @@ from test03 import *
 
 cells,bridgeEdges = connectTheDots((V,EV))
 CVs = orientBoundaryCycles((V,EV),cells)
-
-print "\nCVs =",CVs

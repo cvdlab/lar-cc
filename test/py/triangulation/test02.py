@@ -4,7 +4,7 @@ from larlib import *
 sys.path.insert(0, 'test/py/triangulation/')
 from test01 import *
 
-cells = cellsFromCycles(testArray)
+cells = cellsFromCycles(latticeArray)
 CV = AA(COMP([list,set,CAT]))(EVs)
 EVdict = dict(zip(EV,range(len(EV))))
 FE = [[EVdict[edge] for edge in cycle] for cycle in EVs] 
