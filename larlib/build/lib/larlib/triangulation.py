@@ -448,8 +448,8 @@ def boundaryModel2polylines(model):
     return polylines
 
 """ Computing a LAR 2-complex from an arrangement of line segments"""
-def larFromLines(lines):
-    V,EV = lines2lar(lines)
+def larPair2Triple(model):
+    V,EV = model
     V,cycles,EV = facesFromComps((V,EV))
     areas = integr.surfIntegration((V,cycles,EV))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
