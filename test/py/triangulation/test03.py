@@ -12,6 +12,7 @@ polygons = [polyline + [polyline[0]] for polyline in polylines]
 
 complex = SOLIDIFY(STRUCT(AA(POLYLINE)(polygons)))
 csrBoundaryMat = boundary(FV,EV)
+
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
                         for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))

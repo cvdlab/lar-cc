@@ -155,8 +155,8 @@ Finally, the reduced set of \texttt{cells} as lists of bounding cycles of vertic
 %-------------------------------------------------------------------------------
 @D Computing a LAR 2-complex from an arrangement of line segments
 @{""" Computing a LAR 2-complex from an arrangement of line segments"""
-def larFromLines(lines):
-    V,EV = lines2lar(lines)
+def larPair2Triple(model):
+    V,EV = model
     V,cycles,EV = facesFromComps((V,EV))
     areas = integr.surfIntegration((V,cycles,EV))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
@@ -212,7 +212,8 @@ from larlib import *
 
 filename = "test/svg/inters/test0.svg"
 lines = svg2lines(filename)
-V,FV,EV = larFromLines(lines)
+V,EV = lines2lar(lines)
+V,FV,EV = larPair2Triple((V,EV))
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))        
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.3)) 
@@ -244,6 +245,7 @@ def MKFACES(model):
 @}
 %-------------------------------------------------------------------------------
 
+
 \paragraph{Color visualization}
 A color visualization of the 2-cells of the previous cellular complex is produced by the \texttt{test09.py} file.
 %-------------------------------------------------------------------------------
@@ -254,14 +256,16 @@ sys.path.insert(0, 'test/py/triangulation/')
 from test09 import *
 
 model = V,FV,EV
+
 faces = MKFACES(model)
-colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLACK,BLUE,PURPLE,BROWN]
-components = [COLOR(colors[k%12])(face) for k,face in enumerate(faces)]
+colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
+n = len(FV)
+components = [COLOR(colors[k%n])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))
 @}
 %-------------------------------------------------------------------------------
 
-
+VIEW(STRUCT(AA(POLYLINE)([[V[v] for v in EV[e]] for e in boundaryCells(FV,EV)])))
 
 \subsection{Construction of LAR of 2-faces}
 
@@ -344,19 +348,21 @@ def computeCycleLattice(V,EVs):
     for k,ev in enumerate(EVs):
         row = []
         classify = pointInPolygonClassification((V,ev))
-        for h in range(0,k):
+        for h in range(n):
             i = EVs[h][0][0]
             #point = V[i]
             point = interiorPoints[h]
             test = classify(point)
-            if test=="p_in": row += [1]
+            if h==k: row += [-1]
+            elif test=="p_in": row += [1]
             elif test=="p_out": row += [0]
             elif test=="p_on": row += [-1]
             else: print "error: in cycle classification"
-        row += [-1]
-        for h in range(k,n-1): 
-            row += [0]
         latticeArray += [row]
+    for k in range(n):
+        for h in range(k+1,n): 
+            if latticeArray[k][h] == latticeArray[h][k]:
+                latticeArray[k][h] = 0
     return latticeArray
 @}
 %-------------------------------------------------------------------------------
@@ -1102,12 +1108,11 @@ FE = [[EVdict[edge] for edge in cycle] for cycle in EVs]
 edges = [CAT([FE[cycle] for cycle in cell]) for cell in cells]
 FVs = [[CV[cycle] for cycle in cell] for cell in cells]
 FV = AA(CAT)(FVs)
+cycles = STRUCT(MKPOLS((V,EV)))
+csrBoundaryMat = boundary(FV,EV)
 
 n = len(cells)
 chains = allBinarySubsetsOfLenght(n)
-
-cycles = STRUCT(MKPOLS((V,EV)))
-csrBoundaryMat = boundary(FV,EV)
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
                         for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))
@@ -1183,6 +1188,7 @@ polygons = [polyline + [polyline[0]] for polyline in polylines]
 
 complex = SOLIDIFY(STRUCT(AA(POLYLINE)(polygons)))
 csrBoundaryMat = boundary(FV,EV)
+
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
                         for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))
@@ -1285,23 +1291,13 @@ sys.path.insert(0, '/Users/paoluzzi/Documents/dev/lar-cc/test/py/larcc/')
 from test16 import *
 
 EV = AA(list)(cells)
-V,EVs = biconnectedComponent((V,EV))
-FV = AA(COMP([sorted,list,set,CAT]))(EVs)
-FV = sorted( FV,key=len,reverse=True )
-EVs = sorted( EVs,key=len,reverse=True )
-W = [eval(vcode(v)) for v in V]
-latticeArray = computeCycleLattice(W,EVs)
+V,FV,EV = larPair2Triple((V,EV))
 
-viewLarComplexChain((V,FV,EV))
+bcycles,bverts = boundaryCycles(range(len(EV)),EV)
+VIEW(STRUCT(AA(POLYLINE)([[V[v] for v in verts+[verts[0]]] for verts in bverts])))
 
-"""
-bcycles,bverts = boundaryCycles(range(len(EW)),EW)
-VIEW(STRUCT(AA(POLYLINE)([[V[v] for v in verts] for verts in bverts])))
-"""
-    
-colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, 
-			PURPLE, BROWN]
-components = [COLOR(colors[k%12])(STRUCT(MKPOLS((V,ev)))) for k,ev in enumerate(EVs)]
+colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
+components = [COLOR(colors[k%12])(face) for k,face in enumerate(MKFACES((V,FV,EV)))]
 VIEW(STRUCT(components))
 @}
 %-------------------------------------------------------------------------------

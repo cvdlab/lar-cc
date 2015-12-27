@@ -11,12 +11,11 @@ FE = [[EVdict[edge] for edge in cycle] for cycle in EVs]
 edges = [CAT([FE[cycle] for cycle in cell]) for cell in cells]
 FVs = [[CV[cycle] for cycle in cell] for cell in cells]
 FV = AA(CAT)(FVs)
+cycles = STRUCT(MKPOLS((V,EV)))
+csrBoundaryMat = boundary(FV,EV)
 
 n = len(cells)
 chains = allBinarySubsetsOfLenght(n)
-
-cycles = STRUCT(MKPOLS((V,EV)))
-csrBoundaryMat = boundary(FV,EV)
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
                         for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))

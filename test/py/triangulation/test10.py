@@ -4,7 +4,9 @@ sys.path.insert(0, 'test/py/triangulation/')
 from test09 import *
 
 model = V,FV,EV
+
 faces = MKFACES(model)
-colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLACK,BLUE,PURPLE,BROWN]
-components = [COLOR(colors[k%12])(face) for k,face in enumerate(faces)]
+colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
+n = len(FV)
+components = [COLOR(colors[k%n])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))

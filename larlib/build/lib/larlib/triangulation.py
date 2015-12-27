@@ -177,19 +177,21 @@ def computeCycleLattice(V,EVs):
     for k,ev in enumerate(EVs):
         row = []
         classify = pointInPolygonClassification((V,ev))
-        for h in range(0,k):
+        for h in range(n):
             i = EVs[h][0][0]
             #point = V[i]
             point = interiorPoints[h]
             test = classify(point)
-            if test=="p_in": row += [1]
+            if h==k: row += [-1]
+            elif test=="p_in": row += [1]
             elif test=="p_out": row += [0]
             elif test=="p_on": row += [-1]
             else: print "error: in cycle classification"
-        row += [-1]
-        for h in range(k,n-1): 
-            row += [0]
         latticeArray += [row]
+    for k in range(n):
+        for h in range(k+1,n): 
+            if latticeArray[k][h] == latticeArray[h][k]:
+                latticeArray[k][h] = 0
     return latticeArray
 
 """ Extraction of path-connected boundaries """
@@ -448,8 +450,8 @@ def boundaryModel2polylines(model):
     return polylines
 
 """ Computing a LAR 2-complex from an arrangement of line segments"""
-def larFromLines(lines):
-    V,EV = lines2lar(lines)
+def larPair2Triple(model):
+    V,EV = model
     V,cycles,EV = facesFromComps((V,EV))
     areas = integr.surfIntegration((V,cycles,EV))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
