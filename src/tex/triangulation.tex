@@ -247,7 +247,7 @@ def MKFACES(model):
 
 
 \paragraph{Color visualization}
-A color visualization of the 2-cells of the previous cellular complex is produced by the \texttt{test09.py} file.
+A color visualization of the 2-cells of the previous cellular complex is produced by the \texttt{test10.py} file.
 %-------------------------------------------------------------------------------
 @O test/py/triangulation/test10.py
 @{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
@@ -259,8 +259,7 @@ model = V,FV,EV
 
 faces = MKFACES(model)
 colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
-n = len(FV)
-components = [COLOR(colors[k%n])(faces[k]) for k in range(len(FV))]
+components = [COLOR(colors[k%12])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))
 @}
 %-------------------------------------------------------------------------------

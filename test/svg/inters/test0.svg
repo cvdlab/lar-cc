@@ -18,4 +18,9 @@
 <line fill="none" stroke="#000000" stroke-width="1.4173" stroke-miterlimit="10" x1="431.14" y1="581.445" x2="490.14" y2="581.445"/>
 <line fill="none" stroke="#000000" stroke-width="1.4173" stroke-miterlimit="10" x1="490.14" y1="581.445" x2="431.14" y2="620.445"/>
 <line fill="none" stroke="#000000" stroke-width="1.4173" stroke-miterlimit="10" x1="431.14" y1="581.445" x2="431.14" y2="620.445"/>
+<rect x="140.139" y="304.445" fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" width="44" height="44"/>
+<rect x="405.139" y="304.445" fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" width="44" height="44"/>
+<rect x="220.64" y="308.946" fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" width="42.998" height="42.998"/>
+<rect x="336.39" y="308.946" fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" width="42.998" height="42.998"/>
+<rect x="280.64" y="308.196" fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" width="42.998" height="42.998"/>
 </svg>
