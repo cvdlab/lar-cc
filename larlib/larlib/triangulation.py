@@ -1,6 +1,53 @@
 """ Module for pipelined intersection of geometric objects """
 from larlib import *
 
+""" Return a feasible pair edge/vertex """ 
+def takeEdgeVertex(edgeCounts,EV):
+    e = edgeCounts.index(min(edgeCounts))
+    if edgeCounts[e] < 2: 
+        v = EV[e][0]
+        return True,e,v
+    else: return False,0,0
+
+""" Extract a single edge/vertex cycle """ 
+def succ(e,seq):
+    return seq[(seq.index(e)+1) % len(seq)]
+   
+def extractCycle(edgeCounts,EV,VE,e,v,cycle,ecycle):        
+    nextEdge = succ(e,VE[v])
+    nextVertex, = set(EV[nextEdge]).difference({v})
+    if nextVertex != cycle[0]:
+        cycle.append(nextVertex)
+        ecycle.append(nextEdge)
+        print "\ncycle =",cycle
+        print "ecycle =",ecycle
+        edgeCounts[nextEdge] += 1 
+        v1,v2 = EV[e]
+        extractCycle(edgeCounts,EV,VE,nextEdge,nextVertex,cycle,ecycle)
+        EV[e] = v2,v1
+    print "\nedgeCounts =",edgeCounts
+    return cycle,ecycle
+
+""" Extract all cycles from a LAR pair model """ 
+import inters
+def makeCycles(theModel):
+    #theModel = copy.copy(model)
+    V,EV = theModel
+    VE = inters.edgeSlopeOrdering(theModel)
+    unusedEdges = True
+    cycles,ecycles = [],[]
+    edgeCounts = [0 for edge in EV]
+    edge,vertex = 0,EV[0][0]
+    edgeCounts[0] = 1
+    while unusedEdges:
+        theCycles = extractCycle(edgeCounts,EV,VE,edge,vertex,[vertex],[edge])
+        print "\nedgeCounts =",edgeCounts
+        cycles += [theCycles[0]]
+        ecycles += [theCycles[1]]
+        unusedEdges,edge,vertex = takeEdgeVertex(edgeCounts,EV)
+        edgeCounts[edge] += 1
+    return cycles,ecycles
+
 """ Edge cycles associated to a closed chain of edges """
 
 from collections import defaultdict
@@ -452,7 +499,9 @@ def boundaryModel2polylines(model):
 """ Computing a LAR 2-complex from an arrangement of line segments"""
 def larPair2Triple(model):
     V,EV = model
-    V,cycles,EV = facesFromComps((V,EV))
+    cycles,ecycles = makeCycles(model)
+    print "\n>>> cycles =",cycles
+    print "\n>>> ecycles =",ecycles
     areas = integr.surfIntegration((V,cycles,EV))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
@@ -490,7 +539,8 @@ def viewLarComplexChain(model):
       and non-manifold cells"""
 def MKFACES(model):
     V,FV,EV = model
-    bmatrix = boundary(FV,EV)
+    VV = AA(LIST)(range(len(V)))
+    bmatrix = boundary1(FV,EV,VV)
     boundaryOperator = chain2BoundaryChain(bmatrix)
     chain = [0]*len(FV)
     boundingEdges = []

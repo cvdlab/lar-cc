@@ -1,5 +1,6 @@
 """ Module for pipelined intersection of geometric objects """
 from larlib import *
+from triangulation import *
 from scipy import mat
 
 """ Coding utilities """
@@ -422,7 +423,7 @@ def larFromLines(lines):
     #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
     V,EVs = biconnectedComponent((V,EV))
     if EVs != []:
-		#EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
+        EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
         V,EV = larRemoveVertices(V,EV)
         V,FV,EV = facesFromComps((V,EV))
         areas = integr.surfIntegration((V,FV,EV))
@@ -430,6 +431,18 @@ def larFromLines(lines):
         interiorFaces = [face for area,face in orderedFaces[:-1]]
         return V,interiorFaces,EV
     else: return None
+
+def larFromLines(lines):
+    def larPairSimplify((V,EV)):
+        V,EVs = biconnectedComponent((V,EV))
+        EV = CAT(EVs)
+        V,EV = larRemoveVertices(V,EV)
+        return V,EV
+    
+    V,EV = lines2lar(lines)
+    V,EV = larPairSimplify((V,EV))  #TODO:  toggle to check the generated FV
+    V,FV,EV = larPair2Triple((V,EV))
+    return V,FV,EV
 
 """ Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree

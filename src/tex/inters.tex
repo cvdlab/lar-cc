@@ -591,6 +591,18 @@ def larFromLines(lines):
         interiorFaces = [face for area,face in orderedFaces[:-1]]
         return V,interiorFaces,EV
     else: return None
+
+def larFromLines(lines):
+    def larPairSimplify((V,EV)):
+        V,EVs = biconnectedComponent((V,EV))
+        EV = CAT(EVs)
+        V,EV = larRemoveVertices(V,EV)
+        return V,EV
+    
+    V,EV = lines2lar(lines)
+    V,EV = larPairSimplify((V,EV))  #TODO:  toggle to check the generated FV
+    V,FV,EV = larPair2Triple((V,EV))
+    return V,FV,EV
 @}
 %-------------------------------------------------------------------------------
 
@@ -696,13 +708,6 @@ VIEW(STRUCT(AA(COLOR(RED))(convexes)+AA(MK)(pts)+AA(COLOR(YELLOW))(circles)+[W])
 from larlib import *
 filename = "test/svg/inters/closepoints.svg"
 lines = svg2lines(filename)
-VIEW(STRUCT(AA(POLYLINE)(lines)))
-
-V,FV,EV = larFromLines(lines)
-VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
-VV = AA(LIST)(range(len(V)))
-submodel = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.5))
 
 V,EV = lines2lar(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
@@ -713,6 +718,12 @@ circles = [T([1,2])(pts[h])(CIRCUMFERENCE(RADIUS)(18)) for h,k in close]
 convexes = [JOIN(AA(MK)([pts[v] for v in cluster])) for cluster in clusters]
 W = COLOR(CYAN)(STRUCT(AA(MK)(V)))
 VIEW(STRUCT(AA(COLOR(RED))(convexes)+AA(MK)(pts)+AA(COLOR(YELLOW))(circles)+[W]))
+
+V,FV,EV = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV+EV)) + AA(MK)(V)))
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.5))
 @}
 %-------------------------------------------------------------------------------
 
@@ -725,6 +736,7 @@ VIEW(STRUCT(AA(COLOR(RED))(convexes)+AA(MK)(pts)+AA(COLOR(YELLOW))(circles)+[W])
 @O larlib/larlib/inters.py
 @{""" Module for pipelined intersection of geometric objects """
 from larlib import *
+from triangulation import *
 from scipy import mat
 
 @< Coding utilities @>
@@ -1123,7 +1135,7 @@ The polygonal boundary of the complex is finally drawn.
 @{""" Biconnected components from orthogonal LAR model """
 from larlib import *
 
-filename = "test/py/inters/plan.svg"
+filename = "test/svg/inters/plan.svg"
 #filename = "test/py/inters/building.svg"
 #filename = "test/py/inters/complex.svg"
 lines = svg2lines(filename)

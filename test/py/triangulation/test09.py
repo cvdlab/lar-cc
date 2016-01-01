@@ -3,8 +3,8 @@ from larlib import *
 
 filename = "test/svg/inters/test0.svg"
 lines = svg2lines(filename)
-V,EV = lines2lar(lines)
-V,FV,EV = larPair2Triple((V,EV))
+V,FV,EV = larFromLines(lines)
+
 VV = AA(LIST)(range(len(V)))
-submodel = STRUCT(MKPOLS((V,EV)))        
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.3)) 
+hpc = STRUCT(MKPOLS((V,EV)))        
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.3)) 

@@ -1,7 +1,7 @@
 """ Biconnected components from orthogonal LAR model """
 from larlib import *
 
-filename = "test/py/inters/plan.svg"
+filename = "test/svg/inters/plan.svg"
 #filename = "test/py/inters/building.svg"
 #filename = "test/py/inters/complex.svg"
 lines = svg2lines(filename)

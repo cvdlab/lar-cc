@@ -7,6 +7,5 @@ model = V,FV,EV
 
 faces = MKFACES(model)
 colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
-n = len(FV)
-components = [COLOR(colors[k%n])(faces[k]) for k in range(len(FV))]
+components = [COLOR(colors[k%12])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))
