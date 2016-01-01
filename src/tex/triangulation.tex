@@ -158,8 +158,6 @@ Finally, the reduced set of \texttt{cells} as lists of bounding cycles of vertic
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)
-    print "\n>>> cycles =",cycles
-    print "\n>>> ecycles =",ecycles
     areas = integr.surfIntegration((V,cycles,EV))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
@@ -212,13 +210,28 @@ i.e.~ in the \texttt{test08.py} file, can be generated as below.
 @{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
 from larlib import *
 
-filename = "test/svg/inters/test0.svg"
-lines = svg2lines(filename)
+filename = "test/svg/inters/graph.svg"
+lines = inters.svg2lines(filename)
 V,FV,EV = larFromLines(lines)
 
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))        
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.3)) 
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.2)) 
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/triangulation/test11.py
+@{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
+from larlib import *
+
+filename = "test/svg/triangulation/facade.svg"
+lines = inters.svg2lines(filename)
+V,FV,EV = larFromLines(lines)
+
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))        
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.2)) 
 @}
 %-------------------------------------------------------------------------------
 
@@ -266,8 +279,47 @@ components = [COLOR(colors[k%12])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))
 @}
 %-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+@O test/py/triangulation/test12.py
+@{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
+from larlib import *
+sys.path.insert(0, 'test/py/triangulation/')
+from test11 import *
 
-VIEW(STRUCT(AA(POLYLINE)([[V[v] for v in EV[e]] for e in boundaryCells(FV,EV)])))
+model = V,FV,EV
+
+faces = MKFACES(model)
+colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
+components = [COLOR(colors[k%12])(faces[k]) for k in range(len(FV))]
+VIEW(STRUCT(components))
+
+VIEW(STRUCT(MKFACES((V,[FV[4]],EV))))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/grapha} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/graphb} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/graphc} 
+
+   \includegraphics[width=0.325\linewidth]{images/test0a} 
+   \includegraphics[width=0.325\linewidth]{images/test0b} 
+   \includegraphics[width=0.325\linewidth]{images/test0c} 
+
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/facade-a} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/facade-b} 
+   \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/facade-c} 
+
+   \caption{From top to bottom, left to right: 
+   (a) numbering of cycles of a 2-complex with a hole in a 2-cell; (b) color display of 2-cells; (c) boundary of the 2-chain $\{f_0, f_1, f_2\}$, codified in coordinates as \texttt{[1,1,1,0]}. 
+   (d) cycles of a 2-complex with nested 2-cells and non-manifold points; (e) color display of 2-cells; (f) boundary of the 2-chain $\{f_0,f_1,f_2,f_3\}$. 
+   (g) The 2-complex modeling a building front; (h) color display of 2-cells; (i) solid display of elementary 2-chain $\{f_4\}\subset\texttt{FV}$, of high topological genus, codified in coordinates by the array \texttt{[$0,0,0,0,1,0,\ldots,0$]} of length \texttt{len(FV)}.}
+   \label{fig:example}
+\end{figure}
+
+
 
 \subsection{Construction of LAR of 2-faces}
 
@@ -328,7 +380,6 @@ def makeCycles(theModel):
     edgeCounts[0] = 1
     while unusedEdges:
         theCycles = extractCycle(edgeCounts,EV,VE,edge,vertex,[vertex],[edge])
-        print "\nedgeCounts =",edgeCounts
         cycles += [theCycles[0]]
         ecycles += [theCycles[1]]
         unusedEdges,edge,vertex = takeEdgeVertex(edgeCounts,EV)
@@ -369,13 +420,10 @@ def extractCycle(edgeCounts,EV,VE,e,v,cycle,ecycle):
     if nextVertex != cycle[0]:
         cycle.append(nextVertex)
         ecycle.append(nextEdge)
-        print "\ncycle =",cycle
-        print "ecycle =",ecycle
         edgeCounts[nextEdge] += 1 
         v1,v2 = EV[e]
         extractCycle(edgeCounts,EV,VE,nextEdge,nextVertex,cycle,ecycle)
         EV[e] = v2,v1
-    print "\nedgeCounts =",edgeCounts
     return cycle,ecycle
 @}
 %-------------------------------------------------------------------------------
@@ -460,7 +508,6 @@ Finally the sublists are pruned, by eliminating those whose first element has be
 @D Extraction of path-connected boundaries
 @{""" Extraction of path-connected boundaries """
 def cellsFromCycles (latticeArray):
-    print "\nlatticeArray =\n",latticeArray,"\n"
     n = len(latticeArray)
     sons = [[h]+[k for k in range(n) if row[k]==1] for h,row in enumerate(latticeArray)]
     level = [sum(col) for col in TRANS(latticeArray)]
@@ -1102,6 +1149,7 @@ def pointInPolygonClassification(pol):
 @O larlib/larlib/triangulation.py
 @{""" Module for pipelined intersection of geometric objects """
 from larlib import *
+import inters
 
 @< Return a feasible pair edge/vertex @>
 @< Extract a single edge/vertex cycle @>

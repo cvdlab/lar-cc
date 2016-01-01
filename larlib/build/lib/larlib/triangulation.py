@@ -1,5 +1,6 @@
 """ Module for pipelined intersection of geometric objects """
 from larlib import *
+import inters
 
 """ Return a feasible pair edge/vertex """ 
 def takeEdgeVertex(edgeCounts,EV):
@@ -19,13 +20,10 @@ def extractCycle(edgeCounts,EV,VE,e,v,cycle,ecycle):
     if nextVertex != cycle[0]:
         cycle.append(nextVertex)
         ecycle.append(nextEdge)
-        print "\ncycle =",cycle
-        print "ecycle =",ecycle
         edgeCounts[nextEdge] += 1 
         v1,v2 = EV[e]
         extractCycle(edgeCounts,EV,VE,nextEdge,nextVertex,cycle,ecycle)
         EV[e] = v2,v1
-    print "\nedgeCounts =",edgeCounts
     return cycle,ecycle
 
 """ Extract all cycles from a LAR pair model """ 
@@ -41,7 +39,6 @@ def makeCycles(theModel):
     edgeCounts[0] = 1
     while unusedEdges:
         theCycles = extractCycle(edgeCounts,EV,VE,edge,vertex,[vertex],[edge])
-        print "\nedgeCounts =",edgeCounts
         cycles += [theCycles[0]]
         ecycles += [theCycles[1]]
         unusedEdges,edge,vertex = takeEdgeVertex(edgeCounts,EV)
@@ -243,7 +240,6 @@ def computeCycleLattice(V,EVs):
 
 """ Extraction of path-connected boundaries """
 def cellsFromCycles (latticeArray):
-    print "\nlatticeArray =\n",latticeArray,"\n"
     n = len(latticeArray)
     sons = [[h]+[k for k in range(n) if row[k]==1] for h,row in enumerate(latticeArray)]
     level = [sum(col) for col in TRANS(latticeArray)]
@@ -500,8 +496,6 @@ def boundaryModel2polylines(model):
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)
-    print "\n>>> cycles =",cycles
-    print "\n>>> ecycles =",ecycles
     areas = integr.surfIntegration((V,cycles,EV))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]

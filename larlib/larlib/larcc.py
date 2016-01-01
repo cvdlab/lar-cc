@@ -157,7 +157,7 @@ def invertRelation(CV):
     return VC
 
 def boundary(cells,facets):
-    lenV = max(max(CAT(cells)),max(CAT(facets)))
+    lenV = max(max(CAT(AA(list)(cells))),max(CAT(AA(list)(facets))))
     csrCV = csrCreate(cells,lenV)
     csrFV = csrCreate(facets,lenV)
     csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
@@ -165,7 +165,7 @@ def boundary(cells,facets):
     return csrBoundaryFilter(csrFC,facetLengths)
 
 def boundary1(CV,FV,EV):
-    lenV = max(list(CAT(CV))+list(CAT(FV)))+1
+    lenV = max(list(CAT(CV))+CAT(AA(list)(FV)))+1
     csrCV = csrCreate(CV,lenV)
     csrFV = csrCreate(FV,lenV)
     csrFC = matrixProduct(csrFV, csrTranspose(csrCV))

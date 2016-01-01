@@ -1807,7 +1807,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def boundary(cells,facets):@\\
-\mbox{}\verb@    lenV = max(max(CAT(cells)),max(CAT(facets)))@\\
+\mbox{}\verb@    lenV = max(max(CAT(AA(list)(cells))),max(CAT(AA(list)(facets))))@\\
 \mbox{}\verb@    csrCV = csrCreate(cells,lenV)@\\
 \mbox{}\verb@    csrFV = csrCreate(facets,lenV)@\\
 \mbox{}\verb@    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))@\\
@@ -1815,7 +1815,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \mbox{}\verb@    return csrBoundaryFilter(csrFC,facetLengths)@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def boundary1(CV,FV,EV):@\\
-\mbox{}\verb@    lenV = max(list(CAT(CV))+list(CAT(FV)))+1@\\
+\mbox{}\verb@    lenV = max(list(CAT(CV))+CAT(AA(list)(FV)))+1@\\
 \mbox{}\verb@    csrCV = csrCreate(CV,lenV)@\\
 \mbox{}\verb@    csrFV = csrCreate(FV,lenV)@\\
 \mbox{}\verb@    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))@\\
