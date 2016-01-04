@@ -73,8 +73,8 @@ def lar2boxes(model,qualifier=0):
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
 def MKTRIANGLES(model): 
     V,FV,EV = model
-    if len(V[0]) == 2: V=[v+[0] for v in V]
     FE = crossRelation(V,FV,EV)
+    if len(V[0]) == 2: V=[v+[0] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace]) 
         for triangledFace in triangleSets ]
@@ -168,19 +168,6 @@ def faceTransformations(facet):
     out = (transformMat * (mat(newFacet).T)).T.tolist()
     return transformMat
 
-
-""" Computation of topological relation """
-def crossRelation(V,XV,YV):
-    csrXV = csrCreate(XV,lenV=len(V))
-    csrYV = csrCreate(YV,lenV=len(V))
-    csrXY = matrixProduct(csrXV, csrYV.T)
-    XY = [None for k in range(len(XV))]
-    for k,face in enumerate(XV):
-        data = csrXY[k].data
-        col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
-        # NOTE: val depends on the relation under consideration ...
-    return XY
 
 """ Submanifold mapping computation """
 def submanifoldMapping(pivotFace):
@@ -281,7 +268,6 @@ def spacePartition(V,FV,EV, parts):
         theLines = []
         for line in lines:
             if len(line)>2: 
-                print '\a',"line =",line
                 segments = computeSegments(line)
                 theLines += segments
             else: theLines += [line]
@@ -289,7 +275,7 @@ def spacePartition(V,FV,EV, parts):
         """ Construction of the planar set FX,EX of faces and lines """
         lar = larFromLines(theLines)
         if lar != None: 
-            z,fz,ez = larFromLines(theLines)
+            z,fz,ez,polygons = larFromLines(theLines)
             """ Remove external vertices """
             z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
             w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
@@ -308,6 +294,10 @@ from copy import copy
 
 def boundaryTriangulation(V,FV,EV,FE):
     triangleSet = []  
+    print "\nV =",V
+    print "FV =",FV
+    print "EV =",EV
+    print "FE =",FE
     
     def mapVerts(inverseMap):
         def mapVerts0(mappedVerts):
@@ -434,7 +424,8 @@ def facesFromComponents(model,FE,EF_angle):
     V,FV,EV = model
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
-    boundaryLoop = boundaryCycles(FE[face],EV)[0]
+    boundaryLoop,_ = boundaryCycles(FE[face],EV)
+    boundaryLoop = boundaryLoop[0]
     firstEdge = boundaryLoop[0]
     #import pdb; pdb.set_trace()
     cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
@@ -451,7 +442,8 @@ def facesFromComponents(model,FE,EF_angle):
     while True:
         face, edge = startCell(visitedCell,FE,EV)
         if face == -1: break
-        boundaryLoop = boundaryCycles(FE[face],EV)[0]
+        boundaryLoop,_ = boundaryCycles(FE[face],EV)
+        boundaryLoop = boundaryLoop[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
         cf,coe = getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV)
@@ -472,7 +464,8 @@ def facesFromComponents(model,FE,EF_angle):
 """ Cycles orientation """
 def cyclesOrient(pcycles,fcycle,EV):
     if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
-    ofcycle = boundaryCycles(fcycle,EV)[0] # oriented 
+    ofcycle,_ = boundaryCycles(fcycle,EV) # oriented 
+    ofcycle = ofcycle[0] # oriented 
     if type(pcycles[0])==list: opcycle = CAT(pcycles)
     else: opcycle = pcycles
     int = set(opcycle).intersection(ofcycle)
@@ -507,7 +500,8 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
     if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
         coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
         face = coboundaryFaces[0]            
-    faceLoop = boundaryCycles(FE[face],EV)[0]
+    faceLoop,_ = boundaryCycles(FE[face],EV)
+    faceLoop = faceLoop[0]
     commonEdges = set(faceLoop).intersection(boundaryLoop)
     if commonEdges == set() or commonEdges == {0}: 
         faceLoop = reverseOrientation(faceLoop)
@@ -575,10 +569,13 @@ def thePartition(W,FW,EW):
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.1)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
-    FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
-    
+    print "\nZ =",Z
+    print "\nFZ =",FZ
+    print "\nEZ =",EZ
+    print "\nFE_0 =",FE
     # remove 0 indices from FE relation
-    FE = [[f  if f!=0 else 1 for f in face] for face in FE]
+    FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
+    print "\nFE_1 =",FE
     EF_angle = faceSlopeOrdering(model,FE,Z)
     
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)

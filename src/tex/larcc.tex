@@ -1,10 +1,10 @@
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amsthm}
@@ -45,7 +45,7 @@
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{The LARCC team}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
@@ -104,9 +104,9 @@ The function \texttt{brc2Coo} transforms a \texttt{BRC} representation in a list
 %-------------------------------------------------------------------------------
 @D Brc to Coo transformation
 @{def brc2Coo(ListOfListOfInt):
-	COOm = [[k,col,1] for k,row in enumerate(ListOfListOfInt)
-			for col in row ]
-	return COOm
+    COOm = [[k,col,1] for k,row in enumerate(ListOfListOfInt)
+            for col in row ]
+    return COOm
 @}
 %-------------------------------------------------------------------------------
 
@@ -132,20 +132,20 @@ Then we give the function \texttt{triples2mat} to make the transformation from t
 %-------------------------------------------------------------------------------
 @D From list of triples to scipy.sparse
 @{def triples2mat(triples,shape="csr"):
-	n = len(triples)
-	data = arange(n)
-	ij = arange(2*n).reshape(2,n)
-	for k,item in enumerate(triples):
-		ij[0][k],ij[1][k],data[k] = item
-	return scipy.sparse.coo_matrix((data, ij)).asformat(shape)
+    n = len(triples)
+    data = arange(n)
+    ij = arange(2*n).reshape(2,n)
+    for k,item in enumerate(triples):
+        ij[0][k],ij[1][k],data[k] = item
+    return scipy.sparse.coo_matrix((data, ij)).asformat(shape)
 @}
 %-------------------------------------------------------------------------------
 The conversion from triples to \texttt{csr} format is provided below.
 %-------------------------------------------------------------------------------
 @D Coo to Csr transformation
 @{def coo2Csr(COOm):
-	CSRm = triples2mat(COOm,"csr")
-	return CSRm
+    CSRm = triples2mat(COOm,"csr")
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 Two CSR sparse matrices \texttt{csrFV} and \texttt{csrEV} are generated (by \emph{scipy.sparse})  in the following example:
@@ -162,9 +162,9 @@ The \emph{scipy} printout of the last two lines above is the following:
 {\small
 \begin{verbatim}
 csr(FV) = <4x6 sparse matrix of type '<type 'numpy.int64'>'
-		   with 12 stored elements in Compressed Sparse Row format>
+           with 12 stored elements in Compressed Sparse Row format>
 csr(EV) = <9x6 sparse matrix of type '<type 'numpy.int64'>'
-		   with 18 stored elements in Compressed Sparse Row format>
+           with 18 stored elements in Compressed Sparse Row format>
 \end{verbatim}}
 %-------------------------------------------------------------------------------
 
@@ -173,13 +173,13 @@ The transformation from BRC to CSR format is implemented slightly differently, a
 %-------------------------------------------------------------------------------
 @D Brc to Csr transformation
 @{def csrCreate(BRCmatrix,lenV=0,shape=(0,0)):
-	triples = brc2Coo(BRCmatrix)
-	if shape == (0,0):
-		CSRmatrix = coo2Csr(triples)
-	else:
-		CSRmatrix = scipy.sparse.csr_matrix(shape)
-		for i,j,v in triples: CSRmatrix[i,j] = v
-	return CSRmatrix
+    triples = brc2Coo(BRCmatrix)
+    if shape == (0,0):
+        CSRmatrix = coo2Csr(triples)
+    else:
+        CSRmatrix = scipy.sparse.csr_matrix(shape)
+        for i,j,v in triples: CSRmatrix[i,j] = v
+    return CSRmatrix
 @}
 %-------------------------------------------------------------------------------
 
@@ -218,12 +218,12 @@ Two utility functions allow to query the number of rows and columns of a CSR mat
 %-------------------------------------------------------------------------------
 @D Query Matrix shape
 @{def csrGetNumberOfRows(CSRmatrix):
-	Int = CSRmatrix.shape[0]
-	return Int
-	
+    Int = CSRmatrix.shape[0]
+    return Int
+    
 def csrGetNumberOfColumns(CSRmatrix):
-	Int = CSRmatrix.shape[1]
-	return Int
+    Int = CSRmatrix.shape[1]
+    return Int
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -243,13 +243,13 @@ The Scipy package provides the useful method \texttt{.todense()} in order to tra
 %-------------------------------------------------------------------------------
 @D Sparse to dense matrix transformation
 @{def csr2DenseMatrix(CSRm):
-	nrows = csrGetNumberOfRows(CSRm)
-	ncolumns = csrGetNumberOfColumns(CSRm)
-	ScipyMat = zeros((nrows,ncolumns),int)
-	C = CSRm.tocoo()
-	for triple in zip(C.row,C.col,C.data):
-		ScipyMat[triple[0],triple[1]] = triple[2]
-	return ScipyMat
+    nrows = csrGetNumberOfRows(CSRm)
+    ncolumns = csrGetNumberOfColumns(CSRm)
+    ScipyMat = zeros((nrows,ncolumns),int)
+    C = CSRm.tocoo()
+    for triple in zip(C.row,C.col,C.data):
+        ScipyMat[triple[0],triple[1]] = triple[2]
+    return ScipyMat
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -268,12 +268,12 @@ The following macro provides the IDE interface for the two main matrix operation
 %-------------------------------------------------------------------------------
 @D Matrix product and transposition
 @{def matrixProduct(CSRm1,CSRm2):
-	CSRm = CSRm1 * CSRm2
-	return CSRm
+    CSRm = CSRm1 * CSRm2
+    return CSRm
 
 def csrTranspose(CSRm):
-	CSRm = CSRm.T
-	return CSRm
+    CSRm = CSRm.T
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 
@@ -375,15 +375,38 @@ Some filtering operations on matrix elements are needed in the implementation of
 %-------------------------------------------------------------------------------
 @D Matrix filtering to produce the boundary matrix
 @{def csrBoundaryFilter(CSRm, facetLengths):
-	maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
-	inputShape = CSRm.shape
-	coo = CSRm.tocoo()
-	for k in range(len(coo.data)):
-		if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
-		else: coo.data[k] = 0
-	mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
-	out = mtx.tocsr()
-	return out
+    maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
+    inputShape = CSRm.shape
+    coo = CSRm.tocoo()
+    for k in range(len(coo.data)):
+        if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
+        else: coo.data[k] = 0
+    mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
+    out = mtx.tocsr()
+    return out
+
+def csrBoundaryFilter1(csrBoundaryBoundaryMat,cells,facets,faces,lenV,FE, CSRm, facetLengths):
+    maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
+    inputShape = CSRm.shape
+    coo = CSRm.tocoo()
+    for k in range(len(coo.data)):
+        if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
+        else: coo.data[k] = 0
+    mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
+    out = mtx.tocsr()
+    
+    unreliable = [k for k in range(out.shape[0]) if sum(out[k,:].todense()[0]) > 2]
+    if unreliable != []:
+        for row in unreliable:
+            for j in range(len(cells)):
+                if out[row,j] == 1:
+                    csrCFE = csrBoundaryBoundaryMat[:,j]
+                    cooCFE = csrCFE.tocoo()
+                    flawedCells = [cooCFE.row[k] for k,datum in enumerate(cooCFE.data)
+                        if datum>2]
+                    if all([facet in flawedCells  for facet in FE[row]]):
+                        out[row,j]=0
+    return out
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -398,13 +421,13 @@ print "\ncsrMaxFilter(csrFE) =\n", csr2DenseMatrix(CSRm)
 %-------------------------------------------------------------------------------
 @D Matrix filtering via a generic predicate
 @{def csrPredFilter(CSRm, pred):
-	# can be done in parallel (by rows)
-	coo = CSRm.tocoo()
-	triples = [[row,col,val] for row,col,val 
-				in zip(coo.row,coo.col,coo.data) if pred(val)]
-	i, j, data = TRANS(triples)
-	CSRm = scipy.sparse.coo_matrix((data,(i,j)),CSRm.shape).tocsr()
-	return CSRm
+    # can be done in parallel (by rows)
+    coo = CSRm.tocoo()
+    triples = [[row,col,val] for row,col,val 
+                in zip(coo.row,coo.col,coo.data) if pred(val)]
+    i, j, data = TRANS(triples)
+    CSRm = scipy.sparse.coo_matrix((data,(i,j)),CSRm.shape).tocsr()
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -415,7 +438,351 @@ print "\nccsrPredFilter(csrFE) =\n", csr2DenseMatrix(CSRm)
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Correction to boundary operator}
+The more deep issue with LAR (that already appeared at the beginning of LAR experiments, two years ago) is discussed and solved here.
 
+The boundary operator (and the whole LAR approach) works well with convex cells, but MAY give errors (like $\partial\partial \not= 0$) with non-convex cells. At that time, we understood the source of the problem, due to the fact that ALL the vertices of a $(d-1)$-cell  EXTERNAL to a NON-CONVEX $d$-cell may belong to its boundary ... (e.g.~BOTH the vertices of a 1-cell external to a non-convex 2-cell)
+
+You might say: convexity is a geometric concept, boundary is topological, so what? 
+Because the input is certainly geometrical, via drawings and/or machine generated \texttt{EV,FV} starting from drawings, so the two aspects are strongly interconnected ... 
+
+We implement here a general resolution strategy, since it is pretty  easy to discover the (d-1)-facets where the problem appears:  they are shared by MORE than TWO d-cells ... and this one is a topological ERROR. So, testing $\partial\partial$ on each face, we eliminate the problem \emph{within the boundary operator}, but not within the LAR data structure (to be marked in some way where the problem may appear ... TODO).
+
+My guess is that this source of errors might appear anytime the Boolean input becomes pretty complex, and that it was the greatest source of random errors. 
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test20.py
+@{""" Correction to boundary operator """
+from larlib import *
+
+V,[VV,EV,FV] = larCuboids([2,1],True)
+complex = Struct([(V,FV,EV), t(.5,.25), s(.5,.5), (V,FV,EV)])
+V,FV,EV = struct2lar(complex)
+lines = [[V[v] for v in edge] for edge in EV]
+V,FV,EV,polygons = larFromLines(lines)
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,.5)) 
+
+csrBoundaryMat = boundary(FV,EV)
+print "wrong boundary matrix =",csrBoundaryMat.todense()
+csrBoundaryMat = boundary1(FV,EV,VV)  # <<<<< NOTE !!
+print "right boundary matrix =",csrBoundaryMat.todense()
+
+@< 2-boundary example @>
+
+submodel = viewBoundaryChain((V,FV,EV))([1,1,1,1])
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,.5)) 
+submodel = viewBoundaryChain((V,FV,EV))([0,0,1,1])
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,.5)) 
+@}
+%-------------------------------------------------------------------------------
+
+The printing from example \texttt{test/py/larcc/test20.py} is given below. Notice the difference between the fourth lines from the bottom of the two matrices, generated by the function applications \texttt{boundary(FV,EV)} and \texttt{boundary1(FV,EV,VV)}, respectively.
+
+\vspace{2mm}
+~\hfill
+\begin{minipage}[c]{0.35\textwidth}
+\centering\footnotesize
+\begin{verbatim}
+wrong boundary matrix = [
+ [0 0 1 0]
+ [0 0 1 1]
+ [0 1 1 0]
+ [0 1 1 0]
+ [0 0 1 0]
+ [0 0 0 1]
+ [1 0 0 1]
+ [0 0 0 1]
+ [1 0 0 1]
+ [0 0 1 0]
+ [0 0 0 1]
+ [1 1 1 1]
+ [1 0 0 1]
+ [0 1 1 0]
+ [0 0 1 1]]
+\end{verbatim}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.35\textwidth}
+\centering\footnotesize
+\begin{verbatim}
+right boundary matrix = [
+ [0 0 1 0]
+ [0 0 1 1]
+ [0 1 1 0]
+ [0 1 1 0]
+ [0 0 1 0]
+ [0 0 0 1]
+ [1 0 0 1]
+ [0 0 0 1]
+ [1 0 0 1]
+ [0 0 1 0]
+ [0 0 0 1]
+ [0 0 0 0]
+ [1 0 0 1]
+ [0 1 1 0]
+ [0 0 1 1]]
+\end{verbatim}
+\end{minipage}
+\hfill~
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.325\linewidth]{images/test-boundary1} 
+   \includegraphics[width=0.325\linewidth]{images/test-boundary2} 
+   \includegraphics[width=0.325\linewidth]{images/test-boundary3} 
+   \caption{(a) A 2-complex with non-convex cells; (b) boundary of 2-chain [1,1,1,1]; (c) boundary of 2-chain [0,0,1,1].}
+   \label{fig:example}
+\end{figure}
+
+Whereas the boundary 2-chain is
+%-------------------------------------------------------------------------------
+@D 2-boundary example
+@{""" View boundary chain """
+def viewBoundaryChain(larModel):
+    V,FV,EV = larModel
+    VV = AA(LIST)(range(len(V)))
+    def viewBoundaryChain0 (chain):
+        BE = chain2BoundaryChain(boundary1(FV,EV,VV))(chain)
+        if chain == [1,1,1,1]: assert BE == [0,4,5,7,9,10]
+        if chain == [0,0,1,1]: assert BE == [0,2,3,4,5,6,7,8,9,10,12,13]
+        BEV = [EV[e] for e in BE]
+        if chain == [1,1,1,1]: assert BEV == [(0,1),(5,6),(7,8),(5,7),(0,6),(1, 8)]
+        submodel = STRUCT(MKPOLS((V,BEV)))
+        return submodel
+    return viewBoundaryChain0
+@}
+%-------------------------------------------------------------------------------
+
+The cellular 2-complex generated by example \texttt{}The printing from example \texttt{test/py/larcc/test20.py} is displayed in Figure~\ref{}.
+The corresponding LAR is the following:
+%-------------------------------------------------------------------------------
+@D 2-boundary example
+@{V = [[0.0,1.0],[1.0,1.0],[1.0,0.75],[1.0,0.25],[0.5,0.25],[1.0,0.0],
+[0.0,0.0],[2.0,0.0],[2.0,1.0],[0.5,0.75],[1.5,0.25],[1.5,0.75]]
+
+FV = [[3,2,11,10],[9,2,3,4],[1,2,9,4,3,5,6,0],[1,8,7,5,3,10,11,2]]
+
+EV = [(0,1),(1,2),(4,9),(2,9),(5,6),(7,8),(3,10),(5,7),(2,11),(0,6),
+(1,8),(2,3),(10,11),(3,4),(3,5)]
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Boundary operator on 3-complex with non-convex cells}
+
+\paragraph{Correction to boundary operator}
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test21.py
+@{""" Correction to boundary operator """
+from larlib import *
+
+V = [[0.0,0.0,0.0],[0.0,0.0,1.0],[0.0,1.0,0.0],[0.0,1.0,1.0],[1.0,0.0,0.0],
+[1.0,0.0,1.0],[1.0,1.0,0.0],[1.0,1.0,1.0],[2.0,0.0,0.0],[2.0,0.0,1.0],
+[2.0,1.0,0.0],[2.0,1.0,1.0],[0.5,0.25,0.25],[0.5,0.25,0.75],[0.5,0.75,
+0.25],[0.5,0.75,0.75],[1.0,0.25,0.25],[1.0,0.25,0.75],[1.0,0.75,0.25],
+[1.0,0.75,0.75],[1.5,0.25,0.25],[1.5,0.25,0.75],[1.5,0.75,0.25],[1.5,
+0.75,0.75]]
+
+CV = [(16,17,18,19,20,21,22,23),(4,5,6,7,8,9,10,11,16,17,18,19,20,21,
+22,23),(12,13,14,15,16,17,18,19),(0,1,2,3,4,5,6,7,12,13,14,15,16,
+17,18,19)]
+
+FV = [(0,2,4,6),(12,13,14,15),(4,6,8,10),(0,1,4,5),(16,17,18,19),(4,5,6,
+7,16,17,18,19),(17,19,21,23),(16,17,20,21),(0,1,2,3),(18,19,22,23),
+(14,15,18,19),(1,3,5,7),(12,13,16,17),(12,14,16,18),(13,15,17,19),
+(4,5,8,9),(2,3,6,7),(16,18,20,22),(5,7,9,11),(6,7,10,11),(8,9,10,11),
+(20,21,22,23)]
+
+EV = [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[0,2],[1,3],[4,6],[5,7],
+[8,10],[9,11],[0,4],[1,5],[2,6],[3,7],[4,8],[5,9],[6,10],[7,11],[12,13],
+[14,15],[16,17],[18,19],[20,21],[22,23],[12,14],[13,15],[16,18],[17,19],
+[20,22],[21,23],[12,16],[13,17],[14,18],[15,19],[16,20],[17,21],[18,22],
+[19,23]]
+
+csrBoundaryMat = boundary(CV,FV)
+print "wrong boundary matrix =",csrBoundaryMat.todense()
+csrBoundaryMat = boundary1(CV,FV,EV)
+print "right boundary matrix =",csrBoundaryMat.todense()
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],submodel,.5)) 
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Testing correction to boundary operator for general (non-convex) LAR}
+
+The test example exported in \texttt{test/py/larcc/test22.py} is aimed to check the working of LAR on chain complexes supported by cellular decompositions with non-convex but connected cells, possibly of topological genus $>1$, i.e.~with more than one hole in some face.
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test22.py
+@{""" Testing correction to boundary operator for general (non-convex) LAR """
+from larlib import *
+
+@< Input and visualization of a general cellular complex @>
+@< Visualization of the skeletons @>
+@< Computation of corrected boundary operator @>
+@< Visualization of some boundary chains @>
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Input and visualization of a general cellular complex}
+
+
+%-------------------------------------------------------------------------------
+@D Input and visualization of a general cellular complex
+@{""" Input and visualization of a general cellular complex """
+
+mod1 = larQuote1D([0.2,-0.2,0.2])
+mod2 = larQuote1D([0.5,0.5])
+mod3 = larQuote1D([0.5])
+mod = larModelProduct([larModelProduct([mod2,mod1]),mod3])
+
+mx = larQuote1D([1,1])
+my = larQuote1D([1])
+m = larModelProduct([larModelProduct([mx,my]),my])
+
+complex = Struct([m, t(.5,.2,.25), mod])
+V,CV0 = struct2lar(complex)
+CV = copy(CV0)
+CV[1] += CV[0] + CV[4]
+CV[3] += CV[2] + CV[5]
+VIEW(SKEL_1(STRUCT( MKPOLS((V,CV)))))
+@}
+%-------------------------------------------------------------------------------
+
+The LAR of the cellular decomposition shown in Figure~\ref{} is given in Figure~\ref{fig:3chains00}.
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=\linewidth]{images/3chains00} 
+   \caption{The cellular 3-complex defined below. Cells of different dimension are numbered in different colours.}
+   \label{fig:3chains00}
+\end{figure}
+
+We have 36 vertices, indexed from 0 to 35, and six 3-cells, numbered from 0 to 5.
+Notice that the subsets of integers  \texttt{CV[1]} and \texttt{CV[3]} provide the 
+description of the two non-convex cells.
+
+\begin{verbatim}
+V = [[0.0,0.0,0.0],[0.0,0.0,1.0],[0.0,1.0,0.0],[0.0,1.0,1.0], [1.0,0.0,0.0],
+[1.0,0.0,1.0],[1.0,1.0,0.0],[1.0,1.0,1.0], [2.0,0.0,0.0],[2.0,0.0,1.0],
+[2.0,1.0,0.0],[2.0,1.0,1.0], [0.5,0.2,0.25],[0.5,0.2,0.75],[0.5,0.4,0.25],
+[0.5,0.4,0.75], [1.0,0.2,0.25],[1.0,0.2,0.75],[1.0,0.4,0.25],[1.0,0.4,0.75], 
+[0.5,0.6,0.25],[0.5,0.6,0.75],[0.5,0.8,0.25],[0.5,0.8,0.75], [1.0,0.6,0.25],
+[1.0,0.6,0.75],[1.0,0.8,0.25],[1.0,0.8,0.75], [1.5,0.2,0.25],[1.5,0.2,0.75],
+[1.5,0.4,0.25],[1.5,0.4,0.75], [1.5,0.6,0.25],[1.5,0.6,0.75],[1.5,0.8,0.25],
+[1.5,0.8,0.75]]
+
+CV = [(24,25,26,27,32,33,34,35),(4,5,6,7,8,9,10,11,24,25,26,27,
+32,33,34,35,16,17,18,19,28,29,30,31),(20,21,22,23,24,25,26,27),
+(0,1,2,3,4,5,6,7,20,21,22,23,24,25,26,27,12,13,14,15,16,17,18,19),
+(16,17,18,19,28,29,30,31),(12,13,14,15,16,17,18,19)]
+\end{verbatim}
+
+
+\paragraph{Computation and visualization of the skeletons}
+%-------------------------------------------------------------------------------
+@D Visualization of the skeletons
+@{""" Visualization of the skeletons """
+
+def cubeFV(verts): 
+    [a,b,c,d,  e,f,g,h] = verts
+    return [[a,b,c,d],[e,f,g,h],[a,c,e,g],[b,d,f,h],[a,b,e,f],[c,d,g,h]]
+
+FV = COMP([sorted,set,AA(tuple),CAT,AA(cubeFV)])(CV0)
+V,EV = larFacets((V,FV),dim=2)
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],submodel,.25)) 
+FV[5] += FV[16] + FV[26]
+assert 30==len(boundaryCells(CV0,FV))  # assembly of 3 unrelated 3-complexes
+@}
+%-------------------------------------------------------------------------------
+
+\begin{verbatim}
+FV = [(0,1,2,3),(0,1,4,5),(0,2,4,6),(1,3,5,7),(2,3,6,7), 
+(4,5,6,7,16,17,18,19,24,25,26,27), 
+(4,5,8,9),(4,6,8,10),(5,7,9,11),(6,7,10,11),(8,9,10,11), (12,13,14,15),
+(12,13,16,17),(12,14,16,18),(13,15,17,19), (14,15,18,19),(16,17,18,19),
+(16,17,28,29),(16,18,28,30), (17,19,29,31),(18,19,30,31),(20,21,22,23),
+(20,21,24,25), (20,22,24,26),(21,23,25,27),(22,23,26,27),(24,25,26,27), 
+(24,25,32,33),(24,26,32,34),(25,27,33,35),(26,27,34,35), (28,29,30,31),
+(32,33,34,35)]
+\end{verbatim}
+
+
+\paragraph{Computation of corrected boundary operator}
+Of course, \texttt{totalChain = len(CV)*[1]} is the binary coordinate \texttt{[1,1,1,1,1,1]}
+of the cellular chain made by all the six 3-cells in \texttt{CV}.
+Analogously, \texttt{BF} is the list of integer indices of boundary 2-faces, corresponding to the coordinate representation given below, i.e.~~to the binary string of lenght 33, equating the size of the 2-skeleton of the cellular complex.
+\begin{verbatim}
+BF = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
+\texttt{[1,1,1,1,1,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
+\end{verbatim}
+Conversely, \texttt{BEV} is (a superset of) the 1-skeleton cells of the boundary, according to the image in Figure~\ref{}.
+
+%-------------------------------------------------------------------------------
+@D Computation of corrected boundary operator
+@{""" Computation of corrected boundary operator """
+
+totalChain = len(CV)*[1]
+BF = chain2BoundaryChain(boundary1(CV,FV,EV))(totalChain)
+BFV = [FV[f] for f in BF]
+VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,BFV))))
+glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
+VIEW(STRUCT(AA(glass)(MKPOLS((V,BFV)))))
+VIEW(glass(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BFV)))))
+V,BEV = larFacets((V,BFV),dim=1)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[e for e in BEV if len(e)==2]))))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Visualization of some boundary chains}
+%-------------------------------------------------------------------------------
+@D Visualization of some boundary chains
+@{""" Visualization of some boundary chains """
+
+BF = chain2BoundaryChain(boundary1(CV,FV,EV))([1,0,1,1,0,0])
+BFV = [FV[f] for f in BF]
+V,BEV = larFacets((V,BFV),dim=1)
+BEV = [e for e in BEV if len(e)==2]
+VIEW(glass(STRUCT(MKPOLS((V,BFV)))))
+submodel = STRUCT(MKPOLS((V,BEV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,BEV,BFV],submodel,.25)) 
+
+
+obj = Struct([(V,BFV,BEV)])
+W,FW,EW = struct2lar(obj)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,EW))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((W,FW,EW)))))
+
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains1} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains5} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains6} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains9} 
+   \caption{example caption}
+   \label{fig:example}
+\end{figure}
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains0} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains2} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains3} 
+   \includegraphics[height=0.24\linewidth,width=0.24\linewidth]{images/3chains4} 
+   \caption{example caption}
+   \label{fig:example}
+\end{figure}
 
 \paragraph{Relational inversion (characteristic matrix transposition)}
 
@@ -453,32 +820,32 @@ The following \texttt{larFacets} function returns the LAR model \texttt{V,cellFa
 %-------------------------------------------------------------------------------
 @D Extraction of facets of a cell complex
 @{def setup(model,dim):
-	V, cells = model
-	csr = csrCreate(cells)
-	csrAdjSquareMat = larCellAdjacencies(csr)
-	csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
-	return V,cells,csr,csrAdjSquareMat
+    V, cells = model
+    csr = csrCreate(cells)
+    csrAdjSquareMat = larCellAdjacencies(csr)
+    csrAdjSquareMat = csrPredFilter(csrAdjSquareMat, GE(dim)) # ? HOWTODO ?
+    return V,cells,csr,csrAdjSquareMat
 
 def larFacets(model, dim=3, emptyCellNumber=0):
-	""" Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
-		Return (V, (d-1)-cellFacets)
-		"""
-	V,cells,csr,csrAdjSquareMat = setup(model,dim)
-	solidCellNumber = len(cells) - emptyCellNumber
-	cellFacets = []
-	# for each input cell i
-	for i in range(len(cells)):
-		adjCells = csrAdjSquareMat[i].tocoo()
-		cell1 = csr[i].tocoo().col
-		pairs = zip(adjCells.col,adjCells.data)
-		for j,v in pairs:
-			if (i<j) and (i<solidCellNumber):
-				cell2 = csr[j].tocoo().col
-				cell = list(set(cell1).intersection(cell2))
-				cellFacets.append(sorted(cell))
-	# sort and remove duplicates
-	cellFacets = sorted(AA(list)(set(AA(tuple)(cellFacets))))
-	return V,cellFacets
+    """ Estraction of (d-1)-cellFacets from "model" := (V,d-cells)
+        Return (V, (d-1)-cellFacets)
+        """
+    V,cells,csr,csrAdjSquareMat = setup(model,dim)
+    solidCellNumber = len(cells) - emptyCellNumber
+    cellFacets = []
+    # for each input cell i
+    for i in range(len(cells)):
+        adjCells = csrAdjSquareMat[i].tocoo()
+        cell1 = csr[i].tocoo().col
+        pairs = zip(adjCells.col,adjCells.data)
+        for j,v in pairs:
+            if (i<j) and (i<solidCellNumber):
+                cell2 = csr[j].tocoo().col
+                cell = list(set(cell1).intersection(cell2))
+                cellFacets.append(sorted(cell))
+    # sort and remove duplicates
+    cellFacets = sorted(AA(list)(set(AA(tuple)(cellFacets))))
+    return V,cellFacets
 @}
 %-------------------------------------------------------------------------------
 
@@ -487,8 +854,8 @@ def larFacets(model, dim=3, emptyCellNumber=0):
 %-------------------------------------------------------------------------------
 @D Computation of cell adjacencies
 @{def larCellAdjacencies(CSRm):
-	CSRm = matrixProduct(CSRm,csrTranspose(CSRm))
-	return CSRm
+    CSRm = matrixProduct(CSRm,csrTranspose(CSRm))
+    return CSRm
 @}
 %-------------------------------------------------------------------------------
 
@@ -500,8 +867,8 @@ In both cases the \texttt{EV} relation is computed via the \texttt{larFacets} fu
 @{""" A first (simplicial) example """
 V = [[0.,0.],[3.,0.],[0.,3.],[3.,3.],[1.,2.],[2.,2.],[1.,1.],[2.,1.]]
 FV = [[0,1,3],[1,2,4],[2,4,5],[3,4,6],[4,6,7],[5,7,8], # full
-	[1,3,4],[4,5,7], # empty
-	[0,1,2],[6,7,8],[0,3,6],[2,5,8]] # exterior		
+    [1,3,4],[4,5,7], # empty
+    [0,1,2],[6,7,8],[0,3,6],[2,5,8]] # exterior        
 _,EV = larFacets((V,FV),dim=2)
 print "\nEV =",EV
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,EV))))
@@ -551,15 +918,15 @@ As already outlined, the \texttt{modelIndexing} function return the \emph{hpc} v
 from larlib import *
 
 def modelIndexing(shape):
-	V, bases = larCuboids(shape,True)
-	# bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
-	color = [ORANGE,CYAN,GREEN,WHITE]
-	nums = AA(range)(AA(len)(bases))
-	hpcs = []
-	for k in range(4):
-		hpcs += [SKEL_1(STRUCT(MKPOLS((V,bases[k]))))]
-		hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
-	return STRUCT(hpcs)
+    V, bases = larCuboids(shape,True)
+    # bases = [[cell for cell in cellComplex if len(cell)==2**k] for k in range(4)]
+    color = [ORANGE,CYAN,GREEN,WHITE]
+    nums = AA(range)(AA(len)(bases))
+    hpcs = []
+    for k in range(4):
+        hpcs += [SKEL_1(STRUCT(MKPOLS((V,bases[k]))))]
+        hpcs += [cellNumbering((V,bases[k]),hpcs[2*k])(nums[k],color[k],0.3+0.2*k)]
+    return STRUCT(hpcs)
 @}
 %-------------------------------------------------------------------------------
 
@@ -568,16 +935,16 @@ def modelIndexing(shape):
 @D Visualization of cell indices
 @{""" Numbered visualization of a LAR model """
 def larModelNumbering(scalx=1,scaly=1,scalz=1):
-	def  larModelNumbering0(V,bases,submodel,numberScaling=1):
-		color = [ORANGE,CYAN,GREEN,WHITE]
-		nums = AA(range)(AA(len)(bases))
-		hpcs = [submodel]
-		for k in range(len(bases)):
-			hpcs += [cellNumbering((V,bases[k]),submodel)
-						(nums[k],color[k],(0.5+0.1*k)*numberScaling)]
-		return STRUCT(hpcs)
-		#return EXPLODE(scalx,scaly,scalz)(hpcs)
-	return larModelNumbering0
+    def  larModelNumbering0(V,bases,submodel,numberScaling=1):
+        color = [ORANGE,CYAN,GREEN,WHITE]
+        nums = AA(range)(AA(len)(bases))
+        hpcs = [submodel]
+        for k in range(len(bases)):
+            hpcs += [cellNumbering((V,bases[k]),submodel)
+                        (nums[k],color[k],(0.5+0.1*k)*numberScaling)]
+        return STRUCT(hpcs)
+        #return EXPLODE(scalx,scaly,scalz)(hpcs)
+    return larModelNumbering0
 @}
 %-------------------------------------------------------------------------------
 
@@ -589,22 +956,22 @@ The following function return the \texttt{hpc} of the drawing with arrows of the
 @D Drawing of oriented edges
 @{""" Drawing of oriented edges (2D) """
 def mkSignedEdges (model,scalingFactor=1):
-	V,EV = model
-	assert len(V[0])==2
-	hpcs = []
-	times = C(SCALARVECTPROD)
-	frac = 0.06*scalingFactor
-	for e0,e1 in EV:
-		v0,v1 = V[e0], V[e1]
-		vx,vy = DIFF([ v1, v0 ])
-		nx,ny = [-vy, vx]
-		v2 = SUM([ v0, times(0.66)([vx,vy]) ])
-		v3 = SUM([ v0, times(0.6-frac)([vx,vy]), times(frac)([nx,ny]) ])
-		v4 = SUM([ v0, times(0.6-frac)([vx,vy]), times(-frac)([nx,ny]) ])
-		verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]
-		hpcs += [MKPOL([verts,cells,None])]
-	hpc = STRUCT(hpcs)
-	return hpc
+    V,EV = model
+    assert len(V[0])==2
+    hpcs = []
+    times = C(SCALARVECTPROD)
+    frac = 0.06*scalingFactor
+    for e0,e1 in EV:
+        v0,v1 = V[e0], V[e1]
+        vx,vy = DIFF([ v1, v0 ])
+        nx,ny = [-vy, vx]
+        v2 = SUM([ v0, times(0.66)([vx,vy]) ])
+        v3 = SUM([ v0, times(0.6-frac)([vx,vy]), times(frac)([nx,ny]) ])
+        v4 = SUM([ v0, times(0.6-frac)([vx,vy]), times(-frac)([nx,ny]) ])
+        verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]
+        hpcs += [MKPOL([verts,cells,None])]
+    hpc = STRUCT(hpcs)
+    return hpc
 @}
 %-------------------------------------------------------------------------------
 
@@ -682,6 +1049,27 @@ VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[EV[k] for k in C_1] + [FV[k] for k in C_2])))
 
 
 
+\paragraph{From 2D chains to boundary chains}
+%-------------------------------------------------------------------------------
+@D From 2D chains to boundary chains
+@{""" From 2D chains to boundary chains """
+def chain2BoundaryChain(csrBoundaryMat):
+    print ">>> chain2BoundaryChain"
+    nedges,nfaces = csrBoundaryMat.shape
+    def chain2BoundaryChain0(chain):
+        row = np.array(range(len(chain)))
+        col = np.array([0 for k in range(len(chain))])
+        data = np.array(chain)
+        csrFaceVect = scipy.sparse.coo_matrix((data, (row, col)), shape=(nfaces,1)).tocsr()
+        csrEdgeVect = csrBoundaryMat*csrFaceVect
+        boundaryChain = [h for h,val in
+            zip(csrEdgeVect.tocoo().row, csrEdgeVect.tocoo().data) if val%2 != 0]
+        return boundaryChain
+    print "<<< chain2BoundaryChain"
+    return chain2BoundaryChain0
+@}
+%-------------------------------------------------------------------------------
+
 
 \subsection{Incidence and adjacency operators}
 
@@ -712,12 +1100,12 @@ A high-level function \texttt{larIncidence} useful to compute the LAR representa
 @D Some incidence operators
 @{""" Some incidence operators """
 def larIncidence(cells,facets):
-	csrCellFacet = csrCellFaceIncidence(cells,facets)
-	cooCellFacet = csrCellFacet.tocoo()
-	larCellFacet = [[] for cell in range(len(cells))]
-	for i,j,val in zip(cooCellFacet.row,cooCellFacet.col,cooCellFacet.data):
-		if val == 1: larCellFacet[i] += [j]
-	return larCellFacet
+    csrCellFacet = csrCellFaceIncidence(cells,facets)
+    cooCellFacet = csrCellFacet.tocoo()
+    larCellFacet = [[] for cell in range(len(cells))]
+    for i,j,val in zip(cooCellFacet.row,cooCellFacet.col,cooCellFacet.data):
+        if val == 1: larCellFacet[i] += [j]
+    return larCellFacet
 
 @< Cell-Face incidence operator @>
 @< Cell-Edge incidence operator @>
@@ -732,10 +1120,10 @@ The \texttt{csrCellFaceIncidence} and \texttt{larCellFace} functions are given b
 @D Cell-Face incidence operator
 @{""" Cell-Face incidence operator """
 def csrCellFaceIncidence(CV,FV):
-	return boundary(FV,CV)
+    return boundary(FV,CV)
 
 def larCellFace(CV,FV):
-	return larIncidence(CV,FV)
+    return larIncidence(CV,FV)
 @}
 %-------------------------------------------------------------------------------
 
@@ -746,10 +1134,10 @@ Analogously, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} function
 @D Cell-Edge incidence operator
 @{""" Cell-Edge incidence operator """
 def csrCellEdgeIncidence(CV,EV):
-	 return boundary(EV,CV)
+     return boundary(EV,CV)
 
 def larCellEdge(CV,EV):
-	return larIncidence(CV,EV)
+    return larIncidence(CV,EV)
 @}
 %-------------------------------------------------------------------------------
 
@@ -760,10 +1148,10 @@ Finally, the \texttt{csrCellEdgeIncidence} and \texttt{larCellFace} functions ar
 @D Face-Edge incidence operator
 @{""" Face-Edge incidence operator """
 def csrFaceEdgeIncidence(FV,EV):
-	return boundary(EV,FV)
+    return boundary(EV,FV)
 
 def larFaceEdge(FV,EV):
-	return larIncidence(FV,EV)
+    return larIncidence(FV,EV)
 @}
 %-------------------------------------------------------------------------------
 
@@ -814,11 +1202,11 @@ The function \texttt{incidenceChain}, given below, returns the full stack of \te
 @D Incidence chain computation
 @{""" Incidence chain computation """
 def incidenceChain(bases):
-	#print "\n len(bases) = ",len(bases),"\n"
-	pairsOfBases = zip(bases[1:],bases[:-1])
-	relations = [larIncidence(cells,facets) 
-					for cells,facets in pairsOfBases]
-	return REVERSE(relations)
+    #print "\n len(bases) = ",len(bases),"\n"
+    pairsOfBases = zip(bases[1:],bases[:-1])
+    relations = [larIncidence(cells,facets) 
+                    for cells,facets in pairsOfBases]
+    return REVERSE(relations)
 @}
 %-------------------------------------------------------------------------------
 
@@ -835,7 +1223,7 @@ VV,EV,FV,CV = bases
 incidence = incidenceChain([VV,EV,FV,CV])
 relations = ["CF","FE","EV"]
 for k in range(3):
-	print "\n\n incidence", relations[k], "=\n", incidence[k],
+    print "\n\n incidence", relations[k], "=\n", incidence[k],
 print "\n\n"
 
 submodel = SKEL_1(STRUCT(MKPOLS((V,EV))))
@@ -877,6 +1265,44 @@ incidence EV = [[0,1],[1,2],[3,4],[4,5],[6,7],[7,8],[9,10],[10,11],[0,3],
 When computing the matrices of boundary and coboundary operators it may be useful to distinguish between simplicial complexes and general polytopal complexes, including  cuboidal ones. In the first cases all skeletons, and hence the other topological operators, may be computed using only combinatorial methods. In the second case some reference to their geometric embedding must be done, at least to compute the \emph{oriented} boundary and coboundary. Therefore we separate the two cases in the following sections.
 
 
+\paragraph{Computation of topological relations} 
+The function \texttt{crossRelation} is used here to compute a topological relation starting from two characteristic matrices \texttt{XV} and \texttt{YV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively.
+The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sparse Row) format is used.
+
+%-------------------------------------------------------------------------------
+@D Computation of topological relation
+@{""" Computation of topological relation """
+def crossRelation(V,XV,YV):
+    csrXV = csrCreate(XV,lenV=len(V))
+    csrYV = csrCreate(YV,lenV=len(V))
+    csrXY = matrixProduct(csrXV, csrYV.T)
+    XY = [None for k in range(len(XV))]
+    for k,face in enumerate(XV):
+        data = csrXY[k].data
+        col = csrXY[k].indices
+        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+        # NOTE: val depends on the relation under consideration ...
+    return XY
+
+def crossRelation1(lenV,ZV,XV,YV,terminal=False):
+    if terminal:  
+        print "\n****\nXV =",XV
+        return XV
+    else:
+        csrXV = csrCreate(XV,lenV)
+        csrYV = csrCreate(YV,lenV)
+        csrXY = matrixProduct(csrXV, csrYV.T)
+        XY = [None for k in range(len(XV))]
+        for k,face in enumerate(XV):
+            data = csrXY[k].data
+            col = csrXY[k].indices
+            XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+            # NOTE: val depends on the relation under consideration ...
+        return XY
+@}
+%-------------------------------------------------------------------------------
+
+
 \subsubsection{Non-oriented operators}
 
 The \texttt{boundary} function below takes as parameters the \texttt{BRC} representations of $d$-cells and $(d-1)$-facets, and returns the \texttt{CSR} matrix of the boundary operator. Let us notice that such operator uses a mod 2 algebra, since it takes elements within the field $\Z_2=\{0,1\}$.
@@ -884,12 +1310,12 @@ The \texttt{boundary} function below takes as parameters the \texttt{BRC} repres
 %-------------------------------------------------------------------------------
 @D Test examples of From cells and facets to boundary operator
 @{V = [[0.0,0.0,0.0],[1.0,0.0,0.0],[0.0,1.0,0.0],[1.0,1.0,0.0],
-	   [0.0,0.0,1.0],[1.0,0.0,1.0],[0.0,1.0,1.0],[1.0,1.0,1.0]]
+       [0.0,0.0,1.0],[1.0,0.0,1.0],[0.0,1.0,1.0],[1.0,1.0,1.0]]
 CV = [[0,1,2,4],[1,2,4,5],[2,4,5,6],[1,2,3,5],[2,3,5,6],[3,5,6,7]]
 FV = [[0,1,2],[0,1,4],[0,2,4],[1,2,3],[1,2,4],[1,2,5],[1,3,5],[1,4,5],[2,3,5],
-	  [2,3,6],[2,4,5],[2,4,6],[2,5,6],[3,5,6],[3,5,7],[3,6,7],[4,5,6],[5,6,7]]
+      [2,3,6],[2,4,5],[2,4,6],[2,5,6],[3,5,6],[3,5,7],[3,6,7],[4,5,6],[5,6,7]]
 EV = [[0,1],[0,2],[0,4],[1,2],[1,3],[1,4],[1,5],[2,3],[2,4],[2,5],
-	  [2,6],[3,5],[3,6],[3,7],[4,5],[4,6],[5,6],[5,7],[6,7]]
+      [2,6],[3,5],[3,6],[3,7],[4,5],[4,6],[5,6],[5,7],[6,7]]
 VV = AA(LIST)(range(len(V)))
 
 print "\ncoboundary_2 =\n", csr2DenseMatrix(coboundary(CV,FV))
@@ -903,31 +1329,46 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 %-------------------------------------------------------------------------------
 @D From cells and facets to boundary operator
 @{def boundary(cells,facets):
-	lenV = max(max(cells),max(facets))
-	csrCV = csrCreate(cells,lenV)
-	csrFV = csrCreate(facets,lenV)
-	csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-	facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-	return csrBoundaryFilter(csrFC,facetLengths)
+    lenV = max(max(CAT(AA(list)(cells))),max(CAT(AA(list)(facets))))
+    csrCV = csrCreate(cells,lenV)
+    csrFV = csrCreate(facets,lenV)
+    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
+    return csrBoundaryFilter(csrFC,facetLengths)
+
+def boundary1(CV,FV,EV):
+    lenV = max(list(CAT(CV))+CAT(AA(list)(FV)))+1
+    csrCV = csrCreate(CV,lenV)
+    csrFV = csrCreate(FV,lenV)
+    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
+    VV = AA(LIST)(range(lenV))
+    csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
+    FE = crossRelation1(lenV,CV,FV,EV,True)
+    return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
 
 def coboundary(cells,facets):
-	Boundary = boundary(cells,facets)
-	return csrTranspose(Boundary)
+    Boundary = boundary(cells,facets)
+    return csrTranspose(Boundary)
+
+def coboundary1(cells,facets):
+    Boundary = boundary(cells,facets)
+    return csrTranspose(Boundary)
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 @D From cells and facets to boundary cells
 @{def totalChain(cells):
-	return csrCreate([[0] for cell in cells])  # ????  zero ??
+    return csrCreate([[0] for cell in cells])  # ????  zero ??
 
 def boundaryCells(cells,facets):
-	csrBoundaryMat = boundary(cells,facets)
-	csrChain = totalChain(cells)
-	csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
-	for k,value in enumerate(csrBoundaryChain.data):
-		if value % 2 == 0: csrBoundaryChain.data[k] = 0
-	out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-	return out
+    csrBoundaryMat = boundary(cells,facets)
+    csrChain = totalChain(cells)
+    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
+    for k,value in enumerate(csrBoundaryChain.data):
+        if value % 2 == 0: csrBoundaryChain.data[k] = 0
+    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+    return out
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -966,23 +1407,23 @@ Finally, the $\pm 1$ (signed) incidence coefficients are computed and stored in 
 %-------------------------------------------------------------------------------
 @D Signed boundary matrix for simplicial models
 @{def signedSimplicialBoundary (CV,FV):
-	# compute the set of pairs of indices to [boundary face,incident coface]
-	coo = boundary(CV,FV).tocoo()
-	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
+    # compute the set of pairs of indices to [boundary face,incident coface]
+    coo = boundary(CV,FV).tocoo()
+    pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
 
-	# compute the [face, coface] pair as vertex lists
-	vertLists = [[FV[f], CV[c]] for f,c in pairs]
+    # compute the [face, coface] pair as vertex lists
+    vertLists = [[FV[f], CV[c]] for f,c in pairs]
 
-	# compute the local (interior to the coface) indices of missing vertices 
-	def missingVert(face,coface): return list(set(coface).difference(face))[0]
-	missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
+    # compute the local (interior to the coface) indices of missing vertices 
+    def missingVert(face,coface): return list(set(coface).difference(face))[0]
+    missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
 
-	# signed incidence coefficients
-	faceSigns = AA(C(POWER)(-1))(missingVertIndices)
+    # signed incidence coefficients
+    faceSigns = AA(C(POWER)(-1))(missingVertIndices)
 
-	# signed boundary matrix
-	csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
-	return csrSignedBoundaryMat
+    # signed boundary matrix
+    csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
+    return csrSignedBoundaryMat
 @}
 %-------------------------------------------------------------------------------
 
@@ -1001,26 +1442,26 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 @{def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def boundaryCellsCocells(cells,facets):
-	csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
-	csrTotalChain = totalChain(cells)
-	csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
-	cooCells = csrBoundaryChain.tocoo()	
-	boundaryCells = []
-	for k,v in enumerate(cooCells.data):
-		if abs(v) == 1:
-			boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]			
-	boundaryCocells = []
-	for k,v in enumerate(boundaryCells):
-		boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)		
-	return boundaryCells,boundaryCocells
+    csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
+    csrTotalChain = totalChain(cells)
+    csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
+    cooCells = csrBoundaryChain.tocoo()    
+    boundaryCells = []
+    for k,v in enumerate(cooCells.data):
+        if abs(v) == 1:
+            boundaryCells += [int(cooCells.row[k] * cooCells.data[k])]            
+    boundaryCocells = []
+    for k,v in enumerate(boundaryCells):
+        boundaryCocells += list(csrSignedBoundaryMat[abs(v)].tocoo().col)        
+    return boundaryCells,boundaryCocells
 
 def signedBoundaryCells(verts,cells,facets):
-	boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)		
-	boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
-	boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
-	orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
-	
-	return orientedBoundaryCells
+    boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)        
+    boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
+    boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
+    orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
+    
+    return orientedBoundaryCells
 @}
 %-------------------------------------------------------------------------------
 
@@ -1030,28 +1471,28 @@ def signedBoundaryCells(verts,cells,facets):
 @D Signed boundary matrix for polytopal complexes
 @{""" Signed boundary matrix for polytopal complexes """
 def signedCellularBoundary(V,bases):
-	coo = boundary(bases[-1],bases[-2]).tocoo()
-	pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
-	signs = []
-	dim = len(bases)-1
-	chain = incidenceChain(bases)
-	
-	for pair in pairs:		# for each facet/coface pair
-		flag = REVERSE(pair) #  [c,f]
-		#print "flag 1 =",flag
-		for k in range(dim-1):
-			cell = flag[-1]
-			flag += [chain[k+1][cell][1]]
-		
-		verts = [CCOMB([V[v] for v in bases[dim-k][flag[k]]]) for k in range(dim+1)]
-		flagMat = [verts[v]+[1] for v in range(dim+1)]
-		flagSign = SIGN(np.linalg.det(flagMat))
-		signs += [flagSign]
-	
-	csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )
-	# numpy.set_printoptions(threshold=numpy.nan)
-	# print csrSignedBoundaryMat.todense()
-	return csrSignedBoundaryMat
+    coo = boundary(bases[-1],bases[-2]).tocoo()
+    pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
+    signs = []
+    dim = len(bases)-1
+    chain = incidenceChain(bases)
+    
+    for pair in pairs:        # for each facet/coface pair
+        flag = REVERSE(pair) #  [c,f]
+        #print "flag 1 =",flag
+        for k in range(dim-1):
+            cell = flag[-1]
+            flag += [chain[k+1][cell][1]]
+        
+        verts = [CCOMB([V[v] for v in bases[dim-k][flag[k]]]) for k in range(dim+1)]
+        flagMat = [verts[v]+[1] for v in range(dim+1)]
+        flagSign = SIGN(np.linalg.det(flagMat))
+        signs += [flagSign]
+    
+    csrSignedBoundaryMat = csr_matrix( (signs, TRANS(pairs)) )
+    # numpy.set_printoptions(threshold=numpy.nan)
+    # print csrSignedBoundaryMat.todense()
+    return csrSignedBoundaryMat
 @}
 %-------------------------------------------------------------------------------
 
@@ -1063,13 +1504,13 @@ def signedCellularBoundary(V,bases):
 from scipy.sparse import *
 
 def signedCellularBoundaryCells(verts,bases):
-	CV = bases[-1]
-	boundaryMat = signedCellularBoundary(verts,bases)
-	chainCoords = csc_matrix((len(CV), 1))
-	for cell in range(len(CV)): chainCoords[cell,0] = 1
-	boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
-	orientations = list((boundaryMat * chainCoords).tocoo().data)
-	return orientations,boundaryCells
+    CV = bases[-1]
+    boundaryMat = signedCellularBoundary(verts,bases)
+    chainCoords = csc_matrix((len(CV), 1))
+    for cell in range(len(CV)): chainCoords[cell,0] = 1
+    boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+    orientations = list((boundaryMat * chainCoords).tocoo().data)
+    return orientations,boundaryCells
 @}
 %-------------------------------------------------------------------------------
 
@@ -1204,17 +1645,17 @@ VIEW(mkSignedEdges((V,cells),2))
 Here we provide a 2D example of computation of the oriented boundary of a quite convoluted random cellular complex. The steps performed by the scripts in the following paragraphs are listed below:
 
 \begin{enumerate}
-\item	vertices are generated as random point in the unit circle
-\item	the Delaunay triangulation of the whole set of points is built.
-\item	spike-like triangles elimination
-\item	the 90\% of triangles is randomly discarded
-\item	the input LAR is provided by the remaining triangles
-\item	the 1-cells are computed, and —  if  $n_i < n_j$ -- oriented as $v_i \to v_j$
-\item	the 2-cells are "coherently oriented" via the sign of their 3x3 determinant 
-	using normalised homogeneous coordinates of vertices: ccw if $\det > 0$
-\item	the signed boundary matrix $[\partial_2]$ is built (with elements in $\{-1,0,1\}$ )
-\item	the signed boundary 1-chain (the red one) is computed by $[\partial_2][\mathbf{1}_2]$,
-	where $[\mathbf{1}_2]$ is the coordinate representation of the “total” 2-chain
+\item    vertices are generated as random point in the unit circle
+\item    the Delaunay triangulation of the whole set of points is built.
+\item    spike-like triangles elimination
+\item    the 90\% of triangles is randomly discarded
+\item    the input LAR is provided by the remaining triangles
+\item    the 1-cells are computed, and —  if  $n_i < n_j$ -- oriented as $v_i \to v_j$
+\item    the 2-cells are "coherently oriented" via the sign of their 3x3 determinant 
+    using normalised homogeneous coordinates of vertices: ccw if $\det > 0$
+\item    the signed boundary matrix $[\partial_2]$ is built (with elements in $\{-1,0,1\}$ )
+\item    the signed boundary 1-chain (the red one) is computed by $[\partial_2][\mathbf{1}_2]$,
+    where $[\mathbf{1}_2]$ is the coordinate representation of the “total” 2-chain
 \end{enumerate}
 
 
@@ -1246,13 +1687,14 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 @{""" Boundary orientation of a random 2D triangulation """
 from larlib import *
 from random import random
+from scipy import spatial,linalg
 
 @< Vertices V generated as random point in the unit circle @>
 @< Delaunay triangulation of the whole set V of points @>
 @< Fraction of triangles randomly discarded @>
 @< Coherently orient the input LAR model (V,FV)  @>
 @< Compute the 1-cell and 0-cell bases EV and VV @>
-@< Signed 2-boundary matrix and signed boundary 1-chain @>	
+@< Signed 2-boundary matrix and signed boundary 1-chain @>    
 @< Display the boundary 1-chain @>
 @}
 %-------------------------------------------------------------------------------
@@ -1262,13 +1704,13 @@ from random import random
 @D Vertices V generated as random point in the unit circle
 @{""" Vertices V generated as random point in the unit circle """
 verts = []
-npoints = 200
+npoints = 50
 for k in range(npoints):
-	t = 2*pi*random()
-	u = random()+random()
-	if u > 1: r = 2-u 
-	else: r = u
-	verts += [[r*cos(t), r*sin(t)]]
+    t = 2*pi*random()
+    u = random()+random()
+    if u > 1: r = 2-u 
+    else: r = u
+    verts += [[r*cos(t), r*sin(t)]]
 VIEW(STRUCT(AA(MK)(verts)))
 @}
 %-------------------------------------------------------------------------------
@@ -1277,7 +1719,7 @@ VIEW(STRUCT(AA(MK)(verts)))
 %-------------------------------------------------------------------------------
 @D Delaunay triangulation of the whole set V of points
 @{""" Delaunay triangulation of the whole set V of points """
-triangles = Delaunay(verts)
+triangles = spatial.Delaunay(verts)
 def area(cell): return linalg.det([verts[v]+[1] for v in cell])/2
 cells = [ cell for cell in triangles.vertices.tolist() if area(cell)>PI/(3*npoints)]
 V, FV = AA(list)(verts), cells
@@ -1288,7 +1730,7 @@ V, FV = AA(list)(verts), cells
 %-------------------------------------------------------------------------------
 @D Fraction of triangles randomly discarded
 @{""" Fraction of triangles randomly discarded """
-fraction = 0.7
+fraction = 0.25
 cellSpan = len(FV)
 remove = [int(random()*cellSpan) for k in range(int(cellSpan*fraction)) ]
 FV = [FV[k] for k in range(cellSpan) if not k in remove]
@@ -1300,13 +1742,13 @@ FV = [FV[k] for k in range(cellSpan) if not k in remove]
 @D Coherently orient the input LAR model (V,FV)
 @{""" Coherently orient the input LAR model (V,FV) """
 def positiveOrientation(model):
-	V,simplices = model
-	out = []
-	for simplex in simplices:
-		theMat = [V[v]+[1] for v in simplex]
-		if sign(linalg.det(theMat)) > 0:  out += [simplex]
-		else: out += [REVERSE(simplex)]
-	return V,out
+    V,simplices = model
+    out = []
+    for simplex in simplices:
+        theMat = [V[v]+[1] for v in simplex]
+        if sign(linalg.det(theMat)) > 0:  out += [simplex]
+        else: out += [REVERSE(simplex)]
+    return V,out
 
 V,FV = positiveOrientation((V,FV))
 @}
@@ -1337,8 +1779,8 @@ cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBound
 @{""" Display the boundary 1-chain """
 VIEW(STRUCT(MKPOLS((V,FV))))
 VIEW(STRUCT(
-	MKPOLS((V,FV)) +
-	[COLOR(RED)(mkSignedEdges((V,cells)))]  ))
+    MKPOLS((V,FV)) +
+    [COLOR(RED)(mkSignedEdges((V,cells)))]  ))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1366,50 +1808,50 @@ The variables in the following script have the meaning specified below:
 %-------------------------------------------------------------------------------
 @D Oriented boundary cells for simplicial models
 @{def pivotSimplices(V,CV,d=3):
-	simplices = []
-	for cell in CV:
-		vcell = np.array([V[v] for v in cell])
-		m, simplex = len(cell), []
-		# translate the cell: for each k, vcell[k] -= vcell[0], and simplex[0] := cell[0]
-		for k in range(m-1,-1,-1): vcell[k] -= vcell[0]
-		# simplex = [0], basis = [], tensor = Id(d+1)
-		simplex += [cell[0]]
-		basis = []
-		tensor = np.array(IDNT(d))
-		# look for most distant cell vertex
-		dists = [SUM([SQR(x) for x in v])**0.5 for v in vcell]
-		maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
-		vector = np.array([vcell[maxDistIndex]])
-		# normalize vector
-		den=(vector**2).sum(axis=-1) **0.5
-		basis = [vector/den]
-		simplex += [cell[maxDistIndex]]
-		unUsedIndices = [h for h in cell if h not in simplex]
-		
-		# for k in {2,d+1}:
-		for k in range(2,d+1):
-			# update the orthonormal tensor
-			e = basis[-1]
-			tensor = tensor - np.dot(e.T, e)
-			# compute the index h of a best vector
-			# look for most distant cell vertex
-			dists = [SUM([SQR(x) for x in np.dot(tensor,v)])**0.5
-			if h in unUsedIndices else 0.0
-			for (h,v) in zip(cell,vcell)]
-			# insert the best vector index h in output simplex
-			maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
-			vector = np.array([vcell[maxDistIndex]])
-			# normalize vector
-			den=(vector**2).sum(axis=-1) **0.5
-			basis += [vector/den]
-			simplex += [cell[maxDistIndex]]
-			unUsedIndices = [h for h in cell if h not in simplex]
-		simplices += [simplex]
-	return simplices
+    simplices = []
+    for cell in CV:
+        vcell = np.array([V[v] for v in cell])
+        m, simplex = len(cell), []
+        # translate the cell: for each k, vcell[k] -= vcell[0], and simplex[0] := cell[0]
+        for k in range(m-1,-1,-1): vcell[k] -= vcell[0]
+        # simplex = [0], basis = [], tensor = Id(d+1)
+        simplex += [cell[0]]
+        basis = []
+        tensor = np.array(IDNT(d))
+        # look for most distant cell vertex
+        dists = [SUM([SQR(x) for x in v])**0.5 for v in vcell]
+        maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
+        vector = np.array([vcell[maxDistIndex]])
+        # normalize vector
+        den=(vector**2).sum(axis=-1) **0.5
+        basis = [vector/den]
+        simplex += [cell[maxDistIndex]]
+        unUsedIndices = [h for h in cell if h not in simplex]
+        
+        # for k in {2,d+1}:
+        for k in range(2,d+1):
+            # update the orthonormal tensor
+            e = basis[-1]
+            tensor = tensor - np.dot(e.T, e)
+            # compute the index h of a best vector
+            # look for most distant cell vertex
+            dists = [SUM([SQR(x) for x in np.dot(tensor,v)])**0.5
+            if h in unUsedIndices else 0.0
+            for (h,v) in zip(cell,vcell)]
+            # insert the best vector index h in output simplex
+            maxDistIndex = max(enumerate(dists),key=lambda x: x[1])[0]
+            vector = np.array([vcell[maxDistIndex]])
+            # normalize vector
+            den=(vector**2).sum(axis=-1) **0.5
+            basis += [vector/den]
+            simplex += [cell[maxDistIndex]]
+            unUsedIndices = [h for h in cell if h not in simplex]
+        simplices += [simplex]
+    return simplices
 
 def simplexOrientations(V,simplices):
-	vcells = [[V[v]+[1.0] for v in simplex] for simplex in simplices]
-	return [SIGN(np.linalg.det(vcell)) for vcell in vcells]
+    vcells = [[V[v]+[1.0] for v in simplex] for simplex in simplices]
+    return [SIGN(np.linalg.det(vcell)) for vcell in vcells]
 @}
 %-------------------------------------------------------------------------------
 
@@ -1419,22 +1861,22 @@ def simplexOrientations(V,simplices):
 %------------------------------------------------------------------
 @D Affine transformations of $d$-points
 @{def larTranslate (tvect):
-	def larTranslate0 (points):
-		return [VECTSUM([p,tvect]) for p in points]
-	return larTranslate0
+    def larTranslate0 (points):
+        return [VECTSUM([p,tvect]) for p in points]
+    return larTranslate0
 
-def larRotate (angle):		# 2-dimensional !! TODO: n-dim
-	def larRotate0 (points):
-		a = angle
-		return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
-	return larRotate0
+def larRotate (angle):        # 2-dimensional !! TODO: n-dim
+    def larRotate0 (points):
+        a = angle
+        return [[x*COS(a)-y*SIN(a), x*SIN(a)+y*COS(a)] for x,y in points]
+    return larRotate0
 
 def larScale (svect):
-	def larScale0 (points):
-		print "\n points =",points
-		print "\n svect =",svect
-		return [AA(PROD)(TRANS([p,svect])) for p in points]
-	return larScale0
+    def larScale0 (points):
+        print "\n points =",points
+        print "\n svect =",svect
+        return [AA(PROD)(TRANS([p,svect])) for p in points]
+    return larScale0
 @}
 %------------------------------------------------------------------
 
@@ -1460,10 +1902,10 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 @D Generate a simplicial decomposition ot the $[0,1]^d$ domain
 @{""" cellular decomposition of the unit d-cube """
 def larDomain(shape, cell='cuboid'):
-	if cell=='simplex': V,CV = larSimplexGrid1(shape)
-	elif cell=='cuboid': V,CV = larCuboids(shape)
-	V = larScale( [1./d for d in shape])(V)
-	return [V,CV]
+    if cell=='simplex': V,CV = larSimplexGrid1(shape)
+    elif cell=='cuboid': V,CV = larCuboids(shape)
+    V = larScale( [1./d for d in shape])(V)
+    return [V,CV]
 @}
 %-------------------------------------------------------------------------------
 
@@ -1472,11 +1914,11 @@ A scaled simplicial decomposition is provided by the second-order  \texttt{larIn
 %-------------------------------------------------------------------------------
 @D Scaled simplicial decomposition ot the $[0,1]^d$ domain
 @{def larIntervals(shape, cell='cuboid'):
-	def larIntervals0(size):
-		V,CV = larDomain(shape,cell)
-		V = larScale( size)(V)
-		return [V,CV]
-	return larIntervals0
+    def larIntervals0(size):
+        V,CV = larDomain(shape,cell)
+        V = larScale( size)(V)
+        return [V,CV]
+    return larIntervals0
 @}
 %-------------------------------------------------------------------------------
 
@@ -1487,13 +1929,13 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 %-------------------------------------------------------------------------------
 @D Primitive mapping function 
 @{def larMap(coordFuncs):
-	if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
-	def larMap0(domain,dim=2):
-		V,CV = domain
-		V = AA(coordFuncs)(V)  # plasm CONStruction
-		return [V,CV]
-		# checkModel([V,CV])  TODO
-	return larMap0
+    if isinstance(coordFuncs, list): coordFuncs = CONS(coordFuncs)
+    def larMap0(domain,dim=2):
+        V,CV = domain
+        V = AA(coordFuncs)(V)  # plasm CONStruction
+        return [V,CV]
+        # checkModel([V,CV])  TODO
+    return larMap0
 @}
 %-------------------------------------------------------------------------------
 
@@ -1506,23 +1948,195 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 @D Create a dictionary with key the point location
 @{from collections import defaultdict
 def checkModel(model,dim=2):
-	V,CV = model; n = len(V)
-	vertDict = defaultdict(list)
-	for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
-	points,verts = TRANS(vertDict.items())
-	invertedindex = [None]*n
-	V = []
-	for k,value in enumerate(verts):
-		V.append(eval(points[k]))
-		for i in value:
-			invertedindex[i]=k	
-	CV = [[invertedindex[v] for v in cell] for cell in CV]
-	# filter out degenerate cells
-	CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
-	return [V, CV]
+    V,CV = model; n = len(V)
+    vertDict = defaultdict(list)
+    for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
+    points,verts = TRANS(vertDict.items())
+    invertedindex = [None]*n
+    V = []
+    for k,value in enumerate(verts):
+        V.append(eval(points[k]))
+        for i in value:
+            invertedindex[i]=k    
+    CV = [[invertedindex[v] for v in cell] for cell in CV]
+    # filter out degenerate cells
+    CV = [list(set(cell)) for cell in CV if len(set(cell))>=dim+1]
+    return [V, CV]
 @}
 %-------------------------------------------------------------------------------
 
+
+\paragraph{2-cell with high topological genus}
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test23.py
+@{""" 2-cell with high topological genus """
+from larlib import *
+
+@< Output of 2-cell with high topological genus 0. @>
+@< Output of 2-cell with high topological genus 1. @>
+@< Output of 2-cell with high topological genus 2. @>
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Output of 2-cell with high topological genus 0.
+@{""" 2-cell with high topological genus 0. """
+side = QUOTE(5*[1,-1])
+holes = PROD([side,side])
+V,FV,_ = UKPOL(holes)
+FV = [[v-1 for v in f] for f in FV]
+EV = CAT([[[v,f[(k+1)%4]] for k,v in enumerate(f+[f[0]][:-1])] for f in FV])
+VIEW(STRUCT(MKPOLS((V,EV))))
+
+(W,_) = larBox((-1,-1),(10,10))
+(_,(_,EW,FW)) = larCuboids((1,1),True)
+complex = Struct([(W,FW,EW),(V,FV,EV)])
+V,FV,EV = struct2lar(complex)
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@D Output of 2-cell with high topological genus 1.
+@{""" 2-cell with high topological genus 1. """
+FV = [sorted(CAT(FV))] 
+# EV = sorted(AA(sorted)(EV))  # p2t bug if uncommented: CHECK
+VIEW(STRUCT(MKPOLS((V,EV))))
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,1.5)) 
+@}
+%-------------------------------------------------------------------------------
+
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.32\textwidth]{images/squareholes1} 
+   \includegraphics[width=0.335\textwidth]{images/squareholes2} 
+   \includegraphics[width=0.325\textwidth]{images/squareholes3} 
+   \caption{LAR of a 2-complex: (a) numbering of complex 0-, 1- and 2-cells (just one, numbered 0); (b) solid display of the complex, with boundary 1-cells (all 1-cells) colored in red; (c) triangulation of the interior, made for display purpose.}
+   \label{fig:squareholes}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+@D Output of 2-cell with high topological genus 2.
+@{""" 2-cell with high topological genus 2. """
+
+# LAR data structures
+csrBoundaryMat = boundary(FV,EV)
+boundaryChain = chain2BoundaryChain(csrBoundaryMat)([1])
+triangleSet = larTriangulation( (V,EV) )
+
+# PyPLaSM data structures
+hpcChain = AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))
+hpcChainBoundary = AA(COLOR(RED))(MKPOLS((V,[EV[e] for e in boundaryChain])))
+
+VIEW(STRUCT( hpcChain + hpcChainBoundary ))
+VIEW(EXPLODE(1.2,1.2,1.2)( hpcChain + hpcChainBoundary ))
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Explicit LAR of 2-cell with high topological genus}
+
+The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squareholes} is given below. The reader should notice that the LAR contains the 2-faces description \texttt{EV} of a single 2-cell---of cardinality $O(V)$, and that the bulk of this representation is the array of edge indices \texttt{EV}, given here in lexicographic order.
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test24.py
+@{""" Explicit LAR of 2-cell with high topological genus """
+from larlib import *
+@< Output of 2-cell with high topological genus 0. @>
+
+FV = [CAT(FV)] + sorted(AA(list)(FV))[1:]
+# EV = sorted(AA(sorted)(EV))  # p2t bug if uncommented: CHECK
+model = V,FV,EV
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,1.5)) 
+
+# LAR data structures
+chain = [1]+[0]*(len(FV)-1)
+outModel,triangleSet = larComplexChain(model)(chain)
+
+viewLarComplexChain(model)([0]+[1]*(len(FV)-1))
+viewLarComplexChain(model)([1]+[0]*(len(FV)-1))
+viewLarComplexChain(model)([1]+[0]*5 + [1]*(len(FV)-6))
+viewLarComplexChain(model)([1]*(len(FV)))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig1} 
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig3} 
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig5} 
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig7}
+   
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig2} 
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig4} 
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig6} 
+   \includegraphics[height=0.245\textwidth,width=0.245\textwidth]{images/reconfig8}
+    
+   \caption{LAR of a 2-complex. Upper row: interior (white) and boundary (red) of different 2-chains; Lower row: triangulations of the chains. Warning: all extracted from LAR of a complex with the same boundary operator ... :o)}
+   \label{fig:squareholes}
+\end{figure}
+
+
+%-------------------------------------------------------------------------------
+@O test/py/larcc/test25.py
+@{""" 2-cell with high topological genus """
+from larlib import *
+
+V = [[-1.0,-1.0],[-1.0,10.0],[10.0,-1.0],[10.0,10.0],[0.0,1.0],[0.0,0.0],[1.0,0.0],
+[1.0,1.0],[0.0,3.0],[0.0,2.0],[1.0,2.0],[1.0,3.0],[0.0,5.0],[0.0,4.0],[1.0,4.0],
+[1.0,5.0],[0.0,7.0],[0.0,6.0],[1.0,6.0],[1.0,7.0],[0.0,9.0],[0.0,8.0],[1.0,8.0],
+[1.0,9.0],[2.0,1.0],[2.0,0.0],[3.0,0.0],[3.0,1.0],[2.0,3.0],[2.0,2.0],[3.0,2.0],
+[3.0,3.0],[2.0,5.0],[2.0,4.0],[3.0,4.0],[3.0,5.0],[2.0,7.0],[2.0,6.0],[3.0,6.0],
+[3.0,7.0],[2.0,9.0],[2.0,8.0],[3.0,8.0],[3.0,9.0],[4.0,1.0],[4.0,0.0],[5.0,0.0],
+[5.0,1.0],[4.0,3.0],[4.0,2.0],[5.0,2.0],[5.0,3.0],[4.0,5.0],[4.0,4.0],[5.0,4.0],
+[5.0,5.0],[4.0,7.0],[4.0,6.0],[5.0,6.0],[5.0,7.0],[4.0,9.0],[4.0,8.0],[5.0,8.0],
+[5.0,9.0],[6.0,1.0],[6.0,0.0],[7.0,0.0],[7.0,1.0],[6.0,3.0],[6.0,2.0],[7.0,2.0],
+[7.0,3.0],[6.0,5.0],[6.0,4.0],[7.0,4.0],[7.0,5.0],[6.0,7.0],[6.0,6.0],[7.0,6.0],
+[7.0,7.0],[6.0,9.0],[6.0,8.0],[7.0,8.0],[7.0,9.0],[8.0,1.0],[8.0,0.0],[9.0,0.0],
+[9.0,1.0],[8.0,3.0],[8.0,2.0],[9.0,2.0],[9.0,3.0],[8.0,5.0],[8.0,4.0],[9.0,4.0],
+[9.0,5.0],[8.0,7.0],[8.0,6.0],[9.0,6.0],[9.0,7.0],[8.0,9.0],[8.0,8.0],[9.0,8.0],
+[9.0,9.0]]
+
+FV = [[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,
+28,29,30, 31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,
+54,55,56,57,58,59,60, 61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
+80,81,82,83,84,85,86,87,88,89,90, 91,92,93,94,95,96,97,98,99,100,101,102,103],[4,
+5,6,7],[8,9,10,11],[12,13,14,15],[16,17,18, 19],[20,21,22,23],[24,25,26,27],[28,
+29,30,31],[32,33,34,35],[36,37,38,39],[40,41,42,43],[ 44,45,46,47],[48,49,50,51],
+[52,53,54,55],[56,57,58,59],[60,61,62,63],[64,65,66,67],[68,69, 70,71],[72,73,74,
+75],[76,77,78,79],[80,81,82,83],[84,85,86,87],[88,89,90,91],[92,93,94,95],[96,97,
+98,99],[100,101,102,103]]
+
+EV = [(54,55),(92,93),(68,71),(94,95),(40,41),(18,19),(74,75),(16,19),(80,81),(89,
+90),(6,7),(52,53),(24,27),(25,26),(36,37),(33,34),(36,39),(84,85),(29,30),(52,55),
+(14,15),(97,98),(96,97),(32,35),(17,18),(72,73),(102,103),(101,102),(45,46),(46,47),
+(22,23),(69,70),(8,9),(64,67),(65,66),(58,59),(12,13),(68,69),(32,33),(37,38),(73,
+74),(50,51),(100,101),(38,39),(77,78),(56,59),(44,47),(49,50),(24,25),(76,77),(81,
+82),(66,67),(0,2),(34,35),(60,63),(1,3),(42,43),(28,29),(82,83),(13,14),(48,51),
+(61,62),(16,17),(93,94),(88,91),(48,49),(92,95),(40,43),(12,15),(41,42),(2,3),(90,
+91),(80,83),(84,87),(76,79),(53,54),(96,99),(85,86),(30,31),(62,63),(4,7),(10,11),
+(5,6),(28,31),(98,99),(57,58),(70,71),(56,57),(4,5),(0,1),(72,75),(60,61),(8,11),
+(9,10),(78,79),(44,45),(86,87),(64,65),(20,23),(26,27),(21,22),(100,103),(88,89),
+(20,21)]
+
+chain1 = [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+chain2 = [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+chain3 = [1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+chain4 = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+
+model = V,FV,EV
+viewLarComplexChain(model)(chain1)
+viewLarComplexChain(model)(chain2)
+viewLarComplexChain(model)(chain3)
+viewLarComplexChain(model)(chain4)
+@}
+%-------------------------------------------------------------------------------
 
 
 \section{Exporting the library}
@@ -1534,7 +2148,7 @@ def checkModel(model,dim=2):
 """
 The MIT License
 ===============
-	
+    
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
 'Software'), to deal in the Software without restriction, including
@@ -1589,6 +2203,7 @@ from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 @< Characteristic matrix transposition @>
 @< From cells and facets to boundary operator @>
 @< From cells and facets to boundary cells @>
+@< Computation of topological relation @>
 @< Signed boundary matrix for simplicial models @>
 @< Orientation of general convex cells @>
 @< Computation of cell adjacencies @>
@@ -1605,10 +2220,11 @@ from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 @< Scaled simplicial decomposition ot the $[0,1]^d$ domain @>
 @< Create a dictionary with key the point location @>
 @< Primitive mapping function @>
+@< From 2D chains to boundary chains @>
 
 
 if __name__ == "__main__": 
-	@< Test examples @>
+    @< Test examples @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -1895,8 +2511,8 @@ verts = [AA(lambda x: 2*x)(VECTDIFF([vert,[0.5,0.5,0.5]])) for vert in verts]
 verts = [vert for vert in verts if VECTNORM(vert) < 1.0]
 tetra = Delaunay(verts)
 cells = [cell for cell in tetra.vertices.tolist()
-		 if  ((verts[cell[0]][2]<0) and (verts[cell[1]][2]<0) 
-		 		and (verts[cell[2]][2]<0) and (verts[cell[3]][2]<0) ) ]
+         if  ((verts[cell[0]][2]<0) and (verts[cell[1]][2]<0) 
+                 and (verts[cell[2]][2]<0) and (verts[cell[3]][2]<0) ) ]
 V, CV = verts, cells
 VIEW(MKPOL([V,AA(AA(lambda k:k+1))(CV),[]]))
 @}
@@ -2043,12 +2659,12 @@ from scipy.spatial import Delaunay
 @D Test for quasi-equilateral triangles
 @{""" Test for quasi-equilateral triangles """
 def quasiEquilateral(tria):
-	a = VECTNORM(VECTDIFF(tria[0:2]))
-	b = VECTNORM(VECTDIFF(tria[1:3]))
-	c = VECTNORM(VECTDIFF([tria[0],tria[2]]))
-	m = max(a,b,c)
-	if m/a < 1.7 and m/b < 1.7 and m/c < 1.7: return True
-	else: return False
+    a = VECTNORM(VECTDIFF(tria[0:2]))
+    b = VECTNORM(VECTDIFF(tria[1:3]))
+    c = VECTNORM(VECTDIFF([tria[0],tria[2]]))
+    m = max(a,b,c)
+    if m/a < 1.7 and m/b < 1.7 and m/c < 1.7: return True
+    else: return False
 @}
 %-------------------------------------------------------------------------------
 
@@ -2059,7 +2675,7 @@ verts = np.random.rand(50,2)
 verts = (verts - [0.5,0.5]) * 2
 triangles = Delaunay(verts)
 cells = [ cell for cell in triangles.vertices.tolist()
-		 if (not quasiEquilateral([verts[k] for k in cell])) ]
+         if (not quasiEquilateral([verts[k] for k in cell])) ]
 V, FV = AA(list)(verts), cells
 EV = larSimplexFacets(FV)
 pols2D = MKPOLS((V,FV))
@@ -2081,22 +2697,22 @@ VIEW(submodel)
 @D Decompose a permutation into cycles 
 @{""" Decompose a permutation into cycles """
 def permutationOrbits(List):
-	d = dict((i,int(x)) for i,x in enumerate(List))
-	out = []
-	while d:
-		x = list(d)[0]
-		orbit = []
-		while x in d:
-			orbit += [x],
-			x = d.pop(x)
-		out += [CAT(orbit)+orbit[0]]
-	return out
-		
+    d = dict((i,int(x)) for i,x in enumerate(List))
+    out = []
+    while d:
+        x = list(d)[0]
+        orbit = []
+        while x in d:
+            orbit += [x],
+            x = d.pop(x)
+        out += [CAT(orbit)+orbit[0]]
+    return out
+        
 if __name__ == "__main__":
-	print [2, 3, 4, 5, 6, 7, 0, 1]
-	print permutationOrbits([2, 3, 4, 5, 6, 7, 0, 1])
-	print [3,9,8,4,10,7,2,11,6,0,1,5]
-	print permutationOrbits([3,9,8,4,10,7,2,11,6,0,1,5])
+    print [2, 3, 4, 5, 6, 7, 0, 1]
+    print permutationOrbits([2, 3, 4, 5, 6, 7, 0, 1])
+    print [3,9,8,4,10,7,2,11,6,0,1,5]
+    print permutationOrbits([3,9,8,4,10,7,2,11,6,0,1,5])
 @}
 %-------------------------------------------------------------------------------
 
@@ -2138,7 +2754,7 @@ squares = larModelProduct([mod_0,mod_1])
 V,FV = squares
 simplices = pivotSimplices(V,FV,d=2)
 VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
-			  SKEL_1(STRUCT(MKPOLS((V,FV)))) ]))
+              SKEL_1(STRUCT(MKPOLS((V,FV)))) ]))
 @}
 %-------------------------------------------------------------------------------
 
@@ -2149,7 +2765,7 @@ cubes = larModelProduct([squares,mod_0])
 V,CV = cubes
 simplices = pivotSimplices(V,CV,d=3)
 VIEW(STRUCT([ MKPOL([V,AA(AA(C(SUM)(1)))(simplices),[]]),
-			  SKEL_1(STRUCT(MKPOLS((V,CV)))) ]))
+              SKEL_1(STRUCT(MKPOLS((V,CV)))) ]))
 @}
 %-------------------------------------------------------------------------------
 

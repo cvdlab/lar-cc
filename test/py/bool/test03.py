@@ -22,7 +22,7 @@ VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 #global precision
 #PRECISION -= 2
-V,FV,EV = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 
 VV = AA(LIST)(range(len(V)))

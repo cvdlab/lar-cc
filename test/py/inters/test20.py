@@ -4,7 +4,7 @@ from larlib import *
 sys.path.insert(0, 'test/py/inters/')
 from test17 import *
 
-triangleSet = boundaryCycles2triangulation( (V,EV) )
+triangleSet = larTriangulation( (V,EV) )
 
 VIEW(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))))
 VIEW(SKEL_1(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet))))))

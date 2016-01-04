@@ -1,13 +1,13 @@
 """ Biconnected components from orthogonal LAR model """
 from larlib import *
 
-filename = "test/py/inters/plan.svg"
+filename = "test/svg/inters/plan.svg"
 #filename = "test/py/inters/building.svg"
 #filename = "test/py/inters/complex.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
-V,FV,EV = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
 VV = AA(LIST)(range(len(V)))

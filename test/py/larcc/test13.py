@@ -9,7 +9,7 @@ VV,EV,FV,CV = bases
 incidence = incidenceChain([VV,EV,FV,CV])
 relations = ["CF","FE","EV"]
 for k in range(3):
-   print "\n\n incidence", relations[k], "=\n", incidence[k],
+    print "\n\n incidence", relations[k], "=\n", incidence[k],
 print "\n\n"
 
 submodel = SKEL_1(STRUCT(MKPOLS((V,EV))))
