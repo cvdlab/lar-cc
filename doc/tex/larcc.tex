@@ -651,7 +651,7 @@ My guess is that this source of errors might appear anytime the Boolean input be
 \mbox{}\verb@complex = Struct([(V,FV,EV), t(.5,.25), s(.5,.5), (V,FV,EV)])@\\
 \mbox{}\verb@V,FV,EV = struct2lar(complex)@\\
 \mbox{}\verb@lines = [[V[v] for v in edge] for edge in EV]@\\
-\mbox{}\verb@V,FV,EV = larFromLines(lines)@\\
+\mbox{}\verb@V,FV,EV,polygons = larFromLines(lines)@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@VV = AA(LIST)(range(len(V)))@\\
 \mbox{}\verb@submodel = STRUCT(MKPOLS((V,EV)))@\\

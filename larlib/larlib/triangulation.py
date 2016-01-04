@@ -289,7 +289,7 @@ def scan(V,FVs, group,cycleGroup,cycleVerts):
 """ Scan line algorithm input/output """
 def connectTheDots(model):
     V,EV = model
-    V,EVs = biconnectedComponent((V,EV))
+    V,EVs = inters.biconnectedComponent((V,EV))
     FV = AA(COMP([sorted,set,CAT]))(EVs)
     latticeArray = computeCycleLattice(V,EVs)
     cells = cellsFromCycles(latticeArray)
@@ -342,33 +342,98 @@ def orientBoundaryCycles(model,cells):
             else: setClockwise(h,k,cycle,areas,CVs)
     return CVs
 
-""" From nested boundary cycles to triangulation """
-def larTriangulation( (V,EV) ):
-    model = V,EV
-    cells,bridgeEdges = connectTheDots(model)
-    CVs = orientBoundaryCycles(model,cells)
+""" General composition of nested and non manifold cycles """
+
+""" Trasform a non-manifold vertex cycle into a manifold """
+def findPos(searchList,elems):
+    return [[i for i, x in enumerate(searchList) if x == e] for e in elems]
+
+def makeManifold(V,vcycle):
+    vdict = defaultdict(list)
+    for v in vcycle: vdict[v] += [1]
+    nonManifoldVertices = [v for v,value in vdict.items() if sum(value)>1 ]
+    n = len(vcycle)
     
-    polygons = [[[V[u] for u in cycle] for cycle in cell] for cell in CVs]
-    triangleSet = []   
-    
-    for polygon in polygons:
-        triangledPolygon = []
-        externalCycle = polygon[0]
-        polyline = []
-        for p in externalCycle:
-            polyline.append(Point(p[0],p[1]))
-        cdt = CDT(polyline)
+    def edges(vs,seq,n):
+        positions = findPos(seq,vs)
+        succs = [[(k+1)%n for k in elem] for elem in positions]  
+        triples = CAT([TRANS(item) for item in zip(positions,succs)])
+        return [[v,w] for v,w in triples]
         
-        internalCycles = polygon[1:]
-        for cycle in internalCycles:
-            hole = []
-            for p in cycle:
-                hole.append(Point(p[0],p[1]))
-            cdt.add_hole(hole)
-            
-        triangles = cdt.triangulate()
-        trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
-        triangleSet += [AA(REVERSE)(trias)]
+    vertexPairs = edges(nonManifoldVertices,vcycle,n)
+    vcycle = [V[v] for v in vcycle] 
+    for v,w in vertexPairs: vcycle[v] = VECTSUM(
+        [SCALARVECTPROD([0.001,vcycle[w]]),
+         SCALARVECTPROD([0.999,vcycle[v]]) ])
+    return vcycle
+
+""" Check if some cycle is isolated (hence doubled) """
+def nonDoubled(cycles,cycle):
+    theCycle = set(cycle)
+    for target in cycles:
+        if set(target) == theCycle: return False
+    return True
+
+""" From a non-contractilbe polygon to a list of triangles """
+def cycles2triangles(polygon): 
+    triangleSet,triangledFace = [],[]
+    externalCycle = polygon[0]
+    triangledCycle = []
+    polyline = []
+    for p in externalCycle:
+        polyline.append(Point(p[0],p[1]))
+    cdt = CDT(polyline)
+
+    internalCycles = polygon[1:]
+    for cycle in internalCycles:
+        hole = []
+        for p in cycle:
+            hole.append(Point(p[0],p[1]))
+        cdt.add_hole(hole)
+
+    triangles = cdt.triangulate()
+    trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] 
+        for t in triangles ]
+    
+    triangleSet += [AA(REVERSE)(trias)]
+    return triangleSet
+
+""" From non-contractible polygons to lists of triangles """
+def polygons2TriangleSet(V,polygons):
+    triangleSets = []
+    for polygon in polygons:
+        if len(set(CAT(polygon))) == len(CAT(polygon)):
+            pol = [[V[v] for v in cycle] for cycle in polygon]
+            triangleSets += cycles2triangles(pol)
+        else:
+            cycles = []
+            vcycles = []
+            for cycle in polygon:
+                if len(set(cycle)) == len(cycle):
+                    if nonDoubled(cycles,cycle):
+                        cycles += [cycle]
+                        vcycles += [[V[v] for v in cycle]]
+                else:
+                    vcycle = makeManifold(V,cycle)
+                    cycles += [cycle]
+                    vcycles += [vcycle]
+            triangleSets += cycles2triangles(vcycles)
+    return triangleSets
+
+""" Return a list of colored HPCs for the faces in FV """
+def MKPOLYGONS(V,polygons):
+    triangleSet = polygons2TriangleSet(V,polygons)
+    def mkpol(triangle): return MKPOL([triangle,[[1,2,3]],None])
+    cells = AA(STRUCT)( AA(AA(mkpol))(triangleSet) )
+    colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
+    components = [COLOR(colors[k%12])(cell) for k,cell in enumerate(cells)]
+    return components
+
+
+""" From nested boundary cycles to triangulation """    
+def larTriangulation( (V,EV) ):
+    V,FV,EV,polygons = inters.larFromLines([[V[u],V[v]] for u,v in EV])
+    triangleSet = polygons2TriangleSet(V,polygons)
     return triangleSet
 
 """ Generation of 1-boundaries as vertex permutation """
@@ -496,6 +561,7 @@ def boundaryModel2polylines(model):
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)
+    print "\necycles =",ecycles,"\n"
     areas = integr.surfIntegration((V,cycles,EV))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
@@ -503,14 +569,15 @@ def larPair2Triple(model):
                         for cycle in interiorCycles]
     latticeArray = computeCycleLattice(V,EdgeCyclesByVertices)
     cells = cellsFromCycles(latticeArray)
-    FV = [list(set(CAT([interiorCycles[k] for k in cell]))) for cell in cells]
-    return V,FV,EV
+    polygons = [[interiorCycles[k] for k in cell] for cell in cells]
+    return V,polygons,EV
 
 """ Visualization of a 2D complex and 2-chain """
 def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    csrBoundaryMat = boundary1(FV,EV,VV)
+    #csrBoundaryMat = boundary1(FV,EV,VV)
+    csrBoundaryMat = boundary(FV,EV)
     def larComplexChain0(chain):
         boundaryChain = chain2BoundaryChain(csrBoundaryMat)(chain)
         outModel = V,[EV[e] for e in boundaryChain]

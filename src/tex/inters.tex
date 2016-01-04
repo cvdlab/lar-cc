@@ -579,20 +579,6 @@ The whole transformation of an array of lines into a two-dimensional \texttt{LAR
 @D Transformation of an array of lines in a 2D LAR complex @{
 """ Transformation of an array of lines in a 2D LAR complex """
 def larFromLines(lines):
-    V,EV = lines2lar(lines)
-    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
-    V,EVs = biconnectedComponent((V,EV))
-    if EVs != []:
-        EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
-        V,EV = larRemoveVertices(V,EV)
-        V,FV,EV = facesFromComps((V,EV))
-        areas = integr.surfIntegration((V,FV,EV))
-        orderedFaces = sorted([[area,FV[f]] for f,area in enumerate(areas)])
-        interiorFaces = [face for area,face in orderedFaces[:-1]]
-        return V,interiorFaces,EV
-    else: return None
-
-def larFromLines(lines):
     def larPairSimplify((V,EV)):
         V,EVs = biconnectedComponent((V,EV))
         EV = CAT(EVs)
@@ -601,8 +587,9 @@ def larFromLines(lines):
     
     V,EV = lines2lar(lines)
     V,EV = larPairSimplify((V,EV))  #TODO:  toggle to check the generated FV
-    V,FV,EV = larPair2Triple((V,EV))
-    return V,FV,EV
+    V,polygons,EV = larPair2Triple((V,EV))
+    FV = AA(list)(AA(set)(AA(CAT)(polygons)))
+    return V,FV,EV,polygons
 @}
 %-------------------------------------------------------------------------------
 
@@ -719,7 +706,7 @@ convexes = [JOIN(AA(MK)([pts[v] for v in cluster])) for cluster in clusters]
 W = COLOR(CYAN)(STRUCT(AA(MK)(V)))
 VIEW(STRUCT(AA(COLOR(RED))(convexes)+AA(MK)(pts)+AA(COLOR(YELLOW))(circles)+[W]))
 
-V,FV,EV = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV+EV)) + AA(MK)(V)))
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
@@ -1141,7 +1128,7 @@ filename = "test/svg/inters/plan.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
-V,FV,EV = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
 VV = AA(LIST)(range(len(V)))

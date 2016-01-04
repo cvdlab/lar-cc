@@ -419,20 +419,6 @@ def svg2lines(filename,containmentBox=[],rect2lines=True):
 
 """ Transformation of an array of lines in a 2D LAR complex """
 def larFromLines(lines):
-    V,EV = lines2lar(lines)
-    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV))))
-    V,EVs = biconnectedComponent((V,EV))
-    if EVs != []:
-        EV = list(set(AA(tuple)(AA(sorted)(max(EVs, key=len)))))  ## NB
-        V,EV = larRemoveVertices(V,EV)
-        V,FV,EV = facesFromComps((V,EV))
-        areas = integr.surfIntegration((V,FV,EV))
-        orderedFaces = sorted([[area,FV[f]] for f,area in enumerate(areas)])
-        interiorFaces = [face for area,face in orderedFaces[:-1]]
-        return V,interiorFaces,EV
-    else: return None
-
-def larFromLines(lines):
     def larPairSimplify((V,EV)):
         V,EVs = biconnectedComponent((V,EV))
         EV = CAT(EVs)
@@ -441,8 +427,9 @@ def larFromLines(lines):
     
     V,EV = lines2lar(lines)
     V,EV = larPairSimplify((V,EV))  #TODO:  toggle to check the generated FV
-    V,FV,EV = larPair2Triple((V,EV))
-    return V,FV,EV
+    V,polygons,EV = larPair2Triple((V,EV))
+    FV = AA(list)(AA(set)(AA(CAT)(polygons)))
+    return V,FV,EV,polygons
 
 """ Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree

@@ -23,7 +23,7 @@ EV = face2edge(FV)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 
 lines = [[V[u],V[v]] for u,v in EV]
-V,FV,EV = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV)))) # bug in triangulation!
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV))))) # bug in triangulation!

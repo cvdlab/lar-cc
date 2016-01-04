@@ -275,7 +275,7 @@ def spacePartition(V,FV,EV, parts):
         """ Construction of the planar set FX,EX of faces and lines """
         lar = larFromLines(theLines)
         if lar != None: 
-            z,fz,ez = larFromLines(theLines)
+            z,fz,ez,polygons = larFromLines(theLines)
             """ Remove external vertices """
             z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
             w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))

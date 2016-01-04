@@ -30,7 +30,7 @@ assembly1D = larCells(face2edge)(assembly2D)
 VIEW(EXPLODE(1.2,1.2,1)(CAT(AA(MKPOLS)(assembly1D))))
 
 lines = CAT([[[V[u],V[v]] for u,v in EV] for V,EV in assembly1D])
-V,FV,EV = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((V,FV[:-1],EV)))))
 

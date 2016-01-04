@@ -7,7 +7,7 @@ filename = "test/svg/inters/plan.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
-V,FV,EV = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
 
 VV = AA(LIST)(range(len(V)))

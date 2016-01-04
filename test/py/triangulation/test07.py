@@ -9,7 +9,8 @@ sys.path.insert(0, '/Users/paoluzzi/Documents/dev/lar-cc/test/py/larcc/')
 from test16 import *
 
 EV = AA(list)(cells)
-V,FV,EV = larPair2Triple((V,EV))
+V,polygons,EV = larPair2Triple((V,EV))
+FV = AA(list)(AA(set)(AA(CAT)(polygons)))
 
 bcycles,bverts = boundaryCycles(range(len(EV)),EV)
 VIEW(STRUCT(AA(POLYLINE)([[V[v] for v in verts+[verts[0]]] for verts in bverts])))
