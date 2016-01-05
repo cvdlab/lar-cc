@@ -158,8 +158,8 @@ Finally, the reduced set of \texttt{cells} as lists of bounding cycles of vertic
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)
-    print "\necycles =",ecycles,"\n"
-    areas = integr.surfIntegration((V,cycles,EV))
+    #print "\necycles =",ecycles,"\n"
+    areas = AA(ABS)(integr.surfIntegration((V,cycles,EV),True))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
     EdgeCyclesByVertices = [zip(cycle[:-1],cycle[1:])+[(cycle[-1],cycle[0])] 
@@ -211,7 +211,7 @@ i.e.~ in the \texttt{test08.py} file, can be generated as below.
 @{""" Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
 from larlib import *
 
-filename = "test/svg/inters/graph.svg"
+filename = "test/svg/inters/test0.svg"
 lines = inters.svg2lines(filename)
 V,FV,EV,polygons = larFromLines(lines)
 
@@ -716,24 +716,47 @@ def larTriangulation( (V,EV) ):
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Test example}
+%-------------------------------------------------------------------------------
+@O test/py/triangulation/test14.py 
+@{""" Test example """    
+from larlib import *
+V,EV = ([[0.0, 0.0],
+  [1.0, 0.0],
+  [0.0, 1.0],
+  [-0.536, 0.536],
+  [-1.0, 1.0],
+  [-0.036, 0.536],
+  [-0.4227, 0.4227],
+  [0.0773, 0.4227]],
+ [[1, 0], (0, 6), (6, 7), [7, 5], [5, 3], (3, 6), [2, 1], [4, 3], [4, 2]])
+ 
+model = V,EV
+
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
 \subsection{General composition of nested and non manifold cycles}
 %-------------------------------------------------------------------------------
 @D General composition of nested and non manifold cycles 
 @{""" General composition of nested and non manifold cycles """
 
-@< Trasform a non-manifold vertex cycle into a manifold  @>
+@< Trasform a non-manifold cycle of vertices into a manifold  @>
 @< Check if some cycle is isolated (hence doubled) @>
-@< From a non-contractilbe polygon to a list of triangles @>
+@< From a non-contractible polygon to a list of triangles @>
 @< From non-contractible polygons to lists of triangles @>
 @< Return a list of colored HPCs for the faces in FV @>
 @}
 %-------------------------------------------------------------------------------
 
 
-\paragraph{Trasform a non-manifold vertex cycle into a manifold}
+\paragraph{Trasform a non-manifold cycle of vertices into a manifold}
 %-------------------------------------------------------------------------------
-@D Trasform a non-manifold vertex cycle into a manifold 
-@{""" Trasform a non-manifold vertex cycle into a manifold """
+@D Trasform a non-manifold cycle of vertices into a manifold 
+@{""" Trasform a non-manifold cycle of vertices into a manifold """
 def findPos(searchList,elems):
     return [[i for i, x in enumerate(searchList) if x == e] for e in elems]
 
@@ -770,10 +793,10 @@ def nonDoubled(cycles,cycle):
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{From a non-contractilbe polygon to a list of triangles}
+\paragraph{From a non-contractible polygon to a list of triangles}
 %-------------------------------------------------------------------------------
-@D From a non-contractilbe polygon to a list of triangles 
-@{""" From a non-contractilbe polygon to a list of triangles """
+@D From a non-contractible polygon to a list of triangles 
+@{""" From a non-contractible polygon to a list of triangles """
 def cycles2triangles(polygon): 
     triangleSet,triangledFace = [],[]
     externalCycle = polygon[0]
@@ -846,13 +869,13 @@ def MKPOLYGONS(V,polygons):
 @{""" Visualize a list of colored HPCs for the faces in FV """
 from larlib import *
     
-filename = "test/svg/inters/test0.svg"
+filename = "test/svg/inters/graph3.svg"
 lines = svg2lines(filename)
 V,FV,EV,polygons = larFromLines(lines)
 
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))        
-VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.2))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.1))
 
 VIEW(STRUCT(MKPOLYGONS(V,polygons)))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLYGONS(V,polygons)))
@@ -861,7 +884,10 @@ VIEW(SKEL_1(STRUCT(MKPOLYGONS(V,polygons))))
 viewLarComplexChain((V,FV,EV))([1])  # TODO: solve bug
 @}
 %-------------------------------------------------------------------------------
-
+cells = MKFACES((V,FV,EV))
+colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
+components = [COLOR(colors[k%12])(cell) for k,cell in enumerate(cells)]
+VIEW(STRUCT(components))
 
 \subsection{Monocyclic polygons using bridge-edges}
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -299,12 +299,15 @@ def boundaryTriangulation(V,FV,EV,FE):
     print "EV =",EV
     print "FE =",FE
     
+    f,face = 125, (13, 37, 40, 72, 73, 74, 75, 76)
+    
     def mapVerts(inverseMap):
         def mapVerts0(mappedVerts):
             return (inverseMap * (mat(mappedVerts).T)).T.tolist()
         return mapVerts0
         
     for f,face in enumerate(FV):
+        print "f,face =",f,face
         triangledFace = []
         EW = [EV[e] for e in FE[f]]
         pivotFace = [V[v] for v in face]
@@ -317,13 +320,16 @@ def boundaryTriangulation(V,FV,EV,FE):
         # reconstruction of boundary polyline for LAR face
         model = (verts2D,[range(len(verts2D))],EW)
         struct = Struct([model])
-        points = boundaryModel2polylines(structBoundaryModel(struct))[0]
+        U,EU = structBoundaryModel(struct)
         
+        points = boundaryModel2polylines((U,EU))[0]
+        print "points =",points
         # CDT triangulation with poly2tri
         polyline = [Point(p[0],p[1]) for p in points[:-1]]  
         cdt = CDT(REVERSE(polyline))
         triangles = cdt.triangulate()
         trias = [ [[t.c.x,t.c.y,0,1],[t.b.x,t.b.y,0,1],[t.a.x,t.a.y,0,1]] for t in triangles ]
+        
         inverseMap = transform.I
         trias = AA(mapVerts(inverseMap))(trias)
         
@@ -561,12 +567,8 @@ def thePartition(W,FW,EW):
     model = Z,FZ,EZ
 
     ZZ = AA(LIST)(range(len(Z)))
-    """
-    for k,face in enumerate(FZ):
-        submodel = STRUCT(MKPOLS((Z,[face]+EZ)))
-    """
     submodel = STRUCT(MKPOLS((Z,EZ)))
-    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.1)) 
+    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.2)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
     print "\nZ =",Z

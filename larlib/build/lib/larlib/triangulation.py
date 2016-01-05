@@ -344,7 +344,7 @@ def orientBoundaryCycles(model,cells):
 
 """ General composition of nested and non manifold cycles """
 
-""" Trasform a non-manifold vertex cycle into a manifold """
+""" Trasform a non-manifold cycle of vertices into a manifold """
 def findPos(searchList,elems):
     return [[i for i, x in enumerate(searchList) if x == e] for e in elems]
 
@@ -374,7 +374,7 @@ def nonDoubled(cycles,cycle):
         if set(target) == theCycle: return False
     return True
 
-""" From a non-contractilbe polygon to a list of triangles """
+""" From a non-contractible polygon to a list of triangles """
 def cycles2triangles(polygon): 
     triangleSet,triangledFace = [],[]
     externalCycle = polygon[0]
@@ -561,8 +561,8 @@ def boundaryModel2polylines(model):
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)
-    print "\necycles =",ecycles,"\n"
-    areas = integr.surfIntegration((V,cycles,EV))
+    #print "\necycles =",ecycles,"\n"
+    areas = AA(ABS)(integr.surfIntegration((V,cycles,EV),True))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
     EdgeCyclesByVertices = [zip(cycle[:-1],cycle[1:])+[(cycle[-1],cycle[0])] 

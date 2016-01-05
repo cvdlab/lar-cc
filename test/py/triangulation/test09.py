@@ -1,7 +1,7 @@
 """ Test example of LAR of a 2-complex with non-contractible and non-manifold cells"""
 from larlib import *
 
-filename = "test/svg/inters/graph.svg"
+filename = "test/svg/inters/test0.svg"
 lines = inters.svg2lines(filename)
 V,FV,EV,polygons = larFromLines(lines)
 

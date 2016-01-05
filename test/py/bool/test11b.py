@@ -4,12 +4,6 @@ from larlib import *
 """ Visualization of indices of the boundary triangulation """
 
 V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
-"""
-BF = [FV[f] for f in boundaryCells(CV,FV)]
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BF))))
-_,BE = larFacets((V,BF),dim=2)
-cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
-"""
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
 cubeGrids = Struct(3*[cubeGrid,t(.5,.5,0),r(0,0,PI/6)])
 
