@@ -11,7 +11,7 @@ FE = crossRelation(W,FW,EW)
 EF = invertRelation(FE)
 
 triangleSet = boundaryTriangulation(W,FW,EW,FE)
-TW = triangleIndices(triangleSet,W)
+TW,FT = triangleIndices(triangleSet,W)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CAT(TW)))))
 
 ET = edgesTriangles(EF,FW,TW,EW)

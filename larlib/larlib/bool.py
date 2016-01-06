@@ -298,9 +298,7 @@ def boundaryTriangulation(V,FV,EV,FE):
     print "FV =",FV
     print "EV =",EV
     print "FE =",FE
-    
-    f,face = 125, (13, 37, 40, 72, 73, 74, 75, 76)
-    
+        
     def mapVerts(inverseMap):
         def mapVerts0(mappedVerts):
             return (inverseMap * (mat(mappedVerts).T)).T.tolist()
@@ -317,35 +315,34 @@ def boundaryTriangulation(V,FV,EV,FE):
         mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
         verts2D = [point[:-2] for point in mappedVerts] 
               
-        # reconstruction of boundary polyline for LAR face
+        # Construction of CDT (Constrained Delaunay Triangulation) for LAR face
         model = (verts2D,[range(len(verts2D))],EW)
         struct = Struct([model])
         U,EU = structBoundaryModel(struct)
-        
-        points = boundaryModel2polylines((U,EU))[0]
-        print "points =",points
-        # CDT triangulation with poly2tri
-        polyline = [Point(p[0],p[1]) for p in points[:-1]]  
-        cdt = CDT(REVERSE(polyline))
-        triangles = cdt.triangulate()
-        trias = [ [[t.c.x,t.c.y,0,1],[t.b.x,t.b.y,0,1],[t.a.x,t.a.y,0,1]] for t in triangles ]
+        W,FW,EW,polygons = larFromLines([[U[u],U[v]] for u,v in EU])
+        triangles = polygons2TriangleSet(W,polygons)
+        trias = [[p+[1],q+[1],r+[1]] for p,q,r in CAT(triangles)]
         
         inverseMap = transform.I
         trias = AA(mapVerts(inverseMap))(trias)
-        
         triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
         triangleSet += [triangledFace]
     return triangleSet
 
 def triangleIndices(triangleSet,W):
-    vertDict,out = defaultdict(),[]
-    for k,vertex in enumerate(W):  vertDict[vcode(vertex,PRECISION=3)] = k
-    for h,faceSetOfTriangles in enumerate(triangleSet):
-        trias = [[vertDict[vcode(p,PRECISION=3)] for p in triangle]
-                    for triangle in faceSetOfTriangles]
-        out += [trias]
-    assert len(W)==max(CAT(CAT(out)))+1
-    return out
+    tree = spatial.cKDTree(W)
+    TV,FT,t = [],[],-1
+    for face in triangleSet:
+        ft = []
+        for triangle in face:
+            vertices = tree.query(triangle,1)[1].tolist()
+            t += 1
+            TV += [vertices]
+            ft += [t]
+        FT += [ft]
+    print "TV =",TV
+    VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,TV))))
+    return TV,FT
 
 
 def edgesTriangles(EF, FW, TW, EW):
@@ -369,20 +366,22 @@ def planeProjection(normals):
     elif all(V[:,2]==0): V = np.delete(V, 2, 1)
     return V
 
-def faceSlopeOrdering(model,FE,Z):
+def faceSlopeOrdering(model,FE):
     V,FV,EV = model
     triangleSet = boundaryTriangulation(V,FV,EV,FE)
-    TV = triangleIndices(triangleSet,Z)
-    triangleVertices = CAT(TV)
-    TE = crossRelation(V,triangleVertices,EV)
+    print "\ntriangleSet =",triangleSet
+    VIEW(EXPLODE(1.2,1.2,1.2)(AA(JOIN)( AA(POLYLINE)(CAT(triangleSet)) )))
+    TV,FT = triangleIndices(triangleSet,V)
+    TE = crossRelation(V,TV,EV)
     ET,ET_angle = invertRelation(TE),[]
     #import pdb; pdb.set_trace()
+    print "\nET =",ET,"\n"
     for e,et in enumerate(ET):
         v1,v2 = EV[e]
         v1v2 = set([v1,v2])
         et_angle = []
         t0 = et[0]
-        tverts = [v1,v2] + list(set(triangleVertices[t0]).difference(v1v2))
+        tverts = [v1,v2] + list(set(TV[t0]).difference(v1v2))
         e3 = UNITVECT(VECTDIFF([ V[tverts[1]], V[tverts[0]] ]))
         e1 = UNITVECT(VECTDIFF([ V[tverts[2]], V[tverts[0]] ]))
         e2 = cross(array(e1),e3).tolist()
@@ -391,7 +390,7 @@ def faceSlopeOrdering(model,FE,Z):
         normals = []
         Tvs = []
         for triangle in et:
-            verts = triangleVertices[triangle]
+            verts = TV[triangle]
             vertSet = set(verts).difference(v1v2)
             tvs = [v1,v2] + list(vertSet)
             Tvs += [tvs]
@@ -407,17 +406,13 @@ def faceSlopeOrdering(model,FE,Z):
         sortedTrias = [pair[1] for pair in pairs]
         triasVerts = [pair[2] for pair in pairs]
         ET_angle += [sortedTrias]
-    EF_angle = ET_to_EF_incidence(TV,FV, ET_angle)
+    EF_angle = ET_to_EF_incidence(TV,FV,FT, ET_angle)
     return EF_angle
 
 
 """ Edge-triangles to Edge-faces incidence """
-def ET_to_EF_incidence(TW,FW, ET_angle):
-    tableFT = [None for k in range(len(FW))]
-    t = 0
-    for f,trias in enumerate(TW):
-        tableFT[f] = range(t,t+len(trias))
-        t += len(trias)
+def ET_to_EF_incidence(TW,FW,FT, ET_angle):
+    tableFT = FT
     tableTF = invertRelation(tableFT)
     EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
     #assert( len(EF_angle) == 2*len(FW) )
@@ -426,6 +421,7 @@ def ET_to_EF_incidence(TW,FW, ET_angle):
 """ Cells from $(d-1)$-dimensional LAR model """
 
 def facesFromComponents(model,FE,EF_angle):
+    print "\nECCOMI\n"
     # initialization
     V,FV,EV = model
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
@@ -563,7 +559,6 @@ def thePartition(W,FW,EW):
     parts = boxBuckets3d(containmentBoxes(quadArray))
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
     Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.001)
-    EZ = [EZ[0]]+EZ
     model = Z,FZ,EZ
 
     ZZ = AA(LIST)(range(len(Z)))
@@ -571,14 +566,7 @@ def thePartition(W,FW,EW):
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.2)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
-    print "\nZ =",Z
-    print "\nFZ =",FZ
-    print "\nEZ =",EZ
-    print "\nFE_0 =",FE
-    # remove 0 indices from FE relation
-    FE = doubleCheckFaceBoundaries(FE,Z,FZ,EZ)
-    print "\nFE_1 =",FE
-    EF_angle = faceSlopeOrdering(model,FE,Z)
+    EF_angle = faceSlopeOrdering(model,FE)
     
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE

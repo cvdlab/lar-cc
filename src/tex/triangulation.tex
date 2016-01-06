@@ -1,10 +1,10 @@
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb}
 \usepackage[colorlinks]{hyperref}
 \usepackage{commath}
@@ -44,7 +44,7 @@
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{Alberto Paoluzzi}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
@@ -163,7 +163,7 @@ def larPair2Triple(model):
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
     EdgeCyclesByVertices = [zip(cycle[:-1],cycle[1:])+[(cycle[-1],cycle[0])] 
-    							for cycle in interiorCycles]
+                                for cycle in interiorCycles]
     latticeArray = computeCycleLattice(V,EdgeCyclesByVertices)
     cells = cellsFromCycles(latticeArray)
     polygons = [[interiorCycles[k] for k in cell] for cell in cells]
@@ -253,9 +253,10 @@ def MKFACES(model):
     chain = [0]*len(FV)
     boundingEdges = []
     for k,face in enumerate(FV):
-    	unitChain = copy.copy(chain)
-    	unitChain[k] = 1
-    	boundingEdges += [boundaryOperator(unitChain)]
+        unitChain = copy(chain)
+        unitChain[k] = 1
+        boundingEdges += [boundaryOperator(unitChain)]
+    print "boundingEdges =",boundingEdges
     faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
         for edges in boundingEdges]
     return faces
@@ -551,7 +552,7 @@ FVs = AA(COMP([list,set,CAT]))(EVs)
 latticeArray = computeCycleLattice(V,EVs)
 
 for k in range(len(latticeArray)):
-	print k,latticeArray[k]
+    print k,latticeArray[k]
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
@@ -612,7 +613,7 @@ def scan(V,FVs, group,cycleGroup,cycleVerts):
     bridgeEdges = []
     scannedCycles = []
     for k,(point,cycle,v) in enumerate(cycleGroup[:-2]):
-    	
+        
         nextCycle = cycleGroup[k+1][1]
         n = len(FVs[group][cycle])
         if nextCycle != cycle: 
