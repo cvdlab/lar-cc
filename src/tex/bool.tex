@@ -319,17 +319,28 @@ def spacePartition(V,FV,EV, parts):
     FE = crossRelation(V,FV,EV)
     submodel0 = submodel(V,FV,EV)
     out = []
+    print "\n(V,FV,EV) =",V,FV,EV,"\n"
+    print "\nparts =",parts,"\n"
+    
     """ input: face index f; candidate incident faces F[f]; """
+    aaa=[]
     for f,F in enumerate(parts):
         """ Selection of the LAR submodel S(f) := (V,FV,EV)(f) restricted to [f]+F[f] """    
         fF,fE = submodel0(f,F)
         subModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
         sV,sFV,sEV = struct2lar(subModel)
+        #VIEW(STRUCT(MKPOLS((sV,sFV+sEV)) + [COLOR(RED)(STRUCT(MKPOLS((V,[FV[f]]))))]))
+        
         """ Computation of submanifold map M moving f to z=0 """
         pivotFace = [V[v] for v in FV[f]]
         M = submanifoldMapping(pivotFace)  # submanifold transformation
+        
         """ Transformation of S(f) by M, giving S = (sW,sEW) := M(S(f)) """
         sW,sFW,sEW = larApply(M)((sV,sFV,sEV))
+        
+        red = COLOR(RED)(STRUCT(MKPOLS(larApply(M)((V,[FV[f]])))))
+        #VIEW(STRUCT(MKPOLS((sW,sFW+sEW)) + [red]))
+        
         """ filtering of EW edges traversing z=0, giving EZ edges and incident faces FZEZ """
         sFE = crossRelation(V,sFW,sEW)    
         edges = list(set([ e for k,face in enumerate(sFW)  for e in sFE[k] 
@@ -339,6 +350,8 @@ def spacePartition(V,FV,EV, parts):
         edges = list(set(CAT(edgesPerFace)))
         WW = AA(LIST)(range(len(sW)))
         wires = [sEW[e] for e in edges]
+        #VIEW(STRUCT(MKPOLS((sW,wires)) + [red]))
+        
         """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
         points = collections.OrderedDict()
         lines = [[sW[w1],sW[w2]] for w1,w2 in wires]
@@ -350,22 +363,21 @@ def spacePartition(V,FV,EV, parts):
         lines = [line for line in lines if line!=[]]
         vpoints = [[(vcode(point),k) for k,point in enumerate(line)] for line in lines]
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
-        """ sorting of every aligned set FX, where X is the parameter along the intersection line """
-        theLines = []
-        for line in lines:
-            if len(line)>2: 
-                segments = computeSegments(line)
-                theLines += segments
-            else: theLines += [line]
-        ### Check that every set FX has even cardinality
+        lines = [[line[0],line[-1]]  if len(line)>2 else line for line in lines]
+        #VIEW(STRUCT(AA(POLYLINE)(lines) )) #+ [red]))
+                
         """ Construction of the planar set FX,EX of faces and lines """
-        lar = larFromLines(theLines)
-        if lar != None: 
-            z,fz,ez,polygons = larFromLines(theLines)
-            """ Remove external vertices """
-            z,fz,ez = removeExternals(M,V,EV,FE[f], z,fz,ez)
-            w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
-            out += [Struct([(w,fw,ew)])]
+        #lar = larFromLines(lines)
+        u,fu,eu,polygons = larFromLines(lines)
+        """ Remove external vertices """
+        w,fw,ew = removeExternals(M,V,EV,FE[f], u,fu,eu)
+        v,fv,ev = larPair2Triple((w,ew))
+        fv = CAT(fv)
+        z,fz,ez,polygons = larFromLines([[v[u],v[w]] for u,w in ev])
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
+        
+        w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
+        out += [Struct([(w,fw,ew)])]
     return struct2lar(Struct(out))
 @}
 %-------------------------------------------------------------------------------
@@ -783,7 +795,7 @@ def thePartition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets3d(containmentBoxes(quadArray))
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
-    Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.001)
+    Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.0001)
     model = Z,FZ,EZ
 
     ZZ = AA(LIST)(range(len(Z)))
