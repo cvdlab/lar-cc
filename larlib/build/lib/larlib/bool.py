@@ -288,7 +288,7 @@ def spacePartition(V,FV,EV, parts):
         v,fv,ev = larPair2Triple((w,ew))
         fv = CAT(fv)
         z,fz,ez,polygons = larFromLines([[v[u],v[w]] for u,w in ev])
-        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
+        VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
         
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
         out += [Struct([(w,fw,ew)])]

@@ -13,7 +13,7 @@ FVs = AA(COMP([list,set,CAT]))(EVs)
 latticeArray = computeCycleLattice(V,EVs)
 
 for k in range(len(latticeArray)):
-   print k,latticeArray[k]
+    print k,latticeArray[k]
 
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))

@@ -28,8 +28,8 @@ def extractCycle(edgeCounts,EV,VE,e,v,cycle,ecycle):
 
 """ Extract all cycles from a LAR pair model """ 
 import inters
-def makeCycles(theModel):
-    #theModel = copy.copy(model)
+def makeCycles(model):
+    theModel = copy.copy(model)
     V,EV = theModel
     VE = inters.edgeSlopeOrdering(theModel)
     unusedEdges = True
@@ -37,8 +37,10 @@ def makeCycles(theModel):
     edgeCounts = [0 for edge in EV]
     edge,vertex = 0,EV[0][0]
     edgeCounts[0] = 1
+    print "edgeCounts =",edgeCounts
     while unusedEdges:
         theCycles = extractCycle(edgeCounts,EV,VE,edge,vertex,[vertex],[edge])
+        print "edgeCounts =",edgeCounts
         cycles += [theCycles[0]]
         ecycles += [theCycles[1]]
         unusedEdges,edge,vertex = takeEdgeVertex(edgeCounts,EV)
@@ -268,7 +270,7 @@ def scan(V,FVs, group,cycleGroup,cycleVerts):
     bridgeEdges = []
     scannedCycles = []
     for k,(point,cycle,v) in enumerate(cycleGroup[:-2]):
-      
+        
         nextCycle = cycleGroup[k+1][1]
         n = len(FVs[group][cycle])
         if nextCycle != cycle: 
@@ -566,7 +568,7 @@ def larPair2Triple(model):
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
     EdgeCyclesByVertices = [zip(cycle[:-1],cycle[1:])+[(cycle[-1],cycle[0])] 
-                        for cycle in interiorCycles]
+                                for cycle in interiorCycles]
     latticeArray = computeCycleLattice(V,EdgeCyclesByVertices)
     cells = cellsFromCycles(latticeArray)
     polygons = [[interiorCycles[k] for k in cell] for cell in cells]
@@ -606,9 +608,10 @@ def MKFACES(model):
     chain = [0]*len(FV)
     boundingEdges = []
     for k,face in enumerate(FV):
-      unitChain = copy.copy(chain)
-      unitChain[k] = 1
-      boundingEdges += [boundaryOperator(unitChain)]
+        unitChain = copy(chain)
+        unitChain[k] = 1
+        boundingEdges += [boundaryOperator(unitChain)]
+    print "boundingEdges =",boundingEdges
     faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
         for edges in boundingEdges]
     return faces

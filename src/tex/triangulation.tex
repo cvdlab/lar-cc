@@ -373,8 +373,8 @@ The \texttt{makeCycles} function takes as input a LAR pair model \texttt{(V,EV)}
 @D Extract all cycles from a LAR pair model
 @{""" Extract all cycles from a LAR pair model """ 
 import inters
-def makeCycles(theModel):
-    #theModel = copy.copy(model)
+def makeCycles(model):
+    theModel = copy.copy(model)
     V,EV = theModel
     VE = inters.edgeSlopeOrdering(theModel)
     unusedEdges = True
@@ -382,8 +382,10 @@ def makeCycles(theModel):
     edgeCounts = [0 for edge in EV]
     edge,vertex = 0,EV[0][0]
     edgeCounts[0] = 1
+    print "edgeCounts =",edgeCounts
     while unusedEdges:
         theCycles = extractCycle(edgeCounts,EV,VE,edge,vertex,[vertex],[edge])
+        print "edgeCounts =",edgeCounts
         cycles += [theCycles[0]]
         ecycles += [theCycles[1]]
         unusedEdges,edge,vertex = takeEdgeVertex(edgeCounts,EV)
