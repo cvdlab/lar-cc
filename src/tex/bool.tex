@@ -294,17 +294,36 @@ to remove every vertex that was generated, outside the considered input face, by
 %-------------------------------------------------------------------------------
 @D Remove intersection points external to a submanifold face
 @{""" Remove intersection points external to a submanifold face """
+def veryClose(p,q):
+    out = False
+    if VECTNORM(VECTDIFF([p,q])) <= 0.002:
+        out = True
+    return out
+
 def removeExternals(M,V,EV,fe, z,fz,ez):
+    (Z,FZ,EZ) = copy((z,fz,ez))
     inputFace = Struct([(V,[EV[e] for e in fe])])
-    v,ev = larApply(M)(struct2lar(inputFace))
-    pol = [eval(vcode(w[:-1])) for w in v],ev
+    verts,ev = larApply(M)(struct2lar(inputFace))
+    pol = [eval(vcode(vert[:-1])) for vert in verts],ev
     out = []
     classify = pointInPolygonClassification(pol)
-    for k,point in enumerate(z):
+    for k,point in enumerate(Z):
         if classify(point)=="p_out":  out += [k]
-    fz = [f for f in fz if not any([v in out for v in f])]
-    ez = [e for e in ez if not any([v in out for v in e])]
-    return z,fz,ez
+
+    # verify all v in out w.r.t. pol[0]
+    trueOut = []
+    for v in out: 
+        onBoundary = False
+        for p in pol[0]:
+            if veryClose(Z[v],p):
+                print "v,p,'close'", Z[v],p
+                onBoundary = True
+                Z[v] = p
+        if not onBoundary: trueOut += [v]
+    
+    FW = [f for f in FZ if not any([v in trueOut for v in f])]  # trueOut
+    EW = [e for e in EZ if not any([v in trueOut for v in e])]  # trueOut
+    return Z,FW,EW
 @}
 %-------------------------------------------------------------------------------
 
@@ -323,8 +342,8 @@ def spacePartition(V,FV,EV, parts):
     print "\nparts =",parts,"\n"
     
     """ input: face index f; candidate incident faces F[f]; """
-    aaa=[]
     for f,F in enumerate(parts):
+        print "\nf,F =",f,F
         """ Selection of the LAR submodel S(f) := (V,FV,EV)(f) restricted to [f]+F[f] """    
         fF,fE = submodel0(f,F)
         subModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
@@ -364,16 +383,19 @@ def spacePartition(V,FV,EV, parts):
         vpoints = [[(vcode(point),k) for k,point in enumerate(line)] for line in lines]
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
         lines = [[line[0],line[-1]]  if len(line)>2 else line for line in lines]
-        #VIEW(STRUCT(AA(POLYLINE)(lines) )) #+ [red]))
+        #VIEW(STRUCT(AA(POLYLINE)(lines) + [red]))
+        print "\nlines =",lines
                 
         """ Construction of the planar set FX,EX of faces and lines """
-        #lar = larFromLines(lines)
         u,fu,eu,polygons = larFromLines(lines)
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((u,fu+eu))))
+        
         """ Remove external vertices """
         w,fw,ew = removeExternals(M,V,EV,FE[f], u,fu,eu)
-        v,fv,ev = larPair2Triple((w,ew))
-        fv = CAT(fv)
-        z,fz,ez,polygons = larFromLines([[v[u],v[w]] for u,w in ev])
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,fw+ew))))
+        struct = Struct([(w,fw,ew)])
+        z,fz,ez = struct2lar(struct)
+        
         VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
         
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
