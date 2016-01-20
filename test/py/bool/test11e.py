@@ -3,9 +3,9 @@ from larlib import *
 
 """ Visualization of indices of the boundary triangulation """
 
-V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
-cubeGrids = Struct(3*[cubeGrid,s(.5,.5,.5),r(0,0,PI/6)])
+cubeGrids = Struct(2*[cubeGrid,s(.5,.5,.5),r(0,0,PI/6)])
 
 V,FV,EV = struct2lar(cubeGrids)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))

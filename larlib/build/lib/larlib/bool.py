@@ -252,12 +252,9 @@ def spacePartition(V,FV,EV, parts):
     FE = crossRelation(V,FV,EV)
     submodel0 = submodel(V,FV,EV)
     out = []
-    print "\n(V,FV,EV) =",V,FV,EV,"\n"
-    print "\nparts =",parts,"\n"
     
     """ input: face index f; candidate incident faces F[f]; """
     for f,F in enumerate(parts):
-        print "\nf,F =",f,F
         """ Selection of the LAR submodel S(f) := (V,FV,EV)(f) restricted to [f]+F[f] """    
         fF,fE = submodel0(f,F)
         subModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
@@ -298,7 +295,6 @@ def spacePartition(V,FV,EV, parts):
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
         lines = [[line[0],line[-1]]  if len(line)>2 else line for line in lines]
         #VIEW(STRUCT(AA(POLYLINE)(lines) + [red]))
-        print "\nlines =",lines
                 
         """ Construction of the planar set FX,EX of faces and lines """
         u,fu,eu,polygons = larFromLines(lines)
@@ -310,7 +306,7 @@ def spacePartition(V,FV,EV, parts):
         struct = Struct([(w,fw,ew)])
         z,fz,ez = struct2lar(struct)
         
-        VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
         
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
         out += [Struct([(w,fw,ew)])]
@@ -328,10 +324,6 @@ from copy import copy
 
 def boundaryTriangulation(V,FV,EV,FE):
     triangleSet = []  
-    print "\nV =",V
-    print "FV =",FV
-    print "EV =",EV
-    print "FE =",FE
         
     def mapVerts(inverseMap):
         def mapVerts0(mappedVerts):
@@ -354,8 +346,8 @@ def boundaryTriangulation(V,FV,EV,FE):
         struct = Struct([model])
         U,EU = structBoundaryModel(struct)
         W,FW,EW,polygons = larFromLines([[U[u],U[v]] for u,v in EU])
-        triangles = polygons2TriangleSet(W,polygons)
-        trias = [[p+[1],q+[1],r+[1]] for p,q,r in CAT(triangles)]
+        setsOfTriangles = polygons2TriangleSet(W,polygons)
+        trias = [[p+[1],q+[1],r+[1]] for p,q,r in setsOfTriangles[0]]
         
         inverseMap = transform.I
         trias = AA(mapVerts(inverseMap))(trias)
@@ -374,7 +366,6 @@ def triangleIndices(triangleSet,W):
             TV += [vertices]
             ft += [t]
         FT += [ft]
-    print "TV =",TV
     VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,TV))))
     return TV,FT
 
@@ -402,14 +393,14 @@ def planeProjection(normals):
 
 def faceSlopeOrdering(model,FE):
     V,FV,EV = model
-    triangleSet = boundaryTriangulation(V,FV,EV,FE)
-    print "\ntriangleSet =",triangleSet
+    VIEW(COLOR(YELLOW)(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV)))))
+    triangleSet = boundaryTriangulation(V,FV,EV,FE) # corrected with non-contractible faces
     VIEW(EXPLODE(1.2,1.2,1.2)(AA(JOIN)( AA(POLYLINE)(CAT(triangleSet)) )))
-    TV,FT = triangleIndices(triangleSet,V)
+    VIEW(EXPLODE(1.2,1.2,1.2)( AA(POLYLINE)(AA(lambda tri: tri+[tri[0]])(CAT(triangleSet))) ))
+    TV,FT = triangleIndices(triangleSet,V) 
     TE = crossRelation(V,TV,EV)
     ET,ET_angle = invertRelation(TE),[]
     #import pdb; pdb.set_trace()
-    print "\nET =",ET,"\n"
     for e,et in enumerate(ET):
         v1,v2 = EV[e]
         v1v2 = set([v1,v2])
@@ -453,11 +444,24 @@ def ET_to_EF_incidence(TW,FW,FT, ET_angle):
     return EF_angle
 
 """ Cells from $(d-1)$-dimensional LAR model """
-
 def facesFromComponents(model,FE,EF_angle):
+
+    accumulated = []
+    def viewStep (CF,CV,CE,COE,accumulated):
+        VV = AA(LIST)(range(len(V)))
+        edges = list(set(CE[-1]).difference(accumulated))
+        accumulated = CE[-1]
+        submodel = STRUCT(MKPOLS((V,[EV[k] for k in edges])))
+        VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,1))
+
     print "\nECCOMI\n"
     # initialization
     V,FV,EV = model
+    print "\nV =",V
+    print "\nFV =",FV
+    print "\nEV =",EV
+    print "\nFE =",FE
+    print "\nEF_angle =",EF_angle,"\n"
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
     boundaryLoop,_ = boundaryCycles(FE[face],EV)
@@ -472,11 +476,14 @@ def facesFromComponents(model,FE,EF_angle):
     cv = cv.union(CAT([FV[f] for f in cf]))
     ce = ce.union(CAT([FE[f] for f in cf]))
     CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
+    print "\n\nCF,CV,CE,COE =",CF,CV,CE,COE,"\n"
+    viewStep (CF,CV,CE,COE,accumulated)
     
     # main loop
     #import pdb; pdb.set_trace()
     while True:
         face, edge = startCell(visitedCell,FE,EV)
+        print "face, edge =",face, edge
         if face == -1: break
         boundaryLoop,_ = boundaryCycles(FE[face],EV)
         boundaryLoop = boundaryLoop[0]
@@ -494,6 +501,8 @@ def facesFromComponents(model,FE,EF_angle):
         ce = ce.union(CAT([FE[f] for f in cf]))
         CV += [list(cv)]
         CE += [list(ce)]
+        print "\n\nCF,CV,CE,COE =",CF,CV,CE,COE,"\n"
+        viewStep (CF,CV,CE,COE,accumulated)
     return V,CV,FV,EV,CF,CE,COE
 
 
@@ -569,8 +578,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
         boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
         cf += [nextFace] 
         face = nextFace
-    if DEBUG: pass
-        #VIEW(EXPLODE(1.2,1.2,1.2)( MKTRIANGLES((V,[FV[f] for f in cf])) )) #add EV!
+        VIEW(STRUCT( MKPOLS((V,[EV[h] for f in cf for h in FE[f]])) )) #add EV!
     return cf,coe
 
 """ Main procedure of arrangement partitioning """
@@ -597,7 +605,7 @@ def thePartition(W,FW,EW):
 
     ZZ = AA(LIST)(range(len(Z)))
     submodel = STRUCT(MKPOLS((Z,EZ)))
-    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.2)) 
+    VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
     EF_angle = faceSlopeOrdering(model,FE)
