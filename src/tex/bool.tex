@@ -548,6 +548,10 @@ def faceSlopeOrdering(model,FE):
     TV,FT = triangleIndices(triangleSet,V) 
     TE = crossRelation(V,TV,EV)
     ET,ET_angle = invertRelation(TE),[]
+    print "\nTV =",TV
+    print "\nFT =",FT
+    print "\nTE =",TE
+    print "\nET =",ET
     #import pdb; pdb.set_trace()
     for e,et in enumerate(ET):
         v1,v2 = EV[e]
@@ -579,6 +583,7 @@ def faceSlopeOrdering(model,FE):
         sortedTrias = [pair[1] for pair in pairs]
         triasVerts = [pair[2] for pair in pairs]
         ET_angle += [sortedTrias]
+    print "\nET_angle =",ET_angle
     EF_angle = ET_to_EF_incidence(TV,FV,FT, ET_angle)
     return EF_angle
 @}
