@@ -548,10 +548,6 @@ def faceSlopeOrdering(model,FE):
     TV,FT = triangleIndices(triangleSet,V) 
     TE = crossRelation(V,TV,EV)
     ET,ET_angle = invertRelation(TE),[]
-    print "\nTV =",TV
-    print "\nFT =",FT
-    print "\nTE =",TE
-    print "\nET =",ET
     #import pdb; pdb.set_trace()
     for e,et in enumerate(ET):
         v1,v2 = EV[e]
@@ -583,9 +579,8 @@ def faceSlopeOrdering(model,FE):
         sortedTrias = [pair[1] for pair in pairs]
         triasVerts = [pair[2] for pair in pairs]
         ET_angle += [sortedTrias]
-    print "\nET_angle =",ET_angle
     EF_angle = ET_to_EF_incidence(TV,FV,FT, ET_angle)
-    return EF_angle
+    return EF_angle, ET,TV,FT
 @}
 %-------------------------------------------------------------------------------
 
@@ -644,6 +639,14 @@ if __name__ == "__main__":
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{3-cell traversal}
+The following script contains a completely reviewed and rewritten version of the extraction of 3-cells from its 2-skeleton embedded in 3D. The number of boundary edges of general LAR 2-faces is given by \texttt{len(EF\_angle)} or by \texttt{len(ET)}. The array \texttt{len(EV)} has length \texttt{len(EF\_angle)} + the number of added edges due to the triangulation of original faces. The added edges are not returned inside \texttt{FE} and \texttt{EF\_angle}.
+%-------------------------------------------------------------------------------
+@D 3-cell traversal
+@{
+aaaa
+@}
+%-------------------------------------------------------------------------------
 
 
 \paragraph{The 3-cell traversal algorithm}
@@ -668,11 +671,6 @@ def facesFromComponents(model,FE,EF_angle):
     print "\nECCOMI\n"
     # initialization
     V,FV,EV = model
-    print "\nV =",V
-    print "\nFV =",FV
-    print "\nEV =",EV
-    print "\nFE =",FE
-    print "\nEF_angle =",EF_angle,"\n"
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
     boundaryLoop,_ = boundaryCycles(FE[face],EV)
@@ -687,7 +685,6 @@ def facesFromComponents(model,FE,EF_angle):
     cv = cv.union(CAT([FV[f] for f in cf]))
     ce = ce.union(CAT([FE[f] for f in cf]))
     CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
-    print "\n\nCF,CV,CE,COE =",CF,CV,CE,COE,"\n"
     viewStep (CF,CV,CE,COE,accumulated)
     
     # main loop
@@ -712,7 +709,6 @@ def facesFromComponents(model,FE,EF_angle):
         ce = ce.union(CAT([FE[f] for f in cf]))
         CV += [list(cv)]
         CE += [list(ce)]
-        print "\n\nCF,CV,CE,COE =",CF,CV,CE,COE,"\n"
         viewStep (CF,CV,CE,COE,accumulated)
     return V,CV,FV,EV,CF,CE,COE
 @}
@@ -838,8 +834,9 @@ def thePartition(W,FW,EW):
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
-    EF_angle = faceSlopeOrdering(model,FE)
+    EF_angle, ET,TV,FT = faceSlopeOrdering(model,FE)
     
+    V,CV,FV,EV,CF,CE,COE = cellsFromComponents((Z,FZ,EZ),FE,EF_angle, ET,TV,FT)
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE
 @}
@@ -879,6 +876,7 @@ DEBUG = False
 @< Slope of edges @>
 @< Oriented cycle of vertices from a 1-cycle of unoriented edges @>
 @< Edge-triangles to Edge-faces incidence @>
+@< 3-cell traversal @>
 @< Cells from $(d-1)$-dimensional LAR model @>
 @< Permutation of edges defined by edge cycles @>
 @< Cycles orientation @>
@@ -1203,7 +1201,7 @@ from test09 import *
 
 model = W,FW,EW
 FE = crossRelation(W,FW,EW)
-EF_angle = faceSlopeOrdering(model,FE)
+EF_angle, ET,TV = faceSlopeOrdering(model,FE)
 
 WW = AA(LIST)(range(len(W)))
 submodel = SKEL_1(STRUCT(MKPOLS((W,CAT(TW)))))

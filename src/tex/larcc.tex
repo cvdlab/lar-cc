@@ -1419,7 +1419,17 @@ Finally, the $\pm 1$ (signed) incidence coefficients are computed and stored in 
     missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
 
     # signed incidence coefficients
+    def checkPermutation(vertLists,missingVertIndices):
+        sameOrientation = []
+        for (face,coface),index in zip(vertLists,missingVertIndices):
+            cell = tuple([vert for k,vert in enumerate(coface) if k!=index])
+            if len(cell)==2 and cell==face: sameOrientation += [1]
+            else: sameOrientation += [-1]  # TODO: generalize for any "cell"
+        return sameOrientation
+
+    sameOrientation = checkPermutation(vertLists,missingVertIndices)
     faceSigns = AA(C(POWER)(-1))(missingVertIndices)
+    faceSigns = AA(PROD)(TRANS([faceSigns,sameOrientation]))
 
     # signed boundary matrix
     csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )

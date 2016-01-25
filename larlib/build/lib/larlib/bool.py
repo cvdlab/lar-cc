@@ -400,10 +400,6 @@ def faceSlopeOrdering(model,FE):
     TV,FT = triangleIndices(triangleSet,V) 
     TE = crossRelation(V,TV,EV)
     ET,ET_angle = invertRelation(TE),[]
-    print "\nTV =",TV
-    print "\nFT =",FT
-    print "\nTE =",TE
-    print "\nET =",ET
     #import pdb; pdb.set_trace()
     for e,et in enumerate(ET):
         v1,v2 = EV[e]
@@ -435,9 +431,8 @@ def faceSlopeOrdering(model,FE):
         sortedTrias = [pair[1] for pair in pairs]
         triasVerts = [pair[2] for pair in pairs]
         ET_angle += [sortedTrias]
-    print "\nET_angle =",ET_angle
     EF_angle = ET_to_EF_incidence(TV,FV,FT, ET_angle)
-    return EF_angle
+    return EF_angle, ET,TV,FT
 
 
 """ Edge-triangles to Edge-faces incidence """
@@ -447,6 +442,9 @@ def ET_to_EF_incidence(TW,FW,FT, ET_angle):
     EF_angle = [[tableTF[t][0] for t in triangles] for triangles in ET_angle]
     #assert( len(EF_angle) == 2*len(FW) )
     return EF_angle
+
+
+aaaa
 
 """ Cells from $(d-1)$-dimensional LAR model """
 def facesFromComponents(model,FE,EF_angle):
@@ -462,11 +460,6 @@ def facesFromComponents(model,FE,EF_angle):
     print "\nECCOMI\n"
     # initialization
     V,FV,EV = model
-    print "\nV =",V
-    print "\nFV =",FV
-    print "\nEV =",EV
-    print "\nFE =",FE
-    print "\nEF_angle =",EF_angle,"\n"
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
     boundaryLoop,_ = boundaryCycles(FE[face],EV)
@@ -481,7 +474,6 @@ def facesFromComponents(model,FE,EF_angle):
     cv = cv.union(CAT([FV[f] for f in cf]))
     ce = ce.union(CAT([FE[f] for f in cf]))
     CF,CV,CE,COE = [cf],[list(cv)],[list(ce)],[coe]
-    print "\n\nCF,CV,CE,COE =",CF,CV,CE,COE,"\n"
     viewStep (CF,CV,CE,COE,accumulated)
     
     # main loop
@@ -506,7 +498,6 @@ def facesFromComponents(model,FE,EF_angle):
         ce = ce.union(CAT([FE[f] for f in cf]))
         CV += [list(cv)]
         CE += [list(ce)]
-        print "\n\nCF,CV,CE,COE =",CF,CV,CE,COE,"\n"
         viewStep (CF,CV,CE,COE,accumulated)
     return V,CV,FV,EV,CF,CE,COE
 
@@ -613,8 +604,9 @@ def thePartition(W,FW,EW):
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
 
     FE = crossRelation(Z,FZ,EZ) ## to be double checked !!
-    EF_angle = faceSlopeOrdering(model,FE)
+    EF_angle, ET,TV,FT = faceSlopeOrdering(model,FE)
     
+    V,CV,FV,EV,CF,CE,COE = cellsFromComponents((Z,FZ,EZ),FE,EF_angle, ET,TV,FT)
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE
 
