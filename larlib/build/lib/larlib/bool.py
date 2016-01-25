@@ -168,7 +168,6 @@ def faceTransformations(facet):
     out = (transformMat * (mat(newFacet).T)).T.tolist()
     return transformMat
 
-
 """ Submanifold mapping computation """
 def submanifoldMapping(pivotFace):
     tx,ty,tz = pivotFace[0]
@@ -380,8 +379,6 @@ def edgesTriangles(EF, FW, TW, EW):
                     ET[e] += [t]
     return ET
 
-
-
 """ Circular ordering of faces around edges """
 
 def planeProjection(normals):
@@ -434,7 +431,6 @@ def faceSlopeOrdering(model,FE):
     EF_angle = ET_to_EF_incidence(TV,FV,FT, ET_angle)
     return EF_angle, ET,TV,FT
 
-
 """ Edge-triangles to Edge-faces incidence """
 def ET_to_EF_incidence(TW,FW,FT, ET_angle):
     tableFT = FT
@@ -444,7 +440,7 @@ def ET_to_EF_incidence(TW,FW,FT, ET_angle):
     return EF_angle
 
 
-aaaa
+
 
 """ Cells from $(d-1)$-dimensional LAR model """
 def facesFromComponents(model,FE,EF_angle):
@@ -501,7 +497,6 @@ def facesFromComponents(model,FE,EF_angle):
         viewStep (CF,CV,CE,COE,accumulated)
     return V,CV,FV,EV,CF,CE,COE
 
-
 """ Cycles orientation """
 def cyclesOrient(pcycles,fcycle,EV):
     if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
@@ -551,6 +546,42 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
     #if theEdge==0: theEdge = list(commonEdges)[1]
     return -theEdge,face
 
+""" Extend LAR edges with a given (2D) triangulation """
+from collections import OrderedDict
+
+def extendEV(EV,ET,TV):
+    EVdict = OrderedDict([(edge,k) for k,edge in enumerate(EV)])
+    n = len(EV)-1
+    for e,(u,w) in enumerate(EV):
+        for t in ET[e]:
+            v1,v2,v3 = TV[t]
+            v = list({v1,v2,v3}.difference([u,w]))[0]
+            if u<v: newEdge = (u,v)
+            
+            else: newEdge = (v,u)
+            if not newEdge in EVdict: 
+                n += 1
+                EVdict[newEdge]=n
+                
+            if w<v: newEdge = (w,v)
+            else: newEdge = (v,w)
+            if not newEdge in EVdict: 
+                n += 1
+                EVdict[newEdge]=n
+    return EVdict.keys()
+
+""" Signed boundary operator for a general LAR 2-complex """
+def larSignedBoundary(larModel,triaModel,FT):
+    input = signedSimplicialBoundary(*triaModel)
+    output = boundary(*larModel)
+    (n,m),(p,q) = input.shape, output.shape
+    
+    for h in range(p):
+        for k,triangles in enumerate(FT):
+            lo,hi = triangles[0], triangles[-1]
+            val = [input[h,t] for t in range(lo,hi+1)  if input[h,t]!=0]
+            if val!=[]: output[h,k] = val[0]
+    return output
 
 """ Get single solid cell """
 def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):

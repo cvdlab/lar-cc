@@ -1511,6 +1511,73 @@ def pointInPolygonClassification(pol):
 %-------------------------------------------------------------------------------
 
 
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test12.py @{
+""" Testing of point-in-polygon classification algorithm """
+from larlib import *
+
+filename = "test/svg/inters/tile.svg"
+lines = svg2lines(filename)
+V,EV = lines2lar(lines)
+
+@< Point in polygon testing @>
+
+result = []
+classify = pointInPolygonClassification((V,EV))
+for k in range(10000):
+    queryPoint = [random.random(),random.random()]
+    inOut = classify(queryPoint)
+    #print k,queryPoint,inOut
+    if inOut=="p_in": result += [MK(queryPoint)]
+    elif inOut=="p_out": result += [COLOR(RED)(MK(queryPoint))]
+
+VIEW(STRUCT(MKPOLS((V,EV))+result))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/pointInPolygon} 
+   \caption{Testing the point-in-polygon algorithm.}
+   \label{fig:pointInPolygon}
+\end{figure}
+
+
+\paragraph{Testing of point-in-polygon classification on a random polygon}
+
+%-------------------------------------------------------------------------------
+@O test/py/bool/test14.py @{
+""" Testing of point-in-polygon classification  on a random polygon """
+from larlib import *
+
+filename = "test/svg/inters/tile.svg"
+lines = svg2lines(filename)
+V,EV = lines2lar(lines)
+
+@< Point in polygon testing @>
+
+result = []
+classify = pointInPolygonClassification((V,EV))
+for k in range(10000):
+    queryPoint = [random.random(),random.random()]
+    inOut = classify(queryPoint)
+    #print k,queryPoint,inOut
+    if inOut=="p_in": result += [MK(queryPoint)]
+    elif inOut=="p_out": result += [COLOR(RED)(MK(queryPoint))]
+
+VIEW(STRUCT(MKPOLS((V,EV))+result))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/pointInPolygon} 
+   \caption{Testing the point-in-polygon algorithm.}
+   \label{fig:pointInPolygon}
+\end{figure}
+
+
 \section{Exporting the library}
 %===============================================================================
 

@@ -3,7 +3,7 @@
 \geometry{letterpaper}        %...ora4paperora5paperor...
 %\geometry{landscape}        %Activateforforrotatedpagegeometry
 %\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+\usepackage{graphicx}                %Usepdf,png,jpg,orepswithpdflatex;useepsinDVImode
                                 %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb}
 \usepackage[colorlinks]{hyperref}
@@ -163,14 +163,6 @@ def boxBuckets3d(boxes):
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{aaaaaa}
-%-------------------------------------------------------------------------------
-@D aaaaaa
-@{""" aaaaa """
-
-@}
-%-------------------------------------------------------------------------------
-
 
 \subsection{Merging the boundaries}
 %===============================================================================
@@ -230,13 +222,13 @@ def segmentIntersection(p1,p2):
 
 
 
-\paragraph{Computation of face transformations}
+\paragraph{Computation of affine face transformations}
 The faces in every $\texttt{parts}(i)$ must be affinely transformed into the subspace $x_d=0$, in order to compute the intersection of its elements with this subspace, that are submanifolds of dimension $d-2$. 
 
 A much better solution would be to compute a LU factorization of the the first columns of the U upper triangular or trapezoidal matrix ... see \href{http://stackoverflow.com/questions/15638650/is-there-a-standard-solution-for-gauss-elimination-in-python}{gauss-elimination-in-python}
 
 %-------------------------------------------------------------------------------
-@D Computation of face transformations
+@D Computation of affine face transformations
 @{""" Computation of affine face transformations """
 from numpy import array
 from scipy.linalg import lu
@@ -644,7 +636,7 @@ The following script contains a completely reviewed and rewritten version of the
 %-------------------------------------------------------------------------------
 @D 3-cell traversal
 @{
-aaaa
+
 @}
 %-------------------------------------------------------------------------------
 
@@ -845,6 +837,96 @@ def thePartition(W,FW,EW):
 
 
 
+\paragraph{Extend LAR edges with a given (2D) triangulation}
+%-------------------------------------------------------------------------------
+@D Extend LAR edges with a given (2D) triangulation
+@{""" Extend LAR edges with a given (2D) triangulation """
+from collections import OrderedDict
+
+def extendEV(EV,ET,TV):
+    EVdict = OrderedDict([(edge,k) for k,edge in enumerate(EV)])
+    n = len(EV)-1
+    for e,(u,w) in enumerate(EV):
+        for t in ET[e]:
+            v1,v2,v3 = TV[t]
+            v = list({v1,v2,v3}.difference([u,w]))[0]
+            if u<v: newEdge = (u,v)
+            
+            else: newEdge = (v,u)
+            if not newEdge in EVdict: 
+                n += 1
+                EVdict[newEdge]=n
+                
+            if w<v: newEdge = (w,v)
+            else: newEdge = (v,w)
+            if not newEdge in EVdict: 
+                n += 1
+                EVdict[newEdge]=n
+    return EVdict.keys()
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Signed boundary operator for a general LAR 2-complex}
+%-------------------------------------------------------------------------------
+@D Signed boundary operator for a general LAR 2-complex
+@{""" Signed boundary operator for a general LAR 2-complex """
+def larSignedBoundary(larModel,triaModel,FT):
+    input = signedSimplicialBoundary(*triaModel)
+    output = boundary(*larModel)
+    (n,m),(p,q) = input.shape, output.shape
+    
+    for h in range(p):
+        for k,triangles in enumerate(FT):
+            lo,hi = triangles[0], triangles[-1]
+            val = [input[h,t] for t in range(lo,hi+1)  if input[h,t]!=0]
+            if val!=[]: output[h,k] = val[0]
+    return output
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Generation of signed boundary operator of a general LAR complex}
+%-------------------------------------------------------------------------------
+@O test/py/bool/test16.py
+@{""" Generation of signed boundary operator of a general LAR complex """
+from larlib import *
+
+V = [[0.25,0.25,-5e-05],[0.25,0.75,-5e-05],[0.75,0.75,-5e-05],[0.75,0.25,-5e-05],[1.0,0.0,0.0
+],[0.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0],[0.25,0.25,1.0000499999999999],[0.25,0.25,2.0
+],[0.25,0.75,2.0],[0.25,0.75,1.0000499999999999],[0.25,0.75,-1.0],[0.25,0.25,-1.0],[0.75,
+0.75,-1.0],[0.75,0.25,-1.0],[0.75,0.25,1.0000499999999999],[0.75,0.75,1.0000499999999999]
+,[1.0,0.0,1.0],[0.0,0.0,1.0],[1.0,1.0,1.0],[0.0,1.0,1.0],[0.75,0.75,2.0],[0.75,0.25,2.0]]
+
+FV = [(2,3,16,17),(6,7,20,21),(12,13,14,15),(0,1,8,11),(1,2,11,17),(0,1,12,13),(4,6,18,20),(5,
+7,19,21),(0,3,13,15),(0,3,8,16),(0,1,2,3),(10,11,17,22),(2,3,14,15),(8,9,16,23),(8,11,16,
+17),(1,2,12,14),(16,17,22,23),(4,5,18,19),(8,9,10,11),(9,10,22,23),(0,1,2,3,4,5,6,7),(8,
+11,16,17,18,19,20,21)]
+
+EV = [(3,15),(7,21),(10,11),(4,18),(12,13),(5,19),(8,9),(18,19),(22,23),(0,3),(1,11),(16,17),(
+0,8),(6,7),(20,21),(3,16),(10,22),(18,20),(19,21),(1,2),(12,14),(4,5),(8,11),(13,15),(16,
+23),(14,15),(11,17),(17,22),(2,14),(2,17),(0,1),(9,10),(8,16),(4,6),(1,12),(5,7),(0,13),(
+9,23),(6,20),(2,3)]
+
+VV = AA(LIST)(range(len(V)))
+submodel = SKEL_1(STRUCT(MKPOLS((V,EV))))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.6))
+
+FE = crossRelation(V,FV,EV)
+EF_angle, ET,TV,FT = faceSlopeOrdering((V,FV,EV),FE)
+EW = extendEV(EV,ET,TV)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,TV))))
+            
+submodel = SKEL_1(STRUCT(MKPOLS((V,EW))))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EW,TV],submodel,0.6))
+
+triaModel, larModel = (TV,EW), (FV,EV)
+op = larSignedBoundary(larModel,triaModel,FT)
+print op.todense()
+@}
+%-------------------------------------------------------------------------------
+
+
 \subsection{Boolean chains}
 %===============================================================================
 
@@ -862,7 +944,6 @@ DEBUG = False
 @< Coding utilities @>
 @< Remove subsets from bucket list @>
 @< Iterate the splitting until splittingStack is empty @>
-@< Computation of face transformations @>
 @< Computation of affine face transformations @>
 @< Submanifold mapping computation @>
 @< Helper functions for spacePartition @>
@@ -871,18 +952,15 @@ DEBUG = False
 @< Space partitioning via submanifold mapping @>
 @< 3D boundary triangulation of the space partition @>
 @< Computation of incidence between edges and 3D triangles @>
-@< Directional and orthogonal projection operators @>
-@< Check edge-face ordering @>
 @< Slope of edges @>
-@< Oriented cycle of vertices from a 1-cycle of unoriented edges @>
 @< Edge-triangles to Edge-faces incidence @>
 @< 3-cell traversal @>
 @< Cells from $(d-1)$-dimensional LAR model @>
-@< Permutation of edges defined by edge cycles @>
 @< Cycles orientation @>
 @< Start a new 3-cell @>
 @< Face orientations storage @>
-@< Check and store the orientation of faces @>
+@< Extend LAR edges with a given (2D) triangulation @>
+@< Signed boundary operator for a general LAR 2-complex @>
 @< Get single solid cell @>
 @< Main procedure of arrangement partitioning @>
 @}
@@ -1294,17 +1372,6 @@ VIEW(EXPLODE(1.2,1.2,1.2)([STRUCT(MKPOLS((V,[EV[e] for e in cell]))) for cell in
 %-------------------------------------------------------------------------------
 
 
-%-------------------------------------------------------------------------------
-@D testing the intersection of B-reps 
-@{""" testing the intersection of B-reps """
-
-BF = [FV[f] for f in boundaryCells(CV,FV)]
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,BF))))
-_,BE = larFacets((V,BF),dim=2)
-cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
-@}
-%-------------------------------------------------------------------------------
-
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \centering
@@ -1323,71 +1390,6 @@ cubeGrid = Struct([(V,BF,BE)],"cubeGrid")
    \label{fig:example}
 \end{figure}
 
-
-%-------------------------------------------------------------------------------
-@O test/py/bool/test12.py @{
-""" Testing of point-in-polygon classification algorithm """
-from larlib import *
-
-filename = "test/svg/inters/tile.svg"
-lines = svg2lines(filename)
-V,EV = lines2lar(lines)
-
-@< Point in polygon testing @>
-
-result = []
-classify = pointInPolygonClassification((V,EV))
-for k in range(10000):
-    queryPoint = [random.random(),random.random()]
-    inOut = classify(queryPoint)
-    #print k,queryPoint,inOut
-    if inOut=="p_in": result += [MK(queryPoint)]
-    elif inOut=="p_out": result += [COLOR(RED)(MK(queryPoint))]
-
-VIEW(STRUCT(MKPOLS((V,EV))+result))
-@}
-%-------------------------------------------------------------------------------
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.5\linewidth]{images/pointInPolygon} 
-   \caption{Testing the point-in-polygon algorithm.}
-   \label{fig:pointInPolygon}
-\end{figure}
-
-
-\paragraph{Testing of point-in-polygon classification on a random polygon}
-
-%-------------------------------------------------------------------------------
-@O test/py/bool/test14.py @{
-""" Testing of point-in-polygon classification  on a random polygon """
-from larlib import *
-
-filename = "test/svg/inters/tile.svg"
-lines = svg2lines(filename)
-V,EV = lines2lar(lines)
-
-@< Point in polygon testing @>
-
-result = []
-classify = pointInPolygonClassification((V,EV))
-for k in range(10000):
-    queryPoint = [random.random(),random.random()]
-    inOut = classify(queryPoint)
-    #print k,queryPoint,inOut
-    if inOut=="p_in": result += [MK(queryPoint)]
-    elif inOut=="p_out": result += [COLOR(RED)(MK(queryPoint))]
-
-VIEW(STRUCT(MKPOLS((V,EV))+result))
-@}
-%-------------------------------------------------------------------------------
-
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.5\linewidth]{images/pointInPolygon} 
-   \caption{Testing the point-in-polygon algorithm.}
-   \label{fig:pointInPolygon}
-\end{figure}
 
 \subsection{Polygon triangulation}
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1504,9 +1506,10 @@ V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cube1 = Struct([(V,FV,EV)],"cube1")
 cube2 = Struct([t(.25,.25,-1),s(.5,.5,3),(V,FV,EV)],"cube2")
 V,FV,EV = struct2lar(Struct([cube1,cube2]))
-
 VIEW(STRUCT(MKPOLS((V,FV,EV))))
+"""
 V,CV,FV,EV,CF,CE,COE,FE = thePartition(V,FV,EV)
+"""
 @}
 %-------------------------------------------------------------------------------
 
