@@ -6,7 +6,7 @@ sys.path.insert(0, 'test/py/bool/')
 from test09 import *
 
 model = W,FW,EW
-FE = crossRelation(W,FW,EW)
+FE = crossRelation(len(W),FW,EW)
 EF_angle, ET,TV = faceSlopeOrdering(model,FE)
 
 WW = AA(LIST)(range(len(W)))

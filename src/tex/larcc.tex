@@ -1272,19 +1272,7 @@ The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sp
 %-------------------------------------------------------------------------------
 @D Computation of topological relation
 @{""" Computation of topological relation """
-def crossRelation(V,XV,YV):
-    csrXV = csrCreate(XV,lenV=len(V))
-    csrYV = csrCreate(YV,lenV=len(V))
-    csrXY = matrixProduct(csrXV, csrYV.T)
-    XY = [None for k in range(len(XV))]
-    for k,face in enumerate(XV):
-        data = csrXY[k].data
-        col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
-        # NOTE: val depends on the relation under consideration ...
-    return XY
-
-def crossRelation1(lenV,ZV,XV,YV,terminal=False):
+def crossRelation(lenV,XV,YV,terminal=False):
     if terminal:  
         print "\n****\nXV =",XV
         return XV
@@ -1296,7 +1284,7 @@ def crossRelation1(lenV,ZV,XV,YV,terminal=False):
         for k,face in enumerate(XV):
             data = csrXY[k].data
             col = csrXY[k].indices
-            XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+            XY[k] = [col[h] for h,val in enumerate(data) if val==min(len(XV[k]),len(YV[h]))]
             # NOTE: val depends on the relation under consideration ...
         return XY
 @}
@@ -1344,7 +1332,7 @@ def boundary1(CV,FV,EV):
     facetLengths = [csrCell.getnnz() for csrCell in csrCV]
     VV = AA(LIST)(range(lenV))
     csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
-    FE = crossRelation1(lenV,CV,FV,EV,True)
+    FE = crossRelation(lenV,CV,FV,EV,True)
     return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
 
 def coboundary(cells,facets):

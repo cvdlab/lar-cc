@@ -21,7 +21,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = SKEL_1(STRUCT(MKPOLS((V,EV))))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.6))
 
-FE = crossRelation(V,FV,EV)
+FE = crossRelation(len(V),FV,EV)
 EF_angle, ET,TV,FT = faceSlopeOrdering((V,FV,EV),FE)
 EW = extendEV(EV,ET,TV)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,TV))))
