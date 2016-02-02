@@ -1440,7 +1440,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 @{def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def boundaryCellsCocells(cells,facets):
-    csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
+    csrSignedBoundaryMat = signedSimplicialBoundary(V,cells,facets)
     csrTotalChain = totalChain(cells)
     csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
     cooCells = csrBoundaryChain.tocoo()    
@@ -2568,7 +2568,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,FV))))
 
 %-------------------------------------------------------------------------------
 @D Computing and viewing the oriented boundary of simplicial grid
-@{csrSignedBoundaryMat = signedSimplicialBoundary (CV,FV)
+@{csrSignedBoundaryMat = signedSimplicialBoundary (V,CV,FV)
 boundaryCells_2 = signedBoundaryCells(V,CV,FV)
 boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]
 boundary = (V,boundaryFV)
@@ -2608,7 +2608,7 @@ VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,VV))))
 @D Oriented boundary matrix visualization
 @{""" Oriented boundary matrix visualization """
 np.set_printoptions(threshold='nan')
-csrSignedBoundaryMat = signedSimplicialBoundary (FV,EV)
+csrSignedBoundaryMat = signedSimplicialBoundary (V,FV,EV)
 Z = csr2DenseMatrix(csrSignedBoundaryMat)
 print "\ncsrSignedBoundaryMat =\n", Z
 import matplotlib.pyplot

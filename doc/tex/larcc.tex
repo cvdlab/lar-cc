@@ -1958,7 +1958,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def boundaryCellsCocells(cells,facets):@\\
-\mbox{}\verb@    csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)@\\
+\mbox{}\verb@    csrSignedBoundaryMat = signedSimplicialBoundary(V,cells,facets)@\\
 \mbox{}\verb@    csrTotalChain = totalChain(cells)@\\
 \mbox{}\verb@    csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)@\\
 \mbox{}\verb@    cooCells = csrBoundaryChain.tocoo()    @\\
@@ -3582,7 +3582,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \protect\makebox[0ex][r]{\NWtarget{nuweb58a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize 58a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@csrSignedBoundaryMat = signedSimplicialBoundary (CV,FV)@\\
+\mbox{}\verb@csrSignedBoundaryMat = signedSimplicialBoundary (V,CV,FV)@\\
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
 \mbox{}\verb@boundaryFV = [FV[-k] if k<0 else swap(FV[k]) for k in boundaryCells_2]@\\
 \mbox{}\verb@boundary = (V,boundaryFV)@\\
@@ -3650,7 +3650,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented boundary matrix visualization """@\\
 \mbox{}\verb@np.set_printoptions(threshold='nan')@\\
-\mbox{}\verb@csrSignedBoundaryMat = signedSimplicialBoundary (FV,EV)@\\
+\mbox{}\verb@csrSignedBoundaryMat = signedSimplicialBoundary (V,FV,EV)@\\
 \mbox{}\verb@Z = csr2DenseMatrix(csrSignedBoundaryMat)@\\
 \mbox{}\verb@print "\ncsrSignedBoundaryMat =\n", Z@\\
 \mbox{}\verb@import matplotlib.pyplot@\\

@@ -244,7 +244,7 @@ def signedSimplicialBoundary (CV,FV):
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def boundaryCellsCocells(cells,facets):
-    csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
+    csrSignedBoundaryMat = signedSimplicialBoundary(V,cells,facets)
     csrTotalChain = totalChain(cells)
     csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
     cooCells = csrBoundaryChain.tocoo()    

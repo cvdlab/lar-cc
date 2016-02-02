@@ -572,16 +572,17 @@ def extendEV(EV,ET,TV):
 
 """ Signed boundary operator for a general LAR 2-complex """
 def larSignedBoundary(larModel,triaModel,FT):
-    input = signedSimplicialBoundary(*triaModel)
-    output = boundary(*larModel)
-    (n,m),(p,q) = input.shape, output.shape
+    inputOp = signedSimplicialBoundary(*triaModel)
+    outputOp = boundary(*larModel)
+    (n,m),(p,q) = inputOp.shape, outputOp.shape
     
-    for h in range(p):
+    for h in range(p):   # for each LAR face
         for k,triangles in enumerate(FT):
+            triangles = sorted(triangles)
             lo,hi = triangles[0], triangles[-1]
-            val = [input[h,t] for t in range(lo,hi+1)  if input[h,t]!=0]
-            if val!=[]: output[h,k] = val[0]
-    return output
+            val = [inputOp[h,t] for t in triangles  if inputOp[h,t]!=0.0]
+            if val!=[]: outputOp[h,k] = val[0]
+    return outputOp
 
 """ Get single solid cell """
 def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
