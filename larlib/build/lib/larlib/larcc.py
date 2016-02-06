@@ -172,7 +172,7 @@ def boundary1(CV,FV,EV):
     facetLengths = [csrCell.getnnz() for csrCell in csrCV]
     VV = AA(LIST)(range(lenV))
     csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
-    FE = crossRelation(lenV,CV,FV,EV,True)
+    FE = crossRelation(lenV,FV,EV,True)
     return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
 
 def coboundary(cells,facets):

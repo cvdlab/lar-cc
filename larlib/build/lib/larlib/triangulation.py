@@ -710,6 +710,7 @@ def viewLarComplexChain(model):
 
 """ Solid PyPLaSM visualization of a 2-complex with non-contractible 
       and non-manifold cells"""
+import bool
 def MKFACES(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
@@ -722,7 +723,22 @@ def MKFACES(model):
         unitChain[k] = 1
         boundingEdges += [boundaryOperator(unitChain)]
     print "boundingEdges =",boundingEdges
-    faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
-        for edges in boundingEdges]
+    if len(V[0])==3:
+        faces = []
+        for faceEdges in boundingEdges:
+            facet = [V[v] for e in faceEdges for v in EV[e]]
+            transformMat = bool.faceTransformations(array(facet))
+            verts = (transformMat*mat(facet).T).T.tolist()
+            z = verts[0][-1]
+            verts2D = [vert[:-1] for vert in verts]
+            polylines = [POLYLINE([verts2D[k],verts2D[k+1]]) for k in range(0,len(verts2D),2)]
+            hpc = SOLIDIFY(STRUCT(polylines))
+            verts2D,cells,pols = UKPOL(hpc)
+            verts3D = mat([v+[z] for v in verts2D]).T
+            verts3D = (transformMat.I*verts3D).T         
+            faces += [MKPOL([verts3D.tolist(),cells,pols])]
+    elif len(V[0])==2:
+        faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
+            for edges in boundingEdges]
     return faces
 

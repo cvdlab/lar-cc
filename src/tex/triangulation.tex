@@ -241,10 +241,13 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.2))
 
 A PyPLaSM visualization of a 2-complex of very general kind may be obtained with the \texttt{MKFACES} function, implemented by the \texttt{SOLIDIFY} of geometric values of \emph{HPC} type, starting from the LAR model of the 2-complex to be displayed. Of course, a \texttt{boundaryOperator} is built using the LAR representation of 2-cells and 1-cells, i.e.~\texttt{FV} and \texttt{EV}, respectively.
 
+In order to make the function applicable also to embedded 2-complexes (notice that for our purposes it mekes sense to embed only in 3D), an affine transformation and its inverse must be applied to each face in order to \texttt{SOLIDIFY} it.
+
 %-------------------------------------------------------------------------------
 @D Solid PyPLaSM visualization of a 2-complex
 @{""" Solid PyPLaSM visualization of a 2-complex with non-contractible 
       and non-manifold cells"""
+import bool
 def MKFACES(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
@@ -257,8 +260,23 @@ def MKFACES(model):
         unitChain[k] = 1
         boundingEdges += [boundaryOperator(unitChain)]
     print "boundingEdges =",boundingEdges
-    faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
-        for edges in boundingEdges]
+    if len(V[0])==3:
+        faces = []
+        for faceEdges in boundingEdges:
+            facet = [V[v] for e in faceEdges for v in EV[e]]
+            transformMat = bool.faceTransformations(array(facet))
+            verts = (transformMat*mat(facet).T).T.tolist()
+            z = verts[0][-1]
+            verts2D = [vert[:-1] for vert in verts]
+            polylines = [POLYLINE([verts2D[k],verts2D[k+1]]) for k in range(0,len(verts2D),2)]
+            hpc = SOLIDIFY(STRUCT(polylines))
+            verts2D,cells,pols = UKPOL(hpc)
+            verts3D = mat([v+[z] for v in verts2D]).T
+            verts3D = (transformMat.I*verts3D).T         
+            faces += [MKPOL([verts3D.tolist(),cells,pols])]
+    elif len(V[0])==2:
+        faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
+            for edges in boundingEdges]
     return faces
 @}
 %-------------------------------------------------------------------------------

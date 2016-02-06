@@ -1810,7 +1810,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \mbox{}\verb@    facetLengths = [csrCell.getnnz() for csrCell in csrCV]@\\
 \mbox{}\verb@    VV = AA(LIST)(range(lenV))@\\
 \mbox{}\verb@    csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)@\\
-\mbox{}\verb@    FE = crossRelation(lenV,CV,FV,EV,True)@\\
+\mbox{}\verb@    FE = crossRelation(lenV,FV,EV,True)@\\
 \mbox{}\verb@    return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def coboundary(cells,facets):@\\
