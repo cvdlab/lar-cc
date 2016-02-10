@@ -135,29 +135,29 @@ def boxTest(boxes,h,k):
         B1,B2,B3,B4,B5,B6,_ = boxes[k]
         b1,b2,b3,b4,b5,b6,_ = boxes[h]
         return not (b4<B1 or B4<b1 or b5<B2 or B5<b2 or b6<B3 or B6<b3)
-
+        
 def boxBuckets3d(boxes):
     bucket = range(len(boxes))
     splittingStack = [bucket]
     finalBuckets = []
     while splittingStack != []:
         bucket = splittingStack.pop()
-        below,above = splitOnThreshold(boxes,bucket,1)
-        below1,above1 = splitOnThreshold(boxes,above,2)
-        below2,above2 = splitOnThreshold(boxes,below,2) 
+        below,above = inters.splitOnThreshold(boxes,bucket,1)
+        below1,above1 = inters.splitOnThreshold(boxes,above,2)
+        below2,above2 = inters.splitOnThreshold(boxes,below,2) 
                
-        below11,above11 = splitOnThreshold(boxes,above1,3)
-        below21,above21 = splitOnThreshold(boxes,below1,3)        
-        below12,above12 = splitOnThreshold(boxes,above2,3)
-        below22,above22 = splitOnThreshold(boxes,below2,3)  
+        below11,above11 = inters.splitOnThreshold(boxes,above1,3)
+        below21,above21 = inters.splitOnThreshold(boxes,below1,3)        
+        below12,above12 = inters.splitOnThreshold(boxes,above2,3)
+        below22,above22 = inters.splitOnThreshold(boxes,below2,3)  
               
-        splitting(above1,below11,above11, finalBuckets,splittingStack)
-        splitting(below1,below21,above21, finalBuckets,splittingStack)
-        splitting(above2,below12,above12, finalBuckets,splittingStack)
-        splitting(below2,below22,above22, finalBuckets,splittingStack)
+        inters.splitting(above1,below11,above11, finalBuckets,splittingStack)
+        inters.splitting(below1,below21,above21, finalBuckets,splittingStack)
+        inters.splitting(above2,below12,above12, finalBuckets,splittingStack)
+        inters.splitting(below2,below22,above22, finalBuckets,splittingStack)
         
         finalBuckets = list(set(AA(tuple)(finalBuckets)))
-    parts = geomPartitionate(boxes,finalBuckets)
+    parts = inters.geomPartitionate(boxes,finalBuckets)
     parts = [[h for h in part if boxTest(boxes,h,k)] for k,part in enumerate(parts)]
     return AA(sorted)(parts)
 @}
@@ -298,7 +298,7 @@ def removeExternals(M,V,EV,fe, z,fz,ez):
     verts,ev = larApply(M)(struct2lar(inputFace))
     pol = [eval(vcode(vert[:-1])) for vert in verts],ev
     out = []
-    classify = pointInPolygonClassification(pol)
+    classify = triangulation.pointInPolygonClassification(pol)
     for k,point in enumerate(Z):
         if classify(point)=="p_out":  out += [k]
 
@@ -375,7 +375,7 @@ def spacePartition(V,FV,EV, parts):
         #VIEW(STRUCT(AA(POLYLINE)(lines) + [red]))
                 
         """ Construction of the planar set FX,EX of faces and lines """
-        u,fu,eu,polygons = larFromLines(lines)
+        u,fu,eu,polygons = inters.larFromLines(lines)
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((u,fu+eu))))
         
         """ Remove external vertices """
@@ -435,9 +435,9 @@ def boundaryTriangulation(V,FV,EV,FE):
         # Construction of CDT (Constrained Delaunay Triangulation) for LAR face
         model = (verts2D,[range(len(verts2D))],EW)
         struct = Struct([model])
-        U,EU = structBoundaryModel(struct)
-        W,FW,EW,polygons = larFromLines([[U[u],U[v]] for u,v in EU])
-        setsOfTriangles = polygons2TriangleSet(W,polygons)
+        U,EU = triangulation.structBoundaryModel(struct)
+        W,FW,EW,polygons = inters.larFromLines([[U[u],U[v]] for u,v in EU])
+        setsOfTriangles = triangulation.polygons2TriangleSet(W,polygons)
         trias = [[p+[1],q+[1],r+[1]] for p,q,r in setsOfTriangles[0]]
         
         inverseMap = transform.I
@@ -1008,6 +1008,7 @@ The output matrix of the signed boundary operator follows.
 @O larlib/larlib/bool.py
 @{""" Module for Boolean computations between geometric objects """
 from larlib import *
+import inters,triangulation
 from copy import copy
 DEBUG = False
 

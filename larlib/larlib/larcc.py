@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Basic LARCC library """
+from larlib import *
+
 
 """
 The MIT License
@@ -156,24 +158,8 @@ def invertRelation(CV):
         for v in cell: VC[v] += [k]
     return VC
 
-def boundary(cells,facets):
-    lenV = max(max(CAT(AA(list)(cells))),max(CAT(AA(list)(facets))))
-    csrCV = csrCreate(cells,lenV)
-    csrFV = csrCreate(facets,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-    return csrBoundaryFilter(csrFC,facetLengths)
-
-def boundary1(CV,FV,EV):
-    lenV = max(list(CAT(CV))+CAT(AA(list)(FV)))+1
-    csrCV = csrCreate(CV,lenV)
-    csrFV = csrCreate(FV,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-    VV = AA(LIST)(range(lenV))
-    csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
-    FE = crossRelation(lenV,FV,EV,True)
-    return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
+from boundary import boundary
+from boundary import boundary1
 
 def coboundary(cells,facets):
     Boundary = boundary(cells,facets)
@@ -187,7 +173,7 @@ def totalChain(cells):
     return csrCreate([[0] for cell in cells])  # ????  zero ??
 
 def boundaryCells(cells,facets):
-    csrBoundaryMat = boundary(cells,facets)
+    csrBoundaryMat = boundary.boundary(cells,facets)
     csrChain = totalChain(cells)
     csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
     for k,value in enumerate(csrBoundaryChain.data):

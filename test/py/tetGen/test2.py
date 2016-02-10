@@ -31,15 +31,80 @@ VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
+BF = boundaryCells(CV,FV)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 
-#VIEW(STRUCT(MKFACES((V,FV,EV))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV+EV+VV))))
 VIEW(EXPLODE(1.2,1.2,1.2)(AA(SKEL_1)(MKPOLS((V,CV)))))
 
-FE = crossRelation(V,FV,EV)
+
+# Correction of non-signed boundary op for general (non contractible) LAR cells 
+# ------------------------------------------------------------------------------
+
+def boundary3(CV,FV):
+    lenV = max(CAT(CV))+1
+    FC = invertRelation(crossRelation(lenV,CV,FV))
+    oddAdjacencies = [f for f,cells in enumerate(FC) if len(cells)>2]
+    if oddAdjacencies == []: 
+        return boundary(CV,FV)
+    else:
+        FF = crossRelation(lenV,FV,FV)
+        for f in oddAdjacencies:
+            anomalies = list(set(FF[f]).difference([f]))
+            for g in anomalies:
+                if {f}.issubset(FF[g]): 
+                    FC[g]= list(set(FC[f]).difference(FC[g]))
+                    FC[f]= list(set(FC[f]).difference(FC[g]))
+        out = csr_matrix((len(FV),len(CV)),dtype='b')
+        for h in range(len(FV)):
+            for k in FC[h]:
+                out[h,k] = 1
+        return out
+
+V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
+mod1 = Struct([(V,FV,EV),t(.25,.25,0),s(.25,.5,2),(V,FV,EV)])
+V,FV,EV = struct2lar(mod1)
+
+W,FW,EW = V,FV,EV
+quadArray = [[W[v] for v in face] for face in FW]
+parts = boxBuckets3d(containmentBoxes(quadArray))
+Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.0001)
+V,FV,EV = Z,FZ,EZ
+
+CF = AA(sorted)([[20,12,21,5,19,6],
+[27,1,5,28,13,23],
+[12,14,25,17,10,4],
+[1,7,17,24,11,18],
+[30,29,26,16,8,22,10,11,4,18,24,25],
+[2,3,8,9,0,15]])
+
+CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
+
+CV = [[10, 11, 12, 13, 18, 19, 20, 21],
+ [18, 19, 20, 21, 22, 23, 25, 26],
+ [0, 1, 4, 5, 10, 13, 18, 21],
+ [2, 3, 4, 5, 18, 21, 25, 26],
+ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 17, 18, 21, 24, 25, 26, 27],
+ [6, 8, 14, 15, 16, 24, 28, 29]]
+
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
+
+BF = boundaryCells(CV,FV)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
+
+
+# Tetrahedralization 
+# ------------------------------------------------------------------------------
+
+CF = crossRelation(len(V),CV,FV)
+
+FE = crossRelation(len(V),FV,EV)  # correct (for general LAR cells)
 cycles = []
-for k,face in enumerate(FV):
-    vcycles,_ = makeCycles((V,[EV[e] for e in FE[k]]))
+for faceEdges in FE:
+    vcycles,_ = makeCycles((V,[EV[e] for e in faceEdges]))
     cycles += [[vcycle for k,vcycle in enumerate(vcycles) if k%2==0]]
     
 cycles = [[[16, 17, 2, 3]],   # removed dups ...
@@ -65,7 +130,7 @@ cycles = [[[16, 17, 2, 3]],   # removed dups ...
 
 
 
-CF = [[1, 7, 17, 6, 0, 4, 9, 3, 20,21], # piu 20, 21
+CF = [[1, 7, 17, 6, 0, 4, 9, 3, 20,21], # plus 20,21
  [14, 0, 4, 10, 9, 3],  # no 20,21
  [2, 12, 15, 10, 8, 5],        # no 20
  [16, 11, 19, 18, 14, 13]]   # no 21
@@ -115,6 +180,11 @@ BF = signedSimplicialBoundary(CW,FW)
 bf = (BF * mat(len(CW)*[1]).T).tolist()
 bfs = [k for k,face in enumerate(CAT(bf)) if ABS(face)==1]
 VIEW(EXPLODE(2,2,2)(MKPOLS((W,[FW[f] for f in bfs]))))
+
+
+
+# Tetrahedralization 
+# ------------------------------------------------------------------------------
 
 
 frame = boundary(CV,FV)

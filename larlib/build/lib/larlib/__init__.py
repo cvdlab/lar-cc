@@ -14,6 +14,7 @@ from lar2psm import *
 from simplexn import *
 from largrid import *
 from larcc import *
+from boundary import *
 from integr import *
 from inters import *
 from triangulation import *
