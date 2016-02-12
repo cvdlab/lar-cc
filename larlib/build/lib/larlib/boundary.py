@@ -6,7 +6,7 @@ def boundary(cells,facets):
     lenV = max(CAT(cells))+1
     csrCV = csrCreate(cells,lenV)
     csrFV = csrCreate(facets,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+    csrFC = csrFV * csrCV.T
     facetLengths = [csrCell.getnnz() for csrCell in csrCV]
     return csrBoundaryFilter(csrFC,facetLengths)
 
@@ -17,7 +17,7 @@ def boundary1(CV,FV,EV):
     lenV = max(CAT(CV))+1
     csrCV = csrCreate(CV,lenV)
     csrFV = csrCreate(FV,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+    csrFC = csrFV * csrCV.T
     facetLengths = [csrCell.getnnz() for csrCell in csrCV]
     VV = AA(LIST)(range(lenV))
     csrBBMat = boundary(FV,EV)*boundary(CV,FV)

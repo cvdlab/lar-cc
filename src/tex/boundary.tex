@@ -56,33 +56,55 @@ The various versions of boundary operators on Linear Algebraic Representation of
 \section{Introduction}
 
 In the current \texttt{LarLib} implementation, we have to distinguish between between dimension-independent, dimension-dependent, signed and non-signed operators.
-Therefore a refactoring of the \texttt{LarLib} code related to boundary/coboundary operators started here, with the aim to provide a precise mathematical definition witin the LAR framework, and to simplify and generalise the related algorithms.
+Therefore a code refactoring of \texttt{LarLib}---related to boundary/coboundary operators---started here, with the aim of both providing a precise mathematical definition within the LAR framework, and to simplify and generalise the implemented algorithms.
 
 
 \section{Implementation}
 
-We start this section by making a distinction between 
+We start this section by making a distinction between the (matrices of) boundary operators for the linear spaces $C_k$ of chains over the field $\Z_2 = \{0,1\}$ and over the field $\Z$ of integer numbers.
+We call either \emph{non-signed} or \emph{signed} the corresponding boundary operators, respectively, since the matrix elements take values within the sets $\{-1,0,+1\}$ or $\{0,1\}$, correspondingly.
+Of course, the associated matrices of \emph{coboundary} operators are their transpose matrices.
 
 
 \subsection{Non-signed operators}
 
+For several computations, the knowledge of the matrices of non-signed boundary operators is sufficient. 
+Therefore we will use such tool wherever possible, since its computation is much faster in term of computing time.
 
-\subsubsection{Dimension-independent}
+\subsubsection{Dimension-independence}
 
+As we show in the following, in order to compute the non-signed boundary operator $\partial_d$, it it sufficient to have knowledge of the $M_d$ and $M_{d-1}$ characteristic matrices of $d$-cells and their $(d-1)$-facets, at least in the case of cellular complexes with convex cells. Conversely, for more general non-convex but simply-connected cells, also the $M_{d-2}$ matrix is needed.
 
 \paragraph{Convex-cells}
 
+The algorithm used is pretty easy to present. The compressed characteristic matrices of $d$-cells and $(d-1)$-cells, denoted as \texttt{cells} and \texttt{facets}, respectively, are first put in \texttt{csr} format as \texttt{csrCV} and \texttt{csrFV}. Then the incidence matrix \texttt{csrFC} in compressed sparse row format is computed by matrix product of the compressed characteristic matrices. 
+
+The element $(i,j)$ of this matrix provides the number of vertices in the intersection of \emph{facet} $i$ and \emph{cell} $j$, whereas the number of non-zero elements in each \texttt{csrFV} \emph{row} gives the number of vertices of the facet represented by the row, and is stored in \texttt{facetLengths}. 
+
+The \texttt{boundary} function---to be used only with dimension-independent LAR convex cells---is written efficiently in the following script, by using only the standard functions and attributes of the \texttt{scipy.sparse} module.
+
+The variable \texttt{facetCoboundary} stores in a list, for every facet (\texttt{for h in range(m)})
+the list of cells in its \emph{coboundary}, to be stored in the output \texttt{csr\_matrix} boundary matrix as column indices of elements with non-zero (i.e.~$1$) value.
+
+Notice that both the computation of \texttt{facetCoboundary} contents, and the output of the compressed boundary matrix, are performed in the most efficient way---according to the internal design of the scipy's \texttt{csr} sparse data structure.
+
 %-------------------------------------------------------------------------------
 @D convex-cells boundary operator
-@{""" convex-cells boundary operator """
-from larcc import *
+@{""" convex-cells boundary operator --- best implementation """
 def boundary(cells,facets):
     lenV = max(CAT(cells))+1
     csrCV = csrCreate(cells,lenV)
     csrFV = csrCreate(facets,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-    return csrBoundaryFilter(csrFC,facetLengths)
+    csrFC = csrFV * csrCV.T
+    facetLengths = [csrFacet.getnnz() for csrFacet in csrFV]
+    m,n = csrFC.shape
+    facetCoboundary = [[csrFC.indices[csrFC.indptr[h]+k] 
+        for k,v in enumerate(csrFC.data[csrFC.indptr[h]:csrFC.indptr[h+1]]) 
+            if v==facetLengths[h]] for h in range(m)]
+    indptr = [0]+list(cumsum(AA(len)(facetCoboundary)))
+    indices = CAT(facetCoboundary)
+    data = [1]*len(indices)
+    return csr_matrix((data,indices,indptr),shape=(m,n),dtype='b')
 @}
 %-------------------------------------------------------------------------------
 
@@ -98,7 +120,7 @@ def boundary1(CV,FV,EV):
     lenV = max(CAT(CV))+1
     csrCV = csrCreate(CV,lenV)
     csrFV = csrCreate(FV,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
+    csrFC = csrFV * csrCV.T
     facetLengths = [csrCell.getnnz() for csrCell in csrCV]
     VV = AA(LIST)(range(lenV))
     csrBBMat = boundary(FV,EV)*boundary(CV,FV)
@@ -165,15 +187,17 @@ V,FV,EV,polygons = larFromLines(lines)
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryCells(FV,EV)],))))
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV))))
 
-boundaryOp = boundary(FV,EV)
+boundaryOp = boundary1(FV,EV,VV)  # <<======  NB
+BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
+
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in BF]))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV))))
 
 for k in range(1,len(FV)+1):
     faceChain = k*[1]
-    BF = chain2BoundaryChain(boundaryOp)(faceChain)
-    VIEW(STRUCT(MKPOLS((V,[EV[e] for e in BF]))))
+    boundaryChain = chain2BoundaryChain(boundaryOp)(faceChain)
+    VIEW(STRUCT(MKPOLS((V,[EV[e] for e in boundaryChain]))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -187,24 +211,77 @@ for k in range(1,len(FV)+1):
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-7} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-8} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-9} 
-   \caption{Convex-cell 2-complex. (a) Indexing of 0-,1-,and 2-cells; (b) exploded 2-boundary cells; (c) exploded 2-cells; (d) boundary of a singleton 2-chain; (e--f) boundaries of some 2-chains.}
+   \caption{Convex-cell 2-complex. (a) Indexing of 0-,1-,and 2-cells; (b) exploded 2-boundary cells; (c) exploded 2-cells; (d) boundary of a singleton 2-chain; (e--h) boundaries of some 2-chains.}
    \label{fig:example}
 \end{figure}
+
+In the following we provide be binary operator matrices provided by the two implementations,
+respectively named \texttt{boundary} and \texttt{boundary1}. The first one works correctly only with convex cells; the second one with non-convex but path-connected cells.
+
+\paragraph{Example}
+Comparison of two implementations of the $\partial$ operator. Notice the difference between the penultimate rows. In particular, the penultimate row of the matrix generated by \texttt{boundary(FV,EV)} is plain wrong. It means that the edge $e_{10}$ is shared by all the (three) 2-cells of the complex. Conversely, it is well known that, for a solid complex, i.e.~a $d$-complex embedded in $\mathbb{E}^d$, every $(d-1)$-facet may be shared by no more than 2 $d$-cells. The resulting boundary of the total chain $[f_0, f_1, f_2]$ codified in coordinates as $[1,1,1]$, and shown in Figure~\ref{fig:boundary-test02}d, is sonsequently incorrect.
+\\[3mm]
+
+%-------------------------------------------------------------------------------
+{\scriptsize
+\begin{minipage}[c]{0.5\linewidth}
+\centering
+\begin{verbatim}
+In [1]: boundary(FV,EV).todense()
+Out[1]: 
+matrix([[0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 0, 1],
+        [0, 1, 1],
+        [0, 1, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 1, 1],
+        [0, 1, 1]])
+\end{verbatim}
+\end{minipage}
+\begin{minipage}[c]{0.5\linewidth}
+\centering
+\begin{verbatim}
+In [2]: boundary1(FV,EV,VV).todense()
+Out[2]: 
+matrix([[0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 0, 1],
+        [0, 1, 1],
+        [0, 1, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 1, 0],
+        [0, 1, 1]])
+\end{verbatim}
+\end{minipage}}
+%-------------------------------------------------------------------------------
 
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-2} 
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-3} 
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-4} 
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-5} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-1} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-2} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-3} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-4} 
 
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-6} 
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-7} 
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-8} 
-   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test01-9} 
-   \caption{A non-working example with \texttt{function}. (a) Indexing of 0-,1-,and 2-cells; (b) exploded 2-boundary cells; (c) exploded 2-cells; (d) boundary of a singleton 2-chain; (e--f) boundaries of some 2-chains.}
-   \label{fig:example}
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-1} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-2} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-3} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-5} 
+   \caption{Non-working (i.e.~\emph{wrong}) example with \texttt{boundary}. (a) Indexing of 0-,1-,and 2-cells; (b) exploded 2-boundary cells; (c) exploded 2-cells; (d) boundary of a singleton 2-chain. Working (i.e.~\emph{exact}) example using \texttt{boundary1}: (e--h) as above.}
+   \label{fig:boundary-test02}
 \end{figure}
+
+
+
+
 
 \bibliographystyle{amsalpha}
 \bibliography{boundary}
