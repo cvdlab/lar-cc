@@ -1,4 +1,4 @@
-""" testing boundary operators """
+""" testing boundary operators (correct result) """
 from larlib import *
 
 filename = "test/svg/inters/boundarytest0.svg"
