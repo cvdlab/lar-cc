@@ -114,29 +114,6 @@ def csrBoundaryFilter(CSRm, facetLengths):
     out = mtx.tocsr()
     return out
 
-def csrBoundaryFilter1(csrBoundaryBoundaryMat,cells,facets,faces,lenV,FE, CSRm, facetLengths):
-    maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
-    inputShape = CSRm.shape
-    coo = CSRm.tocoo()
-    for k in range(len(coo.data)):
-        if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
-        else: coo.data[k] = 0
-    mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
-    out = mtx.tocsr()
-    
-    unreliable = [k for k in range(out.shape[0]) if sum(out[k,:].todense()[0]) > 2]
-    if unreliable != []:
-        for row in unreliable:
-            for j in range(len(cells)):
-                if out[row,j] == 1:
-                    csrCFE = csrBoundaryBoundaryMat[:,j]
-                    cooCFE = csrCFE.tocoo()
-                    flawedCells = [cooCFE.row[k] for k,datum in enumerate(cooCFE.data)
-                        if datum>2]
-                    if all([facet in flawedCells  for facet in FE[row]]):
-                        out[row,j]=0
-    return out
-
 def csrPredFilter(CSRm, pred):
     # can be done in parallel (by rows)
     coo = CSRm.tocoo()
@@ -170,12 +147,12 @@ def coboundary1(cells,facets):
     return csrTranspose(Boundary)
 
 def totalChain(cells):
-    return csrCreate([[0] for cell in cells])  # ????  zero ??
+    return csr_matrix(len(cells)*[[1]])
 
 def boundaryCells(cells,facets):
     csrBoundaryMat = boundary.boundary(cells,facets)
-    csrChain = totalChain(cells)
-    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
+    csrChain = csr_matrix(totalChain(cells))
+    csrBoundaryChain = csrBoundaryMat * csrChain
     for k,value in enumerate(csrBoundaryChain.data):
         if value % 2 == 0: csrBoundaryChain.data[k] = 0
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
@@ -183,8 +160,7 @@ def boundaryCells(cells,facets):
 
 """ Computation of topological relation """
 def crossRelation(lenV,XV,YV,terminal=False):
-    if terminal:  
-        print "\n****\nXV =",XV
+    if len(YV) == len(CAT(YV)) == lenV:  
         return XV
     else:
         csrXV = csrCreate(XV,lenV)

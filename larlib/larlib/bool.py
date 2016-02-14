@@ -321,6 +321,7 @@ def orientTriangle(pointTriple):
     else: return pointTriple
     
 from copy import copy
+from scipy import spatial
 
 def boundaryTriangulation(V,FV,EV,FE):
     triangleSet = []  
@@ -609,6 +610,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
     return cf,coe
 
 """ Main procedure of arrangement partitioning """
+import inters
 
 """ Double check the faces boundaries made of edges """
 def doubleCheckFaceBoundaries(FE,V,FV,EV):
@@ -627,7 +629,7 @@ def thePartition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets3d(containmentBoxes(quadArray))
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
-    Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.0001)
+    Z,FZ,EZ = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
     model = Z,FZ,EZ
 
     ZZ = AA(LIST)(range(len(Z)))
