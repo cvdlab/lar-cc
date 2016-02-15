@@ -350,13 +350,12 @@ matrix([[0, 1, 0],
 
 
 \paragraph{3D non-convex LAR cells}
+In this example and in the next one we show the boundary computation of LAR models with non-contractible 3- and 2-cells.
 
 %-------------------------------------------------------------------------------
 @O test/py/boundary/test03.py
 @{""" 3D non-convex LAR cells """
 from larlib import *
-# LAR model with non-contractible faces
-# ------------------------------------------------------------------------------
 
 V = [[0.25, 0.25, 0.0], [0.25, 0.75, 0.0], [0.75, 0.75, 0.0], [0.75, 0.25, 0.0], [1.0, 
 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.25, 0.25, 1.0], [0.25, 
@@ -365,10 +364,8 @@ V = [[0.25, 0.25, 0.0], [0.25, 0.75, 0.0], [0.75, 0.75, 0.0], [0.75, 0.25, 0.0],
 [1.0, 0.0, 1.0], [0.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0], [0.75, 0.75, 2.0], 
 [0.75, 0.25, 2.0]]
 
-CV = [(0,1,2,3,4,5,6,7,8,11,16,17,18,19,20,21), 
-(0,1,2,3,8,11,16,17),
-(0,1,2,3,12,13,14,15), 
-(8,9,10,11,16,17,22,23)]
+CV = [(0,1,2,3,4,5,6,7,8,11,16,17,18,19,20,21), (0,1,2,3,8,11,16,17),
+(0,1,2,3,12,13,14,15), (8,9,10,11,16,17,22,23)]
 
 FV = [(2,3,16,17),(6,7,20,21),(12,13,14,15),(0,1,8,11),(1,2,11,17),(0,1,12,13),
 (4,6,18,20),(5,7,19,21),(0,3,13,15),(0,3,8,16),(0,1,2,3),
@@ -398,6 +395,54 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
    \label{fig:boundary-test03}
 \end{figure}
 
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test04-1} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test04-2} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test03-4} 
+   \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test03-5} 
+   \caption{Non-convex 3-complex. (a) Indexing of 0-,1-,2- and 3-cells; (b) exploded 2-boundary cells ---notice a drawing error on the back of the model---conversely, the data structures involved are correct, as shown by the two following pictures;
+   (c) solid drawing of the 2-chain \texttt{[FV[29],FV[30]]}; (d) triangulation of the same 2-chain.}
+   \label{fig:boundary-test04}
+\end{figure}
+
+\paragraph{3D non-convex LAR cells}
+In this example the 3D model is constructed partly in automated way, partly be hands.
+In particular, first we generate a structure of cuboidal complexes, then we transform it is a single complex using part of the computational pipeline being developed for the Boolean arrangments of complexes, so that all the included cells are mutually fragmented. Then the 3-cells are assembed as sets of 2-faces, giving the \texttt{CF} (cells-by-faces) variable. Finally this one is transformed automatically into \texttt{CV} (cells-by-vertices).
+
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test04.py
+@{""" 3D non-convex LAR cells """
+from larlib import *
+
+V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
+mod1 = Struct([(V,FV,EV),t(.25,.25,0),s(.25,.5,2),(V,FV,EV)])
+W,FW,EW = struct2lar(mod1)
+
+quadArray = [[W[v] for v in face] for face in FW]
+parts = boxBuckets3d(containmentBoxes(quadArray))
+Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.0001)
+V,FV,EV = Z,FZ,EZ
+
+CF = AA(sorted)([[20,12,21,5,19,6],[27,1,5,28,13,23],[12,14,25,17,10,4],
+[1,7,17,24,11,18],[30,29,26,16,8,22,10,11,4,18,24,25],[2,3,8,9,0,15]])
+
+CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
+
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
+
+BF = chain2BoundaryChain(boundary1(CV,FV,EV))(len(CV)*[1])
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV)))))
+
+boundaryChain = chain2BoundaryChain(boundary1(FV,EV,VV))
+faceChain = boundaryChain(29*[0]+[1]) + boundaryChain(30*[0]+[1])
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[29],FV[30]],[EV[e] for e in faceChain]))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[29],FV[30]],[EV[e] for e in faceChain])))))
+@}
+%-------------------------------------------------------------------------------
 
 \bibliographystyle{amsalpha}
 \bibliography{boundary}
