@@ -1,7 +1,7 @@
 """ testing boundary operators (wrong result) """
 from larlib import *
 
-filename = "test/svg/inters/boundarytest1.svg"
+filename = "test/svg/inters/boundarytest3.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
@@ -14,8 +14,9 @@ boundaryOp = boundary1(FV,EV,VV)  # <<======  NB
 #boundaryOp = boundary(FV,EV)  # <<======  NB
 BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
 
-VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in BF])))) # ERROR !!!
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV)))) # ERROR !!!
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in BF])))) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,FV,EV)))) # OK !!!
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV)))) # KO !!!
 
 for k in range(1,len(FV)+1):
     faceChain = k*[1]

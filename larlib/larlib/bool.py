@@ -340,7 +340,7 @@ def boundaryTriangulation(V,FV,EV,FE):
         EW = [[vertdict[w] for w in edge] for edge in EW]
         transform = submanifoldMapping(pivotFace)
         mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
-        verts2D = [point[:-2] for point in mappedVerts] 
+        verts2D = [point[:-2] for point in mappedVerts]
               
         # Construction of CDT (Constrained Delaunay Triangulation) for LAR face
         model = (verts2D,[range(len(verts2D))],EW)
