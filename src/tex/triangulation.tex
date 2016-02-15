@@ -1299,11 +1299,13 @@ def structFilter(obj):
         return Struct(structFilter(obj.body),obj.name,obj.category)
     return obj
 
+import boundary
+
 def structBoundaryModel(struct):
     filteredStruct = structFilter(struct)
     #import pdb; pdb.set_trace()
     V,FV,EV = struct2lar(filteredStruct)
-    edgeBoundary = boundaryCells(FV,EV)
+    edgeBoundary = boundary.boundaryCells(FV,EV)
     cycles,_ = boundaryCycles(edgeBoundary,EV)
     edges = [signedEdge for cycle in cycles for signedEdge in cycle]
     orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
@@ -1394,7 +1396,7 @@ def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     #csrBoundaryMat = boundary1(FV,EV,VV)
-    csrBoundaryMat = boundary(FV,EV)
+    csrBoundaryMat = boundary.boundary(FV,EV)
     def larComplexChain0(chain):
         boundaryChain = chain2BoundaryChain(csrBoundaryMat)(chain)
         outModel = V,[EV[e] for e in boundaryChain]

@@ -113,7 +113,18 @@ def boundary(cells,facets):
 %-------------------------------------------------------------------------------
 
 
-\paragraph{Path-connected cells}
+\paragraph{Non-convex LAR cells}
+
+A more general \texttt{boundary1} operator is given in the following, aiming at compute the boundary matrix for general non-convex cellular decompositions, including \emph{multiply connected} LAR models.
+Notice that in this case an input triple made by \texttt{CV}, \texttt{FV}, and \texttt{EV} is needed,
+where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary compressed) characteristic matrices $M_d$, $M_{d-1}$, and $M_{d-2}$.
+
+First the \texttt{boundary} operator for the convex case is computed within the \texttt{out} variable of \texttt{csr\_matrix} type. Then every \texttt{out} row (i.e.~every $(d-1)$-facet of the $d$-complex) is tested for \emph{reliability}, since every $(d-1)$-face can be shared by \emph{at most two} $d$-cells in a $d$-complex . When this condition is not satisfied, deeper tests are needed to understand what row elements must be forced to value 1, since the $(d-1)$-face itself is a subset, but not actually a facet, of the corresponding $d$-cell. 
+
+In presence of some ``unreliable'' facets, the matrix \texttt{csrBBMat} of the operator $\partial_{d-1}\circ\partial_d$ and the relation \texttt{FE} between faces of dimensions $d-1$ and $d-2$ are computed. Now, let us notice that the columns of \texttt{csrBBMat} report the number of incidences of the $d-2$ faces (as belonging to $(d-1)$-facets embedded on the boundary) and $d$-cells (that are associated to such matrix columns). Hence, in a regular (convex) $d$-complex, such numbers are always even, and in $\Z_2$ arithmetic are reduced to zero, in order to satisfy the fundaments equation $\partial\partial=0$. 
+
+Conversely, with non-convex LAR cells, some incidence numbers may get odd values, due to the non-strict coincidence between cell facets and vertex subsets.
+Therefore, for ``unreliable'' $h$ rows (facets) the \texttt{csrBBMat} columns tracked by ones in $[\partial_d]$ are checked, looking for elements of $(h,k)$ indices with value greater that 2.
 
 %-------------------------------------------------------------------------------
 @D path-connected-cells boundary operator
@@ -134,19 +145,50 @@ def csrBoundaryFilter1(unreliable,out,csrBBMat,cells,FE):
     return out
 
 def boundary1(CV,FV,EV):
+    out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
-    lenV = max(CAT(CV))+1
-    csrBBMat = boundary(FV,EV) * boundary(CV,FV)
-    print "\ncsrBBMat =",csrBBMat,"\n"
-    FE = larcc.crossRelation(lenV,FV,EV)
-    out = boundary(CV,FV)
     unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
     if unreliable != []:
+        csrBBMat = boundary(FV,EV) * boundary(CV,FV)
+        print "\ncsrBBMat =",csrBBMat.todense(),"\n"
+        lenV = max(CAT(CV))+1
+        FE = larcc.crossRelation(lenV,FV,EV)
         out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
     return out
 @}
 %-------------------------------------------------------------------------------
+
+
+
+%-------------------------------------------------------------------------------
+@D From cells and facets to boundary cells
+@{def totalChain(cells):
+    return csr_matrix(len(cells)*[[1]])
+
+def boundaryCells(cells,facets):
+    csrBoundaryMat = boundary(cells,facets)
+    csrChain = csr_matrix(totalChain(cells))
+    csrBoundaryChain = csrBoundaryMat * csrChain
+    for k,value in enumerate(csrBoundaryChain.data):
+        if value % 2 == 0: csrBoundaryChain.data[k] = 0
+    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+    return out
+
+def boundaryCells1(cells,facets,faces):
+    csrBoundaryMat = boundary1(cells,facets,faces)
+    csrChain = csr_matrix(totalChain(cells))
+    csrBoundaryChain = csrBoundaryMat * csrChain
+    """
+    for k,value in enumerate(csrBoundaryChain.data):
+        if value % 2 == 0: csrBoundaryChain.data[k] = 0
+    """
+    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+    return out
+@}
+%-------------------------------------------------------------------------------
+
+
 
 \subsection{Signed operators}
 
@@ -159,6 +201,7 @@ def boundary1(CV,FV,EV):
 from larlib import *
 @< convex-cells boundary operator @>
 @< path-connected-cells boundary operator @>
+@< From cells and facets to boundary cells @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -198,14 +241,15 @@ for k in range(1,len(FV)+1):
 
 \paragraph{Wrong boundary extraction example}
 
-The \texttt{boundary.boundary()} operator is applied here to a cellular 2-complex wih some non-convex cells, producing incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. 
+The \texttt{boundary()} operator, applied  to a cellular 2-complex wih some non-convex cells, produces incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. In order to get always a correct result, use the \texttt{boundary1} operator.
 
 %-------------------------------------------------------------------------------
 @O test/py/boundary/test02.py
 @{""" testing boundary operators (wrong result) """
 from larlib import *
 
-filename = "test/svg/inters/boundarytest3.svg"
+#filename = "test/svg/inters/boundarytest3.svg" # KO (MKTRIANGLES) with boundarytest3 !!!
+filename = "test/svg/inters/boundarytest4.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
@@ -219,8 +263,8 @@ boundaryOp = boundary1(FV,EV,VV)  # <<======  NB
 BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in BF])))) 
-VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,FV,EV)))) # OK !!!
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV)))) # KO !!!
+VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,FV,EV)))) 
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV))))) 
 
 for k in range(1,len(FV)+1):
     faceChain = k*[1]
@@ -305,7 +349,54 @@ matrix([[0, 1, 0],
 \end{figure}
 
 
+\paragraph{3D non-convex LAR cells}
 
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test03.py
+@{""" 3D non-convex LAR cells """
+from larlib import *
+# LAR model with non-contractible faces
+# ------------------------------------------------------------------------------
+
+V = [[0.25, 0.25, 0.0], [0.25, 0.75, 0.0], [0.75, 0.75, 0.0], [0.75, 0.25, 0.0], [1.0, 
+0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.25, 0.25, 1.0], [0.25, 
+0.25, 2.0], [0.25, 0.75, 2.0], [0.25, 0.75, 1.0], [0.25, 0.75, -1.0], [0.25, 0.25, 
+-1.0], [0.75, 0.75, -1.0], [0.75, 0.25, -1.0], [0.75, 0.25, 1.0], [0.75, 0.75, 1.0], 
+[1.0, 0.0, 1.0], [0.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0], [0.75, 0.75, 2.0], 
+[0.75, 0.25, 2.0]]
+
+CV = [(0,1,2,3,4,5,6,7,8,11,16,17,18,19,20,21), 
+(0,1,2,3,8,11,16,17),
+(0,1,2,3,12,13,14,15), 
+(8,9,10,11,16,17,22,23)]
+
+FV = [(2,3,16,17),(6,7,20,21),(12,13,14,15),(0,1,8,11),(1,2,11,17),(0,1,12,13),
+(4,6,18,20),(5,7,19,21),(0,3,13,15),(0,3,8,16),(0,1,2,3),
+(10,11,17,22),(2,3,14,15),(8,9,16,23),(8,11,16,17),
+(1,2,12,14),(16,17,22,23),(4,5,18,19),(8,9,10,11),(
+9,10,22,23),(0,1,2,3,4,5,6,7),(8, 11,16,17,18,19,20,21)]
+
+EV =[(3,15),(7,21),(10,11),(4,18),(12,13),(5,19),(8,9),(18,19),(22,23),(0,3),(1,11),
+(16,17),(0,8),(6,7),(20,21),(3,16),(10,22),(18,20),(19,21),(1,2),(12,14),(4,5),(
+8,11),(13,15),(16,23),(14,15),(11,17),(17,22),(2,14),(2,17),(0,1),(9,10),(8,16),
+(4,6),(1,12),(5,7),(0,13),( 9,23),(6,20),(2,3)]
+
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
+
+BF = boundaryCells1(CV,FV,EV)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
+@}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \includegraphics[height=0.495\linewidth,width=0.495\linewidth]{images/boundary-test03-1} 
+   \includegraphics[height=0.495\linewidth,width=0.495\linewidth]{images/boundary-test03-2} 
+   \caption{Non-convex 3-complex. (a) Indexing of 0-,1-,2- and 3-cells; (b) exploded 2-boundary cells.
+   Notice that two faces are multiply-connected.}
+   \label{fig:boundary-test03}
+\end{figure}
 
 
 \bibliographystyle{amsalpha}

@@ -1305,21 +1305,6 @@ def coboundary1(cells,facets):
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
-@D From cells and facets to boundary cells
-@{def totalChain(cells):
-    return csr_matrix(len(cells)*[[1]])
-
-def boundaryCells(cells,facets):
-    csrBoundaryMat = boundary.boundary(cells,facets)
-    csrChain = csr_matrix(totalChain(cells))
-    csrBoundaryChain = csrBoundaryMat * csrChain
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
-    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-    return out
-@}
-%-------------------------------------------------------------------------------
-%-------------------------------------------------------------------------------
 @D Test examples of From cells and facets to boundary cells
 @{boundaryCells_2 = boundaryCells(CV,FV)
 boundaryCells_1 = boundaryCells([FV[k] for k in boundaryCells_2],EV)
@@ -2162,7 +2147,6 @@ from larlib import *
 @< Matrix filtering via a generic predicate @>
 @< Characteristic matrix transposition @>
 @< From cells and facets to boundary operator @>
-@< From cells and facets to boundary cells @>
 @< Computation of topological relation @>
 @< Signed boundary matrix for simplicial models @>
 @< Orientation of general convex cells @>

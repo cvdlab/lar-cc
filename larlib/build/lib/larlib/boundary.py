@@ -33,15 +33,38 @@ def csrBoundaryFilter1(unreliable,out,csrBBMat,cells,FE):
     return out
 
 def boundary1(CV,FV,EV):
+    out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
-    lenV = max(CAT(CV))+1
-    csrBBMat = boundary(FV,EV) * boundary(CV,FV)
-    print "\ncsrBBMat =",csrBBMat,"\n"
-    FE = larcc.crossRelation(lenV,FV,EV)
-    out = boundary(CV,FV)
     unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
     if unreliable != []:
+        csrBBMat = boundary(FV,EV) * boundary(CV,FV)
+        print "\ncsrBBMat =",csrBBMat.todense(),"\n"
+        lenV = max(CAT(CV))+1
+        FE = larcc.crossRelation(lenV,FV,EV)
         out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
+    return out
+
+def totalChain(cells):
+    return csr_matrix(len(cells)*[[1]])
+
+def boundaryCells(cells,facets):
+    csrBoundaryMat = boundary(cells,facets)
+    csrChain = csr_matrix(totalChain(cells))
+    csrBoundaryChain = csrBoundaryMat * csrChain
+    for k,value in enumerate(csrBoundaryChain.data):
+        if value % 2 == 0: csrBoundaryChain.data[k] = 0
+    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+    return out
+
+def boundaryCells1(cells,facets,faces):
+    csrBoundaryMat = boundary1(cells,facets,faces)
+    csrChain = csr_matrix(totalChain(cells))
+    csrBoundaryChain = csrBoundaryMat * csrChain
+    """
+    for k,value in enumerate(csrBoundaryChain.data):
+        if value % 2 == 0: csrBoundaryChain.data[k] = 0
+    """
+    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 

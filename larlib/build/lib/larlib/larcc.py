@@ -146,18 +146,6 @@ def coboundary1(cells,facets):
     Boundary = boundary(cells,facets)
     return csrTranspose(Boundary)
 
-def totalChain(cells):
-    return csr_matrix(len(cells)*[[1]])
-
-def boundaryCells(cells,facets):
-    csrBoundaryMat = boundary.boundary(cells,facets)
-    csrChain = csr_matrix(totalChain(cells))
-    csrBoundaryChain = csrBoundaryMat * csrChain
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
-    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-    return out
-
 """ Computation of topological relation """
 def crossRelation(lenV,XV,YV,terminal=False):
     if len(YV) == len(CAT(YV)) == lenV:  
