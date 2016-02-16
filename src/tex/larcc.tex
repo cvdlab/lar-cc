@@ -1268,7 +1268,8 @@ def crossRelation0(lenV,XV,YV):
 
 def crossRelation(XV,YV,ZV):
     csrXY = csc_matrix(boundary1(XV,YV,ZV))
-    XY = [list(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]]) 
+    XY = [[k for k,v in  zip(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]],
+			  csrXY.data[csrXY.indptr[j]:csrXY.indptr[j+1]]) if v==1]
           for j in range(len(csrXY.indptr)-1)]
     return XY
 @}

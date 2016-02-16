@@ -163,7 +163,7 @@ Two coordinate compressed sparse matrices \texttt{cooFV} and \texttt{cooEV} are 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ Two CSR sparse matrices \texttt{csrFV} and \texttt{csrEV} are generated (by \emp
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -285,7 +285,7 @@ The conversion to CSR format of the characteristic matrix \emph{faces-vertices} 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb7}{7}\NWlink{nuweb50}{, 50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7}{7}\NWlink{nuweb50a}{, 50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -343,7 +343,7 @@ Two utility functions allow to query the number of rows and columns of a CSR mat
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -386,7 +386,7 @@ The Scipy package provides the useful method \texttt{.todense()} in order to tra
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb7}{7}\NWlink{nuweb50}{, 50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb7}{7}\NWlink{nuweb50a}{, 50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -560,7 +560,7 @@ Some filtering operations on matrix elements are needed in the implementation of
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -599,7 +599,7 @@ Some filtering operations on matrix elements are needed in the implementation of
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1163,7 +1163,7 @@ In both cases the \texttt{EV} relation is computed via the \texttt{larFacets} fu
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1190,7 +1190,7 @@ The adjacentcy matrices between 2-cells and 1-cells are printed here. Finally, t
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1726,7 +1726,8 @@ The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sp
 \mbox{}\verb@@\\
 \mbox{}\verb@def crossRelation(XV,YV,ZV):@\\
 \mbox{}\verb@    csrXY = csc_matrix(boundary1(XV,YV,ZV))@\\
-\mbox{}\verb@    XY = [list(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]]) @\\
+\mbox{}\verb@    XY = [[k for k,v in  zip(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]],@\\
+\mbox{}\verb@           csrXY.data[csrXY.indptr[j]:csrXY.indptr[j+1]]) if v==1]@\\
 \mbox{}\verb@          for j in range(len(csrXY.indptr)-1)]@\\
 \mbox{}\verb@    return XY@\\
 \mbox{}\verb@@{\NWsep}
@@ -1766,7 +1767,7 @@ The \texttt{boundary} function below takes as parameters the \texttt{BRC} repres
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -1815,7 +1816,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb50}{50}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb50a}{50a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2070,7 +2071,7 @@ In both cases the boundary matrix is computed by using the general polytopal app
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap57}
-\protect\makebox[0ex][r]{\NWtarget{nuweb35a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test18.py"@\nobreak\ {\footnotesize 35a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb35}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test18.py"@\nobreak\ {\footnotesize 35 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented cuboidal cells """@\\
@@ -2118,7 +2119,7 @@ In both cases the boundary matrix is computed by using the general polytopal app
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap58}
-\protect\makebox[0ex][r]{\NWtarget{nuweb35b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test17.py"@\nobreak\ {\footnotesize 35b }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb36}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test17.py"@\nobreak\ {\footnotesize 36 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary orientation of a random 2D cubical complex """@\\
@@ -2194,7 +2195,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap59}
-\protect\makebox[0ex][r]{\NWtarget{nuweb38a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test16.py"@\nobreak\ {\footnotesize 38a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb37}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test16.py"@\nobreak\ {\footnotesize 37 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary orientation of a random 2D triangulation """@\\
@@ -2202,13 +2203,13 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \mbox{}\verb@from random import random@\\
 \mbox{}\verb@from scipy import spatial,linalg@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize \NWlink{nuweb38b}{38b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize \NWlink{nuweb38c}{38c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize \NWlink{nuweb39a}{39a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize \NWlink{nuweb39b}{39b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize \NWlink{nuweb39c}{39c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb39d}{39d}}$\,\rangle$}\verb@    @\\
-\mbox{}\verb@@\hbox{$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb40a}{40a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize \NWlink{nuweb38a}{38a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize \NWlink{nuweb38b}{38b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize \NWlink{nuweb38c}{38c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize \NWlink{nuweb39a}{39a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize \NWlink{nuweb39b}{39b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb39c}{39c}}$\,\rangle$}\verb@    @\\
+\mbox{}\verb@@\hbox{$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize \NWlink{nuweb39d}{39d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -2218,7 +2219,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Vertices V generated as random point in the unit circle}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap60}
-\protect\makebox[0ex][r]{\NWtarget{nuweb38b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize 38b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb38a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Vertices V generated as random point in the unit circle\nobreak\ {\footnotesize 38a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Vertices V generated as random point in the unit circle """@\\
@@ -2236,7 +2237,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb38a}{38a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb37}{37}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2244,7 +2245,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Delaunay triangulation of the whole set V of points}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap61}
-\protect\makebox[0ex][r]{\NWtarget{nuweb38c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize 38c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb38b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Delaunay triangulation of the whole set V of points\nobreak\ {\footnotesize 38b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Delaunay triangulation of the whole set V of points """@\\
@@ -2257,7 +2258,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb38a}{38a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb37}{37}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2265,7 +2266,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Fraction of triangles randomly discarded}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap62}
-\protect\makebox[0ex][r]{\NWtarget{nuweb39a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize 39a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb38c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Fraction of triangles randomly discarded\nobreak\ {\footnotesize 38c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Fraction of triangles randomly discarded """@\\
@@ -2278,7 +2279,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb38a}{38a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb37}{37}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2286,7 +2287,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Coherent orientation of input LAR model (V,FV)}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap63}
-\protect\makebox[0ex][r]{\NWtarget{nuweb39b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize 39b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb39a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Coherently orient the input LAR model (V,FV)\nobreak\ {\footnotesize 39a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Coherently orient the input LAR model (V,FV) """@\\
@@ -2305,7 +2306,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb38a}{38a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb37}{37}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2313,7 +2314,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Compute the 1-cell and 0-cell bases EV and VV}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap64}
-\protect\makebox[0ex][r]{\NWtarget{nuweb39c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize 39c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb39b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Compute the 1-cell and 0-cell bases EV and VV\nobreak\ {\footnotesize 39b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Compute the 1-cell and 0-cell bases EV and VV """@\\
@@ -2325,7 +2326,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb38a}{38a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb37}{37}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2333,7 +2334,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Signed boundary matrix [$\partial_2$] and signed boundary 1-chain}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap65}
-\protect\makebox[0ex][r]{\NWtarget{nuweb39d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize 39d}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb39c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed 2-boundary matrix and signed boundary 1-chain\nobreak\ {\footnotesize 39c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Signed 2-boundary matrix  and signed boundary 1-chain """@\\
@@ -2344,7 +2345,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb38a}{38a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb37}{37}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2352,7 +2353,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \paragraph{Display the boundary 1-chain}
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap66}
-\protect\makebox[0ex][r]{\NWtarget{nuweb40a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize 40a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb39d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Display the boundary 1-chain\nobreak\ {\footnotesize 39d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Display the boundary 1-chain """@\\
@@ -2365,7 +2366,7 @@ Here we provide a 2D example of computation of the oriented boundary of a quite 
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb38a}{38a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb37}{37}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -2393,7 +2394,7 @@ The variables in the following script have the meaning specified below:
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap67}
-\protect\makebox[0ex][r]{\NWtarget{nuweb40b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 40b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb40}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize 40}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def pivotSimplices(V,CV,d=3):@\\
@@ -2506,7 +2507,7 @@ The \texttt{larDomain} of given \texttt{shape} is decomposed by \texttt{larSimpl
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap69}
-\protect\makebox[0ex][r]{\NWtarget{nuweb42}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize 42}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb42a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize 42a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" cellular decomposition of the unit d-cube """@\\
@@ -2529,7 +2530,7 @@ A scaled simplicial decomposition is provided by the second-order  \texttt{larIn
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap70}
-\protect\makebox[0ex][r]{\NWtarget{nuweb43a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize 43a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb42b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize 42b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larIntervals(shape, cell='cuboid'):@\\
@@ -2554,7 +2555,7 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap71}
-\protect\makebox[0ex][r]{\NWtarget{nuweb43b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Primitive mapping function\nobreak\ {\footnotesize 43b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb43a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Primitive mapping function\nobreak\ {\footnotesize 43a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@def larMap(coordFuncs):@\\
@@ -2582,7 +2583,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap72}
-\protect\makebox[0ex][r]{\NWtarget{nuweb43c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize 43c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb43b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize 43b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from collections import defaultdict@\\
@@ -2623,8 +2624,8 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 \mbox{}\verb@from larlib import *@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Output of 2-cell with high topological genus 0.\nobreak\ {\footnotesize \NWlink{nuweb44b}{44b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Output of 2-cell with high topological genus 1.\nobreak\ {\footnotesize \NWlink{nuweb45a}{45a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Output of 2-cell with high topological genus 2.\nobreak\ {\footnotesize \NWlink{nuweb45b}{45b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Output of 2-cell with high topological genus 1.\nobreak\ {\footnotesize \NWlink{nuweb44c}{44c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Output of 2-cell with high topological genus 2.\nobreak\ {\footnotesize \NWlink{nuweb44d}{44d}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -2653,14 +2654,14 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb44a}{44a}\NWlink{nuweb46a}{, 46a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb44a}{44a}\NWlink{nuweb45}{, 45}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap75}
-\protect\makebox[0ex][r]{\NWtarget{nuweb45a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Output of 2-cell with high topological genus 1.\nobreak\ {\footnotesize 45a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb44c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Output of 2-cell with high topological genus 1.\nobreak\ {\footnotesize 44c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" 2-cell with high topological genus 1. """@\\
@@ -2693,7 +2694,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap76}
-\protect\makebox[0ex][r]{\NWtarget{nuweb45b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Output of 2-cell with high topological genus 2.\nobreak\ {\footnotesize 45b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb44d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Output of 2-cell with high topological genus 2.\nobreak\ {\footnotesize 44d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" 2-cell with high topological genus 2. """@\\
@@ -2725,7 +2726,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap77}
-\protect\makebox[0ex][r]{\NWtarget{nuweb46a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test24.py"@\nobreak\ {\footnotesize 46a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb45}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test24.py"@\nobreak\ {\footnotesize 45 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Explicit LAR of 2-cell with high topological genus """@\\
@@ -2773,7 +2774,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap78}
-\protect\makebox[0ex][r]{\NWtarget{nuweb46b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test25.py"@\nobreak\ {\footnotesize 46b }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb46}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test25.py"@\nobreak\ {\footnotesize 46 }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" 2-cell with high topological genus """@\\
@@ -2933,16 +2934,16 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@@\hbox{$\langle\,$Incidence chain computation\nobreak\ {\footnotesize \NWlink{nuweb27a}{27a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb33a}{33a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Signed boundary cells for polytopal complexes\nobreak\ {\footnotesize \NWlink{nuweb33b}{33b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb40b}{40b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb42}{42}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb43a}{43a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb43c}{43c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Primitive mapping function\nobreak\ {\footnotesize \NWlink{nuweb43b}{43b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary cells for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb40}{40}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generate a simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb42a}{42a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Scaled simplicial decomposition ot the $[0,1]^d$ domain\nobreak\ {\footnotesize \NWlink{nuweb42b}{42b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Create a dictionary with key the point location\nobreak\ {\footnotesize \NWlink{nuweb43b}{43b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Primitive mapping function\nobreak\ {\footnotesize \NWlink{nuweb43a}{43a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$From 2D chains to boundary chains\nobreak\ {\footnotesize \NWlink{nuweb24}{24}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@if __name__ == "__main__": @\\
-\mbox{}\verb@    @\hbox{$\langle\,$Test examples\nobreak\ {\footnotesize \NWlink{nuweb50}{50}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@    @\hbox{$\langle\,$Test examples\nobreak\ {\footnotesize \NWlink{nuweb50a}{50a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -2954,7 +2955,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap82}
-\protect\makebox[0ex][r]{\NWtarget{nuweb50}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples\nobreak\ {\footnotesize 50}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb50a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples\nobreak\ {\footnotesize 50a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -2983,7 +2984,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap83}
-\protect\makebox[0ex][r]{\NWtarget{nuweb51a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test09.py"@\nobreak\ {\footnotesize 51a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb50b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test09.py"@\nobreak\ {\footnotesize 50b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" comparing oriented boundary and unoriented boundary extraction on a simple example """@\\
@@ -3009,7 +3010,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap84}
-\protect\makebox[0ex][r]{\NWtarget{nuweb51b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test12.py"@\nobreak\ {\footnotesize 51b }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb51a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test12.py"@\nobreak\ {\footnotesize 51a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" comparing edge orientation and oriented boundary extraction """@\\
@@ -3041,22 +3042,22 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap85}
-\protect\makebox[0ex][r]{\NWtarget{nuweb52a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test01.py"@\nobreak\ {\footnotesize 52a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb51b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test01.py"@\nobreak\ {\footnotesize 51b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Model generation, skeleton and boundary extraction """@\\
 \mbox{}\verb@from larlib import *@\\
-\mbox{}\verb@@\hbox{$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWlink{nuweb52b}{52b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWlink{nuweb52c}{52c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWlink{nuweb52d}{52d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWlink{nuweb52e}{52e}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWlink{nuweb53a}{53a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb53b}{53b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb53c}{53c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb54a}{54a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb54b}{54b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb54c}{54c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWlink{nuweb54d}{54d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize \NWlink{nuweb52a}{52a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$characteristic matrices\nobreak\ {\footnotesize \NWlink{nuweb52b}{52b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$incidence matrix\nobreak\ {\footnotesize \NWlink{nuweb52c}{52c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize \NWlink{nuweb52d}{52d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$product of cell complexes\nobreak\ {\footnotesize \NWlink{nuweb52e}{52e}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb53a}{53a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize \NWlink{nuweb53b}{53b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$0-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb53c}{53c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$1-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb54a}{54a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$2-coboundary computation\nobreak\ {\footnotesize \NWlink{nuweb54b}{54b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize \NWlink{nuweb54c}{54c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -3065,7 +3066,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap86}
-\protect\makebox[0ex][r]{\NWtarget{nuweb52b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize 52b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb52a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$input of 2D topology and geometry data\nobreak\ {\footnotesize 52a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -3078,14 +3079,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap87}
-\protect\makebox[0ex][r]{\NWtarget{nuweb52c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$characteristic matrices\nobreak\ {\footnotesize 52c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb52b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$characteristic matrices\nobreak\ {\footnotesize 52b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# characteristic matrices@\\
@@ -3098,14 +3099,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap88}
-\protect\makebox[0ex][r]{\NWtarget{nuweb52d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$incidence matrix\nobreak\ {\footnotesize 52d}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb52c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$incidence matrix\nobreak\ {\footnotesize 52c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product@\\
@@ -3116,14 +3117,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap89}
-\protect\makebox[0ex][r]{\NWtarget{nuweb52e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize 52e}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb52d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary and coboundary operators\nobreak\ {\footnotesize 52d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -3136,14 +3137,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap90}
-\protect\makebox[0ex][r]{\NWtarget{nuweb53a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$product of cell complexes\nobreak\ {\footnotesize 53a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb52e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$product of cell complexes\nobreak\ {\footnotesize 52e}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# product operator@\\
@@ -3161,14 +3162,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap91}
-\protect\makebox[0ex][r]{\NWtarget{nuweb53b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize 53b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb53a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-skeleton extraction\nobreak\ {\footnotesize 53a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 2-skeleton of the 3D product complex@\\
@@ -3186,14 +3187,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap92}
-\protect\makebox[0ex][r]{\NWtarget{nuweb53c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize 53c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb53b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-skeleton extraction\nobreak\ {\footnotesize 53b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# 1-skeleton of the 3D product complex @\\
@@ -3211,14 +3212,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap93}
-\protect\makebox[0ex][r]{\NWtarget{nuweb54a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$0-coboundary computation\nobreak\ {\footnotesize 54a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb53c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$0-coboundary computation\nobreak\ {\footnotesize 53c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary and coboundary operators@\\
@@ -3235,14 +3236,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap94}
-\protect\makebox[0ex][r]{\NWtarget{nuweb54b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-coboundary computation\nobreak\ {\footnotesize 54b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb54a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$1-coboundary computation\nobreak\ {\footnotesize 54a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrEF3 = matrixProduct(csrEV3, csrTranspose(csrFV3))@\\
@@ -3255,14 +3256,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap95}
-\protect\makebox[0ex][r]{\NWtarget{nuweb54c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-coboundary computation\nobreak\ {\footnotesize 54c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb54b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$2-coboundary computation\nobreak\ {\footnotesize 54b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrCV = csrCreate(CV)@\\
@@ -3276,14 +3277,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap96}
-\protect\makebox[0ex][r]{\NWtarget{nuweb54d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize 54d}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb54c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary chain visualisation\nobreak\ {\footnotesize 54c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@# boundary chain visualisation@\\
@@ -3295,7 +3296,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb52a}{52a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb51b}{51b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3307,13 +3308,13 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap97}
-\protect\makebox[0ex][r]{\NWtarget{nuweb55a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test02.py"@\nobreak\ {\footnotesize 55a }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb54d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test02.py"@\nobreak\ {\footnotesize 54d }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary of 3D simplicial grid """@\\
 \mbox{}\verb@from larlib import *@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb55b}{55b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb54e}{54e}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -3323,7 +3324,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap98}
-\protect\makebox[0ex][r]{\NWtarget{nuweb55b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize 55b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb54e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$boundary of 3D simplicial grid\nobreak\ {\footnotesize 54e}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -3351,7 +3352,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb55a}{55a}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb54d}{54d}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3363,16 +3364,16 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap99}
-\protect\makebox[0ex][r]{\NWtarget{nuweb55c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test03.py"@\nobreak\ {\footnotesize 55c }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb55a}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test03.py"@\nobreak\ {\footnotesize 55a }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented boundary of a random simplicial complex """@\\
 \mbox{}\verb@from larlib import *@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Importing external modules\nobreak\ {\footnotesize \NWlink{nuweb55d}{55d}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize \NWlink{nuweb56a}{56a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb56b}{56b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb56c}{56c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Importing external modules\nobreak\ {\footnotesize \NWlink{nuweb55b}{55b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize \NWlink{nuweb55c}{55c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb56a}{56a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize \NWlink{nuweb56b}{56b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -3383,7 +3384,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap100}
-\protect\makebox[0ex][r]{\NWtarget{nuweb55d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing external modules\nobreak\ {\footnotesize 55d}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb55b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Importing external modules\nobreak\ {\footnotesize 55b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Importing external modules """@\\
@@ -3394,14 +3395,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb55c}{55c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb55a}{55a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap101}
-\protect\makebox[0ex][r]{\NWtarget{nuweb56a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize 56a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb55c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generating and viewing a random 3D simplicial complex\nobreak\ {\footnotesize 55c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@verts = np.random.rand(10000, 3) # 1000 points in 3-d@\\
@@ -3418,14 +3419,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb55c}{55c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb55a}{55a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap102}
-\protect\makebox[0ex][r]{\NWtarget{nuweb56b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize 56b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb56a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its non-oriented boundary\nobreak\ {\footnotesize 56a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@FV = larSimplexFacets(CV)@\\
@@ -3439,14 +3440,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb55c}{55c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb55a}{55a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap103}
-\protect\makebox[0ex][r]{\NWtarget{nuweb56c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize 56c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb56b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing its oriented boundary\nobreak\ {\footnotesize 56b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = signedBoundaryCells(V,CV,FV)@\\
@@ -3459,7 +3460,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb55c}{55c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb55a}{55a}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3469,12 +3470,12 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap104}
-\protect\makebox[0ex][r]{\NWtarget{nuweb56d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test04.py"@\nobreak\ {\footnotesize 56d }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb56c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test04.py"@\nobreak\ {\footnotesize 56c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\hbox{$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb57a}{57a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb57b}{57b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb57c}{57c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb56d}{56d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb57a}{57a}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize \NWlink{nuweb57b}{57b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -3485,7 +3486,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap105}
-\protect\makebox[0ex][r]{\NWtarget{nuweb57a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize 57a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb56d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Generate and view a 3D simplicial grid\nobreak\ {\footnotesize 56d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Generate and view a 3D simplicial grid """@\\
@@ -3498,14 +3499,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb56d}{56d}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb56c}{56c}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap106}
-\protect\makebox[0ex][r]{\NWtarget{nuweb57b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize 57b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb57a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the 2-skeleton of simplicial grid\nobreak\ {\footnotesize 57a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@FV = larSimplexFacets(CV)@\\
@@ -3516,14 +3517,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb56d}{56d}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb56c}{56c}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap107}
-\protect\makebox[0ex][r]{\NWtarget{nuweb57c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize 57c}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb57b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computing and viewing the oriented boundary of simplicial grid\nobreak\ {\footnotesize 57b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@csrSignedBoundaryMat = signedSimplicialBoundary (V,CV,FV)@\\
@@ -3536,7 +3537,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb56d}{56d}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb56c}{56c}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3548,15 +3549,15 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap108}
-\protect\makebox[0ex][r]{\NWtarget{nuweb57d}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test05.py"@\nobreak\ {\footnotesize 57d }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb57c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test05.py"@\nobreak\ {\footnotesize 57c }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Skeletons and oriented boundary of a simplicial complex """@\\
 \mbox{}\verb@from larlib import *@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Skeletons computation and visualisation\nobreak\ {\footnotesize ?}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWlink{nuweb58a}{58a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWlink{nuweb58b}{58b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize \NWlink{nuweb57e}{57e}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize \NWlink{nuweb58a}{58a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -3567,7 +3568,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap109}
-\protect\makebox[0ex][r]{\NWtarget{nuweb57e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize 57e}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb57d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Skeletons computation and vilualisation\nobreak\ {\footnotesize 57d}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Skeletons computation and vilualisation """@\\
@@ -3589,7 +3590,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap110}
-\protect\makebox[0ex][r]{\NWtarget{nuweb58a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize 58a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb57e}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Oriented boundary matrix visualization\nobreak\ {\footnotesize 57e}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Oriented boundary matrix visualization """@\\
@@ -3606,14 +3607,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb57d}{57d}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb57c}{57c}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap111}
-\protect\makebox[0ex][r]{\NWtarget{nuweb58b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize 58b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb58a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Computation of oriented boundary cells\nobreak\ {\footnotesize 58a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@"""  Computation of oriented boundary cells """@\\
@@ -3627,7 +3628,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb57d}{57d}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb57c}{57c}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3637,14 +3638,14 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small
 \begin{minipage}{\linewidth} \label{scrap112}
-\protect\makebox[0ex][r]{\NWtarget{nuweb58c}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test06.py"@\nobreak\ {\footnotesize 58c }$\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb58b}{\rule{0ex}{0ex}}\hspace{1em}}\verb@"test/py/larcc/test06.py"@\nobreak\ {\footnotesize 58b }$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Boundary of random 2D simplicial complex """@\\
 \mbox{}\verb@from larlib import *@\\
 \mbox{}\verb@from scipy.spatial import Delaunay@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWlink{nuweb58d}{58d}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize \NWlink{nuweb58c}{58c}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Generation and selection of random triangles\nobreak\ {\footnotesize \NWlink{nuweb59a}{59a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Boundary computation and visualisation\nobreak\ {\footnotesize \NWlink{nuweb59b}{59b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
@@ -3666,7 +3667,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap113}
-\protect\makebox[0ex][r]{\NWtarget{nuweb58d}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize 58d}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb58c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test for quasi-equilateral triangles\nobreak\ {\footnotesize 58c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Test for quasi-equilateral triangles """@\\
@@ -3682,7 +3683,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb58c}{58c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb58b}{58b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3707,7 +3708,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb58c}{58c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb58b}{58b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3726,7 +3727,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \vspace{-1ex}
 \footnotesize\addtolength{\baselineskip}{-1ex}
 \begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \NWtxtMacroRefIn\ \NWlink{nuweb58c}{58c}.
+\item \NWtxtMacroRefIn\ \NWlink{nuweb58b}{58b}.
 \end{list}
 \end{flushleft}
 %-------------------------------------------------------------------------------
@@ -3776,8 +3777,8 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@from larlib import *@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Definition of 1-dimensional LAR models\nobreak\ {\footnotesize \NWlink{nuweb60b}{60b}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWlink{nuweb61a}{61a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWlink{nuweb61b}{61b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize \NWlink{nuweb60c}{60c}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize \NWlink{nuweb61}{61}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -3814,7 +3815,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap119}
-\protect\makebox[0ex][r]{\NWtarget{nuweb61a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 61a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb60c}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of squares and triangles\nobreak\ {\footnotesize 60c}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Assembly generation of squares and triangles """@\\
@@ -3835,7 +3836,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap120}
-\protect\makebox[0ex][r]{\NWtarget{nuweb61b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 61b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb61}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Assembly generation of cubes and tetrahedra\nobreak\ {\footnotesize 61}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Assembly generation  of cubes and tetrahedra """@\\
