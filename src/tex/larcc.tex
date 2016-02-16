@@ -1242,14 +1242,16 @@ incidence EV = [[0,1],[1,2],[3,4],[4,5],[6,7],[7,8],[9,10],[10,11],[0,3],
 When computing the matrices of boundary and coboundary operators it may be useful to distinguish between simplicial complexes and general polytopal complexes, including  cuboidal ones. In the first cases all skeletons, and hence the other topological operators, may be computed using only combinatorial methods. In the second case some reference to their geometric embedding must be done, at least to compute the \emph{oriented} boundary and coboundary. Therefore we separate the two cases in the following sections.
 
 
+
 \paragraph{Computation of topological relations} 
-The function \texttt{crossRelation} is used here to compute a topological relation starting from two characteristic matrices \texttt{XV} and \texttt{YV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively.
+The function \texttt{crossRelation} is used here to compute a topological relation starting from three characteristic matrices \texttt{XV}, \texttt{YV} and \texttt{ZV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively. 
+Three relations are needed, in order to use the stronger \texttt{boundary1} function, that is more robust with respect to the application to non-convex general LAR cells. 
 The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sparse Row) format is used.
 
 %-------------------------------------------------------------------------------
 @D Computation of topological relation
 @{""" Computation of topological relation """
-def crossRelation(lenV,XV,YV,terminal=False):
+def crossRelation0(lenV,XV,YV):
     if len(YV) == len(CAT(YV)) == lenV:  
         return XV
     else:
@@ -1263,6 +1265,12 @@ def crossRelation(lenV,XV,YV,terminal=False):
             XY[k] = [col[h] for h,val in enumerate(data) if val==min(len(XV[k]),len(YV[h]))]
             # NOTE: val depends on the relation under consideration ...
         return XY
+
+def crossRelation(XV,YV,ZV):
+    csrXY = csc_matrix(boundary1(XV,YV,ZV))
+    XY = [list(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]]) 
+          for j in range(len(csrXY.indptr)-1)]
+    return XY
 @}
 %-------------------------------------------------------------------------------
 

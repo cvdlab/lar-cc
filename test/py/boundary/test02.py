@@ -1,8 +1,8 @@
 """ testing boundary operators (wrong result) """
 from larlib import *
 
-#filename = "test/svg/inters/boundarytest3.svg" # KO (MKTRIANGLES) with boundarytest3 !!!
-filename = "test/svg/inters/boundarytest4.svg"
+filename = "test/svg/inters/boundarytest3.svg" # KO (MKTRIANGLES) with boundarytest3 !!!
+#filename = "test/svg/inters/boundarytest4.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     

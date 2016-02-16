@@ -551,7 +551,8 @@ Three types of 1-chains are computed, corresponding to the subsets of boundary e
 @{""" Selection of specialized 1-chains """
 
 """ Classification of edges (boundary, interior, passage 1-chains) """
-FE = crossRelation(len(V),FV,EV)
+VV = AA(LIST)(range(len(V)))
+FE = crossRelation(FV,EV,VV)
 boundaryEdges = boundaryCells(FV[:-1], EV)
 corridorEdges = list(set(CAT([FE[k] for k in [1,16,9,19,10]])).difference(boundaryEdges))
 internalEdges = set(range(len(EV))).difference(boundaryEdges+corridorEdges)
@@ -958,7 +959,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,5))
 
-FE = crossRelation(len(V),FV,EV)
+FE = crossRelation(FV,EV,VV)
 W,FW,EW = (V,[FV[14]],[EV[e] for e in FE[14]])
 VIEW(STRUCT(MKPOLS((W,FW,EW))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1)(MKTRIANGLES((W,FW,EW)))))

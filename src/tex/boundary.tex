@@ -55,20 +55,20 @@ The various versions of boundary operators on Linear Algebraic Representation of
 
 \section{Introduction}
 
-In the current \texttt{LarLib} implementation, we have to distinguish between between dimension-independent, dimension-dependent, signed and non-signed operators.
+In the current \texttt{LarLib} implementation, we have to distinguish between between dimension-independent, dimension-dependent, oriented and non-oriented operators.
 Therefore a code refactoring of \texttt{LarLib}---related to boundary/coboundary operators---started here, with the aim of both providing a precise mathematical definition within the LAR framework, and to simplify and generalise the implemented algorithms.
 
 
 \section{Implementation}
 
 We start this section by making a distinction between the (matrices of) boundary operators for the linear spaces $C_k$ of chains over the field $\Z_2 = \{0,1\}$ and over the field $\Z$ of integer numbers.
-We call either \emph{non-signed} or \emph{signed} the corresponding boundary operators, respectively, since the matrix elements take values within the sets $\{-1,0,+1\}$ or $\{0,1\}$, correspondingly.
+We call either \emph{non-oriented} or \emph{oriented} the corresponding boundary operators, respectively, since the matrix elements take values within the sets $\{-1,0,+1\}$ or $\{0,1\}$, correspondingly.
 Of course, the associated matrices of \emph{coboundary} operators are their transpose matrices.
 
 
-\subsection{Non-signed operators}
+\subsection{Non-oriented operators}
 
-For several computations, the knowledge of the matrices of non-signed boundary operators is sufficient. 
+For several computations, the knowledge of the matrices of non-oriented boundary operators is sufficient. 
 Therefore we will use such tool wherever possible, since its computation is much faster in term of computing time. 
 
 In the following we provide be binary operator matrices provided by two implementations,
@@ -77,7 +77,7 @@ respectively named \texttt{boundary} and \texttt{boundary1}. The first one works
 
 \subsubsection{Dimension-independence}
 
-As we show in the following, in order to compute the non-signed boundary operator $\partial_d$, it it sufficient to have knowledge of the $M_d$ and $M_{d-1}$ characteristic matrices of $d$-cells and their $(d-1)$-facets, at least in the case of cellular complexes with convex cells. Conversely, for more general non-convex but simply-connected cells, also the $M_{d-2}$ matrix is needed.
+As we show in the following, in order to compute the non-oriented boundary operator $\partial_d$, it it sufficient to have knowledge of the $M_d$ and $M_{d-1}$ characteristic matrices of $d$-cells and their $(d-1)$-facets, at least in the case of cellular complexes with convex cells. Conversely, for more general non-convex but simply-connected cells, also the $M_{d-2}$ matrix is needed.
 
 \paragraph{Convex-cells}
 
@@ -153,7 +153,7 @@ def boundary1(CV,FV,EV):
         csrBBMat = boundary(FV,EV) * boundary(CV,FV)
         print "\ncsrBBMat =",csrBBMat.todense(),"\n"
         lenV = max(CAT(CV))+1
-        FE = larcc.crossRelation(lenV,FV,EV)
+        FE = larcc.crossRelation0(lenV,FV,EV)
         out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
     return out
 @}
@@ -170,8 +170,6 @@ def boundaryCells(cells,facets):
     csrBoundaryMat = boundary(cells,facets)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
@@ -179,10 +177,6 @@ def boundaryCells1(cells,facets,faces):
     csrBoundaryMat = boundary1(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
-    """
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
-    """
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 @}
@@ -190,7 +184,7 @@ def boundaryCells1(cells,facets,faces):
 
 
 
-\subsection{Signed operators}
+\subsection{Oriented operators}
 
 
 \section{Exporting}
@@ -208,11 +202,11 @@ from larlib import *
 
 \section{Testing}
 
-\section{Non-signed operators}
+\subsection{Non-oriented operators}
 
 \paragraph{Correct boundary extraction example}
 
-The \texttt{boundary.boundary()} operator is applied here to a cellular 2-complex of convex cells, producing correct result.
+The \texttt{boundary()} operator is applied here to a cellular 2-complex of convex cells, producing correct result. It is worth noting that the operator is dimension-independent, and must be appliad to the \emph{pair} of compressed characteristic matrices $M_d$ and $M_{d-1}$, that --- in list format --- we call either \texttt{CV,FV} or  \texttt{FV,EV}, depending on the dimension (either 3 or 2) of the embedding space.
 
 %-------------------------------------------------------------------------------
 @O test/py/boundary/test01.py
@@ -248,8 +242,8 @@ The \texttt{boundary()} operator, applied  to a cellular 2-complex wih some non-
 @{""" testing boundary operators (wrong result) """
 from larlib import *
 
-#filename = "test/svg/inters/boundarytest3.svg" # KO (MKTRIANGLES) with boundarytest3 !!!
-filename = "test/svg/inters/boundarytest4.svg"
+filename = "test/svg/inters/boundarytest3.svg" # KO (MKTRIANGLES) with boundarytest3 !!!
+#filename = "test/svg/inters/boundarytest4.svg"
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
@@ -357,12 +351,11 @@ In this example and in the next one we show the boundary computation of LAR mode
 @{""" 3D non-convex LAR cells """
 from larlib import *
 
-V = [[0.25, 0.25, 0.0], [0.25, 0.75, 0.0], [0.75, 0.75, 0.0], [0.75, 0.25, 0.0], [1.0, 
-0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.25, 0.25, 1.0], [0.25, 
-0.25, 2.0], [0.25, 0.75, 2.0], [0.25, 0.75, 1.0], [0.25, 0.75, -1.0], [0.25, 0.25, 
--1.0], [0.75, 0.75, -1.0], [0.75, 0.25, -1.0], [0.75, 0.25, 1.0], [0.75, 0.75, 1.0], 
-[1.0, 0.0, 1.0], [0.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0], [0.75, 0.75, 2.0], 
-[0.75, 0.25, 2.0]]
+V = [[0.25,0.25,0.0],[0.25,0.75,0.0],[0.75,0.75,0.0],[0.75,0.25,0.0],[1.0, 0.0,0.0],
+[0.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0],[0.25,0.25,1.0],[0.25, 0.25,2.0],[0.25,0.75,
+2.0],[0.25,0.75,1.0],[0.25,0.75,-1.0],[0.25,0.25, -1.0],[0.75,0.75,-1.0],[0.75,0.25,
+-1.0],[0.75,0.25,1.0],[0.75,0.75,1.0], [1.0,0.0,1.0],[0.0,0.0,1.0],[1.0,1.0,1.0],
+[0.0,1.0,1.0],[0.75,0.75,2.0],[0.75,0.25,2.0]]
 
 CV = [(0,1,2,3,4,5,6,7,8,11,16,17,18,19,20,21), (0,1,2,3,8,11,16,17),
 (0,1,2,3,12,13,14,15), (8,9,10,11,16,17,22,23)]
@@ -407,7 +400,7 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 \end{figure}
 
 \paragraph{3D non-convex LAR cells}
-In this example the 3D model is constructed partly in automated way, partly be hands.
+In this example the 3D model is constructed partly in automated way, partly by hand.
 In particular, first we generate a structure of cuboidal complexes, then we transform it is a single complex using part of the computational pipeline being developed for the Boolean arrangments of complexes, so that all the included cells are mutually fragmented. Then the 3-cells are assembed as sets of 2-faces, giving the \texttt{CF} (cells-by-faces) variable. Finally this one is transformed automatically into \texttt{CV} (cells-by-vertices).
 
 %-------------------------------------------------------------------------------
@@ -434,7 +427,7 @@ VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
-BF = chain2BoundaryChain(boundary1(CV,FV,EV))(len(CV)*[1])
+BF = boundaryCells1(CV,FV,EV)
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV)))))
 
 boundaryChain = chain2BoundaryChain(boundary1(FV,EV,VV))
@@ -443,6 +436,8 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[29],FV[30]],[EV[e] for e in faceCha
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[29],FV[30]],[EV[e] for e in faceChain])))))
 @}
 %-------------------------------------------------------------------------------
+
+\subsection{Oriented operators}
 
 \bibliographystyle{amsalpha}
 \bibliography{boundary}

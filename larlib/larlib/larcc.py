@@ -147,7 +147,7 @@ def coboundary1(cells,facets):
     return csrTranspose(Boundary)
 
 """ Computation of topological relation """
-def crossRelation(lenV,XV,YV,terminal=False):
+def crossRelation0(lenV,XV,YV):
     if len(YV) == len(CAT(YV)) == lenV:  
         return XV
     else:
@@ -161,6 +161,12 @@ def crossRelation(lenV,XV,YV,terminal=False):
             XY[k] = [col[h] for h,val in enumerate(data) if val==min(len(XV[k]),len(YV[h]))]
             # NOTE: val depends on the relation under consideration ...
         return XY
+
+def crossRelation(XV,YV,ZV):
+    csrXY = csc_matrix(boundary1(XV,YV,ZV))
+    XY = [list(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]]) 
+          for j in range(len(csrXY.indptr)-1)]
+    return XY
 
 def signedSimplicialBoundary (CV,FV):
     # compute the set of pairs of indices to [boundary face,incident coface]

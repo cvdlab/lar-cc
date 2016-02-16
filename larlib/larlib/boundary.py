@@ -41,7 +41,7 @@ def boundary1(CV,FV,EV):
         csrBBMat = boundary(FV,EV) * boundary(CV,FV)
         print "\ncsrBBMat =",csrBBMat.todense(),"\n"
         lenV = max(CAT(CV))+1
-        FE = larcc.crossRelation(lenV,FV,EV)
+        FE = larcc.crossRelation0(lenV,FV,EV)
         out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
     return out
 
@@ -52,8 +52,6 @@ def boundaryCells(cells,facets):
     csrBoundaryMat = boundary(cells,facets)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
@@ -61,10 +59,6 @@ def boundaryCells1(cells,facets,faces):
     csrBoundaryMat = boundary1(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
-    """
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
-    """
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 

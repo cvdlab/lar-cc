@@ -72,9 +72,11 @@ def lar2boxes(model,qualifier=0):
     return boxes
 
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
+
 def MKTRIANGLES(model): 
     V,FV,EV = model
-    FE = crossRelation(len(V),FV,EV)
+    VV = AA(LIST)(range(len(V)))
+    FE = crossRelation(FV,EV,VV)
     if len(V[0]) == 2: V=[v+[0] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace]) 
@@ -82,7 +84,8 @@ def MKTRIANGLES(model):
 
 def MKSOLID(*model): 
     V,FV,EV = model
-    FE = crossRelation(len(V),FV,EV)
+    VV = AA(LIST)(range(len(V)))
+    FE = crossRelation(FV,EV,VV)
     pivot = V[0]
     #VF = invertRelation(FV) 
     #faces = [face for face in FV if face not in VF[0]]
@@ -182,7 +185,8 @@ def submanifoldMapping(pivotFace):
 
 """ Helper functions for spacePartition """
 def submodel(V,FV,EV):
-    FE = crossRelation(len(V),FV,EV)
+    VV = AA(LIST)(range(len(V)))
+    FE = crossRelation(FV,EV,VV)
     def submodel0(f,F):
         fE = list(set(FE[f] + CAT([FE[g] for g in F])))
         fF = [f]+F
@@ -249,7 +253,8 @@ def removeExternals(M,V,EV,fe, z,fz,ez):
 
 """ Space partitioning via submanifold mapping """
 def spacePartition(V,FV,EV, parts):
-    FE = crossRelation(len(V),FV,EV)
+    VV = AA(LIST)(range(len(V)))
+    FE = crossRelation(FV,EV,VV)
     submodel0 = submodel(V,FV,EV)
     out = []
     
@@ -272,7 +277,7 @@ def spacePartition(V,FV,EV, parts):
         #VIEW(STRUCT(MKPOLS((sW,sFW+sEW)) + [red]))
         
         """ filtering of EW edges traversing z=0, giving EZ edges and incident faces FZEZ """
-        sFE = crossRelation(len(V),sFW,sEW)    
+        sFE = crossRelation0(len(V),sFW,sEW)    
         edges = list(set([ e for k,face in enumerate(sFW)  for e in sFE[k] 
                     if meetZero(sW, sEW[e]) ]))
         edgesPerFace = [ [e for e in sFE[k] if meetZero(sW, sEW[e])] 
@@ -340,7 +345,7 @@ def boundaryTriangulation(V,FV,EV,FE):
         EW = [[vertdict[w] for w in edge] for edge in EW]
         transform = submanifoldMapping(pivotFace)
         mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
-        verts2D = [point[:-2] for point in mappedVerts]
+        verts2D = [point[:-2] for point in mappedVerts] 
               
         # Construction of CDT (Constrained Delaunay Triangulation) for LAR face
         model = (verts2D,[range(len(verts2D))],EW)
@@ -397,7 +402,8 @@ def faceSlopeOrdering(model,FE):
     VIEW(EXPLODE(1.2,1.2,1.2)(AA(JOIN)( AA(POLYLINE)(CAT(triangleSet)) )))
     VIEW(EXPLODE(1.2,1.2,1.2)( AA(POLYLINE)(AA(lambda tri: tri+[tri[0]])(CAT(triangleSet))) ))
     TV,FT = triangleIndices(triangleSet,V) 
-    TE = crossRelation(len(V),TV,EV)
+    VV = AA(LIST)(range(len(V)))
+    TE = crossRelation(TV,EV,VV)
     ET,ET_angle = invertRelation(TE),[]
     #import pdb; pdb.set_trace()
     for e,et in enumerate(ET):
@@ -636,7 +642,8 @@ def thePartition(W,FW,EW):
     submodel = STRUCT(MKPOLS((Z,EZ)))
     VIEW(larModelNumbering(1,1,1)(Z,[ZZ,EZ,FZ],submodel,0.6)) 
 
-    FE = crossRelation(len(Z),FZ,EZ) ## to be double checked !!
+    ZZ = AA(LIST)(range(len(Z)))
+    FE = crossRelation(FZ,EZ,ZZ) ## to be double checked !!
     EF_angle, ET,TV,FT = faceSlopeOrdering(model,FE)
     
     V,CV,FV,EV,CF,CE,COE = cellsFromComponents((Z,FZ,EZ),FE,EF_angle, ET,TV,FT)

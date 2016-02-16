@@ -1697,8 +1697,10 @@ See Figure~\ref{incidenceChain} for this purpose.
 When computing the matrices of boundary and coboundary operators it may be useful to distinguish between simplicial complexes and general polytopal complexes, including  cuboidal ones. In the first cases all skeletons, and hence the other topological operators, may be computed using only combinatorial methods. In the second case some reference to their geometric embedding must be done, at least to compute the \emph{oriented} boundary and coboundary. Therefore we separate the two cases in the following sections.
 
 
+
 \paragraph{Computation of topological relations} 
-The function \texttt{crossRelation} is used here to compute a topological relation starting from two characteristic matrices \texttt{XV} and \texttt{YV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively.
+The function \texttt{crossRelation} is used here to compute a topological relation starting from three characteristic matrices \texttt{XV}, \texttt{YV} and \texttt{ZV}, that associate the sets of topological objects $X$ and $Y$ with their vertices, respectively. 
+Three relations are needed, in order to use the stronger \texttt{boundary1} function, that is more robust with respect to the application to non-convex general LAR cells. 
 The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sparse Row) format is used.
 
 %-------------------------------------------------------------------------------
@@ -1707,7 +1709,7 @@ The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sp
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@""" Computation of topological relation """@\\
-\mbox{}\verb@def crossRelation(lenV,XV,YV,terminal=False):@\\
+\mbox{}\verb@def crossRelation0(lenV,XV,YV):@\\
 \mbox{}\verb@    if len(YV) == len(CAT(YV)) == lenV:  @\\
 \mbox{}\verb@        return XV@\\
 \mbox{}\verb@    else:@\\
@@ -1721,6 +1723,12 @@ The technique using sparse binary matrices stored in \texttt{CSR} (Compressed Sp
 \mbox{}\verb@            XY[k] = [col[h] for h,val in enumerate(data) if val==min(len(XV[k]),len(YV[h]))]@\\
 \mbox{}\verb@            # NOTE: val depends on the relation under consideration ...@\\
 \mbox{}\verb@        return XY@\\
+\mbox{}\verb@@\\
+\mbox{}\verb@def crossRelation(XV,YV,ZV):@\\
+\mbox{}\verb@    csrXY = csc_matrix(boundary1(XV,YV,ZV))@\\
+\mbox{}\verb@    XY = [list(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]]) @\\
+\mbox{}\verb@          for j in range(len(csrXY.indptr)-1)]@\\
+\mbox{}\verb@    return XY@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1ex}
@@ -1738,7 +1746,7 @@ The \texttt{boundary} function below takes as parameters the \texttt{BRC} repres
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap48}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 29a}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb29}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize 29}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@V = [[0.0,0.0,0.0],[1.0,0.0,0.0],[0.0,1.0,0.0],[1.0,1.0,0.0],@\\
@@ -1767,7 +1775,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap49}
-\protect\makebox[0ex][r]{\NWtarget{nuweb29b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 29b}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb30a}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize 30a}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from boundary import boundary@\\
@@ -1791,7 +1799,7 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap50}
-\protect\makebox[0ex][r]{\NWtarget{nuweb30}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize 30}$\,\rangle\equiv$
+\protect\makebox[0ex][r]{\NWtarget{nuweb30b}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize 30b}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@boundaryCells_2 = boundaryCells(CV,FV)@\\
@@ -2912,7 +2920,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@@\hbox{$\langle\,$Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWlink{nuweb8}{8}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb9b}{9b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Characteristic matrix transposition\nobreak\ {\footnotesize \NWlink{nuweb17}{17}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb29b}{29b}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb30a}{30a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Computation of topological relation\nobreak\ {\footnotesize \NWlink{nuweb28}{28}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize \NWlink{nuweb31}{31}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Orientation of general convex cells\nobreak\ {\footnotesize \NWlink{nuweb32}{32}}$\,\rangle$}\verb@@\\
@@ -2957,8 +2965,8 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Sparse to dense matrix transformation\nobreak\ {\footnotesize \NWlink{nuweb6b}{6b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Matrix filtering to produce the boundary matrix\nobreak\ {\footnotesize \NWlink{nuweb9a}{9a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test example of Matrix filtering via a generic predicate\nobreak\ {\footnotesize \NWlink{nuweb9c}{9c}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb29a}{29a}}$\,\rangle$}\verb@@\\
-\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb30}{30}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary operator\nobreak\ {\footnotesize \NWlink{nuweb29}{29}}$\,\rangle$}\verb@@\\
+\mbox{}\verb@@\hbox{$\langle\,$Test examples of From cells and facets to boundary cells\nobreak\ {\footnotesize \NWlink{nuweb30b}{30b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Computation of cell adjacencies\nobreak\ {\footnotesize \NWlink{nuweb19b}{19b}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Test examples of Extraction of facets of a cell complex\nobreak\ {\footnotesize \NWlink{nuweb19a}{19a}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@{\NWsep}
