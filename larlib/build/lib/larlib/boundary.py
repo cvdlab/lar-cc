@@ -32,6 +32,19 @@ def csrBoundaryFilter1(unreliable,out,csrBBMat,cells,FE):
                     out[row,j]=0
     return out
 
+def csrBoundaryFilter2(unreliable,out,csrBBMat,cells,FE):
+    for col in unreliable:
+        print csrBBMat[:,col]
+        cooCE = csrBBMat.T[col].tocoo()
+        flawedCells = [cooCE.col[k] for k,datum in enumerate(cooCE.data)
+                    if datum>2]
+        print  flawedCells,
+        for j in range(out.shape[0]):
+            if out[j,col] == 1:
+                if all([facet in flawedCells  for facet in FE[j]]):
+                    out[j,col]=0
+    return out
+
 def boundary1(CV,FV,EV):
     out = boundary(CV,FV)
     def csrRowSum(h): 
@@ -43,6 +56,21 @@ def boundary1(CV,FV,EV):
         lenV = max(CAT(CV))+1
         FE = larcc.crossRelation0(lenV,FV,EV)
         out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
+    return out
+
+def boundary2(CV,FV,EV):
+    out = boundary1(CV,FV,EV)
+    lenV = max(CAT(CV))+1
+    VV = AA(LIST)(range(lenV))
+    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary1(CV,FV,VV))
+    print "\ncsrBBMat =",csrBBMat.todense(),"\n"
+    def csrColCheck(h): 
+        return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
+    unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
+    print "\nunreliable =",unreliable,"\n"
+    if unreliable != []:
+        FE = larcc.crossRelation0(lenV,FV,EV)
+        out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
     return out
 
 def totalChain(cells):
@@ -57,6 +85,13 @@ def boundaryCells(cells,facets):
 
 def boundaryCells1(cells,facets,faces):
     csrBoundaryMat = boundary1(cells,facets,faces)
+    csrChain = csr_matrix(totalChain(cells))
+    csrBoundaryChain = csrBoundaryMat * csrChain
+    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
+    return out
+
+def boundaryCells2(cells,facets,faces):
+    csrBoundaryMat = boundary2(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]

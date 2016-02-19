@@ -25,5 +25,5 @@ VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
-BF = boundaryCells1(CV,FV,EV)
+BF = boundaryCells2(CV,FV,EV)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))

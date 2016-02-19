@@ -185,8 +185,9 @@ def submanifoldMapping(pivotFace):
 
 """ Helper functions for spacePartition """
 def submodel(V,FV,EV):
-    VV = AA(LIST)(range(len(V)))
-    FE = crossRelation(FV,EV,VV)
+    lenV = len(V)
+    VV = AA(LIST)(range(lenV))
+    FE = crossRelation0(lenV,FV,EV)
     def submodel0(f,F):
         fE = list(set(FE[f] + CAT([FE[g] for g in F])))
         fF = [f]+F
