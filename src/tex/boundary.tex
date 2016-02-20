@@ -72,7 +72,7 @@ For several computations, the knowledge of the matrices of non-oriented boundary
 Therefore we will use such tool wherever possible, since its computation is much faster in term of computing time. 
 
 In the following we provide be binary operator matrices provided by two implementations,
-respectively named \texttt{boundary} and \texttt{boundary1}. The first one works correctly only with convex cells; the second one works also with non-convex but path-connected cells.
+respectively named \texttt{boundary} and \texttt{boundary2}. The first one works correctly only with convex cells; the second one works also with non-convex but path-connected cells.
 
 
 \subsubsection{Dimension-independence}
@@ -115,7 +115,7 @@ def boundary(cells,facets):
 
 \paragraph{Non-convex LAR cells}
 
-A more general \texttt{boundary1} operator is given in the following, aiming at compute the boundary matrix for general non-convex cellular decompositions, including \emph{multiply connected} LAR models.
+A more general \texttt{boundary2} operator is given in the following, aiming at compute the boundary matrix for general non-convex cellular decompositions, including \emph{multiply connected} LAR models.
 Notice that in this case an input triple made by \texttt{CV}, \texttt{FV}, and \texttt{EV} is needed,
 where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary compressed) characteristic matrices $M_d$, $M_{d-1}$, and $M_{d-2}$.
 
@@ -157,7 +157,7 @@ def csrBoundaryFilter2(unreliable,out,csrBBMat,cells,FE):
                     out[j,col]=0
     return out
 
-def boundary1(CV,FV,EV):
+def boundary2(CV,FV,EV):
     out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
@@ -170,11 +170,11 @@ def boundary1(CV,FV,EV):
         out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
     return out
 
-def boundary2(CV,FV,EV):
-    out = boundary1(CV,FV,EV)
+def boundary3(CV,FV,EV):
+    out = boundary2(CV,FV,EV)
     lenV = max(CAT(CV))+1
     VV = AA(LIST)(range(lenV))
-    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary1(CV,FV,VV))
+    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
     print "\ncsrBBMat =",csrBBMat.todense(),"\n"
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
@@ -192,7 +192,7 @@ def boundary2(CV,FV,EV):
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-03} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-04} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-05} 
-   \caption{Non-convex LAR 2-complex with (two) 1-cells that are subsets of 2-cells without being their facets. Correctly disentangled by the \texttt{boundary1()} function: (a) Indexing of 0-, 1-, and 2-cells; (b) exploded 2-cells; (c) triangulated and exploded 2-cells; (d) boundary of the 2-chain \texttt{[1,1,1,1,1,0]}.}
+   \caption{Non-convex LAR 2-complex with (two) 1-cells that are subsets of 2-cells without being their facets. Correctly disentangled by the \texttt{boundary2()} function: (a) Indexing of 0-, 1-, and 2-cells; (b) exploded 2-cells; (c) triangulated and exploded 2-cells; (d) boundary of the 2-chain \texttt{[1,1,1,1,1,0]}.}
    \label{fig:example}
 \end{figure}
 
@@ -210,14 +210,14 @@ def boundaryCells(cells,facets):
     return out
 
 def boundaryCells1(cells,facets,faces):
-    csrBoundaryMat = boundary1(cells,facets,faces)
+    csrBoundaryMat = boundary2(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
 def boundaryCells2(cells,facets,faces):
-    csrBoundaryMat = boundary2(cells,facets,faces)
+    csrBoundaryMat = boundary3(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
@@ -267,7 +267,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryCells(FV,EV)],))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV))))
 
-boundaryOp = boundary1(FV,EV,VV)
+boundaryOp = boundary2(FV,EV,VV)
 
 for k in range(1,len(FV)+1):
     faceChain = k*[1]
@@ -278,7 +278,7 @@ for k in range(1,len(FV)+1):
 
 \paragraph{Wrong boundary extraction example}
 
-The \texttt{boundary()} operator, applied  to a cellular 2-complex wih some non-convex cells, produces incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. In order to get always a correct result, use the \texttt{boundary1} operator.
+The \texttt{boundary()} operator, applied  to a cellular 2-complex wih some non-convex cells, produces incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. In order to get always a correct result, use the \texttt{boundary2} operator.
 
 %-------------------------------------------------------------------------------
 @O test/py/boundary/test02.py
@@ -295,7 +295,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
 
-boundaryOp = boundary1(FV,EV,VV)  # <<======  NB
+boundaryOp = boundary2(FV,EV,VV)  # <<======  NB
 #boundaryOp = boundary(FV,EV)  # <<======  NB
 BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
 
@@ -352,7 +352,7 @@ matrix([[0, 1, 0],
 \begin{minipage}[c]{0.5\linewidth}
 \centering
 \begin{verbatim}
-In [2]: boundary1(FV,EV,VV).todense()
+In [2]: boundary2(FV,EV,VV).todense()
 Out[2]: 
 matrix([[0, 1, 0],
         [0, 0, 1],
@@ -381,7 +381,7 @@ matrix([[0, 1, 0],
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-2} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-3} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-5} 
-   \caption{Non-working (i.e.~\emph{wrong}) example with \texttt{boundary}. (a) Indexing of 0-,1-,and 2-cells; (b) boundary of a singleton 2-chain; (c) exploded 2-cells; (d) boundary of a singleton 2-chain. Working (i.e.~\emph{exact}) example using \texttt{boundary1}: (e--h) as above.}
+   \caption{Non-working (i.e.~\emph{wrong}) example with \texttt{boundary}. (a) Indexing of 0-,1-,and 2-cells; (b) boundary of a singleton 2-chain; (c) exploded 2-cells; (d) boundary of a singleton 2-chain. Working (i.e.~\emph{exact}) example using \texttt{boundary2}: (e--h) as above.}
    \label{fig:boundary-test02}
 \end{figure}
 
@@ -474,14 +474,14 @@ BF = boundaryCells2(CV,FV,EV)
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV)))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 
-boundaryChain = chain2BoundaryChain(boundary1(FV,EV,VV))
+boundaryChain = chain2BoundaryChain(boundary2(FV,EV,VV))
 faceChain = boundaryChain(29*[0]+[1]) + boundaryChain(30*[0]+[1])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
     (V,[FV[29],FV[30]],[EV[e] for e in faceChain]))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
     (V,[FV[29],FV[30]],[EV[e] for e in faceChain])))))
 
-cellBoundary = chain2BoundaryChain(boundary2(CV,FV,EV))([0,0,0,0,1,0])
+cellBoundary = chain2BoundaryChain(boundary3(CV,FV,EV))([0,0,0,0,1,0])
 faceChain = set()
 for f in cellBoundary: 
     faceCoords = len(FV)*[0]

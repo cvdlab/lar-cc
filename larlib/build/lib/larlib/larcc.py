@@ -136,7 +136,7 @@ def invertRelation(CV):
     return VC
 
 from boundary import boundary
-from boundary import boundary1
+from boundary import boundary2
 
 def coboundary(cells,facets):
     Boundary = boundary(cells,facets)
@@ -163,7 +163,7 @@ def crossRelation0(lenV,XV,YV):
         return XY
 
 def crossRelation(XV,YV,ZV):
-    csrXY = csc_matrix(boundary1(XV,YV,ZV))
+    csrXY = csc_matrix(boundary2(XV,YV,ZV))
     XY = [[k for k,v in  zip(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]],
            csrXY.data[csrXY.indptr[j]:csrXY.indptr[j+1]]) if v==1]
           for j in range(len(csrXY.indptr)-1)]

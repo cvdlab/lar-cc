@@ -24,14 +24,14 @@ BF = boundaryCells2(CV,FV,EV)
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV)))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 
-boundaryChain = chain2BoundaryChain(boundary1(FV,EV,VV))
+boundaryChain = chain2BoundaryChain(boundary2(FV,EV,VV))
 faceChain = boundaryChain(29*[0]+[1]) + boundaryChain(30*[0]+[1])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
     (V,[FV[29],FV[30]],[EV[e] for e in faceChain]))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
     (V,[FV[29],FV[30]],[EV[e] for e in faceChain])))))
 
-cellBoundary = chain2BoundaryChain(boundary2(CV,FV,EV))([0,0,0,0,1,0])
+cellBoundary = chain2BoundaryChain(boundary3(CV,FV,EV))([0,0,0,0,1,0])
 faceChain = set()
 for f in cellBoundary: 
     faceCoords = len(FV)*[0]

@@ -45,7 +45,7 @@ def csrBoundaryFilter2(unreliable,out,csrBBMat,cells,FE):
                     out[j,col]=0
     return out
 
-def boundary1(CV,FV,EV):
+def boundary2(CV,FV,EV):
     out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
@@ -58,11 +58,11 @@ def boundary1(CV,FV,EV):
         out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
     return out
 
-def boundary2(CV,FV,EV):
-    out = boundary1(CV,FV,EV)
+def boundary3(CV,FV,EV):
+    out = boundary2(CV,FV,EV)
     lenV = max(CAT(CV))+1
     VV = AA(LIST)(range(lenV))
-    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary1(CV,FV,VV))
+    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
     print "\ncsrBBMat =",csrBBMat.todense(),"\n"
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
@@ -84,14 +84,14 @@ def boundaryCells(cells,facets):
     return out
 
 def boundaryCells1(cells,facets,faces):
-    csrBoundaryMat = boundary1(cells,facets,faces)
+    csrBoundaryMat = boundary2(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
 def boundaryCells2(cells,facets,faces):
-    csrBoundaryMat = boundary2(cells,facets,faces)
+    csrBoundaryMat = boundary3(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]

@@ -690,7 +690,7 @@ def larPair2Triple(model):
 def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    #csrBoundaryMat = boundary1(FV,EV,VV)
+    #csrBoundaryMat = boundary2(FV,EV,VV)
     csrBoundaryMat = boundary.boundary(FV,EV)
     def larComplexChain0(chain):
         boundaryChain = chain2BoundaryChain(csrBoundaryMat)(chain)
@@ -716,7 +716,7 @@ import bool
 def MKFACES(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    bmatrix = boundary1(FV,EV,VV)
+    bmatrix = boundary2(FV,EV,VV)
     boundaryOperator = chain2BoundaryChain(bmatrix)
     chain = [0]*len(FV)
     boundingEdges = []
