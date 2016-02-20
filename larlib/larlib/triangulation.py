@@ -313,9 +313,10 @@ def pointInPolygonClassification(pol):
 
 
 """ Classification of non intersecting cycles """
+import larcc
 def internalTo(V,ev):
     classify = pointInPolygonClassification((V,ev))
-    ve = invertRelation(ev)
+    ve = larcc.invertRelation(ev)
     for v,edgeIndices in enumerate(ve):
         if len(edgeIndices) == 2: break
     v1,v2 = set(CAT([list(ev[e]) for e in edgeIndices])).symmetric_difference([v])
@@ -672,6 +673,7 @@ def boundaryModel2polylines(model):
     return polylines
 
 """ Computing a LAR 2-complex from an arrangement of line segments"""
+import integr
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)

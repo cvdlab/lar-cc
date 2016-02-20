@@ -72,11 +72,12 @@ def lar2boxes(model,qualifier=0):
     return boxes
 
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
+import larcc
 
 def MKTRIANGLES(model): 
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    FE = crossRelation(FV,EV,VV)
+    FE = larcc.crossRelation(FV,EV,VV)
     if len(V[0]) == 2: V=[v+[0] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace]) 
@@ -85,7 +86,7 @@ def MKTRIANGLES(model):
 def MKSOLID(*model): 
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    FE = crossRelation(FV,EV,VV)
+    FE = larcc.crossRelation(FV,EV,VV)
     pivot = V[0]
     #VF = invertRelation(FV) 
     #faces = [face for face in FV if face not in VF[0]]
@@ -184,10 +185,11 @@ def submanifoldMapping(pivotFace):
     return transform
 
 """ Helper functions for spacePartition """
+import larcc
 def submodel(V,FV,EV):
     lenV = len(V)
     VV = AA(LIST)(range(lenV))
-    FE = crossRelation0(lenV,FV,EV)
+    FE = larcc.crossRelation0(lenV,FV,EV)
     def submodel0(f,F):
         fE = list(set(FE[f] + CAT([FE[g] for g in F])))
         fF = [f]+F
@@ -253,9 +255,10 @@ def removeExternals(M,V,EV,fe, z,fz,ez):
     return Z,FW,EW
 
 """ Space partitioning via submanifold mapping """
+import larcc
 def spacePartition(V,FV,EV, parts):
     VV = AA(LIST)(range(len(V)))
-    FE = crossRelation(FV,EV,VV)
+    FE = larcc.crossRelation(FV,EV,VV)
     submodel0 = submodel(V,FV,EV)
     out = []
     
@@ -278,7 +281,7 @@ def spacePartition(V,FV,EV, parts):
         #VIEW(STRUCT(MKPOLS((sW,sFW+sEW)) + [red]))
         
         """ filtering of EW edges traversing z=0, giving EZ edges and incident faces FZEZ """
-        sFE = crossRelation0(len(V),sFW,sEW)    
+        sFE = larcc.crossRelation0(len(V),sFW,sEW)    
         edges = list(set([ e for k,face in enumerate(sFW)  for e in sFE[k] 
                     if meetZero(sW, sEW[e]) ]))
         edgesPerFace = [ [e for e in sFE[k] if meetZero(sW, sEW[e])] 

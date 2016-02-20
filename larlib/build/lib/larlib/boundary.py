@@ -21,7 +21,7 @@ import larlib
 import larcc
 from larcc import *
 
-def csrBoundaryFilter1(unreliable,out,csrBBMat,cells,FE):
+def csrBoundaryFilter2(unreliable,out,csrBBMat,cells,FE):
     for row in unreliable:
         for j in range(len(cells)):
             if out[row,j] == 1:
@@ -32,19 +32,17 @@ def csrBoundaryFilter1(unreliable,out,csrBBMat,cells,FE):
                     out[row,j]=0
     return out
 
-def csrBoundaryFilter2(unreliable,out,csrBBMat,cells,FE):
+def csrBoundaryFilter3(unreliable,out,csrBBMat,cells,FE):
     for col in unreliable:
-        print csrBBMat[:,col]
         cooCE = csrBBMat.T[col].tocoo()
         flawedCells = [cooCE.col[k] for k,datum in enumerate(cooCE.data)
                     if datum>2]
-        print  flawedCells,
         for j in range(out.shape[0]):
             if out[j,col] == 1:
                 if all([facet in flawedCells  for facet in FE[j]]):
                     out[j,col]=0
     return out
-
+""" path-connected-cells boundary operator """
 def boundary2(CV,FV,EV):
     out = boundary(CV,FV)
     def csrRowSum(h): 
@@ -52,10 +50,9 @@ def boundary2(CV,FV,EV):
     unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
     if unreliable != []:
         csrBBMat = boundary(FV,EV) * boundary(CV,FV)
-        print "\ncsrBBMat =",csrBBMat.todense(),"\n"
         lenV = max(CAT(CV))+1
         FE = larcc.crossRelation0(lenV,FV,EV)
-        out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
+        out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
     return out
 
 def boundary3(CV,FV,EV):
@@ -63,14 +60,12 @@ def boundary3(CV,FV,EV):
     lenV = max(CAT(CV))+1
     VV = AA(LIST)(range(lenV))
     csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
-    print "\ncsrBBMat =",csrBBMat.todense(),"\n"
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
     unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
-    print "\nunreliable =",unreliable,"\n"
     if unreliable != []:
         FE = larcc.crossRelation0(lenV,FV,EV)
-        out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
+        out = csrBoundaryFilter3(unreliable,out,csrBBMat,CV,FE)
     return out
 
 def totalChain(cells):
@@ -83,17 +78,29 @@ def boundaryCells(cells,facets):
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
-def boundaryCells1(cells,facets,faces):
+def boundary2Cells(cells,facets,faces):
     csrBoundaryMat = boundary2(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
-def boundaryCells2(cells,facets,faces):
+def boundary3Cells(cells,facets,faces):
     csrBoundaryMat = boundary3(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
+
+""" Marshalling a structure to a LAR cellular model """
+import bool
+import inters
+from bool import *
+def larMarshal2(struct):
+    W,FW,EW = struct2lar(struct)
+    quadArray = [[W[v] for v in face] for face in FW]
+    parts = bool.boxBuckets3d(containmentBoxes(quadArray))
+    Z,FZ,EZ = bool.spacePartition(W,FW,EW, parts)
+    V,FV,EV = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
+    return V,FV,EV
 

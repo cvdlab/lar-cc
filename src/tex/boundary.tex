@@ -113,11 +113,13 @@ def boundary(cells,facets):
 %-------------------------------------------------------------------------------
 
 
-\paragraph{Non-convex LAR cells}
+\subsection{Non-convex LAR cells}
 
 A more general \texttt{boundary2} operator is given in the following, aiming at compute the boundary matrix for general non-convex cellular decompositions, including \emph{multiply connected} LAR models.
 Notice that in this case an input triple made by \texttt{CV}, \texttt{FV}, and \texttt{EV} is needed,
 where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary compressed) characteristic matrices $M_d$, $M_{d-1}$, and $M_{d-2}$.
+
+\paragraph{Boundary operator from 2-chains to 1-chains}
 
 First the \texttt{boundary} operator for the convex case is computed within the \texttt{out} variable of \texttt{csr\_matrix} type. Then every \texttt{out} row (i.e.~every $(d-1)$-facet of the $d$-complex) is tested for \emph{reliability}, since every $(d-1)$-face can be shared by \emph{at most two} $d$-cells in a $d$-complex . When this condition is not satisfied, deeper tests are needed to understand what row elements must be forced to value 1, since the $(d-1)$-face itself is a subset, but not actually a facet, of the corresponding $d$-cell. 
 
@@ -133,7 +135,7 @@ import larlib
 import larcc
 from larcc import *
 
-def csrBoundaryFilter1(unreliable,out,csrBBMat,cells,FE):
+def csrBoundaryFilter2(unreliable,out,csrBBMat,cells,FE):
     for row in unreliable:
         for j in range(len(cells)):
             if out[row,j] == 1:
@@ -144,19 +146,24 @@ def csrBoundaryFilter1(unreliable,out,csrBBMat,cells,FE):
                     out[row,j]=0
     return out
 
-def csrBoundaryFilter2(unreliable,out,csrBBMat,cells,FE):
+def csrBoundaryFilter3(unreliable,out,csrBBMat,cells,FE):
     for col in unreliable:
-        print csrBBMat[:,col]
         cooCE = csrBBMat.T[col].tocoo()
         flawedCells = [cooCE.col[k] for k,datum in enumerate(cooCE.data)
                     if datum>2]
-        print  flawedCells,
         for j in range(out.shape[0]):
             if out[j,col] == 1:
                 if all([facet in flawedCells  for facet in FE[j]]):
                     out[j,col]=0
     return out
+@}
+%-------------------------------------------------------------------------------
 
+\paragraph{Boundary operator from 3-chains to 2-chains}
+
+%-------------------------------------------------------------------------------
+@D path-connected-cells boundary operator
+@{""" path-connected-cells boundary operator """
 def boundary2(CV,FV,EV):
     out = boundary(CV,FV)
     def csrRowSum(h): 
@@ -164,10 +171,9 @@ def boundary2(CV,FV,EV):
     unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
     if unreliable != []:
         csrBBMat = boundary(FV,EV) * boundary(CV,FV)
-        print "\ncsrBBMat =",csrBBMat.todense(),"\n"
         lenV = max(CAT(CV))+1
         FE = larcc.crossRelation0(lenV,FV,EV)
-        out = csrBoundaryFilter1(unreliable,out,csrBBMat,CV,FE)
+        out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
     return out
 
 def boundary3(CV,FV,EV):
@@ -175,14 +181,12 @@ def boundary3(CV,FV,EV):
     lenV = max(CAT(CV))+1
     VV = AA(LIST)(range(lenV))
     csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
-    print "\ncsrBBMat =",csrBBMat.todense(),"\n"
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
     unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
-    print "\nunreliable =",unreliable,"\n"
     if unreliable != []:
         FE = larcc.crossRelation0(lenV,FV,EV)
-        out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
+        out = csrBoundaryFilter3(unreliable,out,csrBBMat,CV,FE)
     return out
 @}
 %-------------------------------------------------------------------------------
@@ -209,14 +213,14 @@ def boundaryCells(cells,facets):
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
-def boundaryCells1(cells,facets,faces):
+def boundary2Cells(cells,facets,faces):
     csrBoundaryMat = boundary2(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
     return out
 
-def boundaryCells2(cells,facets,faces):
+def boundary3Cells(cells,facets,faces):
     csrBoundaryMat = boundary3(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
@@ -239,6 +243,7 @@ from larlib import *
 @< convex-cells boundary operator @>
 @< path-connected-cells boundary operator @>
 @< From cells and facets to boundary cells @>
+@< Marshalling a structure to a LAR cellular model @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -418,7 +423,7 @@ VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
-BF = boundaryCells2(CV,FV,EV)
+BF = boundary3Cells(CV,FV,EV)
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 @}
 %-------------------------------------------------------------------------------
@@ -450,27 +455,35 @@ In particular, first we generate a structure of cuboidal complexes, then we tran
 @O test/py/boundary/test04.py
 @{""" 3D non-convex LAR cells """
 from larlib import *
+@< Input of a cellular 3-complex @>
+@< Visualization of a 2-chain of a 3-complex @>
+@< Visualization of a 3-chain of a 3-complex @>
+@}
+%-------------------------------------------------------------------------------
 
+\paragraph{Input of a cellular 3-complex}
+%-------------------------------------------------------------------------------
+@D Input of a cellular 3-complex
+@{""" Input of a cellular 3-complex """
 V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
-mod1 = Struct([(V,FV,EV),t(.25,.25,0),s(.25,.5,2),(V,FV,EV)])
-W,FW,EW = struct2lar(mod1)
+struct = Struct([(V,FV,EV),t(.25,.25,0),s(.25,.5,2),(V,FV,EV)])
 
-quadArray = [[W[v] for v in face] for face in FW]
-parts = boxBuckets3d(containmentBoxes(quadArray))
-Z,FZ,EZ = spacePartition(W,FW,EW, parts)
-Z,FZ,EZ = larSimplify((Z,FZ,EZ),radius=0.0001)
-V,FV,EV = Z,FZ,EZ
-
+V,FV,EV = larMarshal2(struct)
 CF = AA(sorted)([[20,12,21,5,19,6],[27,1,5,28,13,23],[12,14,25,17,10,4],
 [1,7,17,24,11,18],[30,29,26,16,8,22,10,11,4,18,24,25],[2,3,8,9,0,15]])
-
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
+@}
+%-------------------------------------------------------------------------------
 
-BF = boundaryCells2(CV,FV,EV)
+\paragraph{Visualization of a 2-chain of a 3-complex}
+%-------------------------------------------------------------------------------
+@D Visualization of a 2-chain of a 3-complex
+@{""" Visualization of a 2-chain of a 3-complex """
+BF = boundary3Cells(CV,FV,EV)
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV)))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 
@@ -480,7 +493,13 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
     (V,[FV[29],FV[30]],[EV[e] for e in faceChain]))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
     (V,[FV[29],FV[30]],[EV[e] for e in faceChain])))))
+@}
+%-------------------------------------------------------------------------------
 
+\paragraph{Visualization of a 3-chain of a 3-complex}
+%-------------------------------------------------------------------------------
+@D Visualization of a 3-chain of a 3-complex
+@{""" Visualization of a 3-chain of a 3-complex """
 cellBoundary = chain2BoundaryChain(boundary3(CV,FV,EV))([0,0,0,0,1,0])
 faceChain = set()
 for f in cellBoundary: 
@@ -495,6 +514,34 @@ VIEW(SKEL_1(STRUCT(MKTRIANGLES(
 %-------------------------------------------------------------------------------
 
 \subsection{Oriented operators}
+
+\appendix
+\section{Utilities}
+
+
+\paragraph{Marshalling a structure to a LAR cellular model}
+The function \texttt{larMarshal2} transforms a \texttt{Struct} object, often used to 
+define some assembly of simpler models, to a correctly defined LAR cellular model, i.e.~to
+a cellular partition of the space, in other words a quasi-disjoint partition of the object into well-glued cells of suitable dimensions.
+
+%-------------------------------------------------------------------------------
+@D Marshalling a structure to a LAR cellular model
+@{""" Marshalling a structure to a LAR cellular model """
+import bool
+import inters
+from bool import *
+def larMarshal2(struct):
+    W,FW,EW = struct2lar(struct)
+    quadArray = [[W[v] for v in face] for face in FW]
+    parts = bool.boxBuckets3d(containmentBoxes(quadArray))
+    Z,FZ,EZ = bool.spacePartition(W,FW,EW, parts)
+    V,FV,EV = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
+    return V,FV,EV
+@}
+%-------------------------------------------------------------------------------
+
+
+
 
 \bibliographystyle{amsalpha}
 \bibliography{boundary}

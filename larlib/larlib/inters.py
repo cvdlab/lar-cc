@@ -219,11 +219,12 @@ def lines2lar(lineArray):
 
 """ Biconnected components """
 """ Adjacency lists of 1-complex vertices """
+import larcc 
 def vertices2vertices(model):
     V,EV = model
-    csrEV = csrCreate(EV)
-    csrVE = csrTranspose(csrEV)
-    csrVV = matrixProduct(csrVE,csrEV)    
+    csrEV = larcc.csrCreate(EV)
+    csrVE = larcc.csrTranspose(csrEV)
+    csrVV = larcc.matrixProduct(csrVE,csrEV)    
     cooVV = csrVV.tocoo()
     data,rows,cols = AA(list)([cooVV.data, cooVV.row, cooVV.col])
     triples = zip(data,rows,cols)
