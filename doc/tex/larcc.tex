@@ -1780,7 +1780,6 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from boundary import boundary@\\
-\mbox{}\verb@from boundary import boundary2@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def coboundary(cells,facets):@\\
 \mbox{}\verb@    Boundary = boundary(cells,facets)@\\
@@ -2907,6 +2906,7 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 \mbox{}\verb@# -*- coding: utf-8 -*-@\\
 \mbox{}\verb@""" Basic LARCC library """@\\
 \mbox{}\verb@from larlib import *@\\
+\mbox{}\verb@from boundary import boundary2,boundary3@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$The MIT Licence\nobreak\ {\footnotesize \NWlink{nuweb48}{48}}$\,\rangle$}\verb@@\\
 \mbox{}\verb@@\hbox{$\langle\,$Importing of modules or packages\nobreak\ {\footnotesize \NWlink{nuweb49a}{49a}}$\,\rangle$}\verb@@\\

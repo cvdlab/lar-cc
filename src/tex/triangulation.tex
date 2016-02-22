@@ -248,12 +248,14 @@ In order to make the function applicable also to embedded 2-complexes (notice th
 @D Solid PyPLaSM visualization of a 2-complex
 @{""" Solid PyPLaSM visualization of a 2-complex with non-contractible 
       and non-manifold cells"""
-import bool
+from boundary import boundary2
+import larcc,boolean
+
 def MKFACES(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     bmatrix = boundary2(FV,EV,VV)
-    boundaryOperator = chain2BoundaryChain(bmatrix)
+    boundaryOperator = larcc.chain2BoundaryChain(bmatrix)
     chain = [0]*len(FV)
     boundingEdges = []
     for k,face in enumerate(FV):
@@ -265,7 +267,7 @@ def MKFACES(model):
         faces = []
         for faceEdges in boundingEdges:
             facet = [V[v] for e in faceEdges for v in EV[e]]
-            transformMat = bool.faceTransformations(array(facet))
+            transformMat = boolean.faceTransformations(array(facet))
             verts = (transformMat*mat(facet).T).T.tolist()
             z = verts[0][-1]
             verts2D = [vert[:-1] for vert in verts]
@@ -299,6 +301,9 @@ faces = MKFACES(model)
 colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLACK]
 components = [COLOR(colors[k%12])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))
+VIEW(SKEL_1(STRUCT(components)))
+VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,FV,EV)))))  TODO: debug MKTRIANGLES for non-manifold cells
+VIEW(STRUCT(MKTRIANGLES((V,FV,EV))))
 @}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
@@ -315,7 +320,7 @@ colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLAC
 components = [COLOR(colors[k%12])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))
 
-VIEW(STRUCT(MKFACES((V,[FV[4]],EV))))
+VIEW(STRUCT(MKFACES((V,[FV[3]],EV))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1394,13 +1399,15 @@ def boundaryModel2polylines(model):
 %-------------------------------------------------------------------------------
 @D Visualization of a 2D complex and 2-chain
 @{""" Visualization of a 2D complex and 2-chain """
+import larcc
+
 def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     #csrBoundaryMat = boundary2(FV,EV,VV)
     csrBoundaryMat = boundary.boundary(FV,EV)
     def larComplexChain0(chain):
-        boundaryChain = chain2BoundaryChain(csrBoundaryMat)(chain)
+        boundaryChain = larcc.chain2BoundaryChain(csrBoundaryMat)(chain)
         outModel = V,[EV[e] for e in boundaryChain]
         triangleSet = larTriangulation(outModel)
         return boundaryChain,triangleSet
@@ -1535,7 +1542,7 @@ def pointInPolygonClassification(pol):
 
 
 %-------------------------------------------------------------------------------
-@O test/py/bool/test12.py @{
+@O test/py/boolean/test12.py @{
 """ Testing of point-in-polygon classification algorithm """
 from larlib import *
 
@@ -1569,7 +1576,7 @@ VIEW(STRUCT(MKPOLS((V,EV))+result))
 \paragraph{Testing of point-in-polygon classification on a random polygon}
 
 %-------------------------------------------------------------------------------
-@O test/py/bool/test14.py @{
+@O test/py/boolean/test14.py @{
 """ Testing of point-in-polygon classification  on a random polygon """
 from larlib import *
 

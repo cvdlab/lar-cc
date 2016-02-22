@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Basic LARCC library """
 from larlib import *
+from boundary import boundary2,boundary3
 
 
 """
@@ -136,7 +137,6 @@ def invertRelation(CV):
     return VC
 
 from boundary import boundary
-from boundary import boundary2
 
 def coboundary(cells,facets):
     Boundary = boundary(cells,facets)

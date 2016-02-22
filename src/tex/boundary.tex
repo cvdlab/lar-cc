@@ -96,7 +96,7 @@ Notice that both the computation of \texttt{facetCoboundary} contents, and the o
 @D convex-cells boundary operator
 @{""" convex-cells boundary operator --- best implementation """
 def boundary(cells,facets):
-    lenV = max(CAT(cells))+1
+    lenV = max(max(CAT(cells)),max(CAT(facets)))+1
     csrCV = csrCreate(cells,lenV)
     csrFV = csrCreate(facets,lenV)
     csrFC = csrFV * csrCV.T
@@ -118,6 +118,41 @@ def boundary(cells,facets):
 A more general \texttt{boundary2} operator is given in the following, aiming at compute the boundary matrix for general non-convex cellular decompositions, including \emph{multiply connected} LAR models.
 Notice that in this case an input triple made by \texttt{CV}, \texttt{FV}, and \texttt{EV} is needed,
 where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary compressed) characteristic matrices $M_d$, $M_{d-1}$, and $M_{d-2}$.
+
+\paragraph{Boundary operator from 3-chains to 2-chains}
+
+%-------------------------------------------------------------------------------
+@D path-connected-cells boundary operator
+@{""" path-connected-cells boundary operator """
+def boundary2(CV,FV,EV):
+    print "\nCV =",CV
+    print "\nFV =",FV
+    print "\nEV =",EV,"\n"
+    out = boundary(CV,FV)
+    def csrRowSum(h): 
+        return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
+    unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
+    if unreliable != []:
+        csrBBMat = boundary(FV,EV) * boundary(CV,FV)
+        lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
+        FE = larcc.crossRelation0(lenV,FV,EV)
+        out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
+    return out
+
+def boundary3(CV,FV,EV):
+    out = boundary2(CV,FV,EV)
+    lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
+    VV = AA(LIST)(range(lenV))
+    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
+    def csrColCheck(h): 
+        return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
+    unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
+    if unreliable != []:
+        FE = larcc.crossRelation0(lenV,FV,EV)
+        out = csrBoundaryFilter3(unreliable,out,csrBBMat,CV,FE)
+    return out
+@}
+%-------------------------------------------------------------------------------
 
 \paragraph{Boundary operator from 2-chains to 1-chains}
 
@@ -159,37 +194,6 @@ def csrBoundaryFilter3(unreliable,out,csrBBMat,cells,FE):
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Boundary operator from 3-chains to 2-chains}
-
-%-------------------------------------------------------------------------------
-@D path-connected-cells boundary operator
-@{""" path-connected-cells boundary operator """
-def boundary2(CV,FV,EV):
-    out = boundary(CV,FV)
-    def csrRowSum(h): 
-        return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
-    unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
-    if unreliable != []:
-        csrBBMat = boundary(FV,EV) * boundary(CV,FV)
-        lenV = max(CAT(CV))+1
-        FE = larcc.crossRelation0(lenV,FV,EV)
-        out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
-    return out
-
-def boundary3(CV,FV,EV):
-    out = boundary2(CV,FV,EV)
-    lenV = max(CAT(CV))+1
-    VV = AA(LIST)(range(lenV))
-    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
-    def csrColCheck(h): 
-        return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
-    unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
-    if unreliable != []:
-        FE = larcc.crossRelation0(lenV,FV,EV)
-        out = csrBoundaryFilter3(unreliable,out,csrBBMat,CV,FE)
-    return out
-@}
-%-------------------------------------------------------------------------------
 
 \begin{figure}[htbp] %  figure placement: here, top, bottom, or page
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-02} 
@@ -244,6 +248,7 @@ from larlib import *
 @< path-connected-cells boundary operator @>
 @< From cells and facets to boundary cells @>
 @< Marshalling a structure to a LAR cellular model @>
+@< Boundary of a 3-complex @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -468,7 +473,7 @@ from larlib import *
 V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
 struct = Struct([(V,FV,EV),t(.25,.25,0),s(.25,.5,2),(V,FV,EV)])
 
-V,FV,EV = larMarshal2(struct)
+V,FV,EV = struct2Marshal(struct)
 CF = AA(sorted)([[20,12,21,5,19,6],[27,1,5,28,13,23],[12,14,25,17,10,4],
 [1,7,17,24,11,18],[30,29,26,16,8,22,10,11,4,18,24,25],[2,3,8,9,0,15]])
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
@@ -479,20 +484,20 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 @}
 %-------------------------------------------------------------------------------
 
+
 \paragraph{Visualization of a 2-chain of a 3-complex}
 %-------------------------------------------------------------------------------
 @D Visualization of a 2-chain of a 3-complex
-@{""" Visualization of a 2-chain of a 3-complex """
-BF = boundary3Cells(CV,FV,EV)
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV)))))
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
+@{""" Visualization of the boundary 2-chain of a 3-complex """
 
-boundaryChain = chain2BoundaryChain(boundary2(FV,EV,VV))
-faceChain = boundaryChain(29*[0]+[1]) + boundaryChain(30*[0]+[1])
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
-    (V,[FV[29],FV[30]],[EV[e] for e in faceChain]))))
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
-    (V,[FV[29],FV[30]],[EV[e] for e in faceChain])))))
+V,BF,BE = larBoundary3(V,CV,FV,EV)(len(CV)*[1])
+VIEW(STRUCT(MKTRIANGLES((V,BF,EV))))
+VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,EV)) )))
+
+boundaryEdges = chain2BoundaryChain(boundary2(FV,EV,VV))
+edgeChain = boundaryEdges(29*[0]+[1]+[1]) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain]))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain])))))
 @}
 %-------------------------------------------------------------------------------
 
@@ -500,18 +505,117 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
 %-------------------------------------------------------------------------------
 @D Visualization of a 3-chain of a 3-complex
 @{""" Visualization of a 3-chain of a 3-complex """
-cellBoundary = chain2BoundaryChain(boundary3(CV,FV,EV))([0,0,0,0,1,0])
-faceChain = set()
-for f in cellBoundary: 
-    faceCoords = len(FV)*[0]
-    faceCoords[f] = 1
-    faceChain = faceChain.union(boundaryChain(faceCoords))
-VIEW(STRUCT(MKTRIANGLES(
-    (V,[FV[f] for f in cellBoundary],[EV[e] for e in faceChain]))))
-VIEW(SKEL_1(STRUCT(MKTRIANGLES(
-    (V,[FV[f] for f in cellBoundary],[EV[e] for e in faceChain])))))
+
+V,BF,BE = larBoundary3(V,CV,FV,EV)([0,0,0,0,1,1])
+VIEW(STRUCT(MKTRIANGLES((V,BF,BE))))
+VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,BE)) )))
 @}
 %-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test05.py
+@{""" Boundary of a 3-complex """
+from larlib import *
+
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
+cube = Struct([ (V,FV,EV) ])
+assembly = Struct([ cube, Struct([t(0,.5,0), r(PI/4,0,0), s(.5,.5,.5),cube]) ])
+
+V,FV,EV = struct2Marshal(assembly)
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.6))
+
+CF = [[1,2,3,4,6,7],[0,1,2,3,4,5,6,7,8,9,10,11]]
+CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
+
+V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1])
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
+VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV)))))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test06.py
+@{""" Boundary of a 3-complex """
+from larlib import *
+
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
+cube = Struct([ (V,FV,EV) ])
+hole = Struct([t(0,.5,0), r(PI/4,0,0), s(.5,.5,.5),cube])
+assembly = Struct([ cube, hole, t(0,0,SQRT(0.5)), hole ])
+
+V,FV,EV = struct2Marshal(assembly) # WRONG:  TODO: check ...
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[[],[],FV],hpc,0.6))
+
+CF = [[4,5,7,16,17,19,20],[3,8,6,12,11,13],[0,1,10,20],[]]
+CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
+
+V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1,1,0])
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
+VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV)))))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test07.py
+@{""" Boundary of a 3-complex """
+from larlib import *
+
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
+cube = Struct([ (V,FV,EV) ])
+hole = Struct([t(0,.5,0), r(PI/4,0,0), s(1,.5/SQRT(2),.5/SQRT(2)),cube])
+assembly = Struct([ cube, hole ])
+
+V,FV,EV = struct2Marshal(assembly) # WRONG:  TODO: check ...
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[[],[],FV],hpc,1))
+
+CF = [[1,3,6,7,12,11],[0,2,4,5,9,8]]
+CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
+
+V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0])
+VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
+#VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
+@}
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test08.py
+@{""" Boundary of a 3-complex """
+from larlib import *
+
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
+cube = Struct([ (V,FV,EV) ])
+hole = Struct([t(0,.5,0), r(PI/4,0,0), s(1,.5/SQRT(2),.5/SQRT(2)),cube])
+assembly = Struct([ cube, hole ])
+assembly2 = Struct([ assembly, t(0,0,.5), s(0.5,1,1), hole ])
+
+V,FV,EV = struct2Marshal(assembly2) # WRONG:  TODO: check ...
+VV = AA(LIST)(range(len(V)))
+hpc = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[[],[],FV],hpc,0.7))
+
+CF = [[1,3,6,14,17,18,19, 0,4,9,11,15,16, 2,5,7,8,10,13],[0,4,9,11,15,16],[2,5,7,8,10,13]]
+CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
+
+V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0,0])
+VIEW(STRUCT(MKFACES((V,BF,BE))))
+VIEW(SKEL_1(STRUCT(MKFACES((V,BF,BE)))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,BE))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
+@}
+%-------------------------------------------------------------------------------
+
+
+
 
 \subsection{Oriented operators}
 
@@ -520,26 +624,58 @@ VIEW(SKEL_1(STRUCT(MKTRIANGLES(
 
 
 \paragraph{Marshalling a structure to a LAR cellular model}
-The function \texttt{larMarshal2} transforms a \texttt{Struct} object, often used to 
+The function \texttt{struct2Marshal} transforms a \texttt{Struct} object, often used to 
 define some assembly of simpler models, to a correctly defined LAR cellular model, i.e.~to
 a cellular partition of the space, in other words a quasi-disjoint partition of the object into well-glued cells of suitable dimensions.
 
 %-------------------------------------------------------------------------------
 @D Marshalling a structure to a LAR cellular model
 @{""" Marshalling a structure to a LAR cellular model """
-import bool
-import inters
-from bool import *
-def larMarshal2(struct):
+import boolean,inters
+
+def struct2Marshal(struct):
     W,FW,EW = struct2lar(struct)
     quadArray = [[W[v] for v in face] for face in FW]
-    parts = bool.boxBuckets3d(containmentBoxes(quadArray))
-    Z,FZ,EZ = bool.spacePartition(W,FW,EW, parts)
+    parts = boolean.boxBuckets3d(boolean.containmentBoxes(quadArray))
+    Z,FZ,EZ = boolean.spacePartition(W,FW,EW, parts)
     V,FV,EV = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
     return V,FV,EV
 @}
 %-------------------------------------------------------------------------------
 
+\paragraph{Boundary of a 3-complex}
+%-------------------------------------------------------------------------------
+@D Boundary of a 3-complex
+@{""" Boundary of a 3-complex """
+import larcc
+"""  WHY wrong ????  TOCHECK !!
+def larBoundary3(V,CV,FV,EV):
+    VV = AA(LIST)(range(len(V)))
+    operator3 = larcc.chain2BoundaryChain(boundary3(CV,FV,EV))
+    operator2 = larcc.chain2BoundaryChain(boundary2(FV,EV,VV))
+    def larBoundary30(chain):
+        BF = operator3(chain)
+        faceCoords = len(FV)*[0]
+        for f in BF: faceCoords[f] = 1
+        BE = operator2(faceCoords)
+        return V,[FV[f] for f in BF],[EV[e] for e in BE]
+    return larBoundary30
+"""
+def larBoundary3(V,CV,FV,EV):
+    VV = AA(LIST)(range(len(V)))
+    operator3 = larcc.chain2BoundaryChain(boundary3(CV,FV,EV))
+    operator2 = larcc.chain2BoundaryChain(boundary2(FV,EV,VV))
+    def larBoundary30(chain):
+        BF = operator3(chain)
+        BE = set()
+        for f in BF: 
+            faceCoords = len(FV)*[0]
+            faceCoords[f] = 1
+            BE = BE.union(operator2(faceCoords))
+        return V,[FV[f] for f in BF],[EV[e] for e in BE]
+    return larBoundary30
+@}
+%-------------------------------------------------------------------------------
 
 
 

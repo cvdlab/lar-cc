@@ -4,7 +4,7 @@ from larlib import *
 V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
 struct = Struct([(V,FV,EV),t(.25,.25,0),s(.25,.5,2),(V,FV,EV)])
 
-V,FV,EV = larMarshal2(struct)
+V,FV,EV = struct2Marshal(struct)
 CF = AA(sorted)([[20,12,21,5,19,6],[27,1,5,28,13,23],[12,14,25,17,10,4],
 [1,7,17,24,11,18],[30,29,26,16,8,22,10,11,4,18,24,25],[2,3,8,9,0,15]])
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
@@ -13,27 +13,20 @@ VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
-""" Visualization of a 2-chain of a 3-complex """
-BF = boundary3Cells(CV,FV,EV)
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV)))))
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
+""" Visualization of the boundary 2-chain of a 3-complex """
 
-boundaryChain = chain2BoundaryChain(boundary2(FV,EV,VV))
-faceChain = boundaryChain(29*[0]+[1]) + boundaryChain(30*[0]+[1])
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
-    (V,[FV[29],FV[30]],[EV[e] for e in faceChain]))))
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES(
-    (V,[FV[29],FV[30]],[EV[e] for e in faceChain])))))
+V,BF,BE = larBoundary3(V,CV,FV,EV)(len(CV)*[1])
+VIEW(STRUCT(MKTRIANGLES((V,BF,EV))))
+VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,EV)) )))
+
+boundaryEdges = chain2BoundaryChain(boundary2(FV,EV,VV))
+edgeChain = boundaryEdges(29*[0]+[1]+[1]) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain]))))
+VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain])))))
 
 """ Visualization of a 3-chain of a 3-complex """
-cellBoundary = chain2BoundaryChain(boundary3(CV,FV,EV))([0,0,0,0,1,0])
-faceChain = set()
-for f in cellBoundary: 
-    faceCoords = len(FV)*[0]
-    faceCoords[f] = 1
-    faceChain = faceChain.union(boundaryChain(faceCoords))
-VIEW(STRUCT(MKTRIANGLES(
-    (V,[FV[f] for f in cellBoundary],[EV[e] for e in faceChain]))))
-VIEW(SKEL_1(STRUCT(MKTRIANGLES(
-    (V,[FV[f] for f in cellBoundary],[EV[e] for e in faceChain])))))
+
+V,BF,BE = larBoundary3(V,CV,FV,EV)([0,0,0,0,1,1])
+VIEW(STRUCT(MKTRIANGLES((V,BF,BE))))
+VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,BE)) )))
 

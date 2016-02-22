@@ -1302,7 +1302,6 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 %-------------------------------------------------------------------------------
 @D From cells and facets to boundary operator
 @{from boundary import boundary
-from boundary import boundary2
 
 def coboundary(cells,facets):
     Boundary = boundary(cells,facets)
@@ -2141,6 +2140,7 @@ from scipy.sparse import vstack,hstack,csr_matrix,coo_matrix,lil_matrix,triu
 @{# -*- coding: utf-8 -*-
 """ Basic LARCC library """
 from larlib import *
+from boundary import boundary2,boundary3
 
 @< The MIT Licence @>
 @< Importing of modules or packages @>

@@ -689,13 +689,15 @@ def larPair2Triple(model):
     return V,polygons,EV
 
 """ Visualization of a 2D complex and 2-chain """
+import larcc
+
 def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     #csrBoundaryMat = boundary2(FV,EV,VV)
     csrBoundaryMat = boundary.boundary(FV,EV)
     def larComplexChain0(chain):
-        boundaryChain = chain2BoundaryChain(csrBoundaryMat)(chain)
+        boundaryChain = larcc.chain2BoundaryChain(csrBoundaryMat)(chain)
         outModel = V,[EV[e] for e in boundaryChain]
         triangleSet = larTriangulation(outModel)
         return boundaryChain,triangleSet
@@ -714,12 +716,14 @@ def viewLarComplexChain(model):
 
 """ Solid PyPLaSM visualization of a 2-complex with non-contractible 
       and non-manifold cells"""
-import bool
+from boundary import boundary2
+import larcc,boolean
+
 def MKFACES(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     bmatrix = boundary2(FV,EV,VV)
-    boundaryOperator = chain2BoundaryChain(bmatrix)
+    boundaryOperator = larcc.chain2BoundaryChain(bmatrix)
     chain = [0]*len(FV)
     boundingEdges = []
     for k,face in enumerate(FV):
@@ -731,7 +735,7 @@ def MKFACES(model):
         faces = []
         for faceEdges in boundingEdges:
             facet = [V[v] for e in faceEdges for v in EV[e]]
-            transformMat = bool.faceTransformations(array(facet))
+            transformMat = boolean.faceTransformations(array(facet))
             verts = (transformMat*mat(facet).T).T.tolist()
             z = verts[0][-1]
             verts2D = [vert[:-1] for vert in verts]
