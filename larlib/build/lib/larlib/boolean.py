@@ -74,15 +74,20 @@ def lar2boxes(model,qualifier=0):
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
 import larcc
 
-def MKTRIANGLES(model): 
+def MKTRIANGLES(model,color=False):
     V,FV,EV = model
     lenV = len(V)
     VV = AA(LIST)(range(len(V)))
     FE = larcc.crossRelation(FV,EV,VV)
     if len(V[0]) == 2: V=[v+[0] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
-    return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace]) 
-        for triangledFace in triangleSets ]
+    if color:
+        colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GREEN,GRAY,ORANGE,BLACK,BLUE,PURPLE,BROWN]
+        return [ COLOR(colors[k%12])(STRUCT([MKPOL([verts,[[3,2,1]],None]) 
+            for verts in triangledFace])) for k,triangledFace in enumerate(triangleSets) ]
+    else:
+        return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace])
+                for triangledFace in triangleSets ]
 
 def MKSOLID(*model): 
     V,FV,EV = model
