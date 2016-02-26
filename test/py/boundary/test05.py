@@ -14,6 +14,4 @@ CF = [[1,2,3,4,6,7],[0,1,2,3,4,5,6,7,8,9,10,11]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
 V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1])
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
-VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV)))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 

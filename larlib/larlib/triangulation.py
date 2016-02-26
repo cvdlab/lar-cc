@@ -677,7 +677,6 @@ import integr
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)
-    print "\necycles =",ecycles,"\n"
     areas = AA(ABS)(integr.surfIntegration((V,cycles,EV),True))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]

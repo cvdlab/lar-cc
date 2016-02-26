@@ -18,9 +18,6 @@ def boundary(cells,facets):
 
 """ path-connected-cells boundary operator """
 def boundary2(CV,FV,EV):
-    print "\nCV =",CV
-    print "\nFV =",FV
-    print "\nEV =",EV,"\n"
     out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
@@ -134,4 +131,73 @@ def larBoundary3(V,CV,FV,EV):
             BE = BE.union(operator2(faceCoords))
         return V,[FV[f] for f in BF],[EV[e] for e in BE]
     return larBoundary30
+
+""" Query from 3-chain to incident 2-chain """
+def larCells2Faces(CV,FV,EV):
+    csrFC = boundary3(CV,FV,EV)
+    def larCells2Faces0(chain):
+        chainCoords = csc_matrix((csrFC.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrFC * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Faces0
+
+""" Query from 3-chain to incident 1-chain """
+def larCells2Edges(CV,FV,EV):
+    lenV = max(CAT(CV))+1
+    VV = AA(LIST)(range(lenV))
+    csrEC = boundary2(FV,EV,VV) * boundary3(CV,FV,EV)
+    def larCells2Faces0(chain):
+        chainCoords = csc_matrix((csrEC.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrEC * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Faces0
+
+""" Query from 2-chain to incident 1-chain """
+def larFaces2Edges(FV,EV):
+    lenV = max(CAT(FV)) + 1
+    VV = AA(LIST)(range(lenV))
+    csrEF = boundary2(FV,EV,VV)
+    def larCells2Faces0(chain):
+        chainCoords = csc_matrix((csrEF.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrEF * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Faces0
+
+""" kfaces-to-kfaces relations """
+
+def larCells2Cells(CV,FV,EV):
+    csrMat = boundary3(CV,FV,EV)
+    csrCC = csrMat.T * csrMat
+    def larCells2Cells0(chain):
+        chainCoords = csc_matrix((csrCC.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrCC * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Cells0
+
+def larFaces2Faces(FV,EV):
+    lenV = max(CAT(FV)) + 1
+    VV = AA(LIST)(range(lenV))
+    csrMat = boundary2(FV,EV,VV)
+    csrFF = csrMat.T * csrMat
+    def larFaces2Faces0(chain):
+        chainCoords = csc_matrix((csrFF.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrFF * chainCoords
+        return out.tocoo().row.tolist()
+    return larFaces2Faces0
+
+def larEdges2Edges(EV,VV):
+    lenV = len(VV)
+    csrMat = boundary(EV,VV)
+    csrEE = csrMat.T * csrMat
+    def larFaces2Faces0(chain):
+        chainCoords = csc_matrix((csrEE.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrEE * chainCoords
+        return out.tocoo().row.tolist()
+    return larFaces2Faces0
 

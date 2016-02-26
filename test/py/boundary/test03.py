@@ -26,4 +26,4 @@ hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
 BF = boundary3Cells(CV,FV,EV)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV),color=True)))

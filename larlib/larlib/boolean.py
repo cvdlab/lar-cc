@@ -349,7 +349,6 @@ def boundaryTriangulation(V,FV,EV,FE):
         return mapVerts0
         
     for f,face in enumerate(FV):
-        print "f,face =",f,face
         triangledFace = []
         EW = [EV[e] for e in FE[f]]
         pivotFace = [V[v] for v in face]
@@ -372,9 +371,7 @@ def boundaryTriangulation(V,FV,EV,FE):
                 return [poly]
             else: return polygons
 
-        print "\npolygons =",polygons
         thePolygons = filtering(polygons)
-        print "\nthePolygons =",thePolygons
         setsOfTriangles = triangulation.polygons2TriangleSet(W,thePolygons)
         trias = [[p+[1],q+[1],r+[1]] for p,q,r in setsOfTriangles[0]]
         

@@ -125,9 +125,6 @@ where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary 
 @D path-connected-cells boundary operator
 @{""" path-connected-cells boundary operator """
 def boundary2(CV,FV,EV):
-    print "\nCV =",CV
-    print "\nFV =",FV
-    print "\nEV =",EV,"\n"
     out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
@@ -237,9 +234,269 @@ def boundary3Cells(cells,facets,faces):
 
 \subsection{Oriented operators}
 
+\subsubsection{Oriented simplicial complexes}
+
+\subsubsection{Oriented LAR complexes}
+
+
+
+
+
+
+\section{From relations to operators}
+%===============================================================================
+
+The LAR approach to topology, implemented in the \texttt{LarLib} modules, allows the user to consider the topological relations of incidence and adjacency between faces of a cellular complex as \emph{linear operators} between chains of cells of various dimensions. 
+
+The previous approach was to consider the incidence and adjaceny as set-theoretical relations, to be solved by using typical database tools. Conversely, according to the novel IT evolution towards big data and cloud-based storage, even for geometrical data, \texttt{LarLib}  takes advantage of a conceptual framework based on linear-algebra and sparse matrices.
+
+\subsection{Classification of operators} 
+
+In the standard solid modeling approach, mainly based on boundary representations, the standard topological operations concern the answers to queries, by reporting the subsets of boundary elements which are incident (different dimension) or adjacent (equal dimension) to assigned boundary elements. Boundary elements stand there for three type of boundary cells: aka \emph{faces} $F$, \emph{edges} $E$, and \emph{vertices} $V$. Nine binary relations may be considered, that are summarized in Table~\ref{tab:one}.
+\begin{table}[htbp]
+\caption{Binary topological relations between boundary elements in boundary representations of solid models}
+\begin{center}
+\begin{tabular}{|c|ccc|}
+\hline 
+  & F & E & V \\
+\hline 
+F & FF & FE & FV \\
+E & EF & EE & EV \\
+V & VF & VE & VV \\
+\hline 
+\end{tabular}
+\end{center}
+\label{tab:one}
+\end{table}%
+
+Conversely, LAR  models are normally based on cellular 3-complexes, so using four sets of cells, namely \emph{3-cells} $C$, \emph{2-cells} $F$, \emph{1-cells} $E$, and \emph{0-cells} $V$. The resulting tables of topological relations, and the associated linear operators, are shown in Tables~\ref{tab:two}a and \ref{tab:two}b, respectively.
+\begin{table}[htbp]
+\caption{Binary topological relations between cells of LAR decompositions of  solid models and corresponding topological operators on $\partial_\circ$ chains.}
+\vspace{3mm}
+\begin{minipage}[c]{0.5\linewidth}\centering
+\begin{tabular}{|c|cccc|}
+\hline 
+  & C & F & E & V \\
+\hline 
+C & CC & \fbox{CF} & \fbox{CE} & CV \\
+F & \fbox{FC} & FF & \fbox{FE} & FV \\
+E & \fbox{EC} & \fbox{EF} & EE & EV \\
+V & VC & VF & VE & VV \\
+\hline 
+\end{tabular}
+\end{minipage}
+\begin{minipage}[c]{0.5\linewidth}\centering
+\begin{tabular}{|c|cccc|}
+\hline 
+  & C & F & E & V \\
+\hline 
+C & $\v{1}_C^\top\circ\v{1}_C$ & {$\partial_3$} & {$\partial_2\circ\partial_3$} & $\v{1}_C$ \\
+F & {$\delta_2$} & $\v{1}_F^\top\circ\v{1}_F$ & {$\partial_2$} & $\v{1}_F$ \\
+E & {$\delta_2\circ\delta_1$} & {$\delta_1$} & $\v{1}_E^\top\circ\v{1}_E$ & $\v{1}_E$ \\
+V & $\v{1}_C^\top$ & $\v{1}_F^\top$ & $\v{1}_E^\top$ & $\v{1}_V$ \\
+\hline 
+\end{tabular}
+\end{minipage}
+\label{tab:two}
+\end{table}%
+
+\subsection{Topological relations}
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+\subsubsection{Adjacency relations}
+
+%-------------------------------------------------------------------------------
+@D kfaces-to-kfaces relation
+@{""" kfaces-to-kfaces relation """
+eeOp = larEdges2Edges(EV,VV)
+EE = [eeOp([k]) for k in range(len(EV))]
+
+ffOp = larFaces2Faces(FV,EV)
+FF = [ffOp([k]) for k in range(len(FV))]
+
+ccOp = larCells2Cells(CV,FV,EV)
+CC = [ccOp([k]) for k in range(len(CV))]
+
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Adjacency relations examples}
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test09.py
+@{""" Adjacency relations examples """
+from larlib import *
+
+sys.path.insert(0, 'test/py/boundary/')
+from test07 import *
+
+@< kfaces-to-kfaces relation @>
+print "\nCC =",CC
+print "\nFF =",FF
+print "\nEE =",EE,"\n"
+
+V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0])
+VIEW(STRUCT(MKTRIANGLES((V,[FV[h] for h in FF[-1]],EV),color=True)))
+VIEW(STRUCT(MKPOLS((V,[EV[h] for h in EE[-1]]))+[COLOR(RED)(MKPOLS((V,[EV[-1]]))[0])]))
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsubsection{Incidence relations}
+
+%-------------------------------------------------------------------------------
+@D mfaces-to-nfaces relations
+@{""" mfaces-to-nfaces relations """
+fcOp = larCells2Faces(CV,FV,EV)
+CF = [fcOp([k]) for k in range(len(CV))]
+FC = invertRelation(CF)
+
+ecOp = larCells2Edges(CV,FV,EV)
+CE = [ecOp([k]) for k in range(len(CV))]
+EC = invertRelation(CE)
+    
+efOp = larFaces2Edges(FV,EV)
+FE = [efOp([k]) for k in range(len(FV))]
+EF = invertRelation(FE)
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Incidence relations examples}
+%-------------------------------------------------------------------------------
+@O test/py/boundary/test10.py
+@{""" Incidence relations examples """
+from larlib import *
+
+sys.path.insert(0, 'test/py/boundary/')
+from test08 import *
+
+@< mfaces-to-nfaces relations @>
+print "\nFC =",FC
+print "\nEC =",EC
+print "\nEF =",EF,"\n"
+
+
+@}
+%-------------------------------------------------------------------------------
+
+
+
+
+
+\subsection{Querying}
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The more important topological operations in a geometric system concern the answer to queries of the type: ``what is the $h$-chain whose cells are $(k-h)$-incident to a given $h$-chain''?
+
+An efficient answer is given by the three higher-level functions in this section, respectively denoted as \texttt{larCells2Faces}, \texttt{larCells2Edges}, and \texttt{larFaces2Edges}.
+Their first application, over the two or three necessary (compressed) characteristic matrices, returns the \texttt{csr\_matrix} of the topological operator, that can be so cached by the calling code.
+The second application, over the list of $h$-chain indices, returns the list of $k$-chain indices of the cells that share with them a $(k-h)$-face.
+
+
+\subsubsection{Topological incidences}
+
+
+\paragraph{Query from 3-chain to incident 2-chain}
+%-------------------------------------------------------------------------------
+@D Query from 3-chain to incident 2-chain
+@{""" Query from 3-chain to incident 2-chain """
+def larCells2Faces(CV,FV,EV):
+    csrFC = boundary3(CV,FV,EV)
+    def larCells2Faces0(chain):
+        chainCoords = csc_matrix((csrFC.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrFC * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Faces0
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Query from 3-chain to incident 1-chain}
+%-------------------------------------------------------------------------------
+@D Query from 3-chain to incident 1-chain
+@{""" Query from 3-chain to incident 1-chain """
+def larCells2Edges(CV,FV,EV):
+    lenV = max(CAT(CV))+1
+    VV = AA(LIST)(range(lenV))
+    csrEC = boundary2(FV,EV,VV) * boundary3(CV,FV,EV)
+    def larCells2Faces0(chain):
+        chainCoords = csc_matrix((csrEC.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrEC * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Faces0
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Query from 2-chain to incident 1-chain}
+%-------------------------------------------------------------------------------
+@D Query from 2-chain to incident 1-chain
+@{""" Query from 2-chain to incident 1-chain """
+def larFaces2Edges(FV,EV):
+    lenV = max(CAT(FV)) + 1
+    VV = AA(LIST)(range(lenV))
+    csrEF = boundary2(FV,EV,VV)
+    def larCells2Faces0(chain):
+        chainCoords = csc_matrix((csrEF.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrEF * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Faces0
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\subsubsection{Topological adjacencies}
+
+\paragraph{kfaces-to-kfaces relations}
+%-------------------------------------------------------------------------------
+@D kfaces-to-kfaces relations
+@{""" kfaces-to-kfaces relations """
+
+def larCells2Cells(CV,FV,EV):
+    csrMat = boundary3(CV,FV,EV)
+    csrCC = csrMat.T * csrMat
+    def larCells2Cells0(chain):
+        chainCoords = csc_matrix((csrCC.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrCC * chainCoords
+        return out.tocoo().row.tolist()
+    return larCells2Cells0
+
+def larFaces2Faces(FV,EV):
+    lenV = max(CAT(FV)) + 1
+    VV = AA(LIST)(range(lenV))
+    csrMat = boundary2(FV,EV,VV)
+    csrFF = csrMat.T * csrMat
+    def larFaces2Faces0(chain):
+        chainCoords = csc_matrix((csrFF.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrFF * chainCoords
+        return out.tocoo().row.tolist()
+    return larFaces2Faces0
+
+def larEdges2Edges(EV,VV):
+    lenV = len(VV)
+    csrMat = boundary(EV,VV)
+    csrEE = csrMat.T * csrMat
+    def larFaces2Faces0(chain):
+        chainCoords = csc_matrix((csrEE.shape[1],1),dtype='b')
+        for k in chain: chainCoords[k,0] = 1
+        out = csrEE * chainCoords
+        return out.tocoo().row.tolist()
+    return larFaces2Faces0
+@}
+%-------------------------------------------------------------------------------
+
+
+\subsection{Examples}
+
+
 
 \section{Exporting}
-
+%===============================================================================
 %-------------------------------------------------------------------------------
 @O larlib/larlib/boundary.py
 @{""" boundary operators """
@@ -249,6 +506,10 @@ from larlib import *
 @< From cells and facets to boundary cells @>
 @< Marshalling a structure to a LAR cellular model @>
 @< Boundary of a 3-complex @>
+@< Query from 3-chain to incident 2-chain @>
+@< Query from 3-chain to incident 1-chain @>
+@< Query from 2-chain to incident 1-chain @>
+@< kfaces-to-kfaces relations @>
 @}
 %-------------------------------------------------------------------------------
 
@@ -310,7 +571,7 @@ boundaryOp = boundary2(FV,EV,VV)  # <<======  NB
 BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in BF])))) 
-VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,FV,EV)))) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV),color=True))) 
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV))))) 
 
 for k in range(1,len(FV)+1):
@@ -429,7 +690,7 @@ hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
 BF = boundary3Cells(CV,FV,EV)
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV),color=True)))
 @}
 %-------------------------------------------------------------------------------
 
@@ -491,12 +752,12 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 @{""" Visualization of the boundary 2-chain of a 3-complex """
 
 V,BF,BE = larBoundary3(V,CV,FV,EV)(len(CV)*[1])
-VIEW(STRUCT(MKTRIANGLES((V,BF,EV))))
+VIEW(STRUCT(MKTRIANGLES((V,BF,EV),color=True)))
 VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,EV)) )))
 
 boundaryEdges = chain2BoundaryChain(boundary2(FV,EV,VV))
 edgeChain = boundaryEdges(29*[0]+[1]+[1]) 
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain]))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain]),color=True)))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain])))))
 @}
 %-------------------------------------------------------------------------------
@@ -531,9 +792,7 @@ CF = [[1,2,3,4,6,7],[0,1,2,3,4,5,6,7,8,9,10,11]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
 V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1])
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
-VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
-VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV)))))
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
 @}
 %-------------------------------------------------------------------------------
 
@@ -575,14 +834,13 @@ assembly = Struct([ cube, hole ])
 V,FV,EV = struct2Marshal(assembly) # WRONG:  TODO: check ...
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[[],[],FV],hpc,1))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.6))
 
 CF = [[1,3,6,7,12,11],[0,2,4,5,9,8]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
 V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0])
-VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
-#VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,EV),color=True)))
 @}
 %-------------------------------------------------------------------------------
 
@@ -607,8 +865,8 @@ CF = [[1,3,6,14,17,18,19, 0,4,9,11,15,16, 2,5,7,8,10,13],[0,4,9,11,15,16],[2,5,7
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
 V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0,0])
-VIEW(STRUCT(MKTRIANGLES((V,BF,BE)))) 
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) 
+VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))))
 @}
 %-------------------------------------------------------------------------------
@@ -629,6 +887,7 @@ Notice that one of 2-cells (as well one of 3-cells) are non-contractible and non
 
 
 \subsection{Oriented operators}
+
 
 \appendix
 \section{Utilities}
