@@ -3,7 +3,7 @@ from setuptools import setup
 import sys,os,math
 
 setup(name='larlib',
-	  version='0.2',
+	  version='0.2.1',
 	  description='Linear algebraic representation of topology and geometry as a complex of chain spaces',
 	  url='https://github.com/cvdlab/lar-cc',
 	  author='Alberto Paoluzzi',
