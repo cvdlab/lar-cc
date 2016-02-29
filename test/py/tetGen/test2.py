@@ -37,29 +37,13 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV+EV+VV))))
 VIEW(EXPLODE(1.2,1.2,1.2)(AA(SKEL_1)(MKPOLS((V,CV)))))
 
+V,BF,BE = larBoundary3(V,CV,FV,EV)([1,1,1,1])
+VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
+
 
 # Correction of non-signed boundary op for general (non contractible) LAR cells 
 # ------------------------------------------------------------------------------
-
-def boundary3(CV,FV):
-    lenV = max(CAT(CV))+1
-    FC = invertRelation(crossRelation(lenV,CV,FV))
-    oddAdjacencies = [f for f,cells in enumerate(FC) if len(cells)>2]
-    if oddAdjacencies == []: 
-        return boundary(CV,FV)
-    else:
-        FF = crossRelation(lenV,FV,FV)
-        for f in oddAdjacencies:
-            anomalies = list(set(FF[f]).difference([f]))
-            for g in anomalies:
-                if {f}.issubset(FF[g]): 
-                    FC[g]= list(set(FC[f]).difference(FC[g]))
-                    FC[f]= list(set(FC[f]).difference(FC[g]))
-        out = csr_matrix((len(FV),len(CV)),dtype='b')
-        for h in range(len(FV)):
-            for k in FC[h]:
-                out[h,k] = 1
-        return out
 
 V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
 mod1 = Struct([(V,FV,EV),t(.25,.25,0),s(.25,.5,2),(V,FV,EV)])
@@ -81,18 +65,22 @@ CF = AA(sorted)([[20,12,21,5,19,6],
 
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
-CV = [[10, 11, 12, 13, 18, 19, 20, 21],
- [18, 19, 20, 21, 22, 23, 25, 26],
- [0, 1, 4, 5, 10, 13, 18, 21],
- [2, 3, 4, 5, 18, 21, 25, 26],
- [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 17, 18, 21, 24, 25, 26, 27],
- [6, 8, 14, 15, 16, 24, 28, 29]]
+CV = [[10,11,12,13,18,19,20,21],
+[18,19,20,21,22,23,25,26],
+[0,1,4,5,10,13,18,21],
+[2,3,4,5,18,21,25,26],
+[0,1,2,3,4,5,6,7,8,9,10,13,16,17,18,21,24,25,26,27],
+[6,8,14,15,16,24,28,29]]
 
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 
-BF = boundaryCells(CV,FV)
+V,BF,BE = larBoundary3(V,CV,FV,EV)([1,1,1,1])
+VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
+
+
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,[FV[f] for f in BF],EV))))
 
 
