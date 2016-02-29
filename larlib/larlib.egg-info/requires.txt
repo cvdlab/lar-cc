@@ -1,3 +1,4 @@
 scipy
 poly2tri
+meshpy
 Cython

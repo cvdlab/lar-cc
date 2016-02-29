@@ -1,8 +1,9 @@
 setup.py
 larlib/__init__.py
 larlib/architectural.py
-larlib/bool.py
 larlib/bool1.py
+larlib/boolean.py
+larlib/boundary.py
 larlib/hijson.py
 larlib/hospital.py
 larlib/integr.py
