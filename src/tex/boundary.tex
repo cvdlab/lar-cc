@@ -10,10 +10,13 @@
 
 %----macros begin---------------------------------------------------------------
 \usepackage{color}
+\usepackage{amsmath}
 \usepackage{amsthm}
+\newtheorem{theorem}{Theorem}
 
 \def\conv{\mbox{\textrm{conv}\,}}
 \def\aff{\mbox{\textrm{aff}\,}}
+\def\N{\mathbb{N}}
 \def\E{\mathbb{E}}
 \def\R{\mathbb{R}}
 \def\Z{\mathbb{Z}}
@@ -230,6 +233,73 @@ def boundary3Cells(cells,facets,faces):
 @}
 %-------------------------------------------------------------------------------
 
+
+\subsection{Correctness proof}
+
+Our goal is to get a constructive and, of course, correct representation of the matrix $[\partial_3]$ starting only from $M_1$, $M_2$, and $M_3$.
+
+We have sufficient evidence here to support the correctness of our identification of the matrices of boundary operators as discussed in the previous section. Remember that $M_1$, $M_2$, and $M_3$ are the characteristic matrices of 1-cells, 2-cells and 3-cells as subsets of vertices, and that $C_0, C_1, C_2, C_3$ are the linear spaces of 0-, 1-, 2-, and 3-chains, with coefficients in the field $\Z_2=\{0,1\}$.
+
+In the following we give a dimension-independent proof, even our implementation is currently restricted to $d\in\{1,2,3\}$.
+
+\paragraph{Preamble}
+It is well known that a linear transformation $T: V\to W$ between two linear spaces, with fixed bases  of dimension $n$ and $m$ respectively, is represented uniquely by a matrix $A\in \R^{m\times n}$, that by columns contains the coordinate representations in $W$ of the basis vectors of $V$. 
+
+
+\begin{theorem}
+Consider the linear transformation $\partial_d: C_d \to C_{d-1}$. Having fixed the bases, made by singleton cells in $C_d$ and $C_{d-1}$, the transformation $\partial_d$ can be represented as a matrix product ${c} \mapsto [\partial_d]\, {c}$, where ${c}\in C_d$ is the coordinate representation of a d-chain, and $[\partial_d]$ is the $m\times n$ binary matrix having \emph{by columns} the coordinate representation in $C_{d-1}$ of the boundary $(d-1)$-chains of cells in $C_{d}$.
+\end{theorem}
+
+\begin{proof}
+The computation of the boundary operator matrix $A_d = [\partial_d] \in\Z_2^{m\times n}$, where $m$ and $n$ are the dimensions of the linear spaces $C_d$ and $C_{d-1}$, respectively, is made in two steps, in the general case.
+
+\paragraph{First step} 
+Consider the characteristic matrices $M_d\in\Z_2^{m\times q}$ and $M_{d-1}\in\Z_2^{n\times q}$ having as rows the images of characteristic functions of bases elements as subsets of vertices, where $q$ is the number of vertices.
+
+Then consider the product matrix $M=M_{d-1}M_{d}^t=(m_{ij})$, with values in the set $\N$ of non-negative integers. Clearly $m_{ij}$ will coincide with the number of vertices shared by cells $c_i\in C_{d-1}$ and $c_j\in C_d$, i.e. with the cardinality of their intersection as discrete sets of vertices. The predicate 
+\begin{equation}
+m_{ij} \equiv |c_i|
+\label{eq:intersection}
+\end{equation}
+is a \emph{necessary} condition for $c_i$ to be a \emph{facet} of $c_j$. Using the Iverson bracket notation, where $[P]$ returns either 1 or 0 depending on the truth of predicate $P$, we can  assign (to) the $(i,j)$ element of our (tentative) boundary matrix the corresponding value:
+\begin{equation}
+A_d(i,j) := [m_{ij} \equiv |c_i|], \qquad 1\leq i\leq m,\, 1\leq j\leq n.
+\label{eq:iverson}
+\end{equation}
+Unfortunately, condition~(\ref{eq:intersection}) is also \emph{sufficient} for $c_i$ being a facet of $c_j$ only when both are convex cells. In other words, Equation~(\ref{eq:iverson}) with $A_d=[\partial_d]$ holds in full generality if and only if the cellular complex under consideration is made only by convex cells. With more general cells, the column $j$ of the $\partial_d$ matrix contains the coordinate representation in $C_{d-1}$ of a possibly proper \emph{superset}  of $\partial_d(c_j)$.
+
+\paragraph{Second step} 
+In order to reduce the columns of the approximate boundary matrix $A_d$ to their exact value in $\Z_2^m$, with $m=\dim C_{d-1}$, we may compute an (approximate) matrix $B\in\N^{p\times n}$ of the operator $\partial_{d-1}\circ\partial_d: C_d \to C_{d-2}$, with $p=\dim C_{d-2}$, by using the approximate representation $A_d$ of the matrix $[\partial_d]$. Let us remark that the exact value of the latter is yet unknown at this point.
+
+According to what asserted in the preamble, every column of this matrix should contain the coordinate representation (in $C_{d-2}$) of the boundary of the boundary of a basis element in $C_d$, i.e.~of a singleton $d$-chain.
+
+Therefore, we will enforce the validity of the constraints $\partial\partial=0$, by checking
+the values of columns in the product matrix $B_d = A_{d-1} A_d \in \N^{p\times n}$. In particular, ~every unit vector $e_j$, \emph{i.e.},~the coordinate representation of a singleton chain $c_j\in C_d$, should be mapped by $B_d$ to the zero vector in $\Z_2^p$:
+\begin{equation}
+e_j \mapsto B_d\, e_j = 0^{p} \in \Z_2^p, \qquad c_j\in C_d.
+\label{eq:boundaryofboundary}
+\end{equation}
+
+Now, let consider the cells of LAR both as subsets of vertices and as cells of a cellular complex.
+Actually, in the LAR general case, there may be some $(d-1)$-facets of some $d$-cell that are subsets of other $d$-cells of which they are not faces. It is not difficult to provide some examples of this fact (see Figure~\ref{fig:}).
+
+When considering each column of $B$ as the coordinate representation of the boundary $(d-2)$-chain of a $d$-cell, and noting that every $d$-cell must be \emph{orientable}, and hence separating an interior space from an exterior space, we conclude that the number of occurrencies of each $(d-2)$-cell in a $B$ column must be necessarily even. In particular, it must be either equal to 2 if the column (the $d$-cell) is locally manifold, or equal to some even number $>2$ if the $d$-cell is locally non-manifold. But \emph{odd incidencies} of $(d-2)$-cells along the $d$-cell boundary \emph{are not allowed}. 
+
+Therefore, for each column $B_j$ ($1\leq j\leq n$) we look for the subset of rows (i.e.~boundary $(d-2)$-faces of $c_j$) of odd value. If there are none, the column $A_j$, associated to $c_j$, is a correct representation of $[\partial_d]_j$. Otherways, we must look for the subsets of $(d-1)$-cells \emph{incorrectly} considered facets of $c_j$.
+
+Let us call $R_j$ the subset of row indices corresponding to odd values in column $B_j$, and consider the subset of $A_j$ rows with value $a_{ij}=1$, i.e.~the superset $S_j$ of $(d-1)$-cells including the boundary $(d-1)$-chain of $c_j$. The redundant vertex subsets that are not boundary facets of $c_j$  are easily discovered by looking at the $(d-2)$-boundary of each $s\in S_j$.
+
+In particular, the $(d-1)$-cell $s\in S_j$ is \emph{redundant} or \emph{extraneous} with respect to the $c_j$ boundary if and only if $\partial_{d-1}(s) \subseteq R_j$, because that property has certainly introduced a spurious increment for each $(d-2)$-facet in the count of incidences of boundary facets.
+
+At this point, we can finally compute the actual boundary matrix $\partial_d$ for a \emph{general} LAR cellular complex, using again the Iverson brackets:
+\begin{align*}
+[\partial_d]_{ij} = [(a_{ij}=1) \wedge ((R_j=\emptyset) \vee (R_j \not\supseteq \partial_{d-1}(s_i)))]\qquad 1\leq i\leq m,\, 1\leq j\leq n
+\end{align*}
+In words it sounds that \emph{the element $(i,j)$ of the boundary matrix $[\partial]_d$ equals that of the ``approximate'' matrix $A_d$ if and only if either the redundant set $R_j$ is empty, or if it does not contain the $(d-1)$-boundary chain of the $i$-th $(d-1)$-cell.}
+
+Just remember that the redundant set $R_j$ contains the $(d-2)$-faces with odd incidencies on $c_j\in C_d$, computed via the ``approximate'' matrix $B_d = A_{d-1}\circ A_d$.
+
+\end{proof}  
 
 
 \subsection{Oriented operators}
