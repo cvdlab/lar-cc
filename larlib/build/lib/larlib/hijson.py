@@ -50,7 +50,8 @@ def subComplexAroundPoint(V,FV,EV,FE,queryPoint):
     return vertexSubset,faceSubset,edgeSubset
 
 if __name__=="__main__":
-    FE = crossRelation(FV,EV)
+    VV = AA(LIST)(range(len(V)))
+    FE = crossRelation(FV,EV,VV)
     queryPoint = (0.6,0.58)
     vertexSubset,faceSubset,edgeSubset = subComplexAroundPoint(V,FV,EV,FE,queryPoint)
     ##VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in FE[faceSubset[0]]])) + [

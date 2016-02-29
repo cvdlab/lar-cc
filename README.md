@@ -16,12 +16,20 @@ see [docs](https://github.com/cvdlab/plasm.js/blob/master/docs/Readme.md)
 
 install [pyplasm](https://github.com/plasm-language/pyplasm)
 
+download [poly2tri](https://github.com/davidcarne/poly2tri.python)
+and type in a terminal, within its directory:
+
+```
+python setup.py build_ext -i
+sudo python setup.py install
+```
+
 ### install
 
 type in a terminal, from any directory
 
 ```
-sudo easy_install larlib 
+sudo pip install larlib 
 ```
 
 or, from your workspace directory

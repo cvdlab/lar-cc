@@ -10,4 +10,4 @@ colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GRAY,GREEN,ORANGE,BLUE,PURPLE,BROWN,BLAC
 components = [COLOR(colors[k%12])(faces[k]) for k in range(len(FV))]
 VIEW(STRUCT(components))
 
-VIEW(STRUCT(MKFACES((V,[FV[4]],EV))))
+VIEW(STRUCT(MKFACES((V,[FV[3]],EV))))

@@ -313,9 +313,10 @@ def pointInPolygonClassification(pol):
 
 
 """ Classification of non intersecting cycles """
+import larcc
 def internalTo(V,ev):
     classify = pointInPolygonClassification((V,ev))
-    ve = invertRelation(ev)
+    ve = larcc.invertRelation(ev)
     for v,edgeIndices in enumerate(ve):
         if len(edgeIndices) == 2: break
     v1,v2 = set(CAT([list(ev[e]) for e in edgeIndices])).symmetric_difference([v])
@@ -605,11 +606,13 @@ def structFilter(obj):
         return Struct(structFilter(obj.body),obj.name,obj.category)
     return obj
 
+import boundary
+
 def structBoundaryModel(struct):
     filteredStruct = structFilter(struct)
     #import pdb; pdb.set_trace()
     V,FV,EV = struct2lar(filteredStruct)
-    edgeBoundary = boundaryCells(FV,EV)
+    edgeBoundary = boundary.boundaryCells(FV,EV)
     cycles,_ = boundaryCycles(edgeBoundary,EV)
     edges = [signedEdge for cycle in cycles for signedEdge in cycle]
     orientedBoundary = [ AA(SIGN)(edges), AA(ABS)(edges)]
@@ -670,10 +673,10 @@ def boundaryModel2polylines(model):
     return polylines
 
 """ Computing a LAR 2-complex from an arrangement of line segments"""
+import integr
 def larPair2Triple(model):
     V,EV = model
     cycles,ecycles = makeCycles(model)
-    print "\necycles =",ecycles,"\n"
     areas = AA(ABS)(integr.surfIntegration((V,cycles,EV),True))
     orderedCycles = sorted([[area,cycles[f]] for f,area in enumerate(areas)])
     interiorCycles = [face for area,face in orderedCycles[:-1]]
@@ -685,13 +688,15 @@ def larPair2Triple(model):
     return V,polygons,EV
 
 """ Visualization of a 2D complex and 2-chain """
+import larcc
+
 def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    #csrBoundaryMat = boundary1(FV,EV,VV)
-    csrBoundaryMat = boundary(FV,EV)
+    #csrBoundaryMat = boundary2(FV,EV,VV)
+    csrBoundaryMat = boundary.boundary(FV,EV)
     def larComplexChain0(chain):
-        boundaryChain = chain2BoundaryChain(csrBoundaryMat)(chain)
+        boundaryChain = larcc.chain2BoundaryChain(csrBoundaryMat)(chain)
         outModel = V,[EV[e] for e in boundaryChain]
         triangleSet = larTriangulation(outModel)
         return boundaryChain,triangleSet
@@ -710,11 +715,14 @@ def viewLarComplexChain(model):
 
 """ Solid PyPLaSM visualization of a 2-complex with non-contractible 
       and non-manifold cells"""
+from boundary import boundary2
+import larcc,boolean
+
 def MKFACES(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    bmatrix = boundary1(FV,EV,VV)
-    boundaryOperator = chain2BoundaryChain(bmatrix)
+    bmatrix = boundary2(FV,EV,VV)
+    boundaryOperator = larcc.chain2BoundaryChain(bmatrix)
     chain = [0]*len(FV)
     boundingEdges = []
     for k,face in enumerate(FV):
@@ -722,7 +730,22 @@ def MKFACES(model):
         unitChain[k] = 1
         boundingEdges += [boundaryOperator(unitChain)]
     print "boundingEdges =",boundingEdges
-    faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
-        for edges in boundingEdges]
+    if len(V[0])==3:
+        faces = []
+        for faceEdges in boundingEdges:
+            facet = [V[v] for e in faceEdges for v in EV[e]]
+            transformMat = boolean.faceTransformations(array(facet))
+            verts = (transformMat*mat(facet).T).T.tolist()
+            z = verts[0][-1]
+            verts2D = [vert[:-1] for vert in verts]
+            polylines = [POLYLINE([verts2D[k],verts2D[k+1]]) for k in range(0,len(verts2D),2)]
+            hpc = SOLIDIFY(STRUCT(polylines))
+            verts2D,cells,pols = UKPOL(hpc)
+            verts3D = mat([v+[z] for v in verts2D]).T
+            verts3D = (transformMat.I*verts3D).T         
+            faces += [MKPOL([verts3D.tolist(),cells,pols])]
+    elif len(V[0])==2:
+        faces = [SOLIDIFY(STRUCT([POLYLINE([V[v] for v in EV[e]]) for e in edges])) 
+            for edges in boundingEdges]
     return faces
 

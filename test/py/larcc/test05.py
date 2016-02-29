@@ -4,7 +4,7 @@ from larlib import *
 
 """ Oriented boundary matrix visualization """
 np.set_printoptions(threshold='nan')
-csrSignedBoundaryMat = signedSimplicialBoundary (FV,EV)
+csrSignedBoundaryMat = signedSimplicialBoundary (V,FV,EV)
 Z = csr2DenseMatrix(csrSignedBoundaryMat)
 print "\ncsrSignedBoundaryMat =\n", Z
 import matplotlib.pyplot

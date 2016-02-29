@@ -1,0 +1,269 @@
+Help on class MeshInfo in module meshpy.tet:
+
+class MeshInfo(meshpy._tetgen.MeshInfo, meshpy.common.MeshInfoBase)
+ |  Method resolution order:
+ |      MeshInfo
+ |      meshpy._tetgen.MeshInfo
+ |      Boost.Python.instance
+ |      __builtin__.object
+ |      meshpy.common.MeshInfoBase
+ |  
+ |  Methods defined here:
+ |  
+ |  dump(self)
+ |  
+ |  set_element_constraints(self, element_constraints)
+ |  
+ |  set_elements(self, elements)
+ |  
+ |  set_facets(self, facets, markers=None)
+ |      Set a list of simple, single-polygon factes. Unlike :meth:`set_facets_ex`,
+ |      :meth:`set_facets` does not allow hole and only lets you use a single
+ |      polygon per facet.
+ |      
+ |      :param facets: a list of facets, where each facet is a single
+ |        polygons, represented by a list of point indices.
+ |      :param markers: Either None or a list of integers of the same
+ |        length as *facets*. Each integer is the facet marker assigned
+ |        to its corresponding facet.
+ |      
+ |      :note: When the above says "list", any repeatable iterable
+ |        also accepted instead.
+ |  
+ |  set_facets_ex(self, facets, facet_holestarts=None, markers=None)
+ |      Set a list of complicated factes. Unlike :meth:`set_facets`,
+ |      :meth:`set_facets_ex` allows holes and multiple polygons per
+ |      facet.
+ |      
+ |      :param facets: a list of facets, where each facet is a list
+ |        of polygons, and each polygon is represented by a list
+ |        of point indices.
+ |      :param facet_holestarts: Either None or a list of hole starting points
+ |        for each facet. Each facet may have several hole starting points.
+ |        The mesh generator starts "eating" a hole into the facet at each
+ |        starting point and continues until it hits a polygon specified
+ |        in this facet's record in *facets*.
+ |      :param markers: Either None or a list of integers of the same
+ |        length as *facets*. Each integer is the facet marker assigned
+ |        to its corresponding facet.
+ |      
+ |      :note: When the above says "list", any repeatable iterable
+ |        also accepted instead.
+ |  
+ |  write_vtk(self, filename)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from meshpy._tetgen.MeshInfo:
+ |  
+ |  __init__(...)
+ |      __init__( (object)arg1) -> None :
+ |      
+ |          C++ signature :
+ |              void __init__(_object*)
+ |  
+ |  __reduce__ = <unnamed Boost.Python function>(...)
+ |  
+ |  load_medit(...)
+ |      load_medit( (MeshInfo)arg1, (str)arg2, (int)arg3) -> None :
+ |      
+ |          C++ signature :
+ |              void load_medit((anonymous namespace)::tMeshInfo {lvalue},char*,int)
+ |  
+ |  load_mtr(...)
+ |      load_mtr( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void load_mtr((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  load_node(...)
+ |      load_node( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void load_node((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  load_off(...)
+ |      load_off( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void load_off((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  load_plc(...)
+ |      load_plc( (MeshInfo)arg1, (str)arg2, (int)arg3) -> None :
+ |      
+ |          C++ signature :
+ |              void load_plc((anonymous namespace)::tMeshInfo {lvalue},char*,int)
+ |  
+ |  load_ply(...)
+ |      load_ply( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void load_ply((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  load_poly(...)
+ |      load_poly( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void load_poly((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  load_stl(...)
+ |      load_stl( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void load_stl((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  load_tetmesh(...)
+ |      load_tetmesh( (MeshInfo)arg1, (str)arg2, (int)arg3) -> None :
+ |      
+ |          C++ signature :
+ |              void load_tetmesh((anonymous namespace)::tMeshInfo {lvalue},char*,int)
+ |  
+ |  load_var(...)
+ |      load_var( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void load_var((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  save_edges(...)
+ |      save_edges( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void save_edges((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  save_elements(...)
+ |      save_elements( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void save_elements((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  save_faces(...)
+ |      save_faces( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void save_faces((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  save_neighbors(...)
+ |      save_neighbors( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void save_neighbors((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  save_nodes(...)
+ |      save_nodes( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void save_nodes((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  save_poly(...)
+ |      save_poly( (MeshInfo)arg1, (str)arg2) -> None :
+ |      
+ |          C++ signature :
+ |              void save_poly((anonymous namespace)::tMeshInfo {lvalue},char*)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from meshpy._tetgen.MeshInfo:
+ |  
+ |  adjacent_elements
+ |  
+ |  edge_markers
+ |  
+ |  edges
+ |  
+ |  element_attributes
+ |  
+ |  element_volumes
+ |  
+ |  elements
+ |  
+ |  face_markers
+ |  
+ |  faces
+ |  
+ |  facet_constraints
+ |  
+ |  facet_markers
+ |  
+ |  facets
+ |  
+ |  holes
+ |  
+ |  neighbors
+ |  
+ |  number_of_element_attributes
+ |  
+ |  number_of_element_vertices
+ |  
+ |  number_of_point_attributes
+ |  
+ |  point_attributes
+ |  
+ |  point_markers
+ |  
+ |  point_metric_tensors
+ |  
+ |  points
+ |  
+ |  regions
+ |  
+ |  segment_constraints
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes inherited from meshpy._tetgen.MeshInfo:
+ |  
+ |  __instance_size__ = 1928
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from Boost.Python.instance:
+ |  
+ |  __dict__
+ |  
+ |  __weakref__
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes inherited from Boost.Python.instance:
+ |  
+ |  __new__ = <built-in method __new__ of Boost.Python.class object>
+ |      T.__new__(S, ...) -> a new object with type S, a subtype of T
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from meshpy.common.MeshInfoBase:
+ |  
+ |  set_holes(self, hole_starts)
+ |  
+ |  set_points(self, points, point_markers=None)
+ |  
+ |  write_neu(self, outfile, bc={}, periodicity=None, description='MeshPy Output')
+ |      Write the mesh out in (an approximation to) Gambit neutral mesh format.
+ |      
+ |      outfile is a file-like object opened for writing.
+ |      
+ |      bc is a dictionary mapping single face markers (or frozensets of them)
+ |      to a tuple (bc_name, bc_code).
+ |      
+ |      periodicity is either a tuple (face_marker, (px,py,..)) giving the
+ |      face marker of the periodic boundary and the period in each coordinate
+ |      direction (0 if none) or the value None for no periodicity.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from meshpy.common.MeshInfoBase:
+ |  
+ |  set_holes(self, hole_starts)
+ |  
+ |  set_points(self, points, point_markers=None)
+ |  
+ |  write_neu(self, outfile, bc={}, periodicity=None, description='MeshPy Output')
+ |      Write the mesh out in (an approximation to) Gambit neutral mesh format.
+ |      
+ |      outfile is a file-like object opened for writing.
+ |      
+ |      bc is a dictionary mapping single face markers (or frozensets of them)
+ |      to a tuple (bc_name, bc_code).
+ |      
+ |      periodicity is either a tuple (face_marker, (px,py,..)) giving the
+ |      face marker of the periodic boundary and the period in each coordinate
+ |      direction (0 if none) or the value None for no periodicity.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from meshpy.common.MeshInfoBase:
+ |  
+ |  face_vertex_indices_to_face_marker
+(END)

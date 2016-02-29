@@ -26,7 +26,7 @@ EV = [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[0,2],[1,3],[4,6],[5,7],
 
 csrBoundaryMat = boundary(CV,FV)
 print "wrong boundary matrix =",csrBoundaryMat.todense()
-csrBoundaryMat = boundary1(CV,FV,EV)
+csrBoundaryMat = boundary2(CV,FV,EV)
 print "right boundary matrix =",csrBoundaryMat.todense()
 
 VV = AA(LIST)(range(len(V)))

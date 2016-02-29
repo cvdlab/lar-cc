@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Basic LARCC library """
+from larlib import *
+from boundary import boundary2,boundary3
+
 
 """
 The MIT License
@@ -112,29 +115,6 @@ def csrBoundaryFilter(CSRm, facetLengths):
     out = mtx.tocsr()
     return out
 
-def csrBoundaryFilter1(csrBoundaryBoundaryMat,cells,facets,faces,lenV,FE, CSRm, facetLengths):
-    maxs = [max(CSRm[k].data) for k in range(CSRm.shape[0])]
-    inputShape = CSRm.shape
-    coo = CSRm.tocoo()
-    for k in range(len(coo.data)):
-        if coo.data[k]==maxs[coo.row[k]]: coo.data[k] = 1
-        else: coo.data[k] = 0
-    mtx = coo_matrix((coo.data, (coo.row, coo.col)), shape=inputShape)
-    out = mtx.tocsr()
-    
-    unreliable = [k for k in range(out.shape[0]) if sum(out[k,:].todense()[0]) > 2]
-    if unreliable != []:
-        for row in unreliable:
-            for j in range(len(cells)):
-                if out[row,j] == 1:
-                    csrCFE = csrBoundaryBoundaryMat[:,j]
-                    cooCFE = csrCFE.tocoo()
-                    flawedCells = [cooCFE.row[k] for k,datum in enumerate(cooCFE.data)
-                        if datum>2]
-                    if all([facet in flawedCells  for facet in FE[row]]):
-                        out[row,j]=0
-    return out
-
 def csrPredFilter(CSRm, pred):
     # can be done in parallel (by rows)
     coo = CSRm.tocoo()
@@ -156,24 +136,7 @@ def invertRelation(CV):
         for v in cell: VC[v] += [k]
     return VC
 
-def boundary(cells,facets):
-    lenV = max(max(CAT(AA(list)(cells))),max(CAT(AA(list)(facets))))
-    csrCV = csrCreate(cells,lenV)
-    csrFV = csrCreate(facets,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-    return csrBoundaryFilter(csrFC,facetLengths)
-
-def boundary1(CV,FV,EV):
-    lenV = max(list(CAT(CV))+CAT(AA(list)(FV)))+1
-    csrCV = csrCreate(CV,lenV)
-    csrFV = csrCreate(FV,lenV)
-    csrFC = matrixProduct(csrFV, csrTranspose(csrCV))
-    facetLengths = [csrCell.getnnz() for csrCell in csrCV]
-    VV = AA(LIST)(range(lenV))
-    csrBoundaryBoundaryMat = boundary(FV,EV)*boundary(CV,FV)
-    FE = crossRelation1(lenV,CV,FV,EV,True)
-    return csrBoundaryFilter1(csrBoundaryBoundaryMat,CV,FV,EV,lenV,FE,csrFC,facetLengths)
+from boundary import boundary
 
 def coboundary(cells,facets):
     Boundary = boundary(cells,facets)
@@ -183,34 +146,9 @@ def coboundary1(cells,facets):
     Boundary = boundary(cells,facets)
     return csrTranspose(Boundary)
 
-def totalChain(cells):
-    return csrCreate([[0] for cell in cells])  # ????  zero ??
-
-def boundaryCells(cells,facets):
-    csrBoundaryMat = boundary(cells,facets)
-    csrChain = totalChain(cells)
-    csrBoundaryChain = matrixProduct(csrBoundaryMat, csrChain)
-    for k,value in enumerate(csrBoundaryChain.data):
-        if value % 2 == 0: csrBoundaryChain.data[k] = 0
-    out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
-    return out
-
 """ Computation of topological relation """
-def crossRelation(V,XV,YV):
-    csrXV = csrCreate(XV,lenV=len(V))
-    csrYV = csrCreate(YV,lenV=len(V))
-    csrXY = matrixProduct(csrXV, csrYV.T)
-    XY = [None for k in range(len(XV))]
-    for k,face in enumerate(XV):
-        data = csrXY[k].data
-        col = csrXY[k].indices
-        XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
-        # NOTE: val depends on the relation under consideration ...
-    return XY
-
-def crossRelation1(lenV,ZV,XV,YV,terminal=False):
-    if terminal:  
-        print "\n****\nXV =",XV
+def crossRelation0(lenV,XV,YV):
+    if len(YV) == len(CAT(YV)) == lenV:  
         return XV
     else:
         csrXV = csrCreate(XV,lenV)
@@ -220,9 +158,16 @@ def crossRelation1(lenV,ZV,XV,YV,terminal=False):
         for k,face in enumerate(XV):
             data = csrXY[k].data
             col = csrXY[k].indices
-            XY[k] = [col[h] for h,val in enumerate(data) if val==2] 
+            XY[k] = [col[h] for h,val in enumerate(data) if val==min(len(XV[k]),len(YV[h]))]
             # NOTE: val depends on the relation under consideration ...
         return XY
+
+def crossRelation(XV,YV,ZV):
+    csrXY = csc_matrix(boundary2(XV,YV,ZV))
+    XY = [[k for k,v in  zip(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]],
+           csrXY.data[csrXY.indptr[j]:csrXY.indptr[j+1]]) if v==1]
+          for j in range(len(csrXY.indptr)-1)]
+    return XY
 
 def signedSimplicialBoundary (CV,FV):
     # compute the set of pairs of indices to [boundary face,incident coface]
@@ -237,7 +182,17 @@ def signedSimplicialBoundary (CV,FV):
     missingVertIndices = [c.index(missingVert(f,c)) for f,c in vertLists]
 
     # signed incidence coefficients
+    def checkPermutation(vertLists,missingVertIndices):
+        sameOrientation = []
+        for (face,coface),index in zip(vertLists,missingVertIndices):
+            cell = tuple([vert for k,vert in enumerate(coface) if k!=index])
+            if len(cell)==2 and cell==face: sameOrientation += [1]
+            else: sameOrientation += [-1]  # TODO: generalize for any "cell"
+        return sameOrientation
+
+    sameOrientation = checkPermutation(vertLists,missingVertIndices)
     faceSigns = AA(C(POWER)(-1))(missingVertIndices)
+    faceSigns = AA(PROD)(TRANS([faceSigns,sameOrientation]))
 
     # signed boundary matrix
     csrSignedBoundaryMat = csr_matrix( (faceSigns, TRANS(pairs)) )
@@ -246,7 +201,7 @@ def signedSimplicialBoundary (CV,FV):
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
 def boundaryCellsCocells(cells,facets):
-    csrSignedBoundaryMat = signedSimplicialBoundary(cells,facets)
+    csrSignedBoundaryMat = signedSimplicialBoundary(V,cells,facets)
     csrTotalChain = totalChain(cells)
     csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
     cooCells = csrBoundaryChain.tocoo()    

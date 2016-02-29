@@ -22,7 +22,8 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,2.5))
 """ Selection of specialized 1-chains """
 
 """ Classification of edges (boundary, interior, passage 1-chains) """
-FE = crossRelation(V,FV,EV)
+VV = AA(LIST)(range(len(V)))
+FE = crossRelation(FV,EV,VV)
 boundaryEdges = boundaryCells(FV[:-1], EV)
 corridorEdges = list(set(CAT([FE[k] for k in [1,16,9,19,10]])).difference(boundaryEdges))
 internalEdges = set(range(len(EV))).difference(boundaryEdges+corridorEdges)
