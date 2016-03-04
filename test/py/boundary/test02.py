@@ -12,7 +12,7 @@ submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
 
 boundaryOp = boundary2(FV,EV,VV)  # <<======  NB
-#boundaryOp = boundary(FV,EV)  # <<======  NB
+boundaryOp = boundary(FV,EV)  # <<======  NB
 BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in BF])))) 
