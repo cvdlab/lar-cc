@@ -38,6 +38,31 @@ def zeroPos(EV,edgeCycle,k):
     else: return False
     
 
+"""
+choose the "next" face g_i  on "ordered" coboundary of edge
+"""
+def adjFace(boundaryOperator,EV,EF_angle,faceChain):
+    def adjFace0(edge):
+        if edge > 0:  edgeLoop = REVERSE(EF_angle[edge])
+        elif edge < 0:  edgeLoop = EF_angle[-edge]
+        elif edge == 0: 
+            if zeroPos(EV,edgeCycle,k): 
+                edgeLoop = REVERSE(EF_angle[edge])
+            else:
+                edgeLoop = EF_angle[-edge]
+        edgeLoop = edgeLoop + [edgeLoop[0]]  # all positive indices
+        print "edgeLoop =",edgeLoop
+        pivotFace = set([ABS(f) for f in faceChain]).intersection(edgeLoop).pop()
+        if pivotFace in edgeLoop:
+            pivotIndex = edgeLoop.index(pivotFace)
+        else:
+            pivotIndex = edgeLoop.index(-pivotFace)
+        adjacentFace = edgeLoop[pivotIndex+1]
+        theSign = boundaryOperator[ABS(edge),adjacentFace]
+        print "adjacentFace,edge,pivotFace,theSign =",adjacentFace,edge,pivotFace,theSign
+        return adjacentFace * -(theSign*SIGN(edge))
+    return adjFace0
+
 
 """
 sort on angles the co-boundaries of 1-cells (loops of signed faces)
@@ -67,7 +92,7 @@ while nonWorkedFaces != set():
     compute the oriented 1-boundary  E := ∂_2(F) (loops of signed edges)
     """
     vect = csc_matrix((m,1),dtype='b')
-    for face in faceChain:  vect[face] = 1
+    for face in faceChain:  vect[face] = SIGN(face)
     edgeCycleCoords = boundaryOperator * vect
     edgeCycle = coords2chain(edgeCycleCoords)
     print "\nedgeCycle=",edgeCycle
@@ -78,37 +103,22 @@ while nonWorkedFaces != set():
         """
         for each edge on E 
         """
+        look4face = adjFace(boundaryOperator,EV,EF_angle,faceChain)
         for k,edge in enumerate(edgeCycle):
             print "\nedge=",edge
-            """
-            choose the "next" face g_i  on "ordered" coboundary of edge
-            """
-            if edge > 0:  faceLoop = REVERSE(EF_angle[edge])
-            elif edge < 0:  faceLoop = EF_angle[-edge]
-            elif edge == 0: 
-                if zeroPos(EV,edgeCycle,k): 
-                    faceLoop = REVERSE(EF_angle[edge])
-                else:
-                    faceLoop = EF_angle[-edge]
-            faceLoop = faceLoop + [faceLoop[0]]
-            print "faceLoop=",faceLoop
-            pivot = faceChain.intersection(faceLoop).pop()
-            print "pivot=",pivot
-            pivotIndex = faceLoop.index(pivot)
-            print "pivotIndex=",pivotIndex
-            adjacentFace = faceLoop[pivotIndex+1]
+            adjacentFace = look4face(edge)
             """
             assemble all the g_i with F in a new 2-chain F := F \cup [g_i]
             """
             faceChain = faceChain.union([adjacentFace])
             print "faceChain=",faceChain
             #VIEW(STRUCT(MKTRIANGLES((V,[FV[f] for f in faceChain],EV),color=True)))
-            nonWorkedFaces = nonWorkedFaces.difference([adjacentFace])
+            nonWorkedFaces = nonWorkedFaces.difference([ABS(adjacentFace)])
             print "nonWorkedFaces=",nonWorkedFaces
             """
             """
         vect = csc_matrix((m,1),dtype='b')
-        for face in faceChain:  vect[face] = 1
+        for face in faceChain:  vect[ABS(face)] = SIGN(face)
         edgeCycleCoords = boundaryOperator * vect
         edgeCycle = coords2chain(edgeCycleCoords)
         print "\nedgeCycle=",edgeCycle
@@ -117,4 +127,10 @@ while nonWorkedFaces != set():
     """
 
         
-        
+
+V,BF,BE = larBoundary3(V,FV,EV,VV)([1]*len(FV))
+V,BF,BE = larBoundary3(V,FV,EV,VV)([0]*3 +[1] +[0]*8 +[1])
+
+
+VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
+VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
