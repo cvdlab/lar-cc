@@ -1,5 +1,8 @@
+
+"""
 Extraction of 3-cells from a 2-skeleton embedded in 3D
 ========================================
+"""
 
 def coords2chain(chainCoords):
     chain = []
@@ -29,7 +32,7 @@ def larBoundary2(FV,EV):
     return csr_matrix(signedBoundary2)
 
 def zeroPos(EV,edgeCycle,k):
-    cycle = edgecyle + [edgecyle[0]]
+    cycle = edgeCycle + [edgeCycle[0]]
     assert cycle[k] == 0
     if cycle[k+1] > 0: k_end = EV[k+1][0]
     else: k_end = EV[k+1][1]
@@ -41,7 +44,7 @@ def zeroPos(EV,edgeCycle,k):
 """
 choose the "next" face g_i  on "ordered" coboundary of edge
 """
-def adjFace(boundaryOperator,EV,EF_angle,faceChain):
+def adjFace(boundaryOperator,EV,EF_angle,faceChain,edgeCycle):
     def adjFace0(edge):
         if edge > 0:  edgeLoop = REVERSE(EF_angle[edge])
         elif edge < 0:  edgeLoop = EF_angle[-edge]
@@ -64,73 +67,86 @@ def adjFace(boundaryOperator,EV,EF_angle,faceChain):
     return adjFace0
 
 
-"""
-sort on angles the co-boundaries of 1-cells (loops of signed faces)
-"""
-model = V,FV,EV
-efOp = larFaces2Edges(FV,EV)
-FE = [efOp([k]) for k in range(len(FV))]
-EF_angle, _,_,_ = faceSlopeOrdering(model,FE)
-"""
-initialize the 2-coboundary array of arrays, with boundary 2-faces of 3-cells by row
-"""
-m = len(FV)
-nonWorkedFaces = set(range(m))
-coboundary_2 = []
-boundaryOperator = larBoundary2(FV,EV)
-"""
-repeat until the set of non-worked faces is empty
-"""
-while nonWorkedFaces != set():
-    """
-    Take an elementary 2-chain F = [f]
-    """
-    seedFace = nonWorkedFaces.pop()
-    nonWorkedFaces = nonWorkedFaces.difference({seedFace})
-    faceChain = {seedFace}
-    """
-    compute the oriented 1-boundary  E := ∂_2(F) (loops of signed edges)
-    """
-    vect = csc_matrix((m,1),dtype='b')
-    for face in faceChain:  vect[face] = SIGN(face)
-    edgeCycleCoords = boundaryOperator * vect
-    edgeCycle = coords2chain(edgeCycleCoords)
-    print "\nedgeCycle=",edgeCycle
-    """
-    repeat until E[F] = ø
-    """
-    while edgeCycle != []:
-        """
-        for each edge on E 
-        """
-        look4face = adjFace(boundaryOperator,EV,EF_angle,faceChain)
-        for k,edge in enumerate(edgeCycle):
-            print "\nedge=",edge
-            adjacentFace = look4face(edge)
-            """
-            assemble all the g_i with F in a new 2-chain F := F \cup [g_i]
-            """
-            faceChain = faceChain.union([adjacentFace])
-            print "faceChain=",faceChain
-            #VIEW(STRUCT(MKTRIANGLES((V,[FV[f] for f in faceChain],EV),color=True)))
-            nonWorkedFaces = nonWorkedFaces.difference([ABS(adjacentFace)])
-            print "nonWorkedFaces=",nonWorkedFaces
-            """
-            """
-        vect = csc_matrix((m,1),dtype='b')
-        for face in faceChain:  vect[ABS(face)] = SIGN(face)
-        edgeCycleCoords = boundaryOperator * vect
-        edgeCycle = coords2chain(edgeCycleCoords)
-        print "\nedgeCycle=",edgeCycle
-    """
-    put the signed F elements in a new column of ∂_3 (new row of coboundary_2)
-    """
+def larBoundary3((V,FV,EV)):
+	"""
+	sort on angles the co-boundaries of 1-cells (loops of signed faces)
+	"""
+	model = V,FV,EV
+	efOp = larFaces2Edges(FV,EV)
+	FE = [efOp([k]) for k in range(len(FV))]
+	EF_angle, _,_,_ = faceSlopeOrdering(model,FE)
+	"""
+	initialize the 2-coboundary array of arrays, with boundary 2-faces of 3-cells by row
+	"""
+	m = len(FV)
+	nonWorkedFaces = set(range(m))
+	coboundary_2 = []
+	boundaryOperator = larBoundary2(FV,EV)
+	cellNumber=0
+	row,col,data = [],[],[]
+	"""
+	repeat until the set of non-worked faces is empty
+	"""
+	while nonWorkedFaces != set():
+		"""
+		Take an elementary 2-chain F = [f]
+		"""
+		seedFace = nonWorkedFaces.pop()
+		nonWorkedFaces = nonWorkedFaces.difference({seedFace})
+		faceChain = {seedFace}
+		"""
+		compute the oriented 1-boundary  E := ∂_2(F) (loops of signed edges)
+		"""
+		vect = csc_matrix((m,1),dtype='b')
+		for face in faceChain:  vect[face] = SIGN(face)
+		edgeCycleCoords = boundaryOperator * vect
+		edgeCycle = coords2chain(edgeCycleCoords)
+		print "\nedgeCycle=",edgeCycle
+		"""
+		repeat until E[F] = ø
+		"""
+		while edgeCycle != []:
+			"""
+			for each edge on E 
+			"""
+			look4face = adjFace(boundaryOperator,EV,EF_angle,faceChain,edgeCycle)
+			for k,edge in enumerate(edgeCycle):
+				print "\nedge=",edge
+				adjacentFace = look4face(edge)
+				"""
+				assemble all the g_i with F in a new 2-chain F := F \cup [g_i]
+				"""
+				faceChain = faceChain.union([adjacentFace])
+				print "faceChain=",faceChain
+				#VIEW(STRUCT(MKTRIANGLES((V,[FV[f] for f in faceChain],EV),color=True)))
+				nonWorkedFaces = nonWorkedFaces.difference([ABS(adjacentFace)])
+				print "nonWorkedFaces=",nonWorkedFaces
+				"""
+				"""
+			vect = csc_matrix((m,1),dtype='b')
+			for face in faceChain:  vect[ABS(face)] = SIGN(face)
+			edgeCycleCoords = boundaryOperator * vect
+			edgeCycle = coords2chain(edgeCycleCoords)
+			print "\nedgeCycle=",edgeCycle
+		"""
+		put the signed F elements in a new column of ∂_3 (new row of coboundary_2)
+		"""
+		row += [ABS(face) for face in faceChain]
+		col += [cellNumber for face in faceChain]
+		data += [SIGN(face) for face in faceChain]
+		cellNumber += 1
 
-        
+	outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
+	return csr_matrix(outMatrix) 
 
+
+larBoundary3((V,FV,EV))
+
+"""
 V,BF,BE = larBoundary3(V,FV,EV,VV)([1]*len(FV))
 V,BF,BE = larBoundary3(V,FV,EV,VV)([0]*3 +[1] +[0]*8 +[1])
 
 
 VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
+"""
