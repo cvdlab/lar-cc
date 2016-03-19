@@ -76,7 +76,7 @@ We notice the the LAR input is normalized by the \texttt{larFromLines} function:
 def svg2lar(filename):
     lines = svg2lines(filename)
     larModel = larFromLines(lines)
-    V,FV,EV = larModel
+    V,FV,EV,_ = larModel
     return larModel
 @}
 %-------------------------------------------------------------------------------
@@ -494,7 +494,7 @@ scaleFactor = 83.333
 
 filename = "test/svg/inters/plan.svg"
 larModel = svg2lar(filename)
-larModel = larApply(s(scaleFactor,scaleFactor))(larModel)
+larModel = larApply(s(scaleFactor,scaleFactor))(larModel[:3])
 V,FV,EV = larModel
 FV[2] += FV[71]      # for now :o)
 @}

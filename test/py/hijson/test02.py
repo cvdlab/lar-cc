@@ -7,7 +7,7 @@ scaleFactor = 83.333
 
 filename = "test/svg/inters/plan.svg"
 larModel = svg2lar(filename)
-larModel = larApply(s(scaleFactor,scaleFactor))(larModel)
+larModel = larApply(s(scaleFactor,scaleFactor))(larModel[:3])
 V,FV,EV = larModel
 FV[2] += FV[71]      # for now :o)
 

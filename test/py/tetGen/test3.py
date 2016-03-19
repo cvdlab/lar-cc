@@ -39,13 +39,21 @@ def zeroPos(EV,edgeCycle,k):
     u,v = EV[k]
     if v==k_end: return True
     else: return False
+
+def zeroPos(EV,edgeCycle,k):
+    cycle = edgeCycle + [edgeCycle[0]]
+    assert cycle[k] == 0
+    u,v = EV[k+1]
+    if v>u and cycle[k+1] > 0: return True
+    elif v>u and cycle[k+1] < 0: return False
+    else: print "error: orientation of edge 0"
     
 
 """
 choose the "next" face g_i  on "ordered" coboundary of edge
 """
 def adjFace(boundaryOperator,EV,EF_angle,faceChain,edgeCycle):
-    def adjFace0(edge):
+    def adjFace0(k,edge):
         if edge > 0:  edgeLoop = REVERSE(EF_angle[edge])
         elif edge < 0:  edgeLoop = EF_angle[-edge]
         elif edge == 0: 
@@ -66,6 +74,9 @@ def adjFace(boundaryOperator,EV,EF_angle,faceChain,edgeCycle):
         return adjacentFace * -(theSign*SIGN(edge))
     return adjFace0
 
+def chooseSeedFace(FV,nonWorkedFaces,faceChain):
+    if len(FV) == len(nonWorkedFaces): return nonWorkedFaces.pop()
+    else: pass
 
 def larBoundary3((V,FV,EV)):
 	"""
@@ -84,6 +95,7 @@ def larBoundary3((V,FV,EV)):
 	boundaryOperator = larBoundary2(FV,EV)
 	cellNumber=0
 	row,col,data = [],[],[]
+	faceChain,CF = {},[]
 	"""
 	repeat until the set of non-worked faces is empty
 	"""
@@ -92,7 +104,8 @@ def larBoundary3((V,FV,EV)):
 		Take an elementary 2-chain F = [f]
 		"""
 		seedFace = nonWorkedFaces.pop()
-		nonWorkedFaces = nonWorkedFaces.difference({seedFace})
+		#seedFace = chooseSeedFace(FV,nonWorkedFaces)
+		#nonWorkedFaces = nonWorkedFaces.difference({seedFace})
 		faceChain = {seedFace}
 		"""
 		compute the oriented 1-boundary  E := ∂_2(F) (loops of signed edges)
@@ -112,15 +125,15 @@ def larBoundary3((V,FV,EV)):
 			look4face = adjFace(boundaryOperator,EV,EF_angle,faceChain,edgeCycle)
 			for k,edge in enumerate(edgeCycle):
 				print "\nedge=",edge
-				adjacentFace = look4face(edge)
+				adjacentFace = look4face(k,edge)
 				"""
 				assemble all the g_i with F in a new 2-chain F := F \cup [g_i]
 				"""
 				faceChain = faceChain.union([adjacentFace])
 				print "faceChain=",faceChain
 				#VIEW(STRUCT(MKTRIANGLES((V,[FV[f] for f in faceChain],EV),color=True)))
-				nonWorkedFaces = nonWorkedFaces.difference([ABS(adjacentFace)])
-				print "nonWorkedFaces=",nonWorkedFaces
+				#nonWorkedFaces = nonWorkedFaces.difference([ABS(adjacentFace)])
+				#print "nonWorkedFaces=",nonWorkedFaces
 				"""
 				"""
 			vect = csc_matrix((m,1),dtype='b')
@@ -135,12 +148,16 @@ def larBoundary3((V,FV,EV)):
 		col += [cellNumber for face in faceChain]
 		data += [SIGN(face) for face in faceChain]
 		cellNumber += 1
+		CF += [list(faceChain)] 
+		nonWorkedFaces = nonWorkedFaces.difference(AA(ABS)(faceChain))
+		print "nonWorkedFaces=",nonWorkedFaces
 
 	outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
-	return csr_matrix(outMatrix) 
+	CV = [list(set(CAT([FV[f] for f in cell]))) for cell in CF[:3]]
+	return csr_matrix(outMatrix),CV
 
 
-larBoundary3((V,FV,EV))
+csrboundary3,CV = larBoundary3((V,FV,EV))
 
 """
 V,BF,BE = larBoundary3(V,FV,EV,VV)([1]*len(FV))

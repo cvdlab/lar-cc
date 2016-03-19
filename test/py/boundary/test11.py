@@ -1,8 +1,8 @@
-""" Incidence relations examples """
+""" Testing signed 2-boundary """
 from larlib import *
 
 sys.path.insert(0, 'test/py/boundary/')
-from test08 import *
+from test10 import *
 
 """ mfaces-to-nfaces relations """
 fcOp = larCells2Faces(CV,FV,EV)
@@ -17,6 +17,7 @@ efOp = larFaces2Edges(FV,EV)
 FE = [efOp([k]) for k in range(len(FV))]
 EF = invertRelation(FE)
 
-print "\nFC =",FC
-print "\nEC =",EC
-print "\nEF =",EF,"\n"
+
+signedBoundary2 = larBoundary2(FV,EV)
+
+

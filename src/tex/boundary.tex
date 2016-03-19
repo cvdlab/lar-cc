@@ -497,13 +497,43 @@ def larCells2Edges(CV,FV,EV):
 @}
 %-------------------------------------------------------------------------------
 
+
+\paragraph{Compute the signed 2-boundary matrix}
+Compute the signed 2-boundary matrix, orienting every column (face) coherently with the orientation of its edge of greatest index (in order to remove the orientation indecision about edge 0 --- serve? Boh!)
+%-------------------------------------------------------------------------------
+@D Compute the signed 2-boundary matrix
+@{""" Compute the signed 2-boundary matrix """
+import triangulation
+    
+def larBoundary2(V,FV,EV):
+    efOp = larFaces2Edges(V,FV,EV)
+    FE = [efOp([k]) for k in range(len(FV))]
+    data,row,col = [],[],[]
+    for f in range(len(FE)):
+        cycle_data = triangulation.find_cycles(V,[EV[e] for e in FE[f]])
+        vcycles = cycle_data['v_cycles']
+        ecycles = cycle_data['e_cycles']
+        pairs = zip(vcycles,ecycles)
+        vertEdgeCycles = [zip(vcycle,[FE[f][e] for e in ecycle]) for vcycle,ecycle in pairs]
+        vertEdgeCycles = sorted(vertEdgeCycles,key=len)[:-1]
+        coefficients = [1 if v == EV[e][0] else -1 for cycle in vertEdgeCycles for (v,e) in cycle]
+        ecycle = [e for cycle in vertEdgeCycles for (v,e) in cycle]
+        data += coefficients
+        row += ecycle
+        col += [f]*len(ecycle)
+        #print f,len(data),len(row),len(col)
+    signedBoundary2 = coo_matrix((data,(row,col)), shape=(len(EV),len(FV)),dtype='b')
+    return csr_matrix(signedBoundary2)
+@}
+%-------------------------------------------------------------------------------
+
+
 \paragraph{Query from 2-chain to incident 1-chain}
 %-------------------------------------------------------------------------------
 @D Query from 2-chain to incident 1-chain
 @{""" Query from 2-chain to incident 1-chain """
-def larFaces2Edges(FV,EV):
-    lenV = max(CAT(FV)) + 1
-    VV = AA(LIST)(range(lenV))
+def larFaces2Edges(V,FV,EV):
+    VV = AA(LIST)(range(len(V)))
     csrEF = boundary2(FV,EV,VV)
     def larCells2Faces0(chain):
         chainCoords = csc_matrix((csrEF.shape[1],1),dtype='b')
@@ -573,6 +603,7 @@ from larlib import *
 @< path-connected-cells boundary operator @>
 @< From cells and facets to boundary cells @>
 @< Marshalling a structure to a LAR cellular model @>
+@< Compute the signed 2-boundary matrix @>
 @< Boundary of a 3-complex @>
 @< Query from 3-chain to incident 2-chain @>
 @< Query from 3-chain to incident 1-chain @>
@@ -1064,8 +1095,16 @@ def larBoundary3(V,CV,FV,EV):
 %-------------------------------------------------------------------------------
 
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\linewidth]{images/edgecycle} 
+   \caption{The oriented boundary 1-cycle of a partial 3-cell extraction from a 2-complex in 3D.}
+   \label{fig:edgecycle}
+\end{figure}
+
 
 \bibliographystyle{amsalpha}
 \bibliography{boundary}
+
 
 \end{document}

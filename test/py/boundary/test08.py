@@ -10,7 +10,7 @@ assembly2 = Struct([ assembly, t(0,0,.5), s(0.5,1,1), hole ])
 V,FV,EV = struct2Marshal(assembly2) # WRONG:  TODO: check ...
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
-VIEW(larModelNumbering(1,1,1)(V,[[],[],FV],hpc,0.7))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.7))
 
 CF = [[1,3,6,14,17,18,19, 0,4,9,11,15,16, 2,5,7,8,10,13],[0,4,9,11,15,16],[2,5,7,8,10,13]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
