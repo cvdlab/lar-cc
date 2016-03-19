@@ -7,7 +7,7 @@ DEBUG = False
 def svg2lar(filename):
     lines = svg2lines(filename)
     larModel = larFromLines(lines)
-    V,FV,EV = larModel
+    V,FV,EV,_ = larModel
     return larModel
 
 """ Emulation of input from ``selection box'' over a LAR normalized representation """

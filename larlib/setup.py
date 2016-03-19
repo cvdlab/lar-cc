@@ -13,6 +13,7 @@ setup(name='larlib',
 	  zip_safe=False,
 	  install_requires=[
 						'scipy',
+						'pyyaml',
 						#'pyplasm',
 						#'triangle',
 						'poly2tri',

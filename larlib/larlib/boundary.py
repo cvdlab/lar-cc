@@ -103,6 +103,29 @@ def struct2Marshal(struct):
     V,FV,EV = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
     return V,FV,EV
 
+""" Compute the signed 2-boundary matrix """
+import triangulation
+    
+def larBoundary2(V,FV,EV):
+    efOp = larFaces2Edges(V,FV,EV)
+    FE = [efOp([k]) for k in range(len(FV))]
+    data,row,col = [],[],[]
+    for f in range(len(FE)):
+        cycle_data = triangulation.find_cycles(V,[EV[e] for e in FE[f]])
+        vcycles = cycle_data['v_cycles']
+        ecycles = cycle_data['e_cycles']
+        pairs = zip(vcycles,ecycles)
+        vertEdgeCycles = [zip(vcycle,[FE[f][e] for e in ecycle]) for vcycle,ecycle in pairs]
+        vertEdgeCycles = sorted(vertEdgeCycles,key=len)[:-1]
+        coefficients = [1 if v == EV[e][0] else -1 for cycle in vertEdgeCycles for (v,e) in cycle]
+        ecycle = [e for cycle in vertEdgeCycles for (v,e) in cycle]
+        data += coefficients
+        row += ecycle
+        col += [f]*len(ecycle)
+        #print f,len(data),len(row),len(col)
+    signedBoundary2 = coo_matrix((data,(row,col)), shape=(len(EV),len(FV)),dtype='b')
+    return csr_matrix(signedBoundary2)
+
 """ Boundary of a 3-complex """
 import larcc
 """  WHY wrong ????  TOCHECK !!
@@ -155,9 +178,8 @@ def larCells2Edges(CV,FV,EV):
     return larCells2Faces0
 
 """ Query from 2-chain to incident 1-chain """
-def larFaces2Edges(FV,EV):
-    lenV = max(CAT(FV)) + 1
-    VV = AA(LIST)(range(lenV))
+def larFaces2Edges(V,FV,EV):
+    VV = AA(LIST)(range(len(V)))
     csrEF = boundary2(FV,EV,VV)
     def larCells2Faces0(chain):
         chainCoords = csc_matrix((csrEF.shape[1],1),dtype='b')
