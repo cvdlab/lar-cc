@@ -1,23 +1,28 @@
 
-"""
-Extraction of 3-cells from a 2-skeleton embedded in 3D
-========================================
-"""
 
-def coords2chain(chainCoords):
-    coo = coo_matrix(chainCoords)
-    return [(e,val) for e,val in zip(coo.row,coo.data)]
-
-
-"""
+\subsection{Extraction of 3-cells from a 2-skeleton embedded in 3D}
 Need to characterize the two vertices of zero edge as "last" of previous edge in the chain,
 and "first" of following edge in the chain. Therefore the zero edge is oriented as from "last" to "first" and consequently, is "positive" iff  "first" > "last".
 
 It is sufficient to characterize the "first" vertex of the edge following the zero edge. This one is the "last" of zero edge. the other vertex of zero edge is its "first". Zero edge is "positive" iff last(zero) > first(zero).
-"""
-"""
+
+\paragraph{aaaaaaa}
+%-------------------------------------------------------------------------------
+@D aaaaaaa
+@{""" aaaaaaa """
+def coords2chain(chainCoords):
+    coo = coo_matrix(chainCoords)
+    return [(e,val) for e,val in zip(coo.row,coo.data)]
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{aaaaaaa}
 choose the "next" face g_i  on "ordered" coboundary of edge
-"""
+
+%-------------------------------------------------------------------------------
+@D aaaaaaa
+@{""" aaaaaaa """
 def adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation):
     def adjFace0(edge,orientation):
         if orientation > 0:  edgeLoop = REVERSE(EF_angle[edge])
@@ -38,7 +43,14 @@ def adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation):
         return adjacentFace, -(theSign*orientation)
         #return adjacentFace, theSign
     return adjFace0
+@}
+%-------------------------------------------------------------------------------
 
+
+\paragraph{aaaaaaa}
+%-------------------------------------------------------------------------------
+@D aaaaaaa
+@{""" aaaaaaa """
 def chooseStartFace(FV,faceCounter):
     print "\n>>>>>>> ECCOMI"
     for f in range(len(FV)):
@@ -46,8 +58,14 @@ def chooseStartFace(FV,faceCounter):
         elif faceCounter[f,0]==0 and faceCounter[f,1]==1: return (f,1)
     if sum(array(faceCounter))==2*len(FV): return (-1,999)
     else: return (0,1)
+@}
+%-------------------------------------------------------------------------------
 
 
+\paragraph{aaaaaaa}
+%-------------------------------------------------------------------------------
+@D aaaaaaa
+@{""" aaaaaaa """
 def signedBasis(boundaryOperator):
 	facesByEdges = csc_matrix(boundaryOperator)
 	m,n = facesByEdges.shape
@@ -56,10 +74,16 @@ def signedBasis(boundaryOperator):
 		edges += [facesByEdges.indices[facesByEdges.indptr[i]:facesByEdges.indptr[i+1]].tolist()]
 		signs += [facesByEdges.data[facesByEdges.indptr[i]:facesByEdges.indptr[i+1]].tolist()]
 	return zip(edges,signs)
+@}
+%-------------------------------------------------------------------------------
 
 
 
-def larBoundary3((V,FV,EV)):
+\paragraph{aaaaaaa}
+%-------------------------------------------------------------------------------
+@D aaaaaaa
+@{""" aaaaaaa """
+def larSignedBoundary3((V,FV,EV)):
 	"""
 	sort on angles the co-boundaries of 1-cells (loops of signed faces)
 	"""
@@ -75,7 +99,7 @@ def larBoundary3((V,FV,EV)):
 	m = len(FV)
 	nonWorkedFaces = set(range(m))
 	coboundary_2 = []
-	boundaryOperator = larBoundary2(V,FV,EV)
+	boundaryOperator = larSignedBoundary2(V,FV,EV)
 	FEbasis = signedBasis(boundaryOperator)
 	cellNumber=0
 	row,col,data = [],[],[]
@@ -150,14 +174,18 @@ def larBoundary3((V,FV,EV)):
 
 	outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
 	return csr_matrix(outMatrix),CF,faceCounter
-
-csrmat,CF,faceCounter = larBoundary3((V,FV,EV))
-
-"""
-V,BF,BE = larBoundary3(V,FV,EV,VV)([1]*len(FV))
-V,BF,BE = larBoundary3(V,FV,EV,VV)([0]*3 +[1] +[0]*8 +[1])
+@}
+%-------------------------------------------------------------------------------
 
 
-VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
-"""
+if __name__=="__main__":
+
+	V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
+	cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+	cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
+
+	V,FV,EV = struct2Marshal(cubeGrids)
+	csrmat,CF,faceCounter = larSignedBoundary3((V,FV,EV))
+	csrmat.todense()
+@}
+%-------------------------------------------------------------------------------

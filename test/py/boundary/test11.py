@@ -19,5 +19,3 @@ EF = invertRelation(FE)
 
 
 signedBoundary2 = larSignedBoundary2(FV,EV)
-
-
