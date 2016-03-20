@@ -36,7 +36,7 @@ assert 30==len(boundaryCells(CV0,FV))  # assembly of 3 unrelated 3-complexes
 """ Computation of corrected boundary operator """
 
 totalChain = len(CV)*[1]
-BF = chain2BoundaryChain(boundary2(CV,FV,EV))(totalChain)
+BF = chain2BoundaryChain(larUnsignedBoundary2(CV,FV,EV))(totalChain)
 BFV = [FV[f] for f in BF]
 VIEW(EXPLODE(1.5,1.5,1.5)(MKPOLS((V,BFV))))
 glass = MATERIAL([1,0,0,0.1,  0,1,0,0.1,  0,0,1,0.1, 0,0,0,0.1, 100])
@@ -47,7 +47,7 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[e for e in BEV if len(e)==2]))))
 
 """ Visualization of some boundary chains """
 
-BF = chain2BoundaryChain(boundary2(CV,FV,EV))([1,0,1,1,0,0])
+BF = chain2BoundaryChain(larUnsignedBoundary2(CV,FV,EV))([1,0,1,1,0,0])
 BFV = [FV[f] for f in BF]
 V,BEV = larFacets((V,BFV),dim=1)
 BEV = [e for e in BEV if len(e)==2]

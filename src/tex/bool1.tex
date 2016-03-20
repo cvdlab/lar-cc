@@ -181,12 +181,12 @@ def larBool1():
 	V, CV1,CV2, n1,n12,n2 = mergeVertices(model1,model2)
 	VV = AA(LIST)(range(len(V)))
 	V,CV,vertDict,n1,n12,n2,BC,nbc1,nbc2 = makeCDC(arg1,arg2)
-	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
+	W,CW,VC,BCellCovering,cellCuts,boundary1,larUnsignedBoundary2,BCW = makeSCDC(V,CV,BC,nbc1,nbc2)
 	assert len(VC) == len(V) 
 	assert len(BCellCovering) == len(BC)
 
 	if TRACE: tracing = mytrace(tracing,"<larBool1")-1
-	return W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW 
+	return W,CW,VC,BCellCovering,cellCuts,boundary1,larUnsignedBoundary2,BCW 
 @}
 %-------------------------------------------------------------------------------
 
@@ -329,14 +329,14 @@ This software module returns also
 %-------------------------------------------------------------------------------
 @D Second Boolean step
 @{""" Second Boolean step """
-def larBool2(boundary1,boundary2):
+def larBool2(boundary1,larUnsignedBoundary2):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool2")
 
 	dim = len(W[0])
 	WW = AA(LIST)(range(len(W)))
 	FW = convexFacets (W,CW)
 	_,EW = larFacets((W,FW), dim=2)
-	boundary1,boundary2,FWdict = makeFacetDicts(FW,boundary1,boundary2)
+	boundary1,larUnsignedBoundary2,FWdict = makeFacetDicts(FW,boundary1,larUnsignedBoundary2)
 	if dim == 3: 
 		_,EW = larFacets((W,FW), dim=2)
 		bases = [WW,EW,FW,CW]
@@ -344,7 +344,7 @@ def larBool2(boundary1,boundary2):
 	else: print "\nerror: not implemented\n"
 
 	if TRACE: tracing = mytrace(tracing,"<larBool2")-1
-	return W,CW,dim,bases,boundary1,boundary2,FW,BCW
+	return W,CW,dim,bases,boundary1,larUnsignedBoundary2,FW,BCW
 @}
 %-------------------------------------------------------------------------------
 
@@ -636,10 +636,10 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 	FW = larConvexFacets(W,CW)
 	print "\nFW =",FW,"\n"
 	
-	boundary1,boundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
+	boundary1,larUnsignedBoundary2 = boundaryEmbedding(BCfrags,nbc1,dim)
 
 	if TRACE: tracing = mytrace(tracing,"<makeSCDC")-1
-	return W,CW,VC,BCellcovering,cellCuts,boundary1,boundary2,BCW
+	return W,CW,VC,BCellcovering,cellCuts,boundary1,larUnsignedBoundary2,BCW
 @}
 %-------------------------------------------------------------------------------
 
@@ -654,21 +654,21 @@ for h in cuts:
 def boundaryEmbedding(BCfrags,nbc1,dim):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaryEmbedding")
 
-	boundary1,boundary2 = defaultdict(list),defaultdict(list)						 
+	boundary1,larUnsignedBoundary2 = defaultdict(list),defaultdict(list)						 
 	for h,frags in BCfrags:
 		if h < nbc1: boundary1[h] += [frags]
-		else: boundary2[h] += [frags]	
+		else: larUnsignedBoundary2[h] += [frags]	
 	boundarylist1,boundarylist2 = [],[]
 	for h,facets in boundary1.items():
 		boundarylist1 += [(h, AA(eval)(set([str(sorted(f)) 
 							for f in facets if len(set(f)) >= dim])) )]
-	for h,facets in boundary2.items():
+	for h,facets in larUnsignedBoundary2.items():
 		boundarylist2 += [(h, AA(eval)(set([str(sorted(f)) 
 							for f in facets if len(set(f)) >= dim])) )]
-	boundary1,boundary2 = dict(boundarylist1),dict(boundarylist2)
+	boundary1,larUnsignedBoundary2 = dict(boundarylist1),dict(boundarylist2)
 
 	if TRACE: tracing = mytrace(tracing,"<boundaryEmbedding")-1
-	return boundary1,boundary2
+	return boundary1,larUnsignedBoundary2
 @}
 %-------------------------------------------------------------------------------
 
@@ -676,11 +676,11 @@ def boundaryEmbedding(BCfrags,nbc1,dim):
 %-------------------------------------------------------------------------------
 @D Make facets dictionaries
 @{""" Make facets dictionaries """
-def makeFacetDicts(FW,boundary1,boundary2):
+def makeFacetDicts(FW,boundary1,larUnsignedBoundary2):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">makeFacetDicts")
 	
 	print "boundary1 =",boundary1
-	print "boundary2 =",boundary2
+	print "larUnsignedBoundary2 =",larUnsignedBoundary2
 	print "FW =",FW
 	
 	FWdict = dict()
@@ -692,15 +692,15 @@ def makeFacetDicts(FW,boundary1,boundary2):
 		value = [FWdict[str(facet)] for facet in value]
 		boundary1[key] = value
 		
-	for key,value in boundary2.items():
+	for key,value in larUnsignedBoundary2.items():
 		value = [FWdict[str(facet)] for facet in value]
-		boundary2[key] = value
+		larUnsignedBoundary2[key] = value
 
 	print "boundary1 =",boundary1
-	print "boundary2 =",boundary2
+	print "larUnsignedBoundary2 =",larUnsignedBoundary2
 
 	if TRACE: tracing = mytrace(tracing,"<makeFacetDicts")-1
-	return boundary1,boundary2,FWdict
+	return boundary1,larUnsignedBoundary2,FWdict
 @}
 %-------------------------------------------------------------------------------
 
@@ -841,7 +841,7 @@ def larBool3():
 	boundaryMat = coBoundaryMat.T
 	CWbits = [[-1,-1] for k in range(len(CW))]
 	CWbits = cellTagging(boundary1,boundaryMat,CW,FW,W,BCW,CWbits,0)
-	CWbits = cellTagging(boundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
+	CWbits = cellTagging(larUnsignedBoundary2,boundaryMat,CW,FW,W,BCW,CWbits,1)
 	for cell in range(len(CW)):
 		if CWbits[cell][0] == 1:
 			CWbits = booleanChainTraverse(0,cell,W,CW,CWbits,1)		
@@ -1120,10 +1120,10 @@ The first tool provides a mapping from $(d-1)$-facets of SCDC to their embedding
 %-------------------------------------------------------------------------------
 @D Fourth Boolean step
 @{""" Fourth Boolean step """
-def larBool4(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits):
+def larBool4(W,CW,FW,boundaryMat,boundary1,larUnsignedBoundary2,CWbits):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">larBool4")
 
-	X,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,boundary2,CWbits)
+	X,CX,CXbits = gatherPolytopes(W,CW,FW,boundaryMat,boundary1,larUnsignedBoundary2,CWbits)
 	FX = larConvexFacets (X,CX)
 
 	if TRACE: tracing = mytrace(tracing,"<larBool4")-1
@@ -1149,14 +1149,14 @@ def facet2covectors(W,FW):
 	if TRACE: tracing = mytrace(tracing,"<facet2covectors")-1
 	return [COVECTOR([W[v] for v in facet]) for facet in FW]
 
-def boundaries(boundary1,boundary2):
+def boundaries(boundary1,larUnsignedBoundary2):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">boundaries")
 
 	#if TRACE: tracing = mytrace(tracing,"<aaaa")-1
-	#return set(CAT(boundary1.values() + boundary2.values()))
+	#return set(CAT(boundary1.values() + larUnsignedBoundary2.values()))
 
 	if TRACE: tracing = mytrace(tracing,"<boundaries")-1
-	return boundary1.union(boundary2)
+	return boundary1.union(larUnsignedBoundary2)
 @}
 %-------------------------------------------------------------------------------
 
@@ -1473,14 +1473,14 @@ def larBool(arg1,arg2, brep=False):
 	model1,model2 = (V1,cells1),(V2,cells2)
 		
 	@< First Boolean step @>
-	W,CW,VC,BCellCovering,cellCuts,boundary1,boundary2,BCW = larBool1()
+	W,CW,VC,BCellCovering,cellCuts,boundary1,larUnsignedBoundary2,BCW = larBool1()
 	VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,CW))))
 	
 	@< Second Boolean step @>
-	W,CW,dim,bases,boundary1,boundary2,FW,BCW = larBool2(boundary1,boundary2)
+	W,CW,dim,bases,boundary1,larUnsignedBoundary2,FW,BCW = larBool2(boundary1,larUnsignedBoundary2)
 
 	@< Third Boolean step @>
-	V,CV,FV,boundaryMat,boundary1,boundary2,chain1,chain2,CWbits = larBool3()
+	V,CV,FV,boundaryMat,boundary1,larUnsignedBoundary2,chain1,chain2,CWbits = larBool3()
 	
 	submodel = SKEL_1(STRUCT(MKPOLS((V,CV))))
 	VV = AA(LIST)(range(len(V)))
@@ -1490,7 +1490,7 @@ def larBool(arg1,arg2, brep=False):
 		VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,[cell for k,cell in enumerate(CV) if sum(CWbits[k])==2]))))
 	
 	@< Fourth Boolean step @>
-	W,CX,FX,CXbits = larBool4(V,CV,FV,boundaryMat,boundary1,boundary2,CWbits)
+	W,CX,FX,CXbits = larBool4(V,CV,FV,boundaryMat,boundary1,larUnsignedBoundary2,CWbits)
 
 	W,CX,FX = larVertexRemoval(W,CX,FX)
 	chain1,chain2 = TRANS(CXbits)

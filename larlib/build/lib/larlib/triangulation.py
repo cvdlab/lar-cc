@@ -693,7 +693,7 @@ import larcc
 def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    #csrBoundaryMat = boundary2(FV,EV,VV)
+    #csrBoundaryMat = larUnsignedBoundary2(FV,EV,VV)
     csrBoundaryMat = boundary.boundary(FV,EV)
     def larComplexChain0(chain):
         boundaryChain = larcc.chain2BoundaryChain(csrBoundaryMat)(chain)
@@ -715,13 +715,13 @@ def viewLarComplexChain(model):
 
 """ Solid PyPLaSM visualization of a 2-complex with non-contractible 
       and non-manifold cells"""
-from boundary import boundary2
+from boundary import larUnsignedBoundary2
 import larcc,boolean
 
 def MKFACES(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
-    bmatrix = boundary2(FV,EV,VV)
+    bmatrix = larUnsignedBoundary2(FV,EV,VV)
     boundaryOperator = larcc.chain2BoundaryChain(bmatrix)
     chain = [0]*len(FV)
     boundingEdges = []

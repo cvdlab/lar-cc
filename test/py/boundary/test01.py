@@ -12,7 +12,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryCells(FV,EV)],))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV))))
 
-boundaryOp = boundary2(FV,EV,VV)
+boundaryOp = larUnsignedBoundary2(FV,EV,VV)
 
 for k in range(1,len(FV)+1):
     faceChain = k*[1]

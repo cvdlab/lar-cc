@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Basic LARCC library """
 from larlib import *
-from boundary import boundary2,boundary3
+from boundary import larUnsignedBoundary2,boundary3
 
 
 """
@@ -163,7 +163,7 @@ def crossRelation0(lenV,XV,YV):
         return XY
 
 def crossRelation(XV,YV,ZV):
-    csrXY = csc_matrix(boundary2(XV,YV,ZV))
+    csrXY = csc_matrix(larUnsignedBoundary2(XV,YV,ZV))
     XY = [[k for k,v in  zip(csrXY.indices[csrXY.indptr[j]:csrXY.indptr[j+1]],
            csrXY.data[csrXY.indptr[j]:csrXY.indptr[j+1]]) if v==1]
           for j in range(len(csrXY.indptr)-1)]

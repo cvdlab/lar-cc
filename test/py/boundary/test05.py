@@ -13,5 +13,5 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.6))
 CF = [[1,2,3,4,6,7],[0,1,2,3,4,5,6,7,8,9,10,11]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([0,1])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 

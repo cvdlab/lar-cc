@@ -17,7 +17,7 @@ def boundary(cells,facets):
     return csr_matrix((data,indices,indptr),shape=(m,n),dtype='b')
 
 """ path-connected-cells boundary operator """
-def boundary2(CV,FV,EV):
+def larUnsignedBoundary2(CV,FV,EV):
     out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
@@ -30,10 +30,10 @@ def boundary2(CV,FV,EV):
     return out
 
 def boundary3(CV,FV,EV):
-    out = boundary2(CV,FV,EV)
+    out = larUnsignedBoundary2(CV,FV,EV)
     lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
     VV = AA(LIST)(range(lenV))
-    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
+    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * larUnsignedBoundary2(CV,FV,EV))
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
     unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
@@ -79,7 +79,7 @@ def boundaryCells(cells,facets):
     return out
 
 def boundary2Cells(cells,facets,faces):
-    csrBoundaryMat = boundary2(cells,facets,faces)
+    csrBoundaryMat = larUnsignedBoundary2(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
@@ -106,7 +106,7 @@ def struct2Marshal(struct):
 """ Compute the signed 2-boundary matrix """
 import triangulation
     
-def larBoundary2(V,FV,EV):
+def larSignedBoundary2(V,FV,EV):
     efOp = larFaces2Edges(V,FV,EV)
     FE = [efOp([k]) for k in range(len(FV))]
     data,row,col = [],[],[]
@@ -129,23 +129,23 @@ def larBoundary2(V,FV,EV):
 """ Boundary of a 3-complex """
 import larcc
 """  WHY wrong ????  TOCHECK !!
-def larBoundary3(V,CV,FV,EV):
+def larUnsignedBoundary3(V,CV,FV,EV):
     VV = AA(LIST)(range(len(V)))
     operator3 = larcc.chain2BoundaryChain(boundary3(CV,FV,EV))
-    operator2 = larcc.chain2BoundaryChain(boundary2(FV,EV,VV))
-    def larBoundary30(chain):
+    operator2 = larcc.chain2BoundaryChain(larUnsignedBoundary2(FV,EV,VV))
+    def larUnsignedBoundary30(chain):
         BF = operator3(chain)
         faceCoords = len(FV)*[0]
         for f in BF: faceCoords[f] = 1
         BE = operator2(faceCoords)
         return V,[FV[f] for f in BF],[EV[e] for e in BE]
-    return larBoundary30
+    return larUnsignedBoundary30
 """
-def larBoundary3(V,CV,FV,EV):
+def larUnsignedBoundary3(V,CV,FV,EV):
     VV = AA(LIST)(range(len(V)))
     operator3 = larcc.chain2BoundaryChain(boundary3(CV,FV,EV))
-    operator2 = larcc.chain2BoundaryChain(boundary2(FV,EV,VV))
-    def larBoundary30(chain):
+    operator2 = larcc.chain2BoundaryChain(larUnsignedBoundary2(FV,EV,VV))
+    def larUnsignedBoundary30(chain):
         BF = operator3(chain)
         BE = set()
         for f in BF: 
@@ -153,7 +153,7 @@ def larBoundary3(V,CV,FV,EV):
             faceCoords[f] = 1
             BE = BE.union(operator2(faceCoords))
         return V,[FV[f] for f in BF],[EV[e] for e in BE]
-    return larBoundary30
+    return larUnsignedBoundary30
 
 """ Query from 3-chain to incident 2-chain """
 def larCells2Faces(CV,FV,EV):
@@ -169,7 +169,7 @@ def larCells2Faces(CV,FV,EV):
 def larCells2Edges(CV,FV,EV):
     lenV = max(CAT(CV))+1
     VV = AA(LIST)(range(lenV))
-    csrEC = boundary2(FV,EV,VV) * boundary3(CV,FV,EV)
+    csrEC = larUnsignedBoundary2(FV,EV,VV) * boundary3(CV,FV,EV)
     def larCells2Faces0(chain):
         chainCoords = csc_matrix((csrEC.shape[1],1),dtype='b')
         for k in chain: chainCoords[k,0] = 1
@@ -180,7 +180,7 @@ def larCells2Edges(CV,FV,EV):
 """ Query from 2-chain to incident 1-chain """
 def larFaces2Edges(V,FV,EV):
     VV = AA(LIST)(range(len(V)))
-    csrEF = boundary2(FV,EV,VV)
+    csrEF = larUnsignedBoundary2(FV,EV,VV)
     def larCells2Faces0(chain):
         chainCoords = csc_matrix((csrEF.shape[1],1),dtype='b')
         for k in chain: chainCoords[k,0] = 1
@@ -203,7 +203,7 @@ def larCells2Cells(CV,FV,EV):
 def larFaces2Faces(FV,EV):
     lenV = max(CAT(FV)) + 1
     VV = AA(LIST)(range(lenV))
-    csrMat = boundary2(FV,EV,VV)
+    csrMat = larUnsignedBoundary2(FV,EV,VV)
     csrFF = csrMat.T * csrMat
     def larFaces2Faces0(chain):
         chainCoords = csc_matrix((csrFF.shape[1],1),dtype='b')

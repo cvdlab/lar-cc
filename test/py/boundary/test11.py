@@ -18,6 +18,6 @@ FE = [efOp([k]) for k in range(len(FV))]
 EF = invertRelation(FE)
 
 
-signedBoundary2 = larBoundary2(FV,EV)
+signedBoundary2 = larSignedBoundary2(FV,EV)
 
 

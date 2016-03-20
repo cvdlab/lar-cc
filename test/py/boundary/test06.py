@@ -14,7 +14,7 @@ VIEW(larModelNumbering(1,1,1)(V,[[],[],FV],hpc,0.6))
 CF = [[4,5,7,16,17,19,20],[3,8,6,12,11,13],[0,1,10,20],[]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1,1,0])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([0,1,1,0])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
 VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV)))))

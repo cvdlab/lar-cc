@@ -13,7 +13,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,.5))
 
 csrBoundaryMat = boundary(FV,EV)
 print "wrong boundary matrix =",csrBoundaryMat.todense()
-csrBoundaryMat = boundary2(FV,EV,VV)  # <<<<< NOTE !!
+csrBoundaryMat = larUnsignedBoundary2(FV,EV,VV)  # <<<<< NOTE !!
 print "right boundary matrix =",csrBoundaryMat.todense()
 
 """ View boundary chain """
@@ -21,7 +21,7 @@ def viewBoundaryChain(larModel):
     V,FV,EV = larModel
     VV = AA(LIST)(range(len(V)))
     def viewBoundaryChain0 (chain):
-        BE = chain2BoundaryChain(boundary2(FV,EV,VV))(chain)
+        BE = chain2BoundaryChain(larUnsignedBoundary2(FV,EV,VV))(chain)
         if chain == [1,1,1,1]: assert BE == [0,4,5,7,9,10]
         if chain == [0,0,1,1]: assert BE == [0,2,3,4,5,6,7,8,9,10,12,13]
         BEV = [EV[e] for e in BE]

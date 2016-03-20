@@ -75,7 +75,7 @@ For several computations, the knowledge of the matrices of non-oriented boundary
 Therefore we will use such tool wherever possible, since its computation is much faster in term of computing time. 
 
 In the following we provide be binary operator matrices provided by two implementations,
-respectively named \texttt{boundary} and \texttt{boundary2}. The first one works correctly only with convex cells; the second one works also with non-convex but path-connected cells.
+respectively named \texttt{boundary} and \texttt{larUnsignedBoundary2}. The first one works correctly only with convex cells; the second one works also with non-convex but path-connected cells.
 
 
 \subsubsection{Dimension-independence}
@@ -118,7 +118,7 @@ def boundary(cells,facets):
 
 \subsection{Non-convex LAR cells}
 
-A more general \texttt{boundary2} operator is given in the following, aiming at compute the boundary matrix for general non-convex cellular decompositions, including \emph{multiply connected} LAR models.
+A more general \texttt{larUnsignedBoundary2} operator is given in the following, aiming at compute the boundary matrix for general non-convex cellular decompositions, including \emph{multiply connected} LAR models.
 Notice that in this case an input triple made by \texttt{CV}, \texttt{FV}, and \texttt{EV} is needed,
 where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary compressed) characteristic matrices $M_d$, $M_{d-1}$, and $M_{d-2}$.
 
@@ -127,7 +127,7 @@ where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary 
 %-------------------------------------------------------------------------------
 @D path-connected-cells boundary operator
 @{""" path-connected-cells boundary operator """
-def boundary2(CV,FV,EV):
+def larUnsignedBoundary2(CV,FV,EV):
     out = boundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
@@ -140,10 +140,10 @@ def boundary2(CV,FV,EV):
     return out
 
 def boundary3(CV,FV,EV):
-    out = boundary2(CV,FV,EV)
+    out = larUnsignedBoundary2(CV,FV,EV)
     lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
     VV = AA(LIST)(range(lenV))
-    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * boundary2(CV,FV,EV))
+    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * larUnsignedBoundary2(CV,FV,EV))
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
     unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
@@ -200,7 +200,7 @@ def csrBoundaryFilter3(unreliable,out,csrBBMat,cells,FE):
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-03} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-04} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-05} 
-   \caption{Non-convex LAR 2-complex with (two) 1-cells that are subsets of 2-cells without being their facets. Correctly disentangled by the \texttt{boundary2()} function: (a) Indexing of 0-, 1-, and 2-cells; (b) exploded 2-cells; (c) triangulated and exploded 2-cells; (d) boundary of the 2-chain \texttt{[1,1,1,1,1,0]}.}
+   \caption{Non-convex LAR 2-complex with (two) 1-cells that are subsets of 2-cells without being their facets. Correctly disentangled by the \texttt{larUnsignedBoundary2()} function: (a) Indexing of 0-, 1-, and 2-cells; (b) exploded 2-cells; (c) triangulated and exploded 2-cells; (d) boundary of the 2-chain \texttt{[1,1,1,1,1,0]}.}
    \label{fig:example}
 \end{figure}
 
@@ -218,7 +218,7 @@ def boundaryCells(cells,facets):
     return out
 
 def boundary2Cells(cells,facets,faces):
-    csrBoundaryMat = boundary2(cells,facets,faces)
+    csrBoundaryMat = larUnsignedBoundary2(cells,facets,faces)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
@@ -406,7 +406,7 @@ print "\nCC =",CC
 print "\nFF =",FF
 print "\nEE =",EE,"\n"
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([1,0])
 VIEW(STRUCT(MKTRIANGLES((V,[FV[h] for h in FF[-1]],EV),color=True)))
 VIEW(STRUCT(MKPOLS((V,[EV[h] for h in EE[-1]]))+[COLOR(RED)(MKPOLS((V,[EV[-1]]))[0])]))
 @}
@@ -487,7 +487,7 @@ def larCells2Faces(CV,FV,EV):
 def larCells2Edges(CV,FV,EV):
     lenV = max(CAT(CV))+1
     VV = AA(LIST)(range(lenV))
-    csrEC = boundary2(FV,EV,VV) * boundary3(CV,FV,EV)
+    csrEC = larUnsignedBoundary2(FV,EV,VV) * boundary3(CV,FV,EV)
     def larCells2Faces0(chain):
         chainCoords = csc_matrix((csrEC.shape[1],1),dtype='b')
         for k in chain: chainCoords[k,0] = 1
@@ -499,13 +499,13 @@ def larCells2Edges(CV,FV,EV):
 
 
 \paragraph{Compute the signed 2-boundary matrix}
-Compute the signed 2-boundary matrix, orienting every column (face) coherently with the orientation of its edge of greatest index (in order to remove the orientation indecision about edge 0 --- serve? Boh!)
+Compute the signed 2-boundary matrix.
 %-------------------------------------------------------------------------------
 @D Compute the signed 2-boundary matrix
 @{""" Compute the signed 2-boundary matrix """
 import triangulation
     
-def larBoundary2(V,FV,EV):
+def larSignedBoundary2(V,FV,EV):
     efOp = larFaces2Edges(V,FV,EV)
     FE = [efOp([k]) for k in range(len(FV))]
     data,row,col = [],[],[]
@@ -534,7 +534,7 @@ def larBoundary2(V,FV,EV):
 @{""" Query from 2-chain to incident 1-chain """
 def larFaces2Edges(V,FV,EV):
     VV = AA(LIST)(range(len(V)))
-    csrEF = boundary2(FV,EV,VV)
+    csrEF = larUnsignedBoundary2(FV,EV,VV)
     def larCells2Faces0(chain):
         chainCoords = csc_matrix((csrEF.shape[1],1),dtype='b')
         for k in chain: chainCoords[k,0] = 1
@@ -566,7 +566,7 @@ def larCells2Cells(CV,FV,EV):
 def larFaces2Faces(FV,EV):
     lenV = max(CAT(FV)) + 1
     VV = AA(LIST)(range(lenV))
-    csrMat = boundary2(FV,EV,VV)
+    csrMat = larUnsignedBoundary2(FV,EV,VV)
     csrFF = csrMat.T * csrMat
     def larFaces2Faces0(chain):
         chainCoords = csc_matrix((csrFF.shape[1],1),dtype='b')
@@ -637,7 +637,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in boundaryCells(FV,EV)],))))
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV,EV))))
 
-boundaryOp = boundary2(FV,EV,VV)
+boundaryOp = larUnsignedBoundary2(FV,EV,VV)
 
 for k in range(1,len(FV)+1):
     faceChain = k*[1]
@@ -648,7 +648,7 @@ for k in range(1,len(FV)+1):
 
 \paragraph{Wrong boundary extraction example}
 
-The \texttt{boundary()} operator, applied  to a cellular 2-complex wih some non-convex cells, produces incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. In order to get always a correct result, use the \texttt{boundary2} operator.
+The \texttt{boundary()} operator, applied  to a cellular 2-complex wih some non-convex cells, produces incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. In order to get always a correct result, use the \texttt{larUnsignedBoundary2} operator.
 
 %-------------------------------------------------------------------------------
 @O test/py/boundary/test02.py
@@ -665,7 +665,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
 
-boundaryOp = boundary2(FV,EV,VV)  # <<======  NB
+boundaryOp = larUnsignedBoundary2(FV,EV,VV)  # <<======  NB
 #boundaryOp = boundary(FV,EV)  # <<======  NB
 BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
 
@@ -722,7 +722,7 @@ matrix([[0, 1, 0],
 \begin{minipage}[c]{0.5\linewidth}
 \centering
 \begin{verbatim}
-In [2]: boundary2(FV,EV,VV).todense()
+In [2]: larUnsignedBoundary2(FV,EV,VV).todense()
 Out[2]: 
 matrix([[0, 1, 0],
         [0, 0, 1],
@@ -751,7 +751,7 @@ matrix([[0, 1, 0],
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-2} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-3} 
    \includegraphics[height=0.245\linewidth,width=0.245\linewidth]{images/boundary-test02-5} 
-   \caption{Non-working (i.e.~\emph{wrong}) example with \texttt{boundary}. (a) Indexing of 0-,1-,and 2-cells; (b) boundary of a singleton 2-chain; (c) exploded 2-cells; (d) boundary of a singleton 2-chain. Working (i.e.~\emph{exact}) example using \texttt{boundary2}: (e--h) as above.}
+   \caption{Non-working (i.e.~\emph{wrong}) example with \texttt{boundary}. (a) Indexing of 0-,1-,and 2-cells; (b) boundary of a singleton 2-chain; (c) exploded 2-cells; (d) boundary of a singleton 2-chain. Working (i.e.~\emph{exact}) example using \texttt{larUnsignedBoundary2}: (e--h) as above.}
    \label{fig:boundary-test02}
 \end{figure}
 
@@ -850,11 +850,11 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 @D Visualization of a 2-chain of a 3-complex
 @{""" Visualization of the boundary 2-chain of a 3-complex """
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)(len(CV)*[1])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)(len(CV)*[1])
 VIEW(STRUCT(MKTRIANGLES((V,BF,EV),color=True)))
 VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,EV)) )))
 
-boundaryEdges = chain2BoundaryChain(boundary2(FV,EV,VV))
+boundaryEdges = chain2BoundaryChain(larUnsignedBoundary2(FV,EV,VV))
 edgeChain = boundaryEdges(29*[0]+[1]+[1]) 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain]),color=True)))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain])))))
@@ -866,7 +866,7 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeCh
 @D Visualization of a 3-chain of a 3-complex
 @{""" Visualization of a 3-chain of a 3-complex """
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([0,0,0,0,1,1])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([0,0,0,0,1,1])
 VIEW(STRUCT(MKTRIANGLES((V,BF,BE))))
 VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,BE)) )))
 @}
@@ -890,7 +890,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.6))
 CF = [[1,2,3,4,6,7],[0,1,2,3,4,5,6,7,8,9,10,11]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([0,1])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
 @}
 %-------------------------------------------------------------------------------
@@ -913,7 +913,7 @@ VIEW(larModelNumbering(1,1,1)(V,[[],[],FV],hpc,0.6))
 CF = [[4,5,7,16,17,19,20],[3,8,6,12,11,13],[0,1,10,20],[]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([0,1,1,0])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([0,1,1,0])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))) # ERROR in MKTRIANGLES with non-manifold face
 VIEW(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV))))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKFACES((V,BF,EV)))))
@@ -938,7 +938,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.6))
 CF = [[1,3,6,7,12,11],[0,2,4,5,9,8]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0])
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([1,0])
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,EV),color=True)))
 @}
 %-------------------------------------------------------------------------------
@@ -955,17 +955,22 @@ hole = Struct([t(0,.5,0), r(PI/4,0,0), s(1,.5/SQRT(2),.5/SQRT(2)),cube])
 assembly = Struct([ cube, hole ])
 assembly2 = Struct([ assembly, t(0,0,.5), s(0.5,1,1), hole ])
 
-V,FV,EV = struct2Marshal(assembly2) # WRONG:  TODO: check ...
+V,FV,EV = struct2Marshal(assembly2) 
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],hpc,0.7))
 
-CF = [[1,3,6,14,17,18,19, 0,4,9,11,15,16, 2,5,7,8,10,13],[0,4,9,11,15,16],[2,5,7,8,10,13]]
+#CF = [[1,3,6,14,17,18,19, 0,4,9,11,15,16, 2,5,7,8,10,13],[0,4,9,11,15,16],[2,5,7,8,10,13]]
+CF = [[16,9,11,0,15,4],[10,12,7,2,17,15,9,5,18,8,16,3,6,14,19,4,1],[5,13,7,10,8,2]]
 CV = [list(set(CAT([FV[f]  for f in faces]))) for faces in CF]
 
-V,BF,BE = larBoundary3(V,CV,FV,EV)([1,0,0])
-VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
-VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
+n = len(CV)
+for k in range(n): 
+    V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)(IDNT(n)[k])
+    VIEW(STRUCT(MKTRIANGLES((V,BF,BE),color=True))) 
+    VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE),color=True))) 
+    VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))))
+V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([1,1,1])
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,BF,BE)))))
 @}
 %-------------------------------------------------------------------------------
@@ -996,7 +1001,7 @@ It is computed using also the $M_2$ and $M_1$ characteristic matrices, or --- be
 %-------------------------------------------------------------------------------
 @D Signed 2-boundary
 @{""" Signed 2-boundary """
-def larBoundary2(FV,EV):
+def larSignedBoundary2(FV,EV):
 	efOp = larFaces2Edges(FV,EV)
 	FE = [efOp([k]) for k in range(len(FV))]
 	data,row,col = [],[],[]
@@ -1026,7 +1031,7 @@ from test10 import *
 
 @< mfaces-to-nfaces relations @>
 
-signedBoundary2 = larBoundary2(FV,EV)
+signedBoundary2 = larSignedBoundary2(FV,EV)
 
 
 @}
@@ -1066,23 +1071,23 @@ def struct2Marshal(struct):
 @{""" Boundary of a 3-complex """
 import larcc
 """  WHY wrong ????  TOCHECK !!
-def larBoundary3(V,CV,FV,EV):
+def larUnsignedBoundary3(V,CV,FV,EV):
     VV = AA(LIST)(range(len(V)))
     operator3 = larcc.chain2BoundaryChain(boundary3(CV,FV,EV))
-    operator2 = larcc.chain2BoundaryChain(boundary2(FV,EV,VV))
-    def larBoundary30(chain):
+    operator2 = larcc.chain2BoundaryChain(larUnsignedBoundary2(FV,EV,VV))
+    def larUnsignedBoundary30(chain):
         BF = operator3(chain)
         faceCoords = len(FV)*[0]
         for f in BF: faceCoords[f] = 1
         BE = operator2(faceCoords)
         return V,[FV[f] for f in BF],[EV[e] for e in BE]
-    return larBoundary30
+    return larUnsignedBoundary30
 """
-def larBoundary3(V,CV,FV,EV):
+def larUnsignedBoundary3(V,CV,FV,EV):
     VV = AA(LIST)(range(len(V)))
     operator3 = larcc.chain2BoundaryChain(boundary3(CV,FV,EV))
-    operator2 = larcc.chain2BoundaryChain(boundary2(FV,EV,VV))
-    def larBoundary30(chain):
+    operator2 = larcc.chain2BoundaryChain(larUnsignedBoundary2(FV,EV,VV))
+    def larUnsignedBoundary30(chain):
         BF = operator3(chain)
         BE = set()
         for f in BF: 
@@ -1090,7 +1095,7 @@ def larBoundary3(V,CV,FV,EV):
             faceCoords[f] = 1
             BE = BE.union(operator2(faceCoords))
         return V,[FV[f] for f in BF],[EV[e] for e in BE]
-    return larBoundary30
+    return larUnsignedBoundary30
 @}
 %-------------------------------------------------------------------------------
 
