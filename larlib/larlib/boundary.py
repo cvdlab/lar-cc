@@ -318,5 +318,5 @@ if __name__=="__main__":
 
    V,FV,EV = struct2Marshal(cubeGrids)
    csrmat,CF,faceCounter = larSignedBoundary3((V,FV,EV))
-   csrmat.todense()
+   print csrmat.todense()
 
