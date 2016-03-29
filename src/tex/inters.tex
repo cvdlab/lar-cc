@@ -84,7 +84,7 @@ Given as input a list \texttt{randomLineArray} of pairs of 2D points, the functi
 @D Containment boxes
 @{""" Containment boxes """
 def containment2DBoxes(randomLineArray):
-    boxes = [eval(vcode([min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2)]))
+    boxes = [eval(vcode(4)([min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2)]))
             for ((x1,y1),(x2,y2)) in randomLineArray]
     return boxes
 @}
@@ -166,12 +166,12 @@ def boxBuckets(boxes):
 def segmentIntersect(boxes,lineArray,pointStorage):
     def segmentIntersect0(h):
         p1,p2 = lineArray[h]
-        line1 = '['+ vcode(p1) +','+ vcode(p2) +']'
+        line1 = '['+ vcode(4)(p1) +','+ vcode(4)(p2) +']'
         (x1,y1),(x2,y2) = p1,p2
         B1,B2,B3,B4 = boxes[h]
         def segmentIntersect1(k):
             p3,p4 = lineArray[k]
-            line2 = '['+ vcode(p3) +','+ vcode(p4) +']'
+            line2 = '['+ vcode(4)(p3) +','+ vcode(4)(p4) +']'
             (x3,y3),(x4,y4) = p3,p4
             b1,b2,b3,b4 = boxes[k]
             if not (b3<B1 or B3<b1 or b4<B2 or B4<b2):
@@ -210,7 +210,7 @@ def lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage):
     for line in bucket:
         point = intersect1(line)
         if point != None: 
-            intersectionPoints.append(eval(vcode(point)))
+            intersectionPoints.append(eval(vcode(4)(point)))
     return intersectionPoints
 @}
 %-------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ def lineIntersection(lineArray):
     pointStorage = defaultdict(list)
     for line in lineArray:
         p1,p2 = line
-        key = '['+ vcode(p1) +','+ vcode(p2) +']'
+        key = '['+ vcode(4)(p1) +','+ vcode(4)(p2) +']'
         pointStorage[key] = []
 
     boxes = containment2DBoxes(lineArray)
@@ -238,7 +238,7 @@ def lineIntersection(lineArray):
         intersectionPoints = intersectionPoints.union(AA(tuple)(pointBucket))
 
     frags = AA(eval)(pointStorage.keys())
-    params = AA(COMP([sorted,list,set,tuple,eval,vcode]))(pointStorage.values())
+    params = AA(COMP([sorted,list,set,tuple,eval,vcode(4)]))(pointStorage.values())
         
     return intersectionPoints,params,frags  ### GOOD: 1, WRONG: 2 !!!
 @}
@@ -274,13 +274,13 @@ def lines2lar(lineArray):
     index,defaultValue,V,EV = -1,-1,[],[]
     
     for k,(p1,p2) in enumerate(frags):
-        outline = [vcode(p1)]
+        outline = [vcode(4)(p1)]
         if params[k] != []:
             for alpha in params[k]:
                 if alpha != 0.0 and alpha != 1.0:
                     p = list(array(p1)+alpha*(array(p2)-array(p1)))
-                    outline += [vcode(p)]
-        outline += [vcode(p2)]
+                    outline += [vcode(4)(p)]
+        outline += [vcode(4)(p2)]
     
         edge = []
         for key in outline:
@@ -715,6 +715,143 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.5))
 @}
 %-------------------------------------------------------------------------------
 
+%-------------------------------------------------------------------------------
+@O test/py/inters/test15.py
+@{""" Testing containments between non intersecting cycles """
+from larlib import *
+
+filename = "test/svg/inters/facade.svg"
+lines = svg2lines(filename)
+VIEW(STRUCT(AA(POLYLINE)(lines)))
+
+V,EV = lines2lar(lines)
+V,EVs = biconnectedComponent((V,EV))
+# candidate face
+FVs = AA(COMP([list,set,CAT]))(EVs)
+
+latticeArray = computeCycleLattice(V,EVs)
+
+for k in range(len(latticeArray)):
+    print k,latticeArray[k]
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FVs],submodel,0.15)) 
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test16.py
+@{""" Generating the LAR of a set of non-intersecting cycles """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test15 import *
+
+cells = cellsFromCycles(latticeArray)
+CV = AA(COMP([list,set,CAT]))(EVs)
+EVdict = dict(zip(EV,range(len(EV))))
+FE = [[EVdict[edge] for edge in cycle] for cycle in EVs] 
+edges = [CAT([FE[cycle] for cycle in cell]) for cell in cells]
+FVs = [[CV[cycle] for cycle in cell] for cell in cells]
+FV = AA(CAT)(FVs)
+
+n = len(cells)
+chains = allBinarySubsetsOfLenght(n)
+
+cycles = STRUCT(MKPOLS((V,EV)))
+csrBoundaryMat = larBoundary(FV,EV)
+for chain in chains:
+    chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
+                        for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))
+    VIEW(STRUCT([cycles, chainBoundary]))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test17.py
+@{""" Generating the LAR of a set of non-intersecting cycles """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test16 import *
+
+lar = (V,FV,EV)
+
+bcycles,_ = boundaryCycles(range(len(EV)),EV)
+polylines = [[V[EV[e][1]] if e>0 else V[EV[-e][0]] for e in cycle ] for cycle in bcycles]
+polygons = [polyline + [polyline[0]] for polyline in polylines]
+
+complex = SOLIDIFY(STRUCT(AA(POLYLINE)(polygons)))
+csrBoundaryMat = larBoundary(FV,EV)
+for chain in chains:
+    chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
+                        for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))
+    VIEW(STRUCT([complex, chainBoundary]))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test18.py
+@{""" Orienting a set of non-intersecting cycles """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test17 import *
+
+cells,bridgeEdges = connectTheDots((V,EV))
+CVs = orientBoundaryCycles((V,EV),cells)
+
+print "\nCVs =",CVs
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test19.py
+@{""" Generating the LAR of a set of non-intersecting cycles """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test17 import *
+
+W,EW = boundaryCycles2vertexPermutation( (V,EV) )
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,EW))))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test20.py
+@{""" Generating the Triangulation of a set of non-intersecting cycles """
+from larlib import *
+
+sys.path.insert(0, 'test/py/inters/')
+from test17 import *
+
+triangleSet = larTriangulation( (V,EV) )
+
+VIEW(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))))
+VIEW(SKEL_1(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet))))))
+
+"""
+model = V,EV
+W,FW = lar2boundaryPolygons(model)
+polygons = [[W[u] for u in poly] for poly in FW]
+VIEW(STRUCT(AA(POLYLINE)(polygons)))
+
+triangleSet,triangledFace = [],[]
+for polygon in polygons:  
+    triangledPolygon = []
+    polyline = []
+    for p in polygon:
+        polyline.append(Point(p[0],p[1]))
+    cdt = CDT(polyline)
+
+    triangles = cdt.triangulate()
+    trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
+    triangleSet += [AA(REVERSE)(trias)]
+"""
+@}
+%-------------------------------------------------------------------------------
 
 %===============================================================================
 \section{Exporting the module}
@@ -1036,7 +1173,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV],submodel,0.1))
 
 We postulate here that the input file \texttt{test/py/inters/test.svg} should contain only \texttt{<line>} primitives, so we skip any other content. Such primitives are parsed by matching against regular expressions, and their \texttt{x1,y1,x2,y2} attributes are extracted and stored into the \texttt{lines} variable.
 An isomorphic window-viewport transformation is then performed, to transform the data within the standard unit 2D square $[0,1]^2$.
-The input vertices are finally set to a fixed resolution, using the \texttt{vcode} function. 
+The input vertices are finally set to a fixed resolution, using the \texttt{vcode(4)} function. 
 
 %-------------------------------------------------------------------------------
 @D SVG input parsing and transformation
@@ -1106,7 +1243,7 @@ lines = [[[
       for [[x1,y1],[x2,y2]] in lines]
 
 # line vertices set to fixed resolution
-lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
+lines = eval("".join(['['+ vcode(4)(p1) +','+ vcode(4)(p2) +'], ' for p1,p2 in lines]))
 @}
 %-------------------------------------------------------------------------------
 
@@ -1277,7 +1414,7 @@ A single random point, codified in floating point format, and with a fixed (quit
 @D Generation of a random point
 @{""" Generation of a random point """
 def rpoint2d():
-    return eval( vcode([ random.random(), random.random() ]) )
+    return eval( vcode(4)([ random.random(), random.random() ]) )
 @}
 %-------------------------------------------------------------------------------
     
@@ -1292,7 +1429,7 @@ def redge(scaling):
     pos = rpoint2d()
     v1 = (v1-c)*scaling + pos
     v2 = (v2-c)*scaling + pos
-    return tuple(eval(vcode(v1))), tuple(eval(vcode(v2)))
+    return tuple(eval(vcode(4)(v1))), tuple(eval(vcode(4)(v2)))
 @}
 %-------------------------------------------------------------------------------
     

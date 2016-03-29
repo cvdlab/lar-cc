@@ -299,7 +299,7 @@ def removeExternals(M,V,EV,fe, z,fz,ez):
     (Z,FZ,EZ) = copy((z,fz,ez))
     inputFace = Struct([(V,[EV[e] for e in fe])])
     verts,ev = larApply(M)(struct2lar(inputFace))
-    pol = [eval(vcode(vert[:-1])) for vert in verts],ev
+    pol = [eval(vcode(4)(vert[:-1])) for vert in verts],ev
     out = []
     classify = triangulation.pointInPolygonClassification(pol)
     for k,point in enumerate(Z):
@@ -376,7 +376,7 @@ def spacePartition(V,FV,EV, parts):
         pointsPerFace = [set(face).intersection(points.keys()) for face in edgesPerFace]
         lines = [[points[e][:2] for e in face] for face in pointsPerFace]
         lines = [line for line in lines if line!=[]]
-        vpoints = [[(vcode(point),k) for k,point in enumerate(line)] for line in lines]
+        vpoints = [[(vcode(4)(point),k) for k,point in enumerate(line)] for line in lines]
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
         lines = [[line[0],line[-1]]  if len(line)>2 else line for line in lines]
         #VIEW(STRUCT(AA(POLYLINE)(lines) + [red]))
@@ -1551,9 +1551,9 @@ triangles = cdt.triangulate()
 trias = [ [[t.a.x,t.a.y],[t.b.x,t.b.y],[t.c.x,t.c.y]] for t in triangles ]
 vdict = defaultdict(list)
 for k,point in enumerate(CAT(trias)): 
-    vdict[vcode(point)] += [k]
+    vdict[vcode(4)(point)] += [k]
 vdict = OrderedDict(zip(vdict.keys(),range(len(vdict.keys()))))
-FV = [(vdict[vcode(a)], vdict[vcode(b)], vdict[vcode(c)]) for [a,b,c] in trias] 
+FV = [(vdict[vcode(4)(a)], vdict[vcode(4)(b)], vdict[vcode(4)(c)]) for [a,b,c] in trias] 
 repeatedEdges = CAT([[[v1,v2],[v2,v3],[v3,v1]] for [v1,v2,v3] in FV])
 EV = list(set(AA(tuple)(AA(sorted)(repeatedEdges))))
 V = [eval(vect) for vect in vdict]
@@ -1742,7 +1742,7 @@ A single random point, codified in floating point format, and with a fixed (quit
 @D Generation of a random 3D point
 @{""" Generation of a random 3D point """
 def rpoint3d():
-    return eval( vcode([ random.random(), random.random(), random.random() ]) )
+    return eval( vcode(4)([ random.random(), random.random(), random.random() ]) )
 @}
 %-------------------------------------------------------------------------------
     
@@ -1758,7 +1758,7 @@ def rtriangle(scaling):
     v1 = (v1-c)*scaling + pos
     v2 = (v2-c)*scaling + pos
     v3 = (v3-c)*scaling + pos
-    return tuple(eval(vcode(v1))), tuple(eval(vcode(v2))), tuple(eval(vcode(v3)))
+    return tuple(eval(vcode(4)(v1))), tuple(eval(vcode(4)(v2))), tuple(eval(vcode(4)(v3)))
 @}
 %-------------------------------------------------------------------------------
     
@@ -1772,15 +1772,15 @@ Given as input a list \texttt{randomTriaArray} of pairs of 2D points, the functi
 @{""" Containment boxes """
 def containmentBoxes(randomPointArray,qualifier=0):
     if len(randomPointArray[0])==2:
-        boxes = [eval(vcode([min(x1,x2), min(y1,y2), min(z1,z2), 
+        boxes = [eval(vcode(4)([min(x1,x2), min(y1,y2), min(z1,z2), 
                              max(x1,x2), max(y1,y2), max(z1,z2)]))+[qualifier]
                 for ((x1,y1,z1),(x2,y2,z2)) in randomPointArray]
     elif len(randomPointArray[0])==3:
-        boxes = [eval(vcode([min(x1,x2,x3), min(y1,y2,y3), min(z1,z2,z3), 
+        boxes = [eval(vcode(4)([min(x1,x2,x3), min(y1,y2,y3), min(z1,z2,z3), 
                              max(x1,x2,x3), max(y1,y2,y3), max(z1,z2,z3)]))+[qualifier]
                 for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3)) in randomPointArray]
     elif len(randomPointArray[0])==4:
-        boxes = [eval(vcode([min(x1,x2,x3,x4), min(y1,y2,y3,y4), min(z1,z2,z3,z4), 
+        boxes = [eval(vcode(4)([min(x1,x2,x3,x4), min(y1,y2,y3,y4), min(z1,z2,z3,z4), 
                              max(x1,x2,x3,x4), max(y1,y2,y3,y4), max(z1,z2,z3,z4)]))+[qualifier]
                 for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3),(x4,y4,z4)) in randomPointArray]
     return boxes
@@ -1806,7 +1806,7 @@ def lar2boxes(model,qualifier=0):
         verts = [V[v] for v in cell]
         x1,y1,z1 = [min(coord) for coord in TRANS(verts)]
         x2,y2,z2 = [max(coord) for coord in TRANS(verts)]
-        boxes += [eval(vcode([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))+[(qualifier,k)]]
+        boxes += [eval(vcode(4)([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))+[(qualifier,k)]]
     return boxes
 @}
 %-------------------------------------------------------------------------------

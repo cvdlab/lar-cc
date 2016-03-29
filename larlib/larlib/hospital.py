@@ -30,7 +30,7 @@ def coordMaps(YMAX):
     def coordMaps0(polyline):
         polyline = AA(grid2coords(X,Y))(polyline)
         polyline = vmap(YMAX)(polyline)
-        return [eval(vcode(point)) for point in polyline]
+        return [eval(vcode(4)(point)) for point in polyline]
     return coordMaps0
 
 metric = coordMaps(YMAX)
@@ -474,7 +474,7 @@ def removeDuplicates(nodes,arcs1,arcs2,faces):
     ndict = defaultdict(list)
     index = [None for k in range(len(nodes))]
     for k,node in enumerate(nodes):
-        ndict[vcode(node)] += [k]
+        ndict[vcode(4)(node)] += [k]
     for h,nodeIndices in enumerate(ndict.values()):
         for k in nodeIndices:
             index[k] = h

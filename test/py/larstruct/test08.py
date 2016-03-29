@@ -19,8 +19,8 @@ FV = [
 
 polylines = lar2polylines((V,FV))
 lines = CAT([zip(polyline[:-1],polyline[1:]) for polyline in polylines])   
-verts = dict(zip(AA(vcode)(V),range(len(V))))
-edges = [tuple(sorted([verts[vcode(v1)], verts[vcode(v2)]])) for v1,v2 in lines]
+verts = dict(zip(AA(vcode(4))(V),range(len(V))))
+edges = [tuple(sorted([verts[vcode(4)(v1)], verts[vcode(4)(v2)]])) for v1,v2 in lines]
 EV = list(set(edges))
 
 dwelling = larApply(t(3,0))(Model((V,FV)))

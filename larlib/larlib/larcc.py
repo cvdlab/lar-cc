@@ -440,7 +440,7 @@ from collections import defaultdict
 def checkModel(model,dim=2):
     V,CV = model; n = len(V)
     vertDict = defaultdict(list)
-    for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
+    for k,v in enumerate(V): vertDict[vcode(4)(v)].append(k) 
     points,verts = TRANS(vertDict.items())
     invertedindex = [None]*n
     V = []

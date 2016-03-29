@@ -1895,7 +1895,7 @@ It is applied to the array \texttt{coordFuncs} of coordinate functions and to th
 \subsection{Identify close or coincident points}
 
 The function \texttt{checkModel}, applied to a \texttt{model} parameter, i.e.~to a (vertices, cells)  pair, returns the model after identification of vertices with coincident or very close position vectors.
-The \texttt{checkModel} function works as follows: first a dictionary \texttt{vertDict} is created, with key a suitably approximated position converted into a string by the \texttt{vcode} converter (given in the Appendix), and with value the list of vertex indices with the same (approximated) position. Then, an \texttt{invertedindex} array is created, associating each original vertex index with the new index produced by enumerating the (distinct) keys of the dictionary. Finally, a new list \texttt{CV} of cells is created, by substituting the new vertex indices for the old ones. 
+The \texttt{checkModel} function works as follows: first a dictionary \texttt{vertDict} is created, with key a suitably approximated position converted into a string by the \texttt{vcode(4)} converter (given in the Appendix), and with value the list of vertex indices with the same (approximated) position. Then, an \texttt{invertedindex} array is created, associating each original vertex index with the new index produced by enumerating the (distinct) keys of the dictionary. Finally, a new list \texttt{CV} of cells is created, by substituting the new vertex indices for the old ones. 
 
 %-------------------------------------------------------------------------------
 @D Create a dictionary with key the point location
@@ -1903,7 +1903,7 @@ The \texttt{checkModel} function works as follows: first a dictionary \texttt{ve
 def checkModel(model,dim=2):
     V,CV = model; n = len(V)
     vertDict = defaultdict(list)
-    for k,v in enumerate(V): vertDict[vcode(v)].append(k) 
+    for k,v in enumerate(V): vertDict[vcode(4)(v)].append(k) 
     points,verts = TRANS(vertDict.items())
     invertedindex = [None]*n
     V = []

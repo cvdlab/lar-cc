@@ -4,7 +4,7 @@ from larlib import *
 sys.path.insert(0, 'test/py/inters/')
 from test15 import *
 
-cells = cellsFromCycles(testArray)
+cells = cellsFromCycles(latticeArray)
 CV = AA(COMP([list,set,CAT]))(EVs)
 EVdict = dict(zip(EV,range(len(EV))))
 FE = [[EVdict[edge] for edge in cycle] for cycle in EVs] 
@@ -16,7 +16,7 @@ n = len(cells)
 chains = allBinarySubsetsOfLenght(n)
 
 cycles = STRUCT(MKPOLS((V,EV)))
-csrBoundaryMat = boundary(FV,EV)
+csrBoundaryMat = larBoundary(FV,EV)
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 
                         for e in chain2BoundaryChain(csrBoundaryMat)(chain)]))))

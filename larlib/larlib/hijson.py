@@ -17,8 +17,8 @@ def subComplexInBox(V,FV,EV,queryBox):
     (xmin,ymin),(xmax,ymax) = queryBox
     if xmin > xmax: xmin,xmax = xmax,xmin
     if ymin > ymax: ymin,ymax = ymax,ymin
-    vdict = dict([(vcode(vert),k) for k,vert in enumerate(V)])
-    vertexSubset = [vdict[vcode((x,y))] for x,y in V if xmin<=x<=xmax and ymin<=y<=ymax]
+    vdict = dict([(vcode(4)(vert),k) for k,vert in enumerate(V)])
+    vertexSubset = [vdict[vcode(4)((x,y))] for x,y in V if xmin<=x<=xmax and ymin<=y<=ymax]
     edgeSubset = [e for e,edge in enumerate(EV) if all([v in vertexSubset  for v in edge])]    
     faceSubset = [f for f,face in enumerate(FV) if all([v in vertexSubset  for v in face])]
     return vertexSubset,faceSubset,edgeSubset
@@ -70,9 +70,9 @@ def chain2structs(V,FV,EV,FE):
         struct = []
         for cell in chain:
             vs = [V[v] for v in FV[cell]]
-            vdict = dict([[vcode(vert),k] for k,vert in enumerate(vs)])
+            vdict = dict([[vcode(4)(vert),k] for k,vert in enumerate(vs)])
             facetEdges = [[V[v] for v in EV[e]] for e in FE[cell]]
-            ev = [(vdict[vcode(v1)], vdict[vcode(v2)]) for v1,v2 in facetEdges]
+            ev = [(vdict[vcode(4)(v1)], vdict[vcode(4)(v2)]) for v1,v2 in facetEdges]
             fv = [range(len(vs))]
             shape = vs,fv,ev
             struct += [ Struct([ shape ], name=None, category="room" ) ]

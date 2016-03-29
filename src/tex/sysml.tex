@@ -677,14 +677,14 @@ def vertexSieve(model1, model2):
 
 \paragraph{Merge two dictionaries with point location as keys}
 Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger than their initial sets 
-\texttt{V1} and \texttt{V2}, we index the set $\texttt{V1} \cup \texttt{V2}$ using a Python \texttt{defaultdict} dictionary, in order to avoid errors of "missing key". As dictionary keys, we use the string representation of the vertex position vector provided by the \texttt{vcode} function given in the Appendix.
+\texttt{V1} and \texttt{V2}, we index the set $\texttt{V1} \cup \texttt{V2}$ using a Python \texttt{defaultdict} dictionary, in order to avoid errors of "missing key". As dictionary keys, we use the string representation of the vertex position vector provided by the \texttt{vcode(4)} function given in the Appendix.
 %-------------------------------------------------------------------------------
 @D Merge two dictionaries with keys the point locations
 @{
 	vdict1 = defaultdict(list)
-	for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
+	for k,v in enumerate(V1): vdict1[vcode(4)(v)].append(k) 
 	vdict2 = defaultdict(list)
-	for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
+	for k,v in enumerate(V2): vdict2[vcode(4)(v)].append(k+n) 
 	
 	vertdict = defaultdict(list)
 	for point in vdict1.keys(): vertdict[point] += vdict1[point]
@@ -693,11 +693,11 @@ Since currently \texttt{CV1} and \texttt{CV2} point to a set of vertices larger 
 %-------------------------------------------------------------------------------
 
 \paragraph{Example of string coding of a vertex position}
-The position vector of a point of real coordinates is provided by the function \texttt{vcode}.
+The position vector of a point of real coordinates is provided by the function \texttt{vcode(4)}.
 An example of coding is given below. The \emph{precision} of the string representation can be tuned at will.
 {\small
 \begin{verbatim}
->>> vcode([-0.011660381062724849, 0.297350056848685860])
+>>> vcode(4)([-0.011660381062724849, 0.297350056848685860])
 '[-0.0116604, 0.2973501]'
 \end{verbatim}}
 

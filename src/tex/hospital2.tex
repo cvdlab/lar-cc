@@ -913,7 +913,7 @@ def coordMaps(YMAX):
     def coordMaps0(polyline):
         polyline = AA(grid2coords(X,Y))(polyline)
         polyline = vmap(YMAX)(polyline)
-        return [eval(vcode(point)) for point in polyline]
+        return [eval(vcode(4)(point)) for point in polyline]
     return coordMaps0
 
 metric = coordMaps(YMAX)

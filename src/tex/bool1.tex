@@ -147,7 +147,7 @@ This software module returns also:
 \item 
 
 a dictionary \texttt{vertDict} of \texttt{V} vertices, with \emph{key} the symbolic representation of vertices \texttt{v} if TRACE: tracing = mytrace(tracing,"<aaaa")-1
-a dictionary \texttt{vertDict} of \texttt{V} vertices, with \emph{key} the symbolic representation of vertices \texttt{v} returned by expressions \texttt{vcode(v)}, $\texttt{v}\in \texttt{V}$, and with values the finite ordinal numbers of the vertices;
+a dictionary \texttt{vertDict} of \texttt{V} vertices, with \emph{key} the symbolic representation of vertices \texttt{v} returned by expressions \texttt{vcode(4)(v)}, $\texttt{v}\in \texttt{V}$, and with values the finite ordinal numbers of the vertices;
 
 \item 
 the numbers \texttt{n1}, \texttt{n12}, \texttt{n2} of the elements of \texttt{V1}, $\texttt{V1}\cap\texttt{V2}$, and \texttt{V2}, respectively. Notice that the following assertions must hold (see Figure~\ref{fig:bounds}):
@@ -210,9 +210,9 @@ def mergeVertices(model1, model2):
 	CV2 = shift(CV2,n)
 
 	vdict1 = defaultdict(list)
-	for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
+	for k,v in enumerate(V1): vdict1[vcode(4)(v)].append(k) 
 	vdict2 = defaultdict(list)
-	for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
+	for k,v in enumerate(V2): vdict2[vcode(4)(v)].append(k+n) 
 	vertDict = defaultdict(list)
 	for point in vdict1.keys(): vertDict[point] += vdict1[point]
 	for point in vdict2.keys(): vertDict[point] += vdict2[point]
@@ -269,7 +269,7 @@ def makeCDC(arg1,arg2, brep=False):
 		if not (-0.0001 < scipy.linalg.det([V[v]+[1] for v in simplex]) < 0.0001) ]))
 	
 	vertDict = defaultdict(list)
-	for k,v in enumerate(V): vertDict[vcode(v)] += [k]
+	for k,v in enumerate(V): vertDict[vcode(4)(v)] += [k]
 	
 	if brep == False:
 		signs1,BC1 = signedCellularBoundaryCells(V1,basis1)
@@ -283,8 +283,8 @@ def makeCDC(arg1,arg2, brep=False):
 	else:
 		BC1,BC2 = basis1[-1],basis2[-1]
 	
-	BC = [[ vertDict[vcode(V1[v])][0] for v in cell] for cell in BC1] + [ 
-			[ vertDict[vcode(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
+	BC = [[ vertDict[vcode(4)(V1[v])][0] for v in cell] for cell in BC1] + [ 
+			[ vertDict[vcode(4)(V2[v])][0] for v in cell] for cell in BC2] #+ qhullBoundary(V)
 		
 
 	if TRACE: tracing = mytrace(tracing,"<makeCDC")-1
@@ -439,7 +439,7 @@ def cuttingTest(covector,polytope,V):
 	if TRACE: global tracing;tracing = mytrace(tracing+1,">testingSubspace0")
 
 	signs = [INNERPROD([covector, [1.]+V[v]]) for v in polytope]
-	signs = eval(vcode(signs))
+	signs = eval(vcode(4)(signs))
 
 	if TRACE: tracing = mytrace(tracing,"<testingSubspace0")-1
 	return any([value<-0.001 for value in signs]) and \
@@ -591,7 +591,7 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 		if cuts == []:
 			cell = []
 			for v in CV[k]:
-				key = vcode(V[v])
+				key = vcode(4)(V[v])
 				if Wdict.get(key,defaultValue) == defaultValue:
 					index += 1
 					Wdict[key] = index
@@ -605,7 +605,7 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 			for cellFragment in cellFragments:
 				cellFrag = []
 				for v in cellFragment:
-					key = vcode(v)
+					key = vcode(4)(v)
 					if Wdict.get(key,defaultValue) == defaultValue:
 						index += 1
 						Wdict[key] = index
@@ -619,14 +619,14 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 					thefacet = []
 					for w in cellFragment:
 						if verySmall( PROD([ COVECTOR( [V[v] for v in BC[f]] ) , [1.]+w ]) ):
-							thefacet += [ Wdict[vcode(w)] ]
+							thefacet += [ Wdict[vcode(4)(w)] ]
 					BCfrags += [(f, thefacet)]		
 				
 	print "\nmakeSCDC >>"
 	print "end loop"
 	CW = sorted(AA(sorted)(CW))
 	print "\nBCfrags =",BCfrags
-	BCW = [ [ Wdict[vcode(V[v])] for v in cell ] for cell in BC]
+	BCW = [ [ Wdict[vcode(4)(V[v])] for v in cell ] for cell in BC]
 	W = sorted(zip( Wdict.values(), Wdict.keys() ))
 	W = AA(eval)(TRANS(W)[1])
 	dim = len(W[0])
@@ -646,7 +646,7 @@ def makeSCDC(V,CV,BC,nbc1,nbc2):
 for h in cuts:
 	for w in cellFragment:
 		if verySmall( PROD([ COVECTOR( [V[v] for v in BC[h]] ) , [1.]+w ]) ):
-			BCfrags += (h, Wdict[vcode(w)] )
+			BCfrags += (h, Wdict[vcode(4)(w)] )
 
 %-------------------------------------------------------------------------------
 @D Boolean argument boundaries embedding in SCDC
@@ -1354,7 +1354,7 @@ def facetCovectors(X,FX):
 				theSign = SIGN(comp)
 				break
 		normalizedCovect = [x*theSign  if x!=abs(0.0) else x for x in normalizedCovect]
-		covectors[vcode(normalizedCovect)] += [k]
+		covectors[vcode(4)(normalizedCovect)] += [k]
 
 	if TRACE: tracing = mytrace(tracing,"<facetCovectors")-1
 	return covectors
@@ -1437,7 +1437,7 @@ def larRemoveVertices(V,FV):
     for k,incell in enumerate(FV):
         outcell = []
         for v in incell:
-            key = vcode(V[v])
+            key = vcode(4)(V[v])
             if vertDict.get(key,defaultValue) == defaultValue:
                 index += 1
                 vertDict[key] = index
@@ -2412,14 +2412,14 @@ def fixedPrec(value):
 	if out == -0.0: out = 0.0
 	return str(out)
 	
-def vcode (vect): 
-	#if TRACE: global tracing;tracing = mytrace(tracing+1,">vcode")
+def vcode(4) (vect): 
+	#if TRACE: global tracing;tracing = mytrace(tracing+1,">vcode(4)")
 	"""
 	To generate a string representation of a number array.
 	Used to generate the vertex keys in PointSet dictionary, and other similar operations.
 	"""
 
-	#if TRACE: tracing = mytrace(tracing,"<vcode")-1
+	#if TRACE: tracing = mytrace(tracing,"<vcode(4)")-1
 	return prepKey(AA(fixedPrec)(vect))
 @}
 %------------------------------------------------------------------
