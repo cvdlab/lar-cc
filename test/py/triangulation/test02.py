@@ -12,7 +12,7 @@ edges = [CAT([FE[cycle] for cycle in cell]) for cell in cells]
 FVs = [[CV[cycle] for cycle in cell] for cell in cells]
 FV = AA(CAT)(FVs)
 cycles = STRUCT(MKPOLS((V,EV)))
-csrBoundaryMat = boundary(FV,EV)
+csrBoundaryMat = larBoundary(FV,EV)
 
 n = len(cells)
 chains = allBinarySubsetsOfLenght(n)

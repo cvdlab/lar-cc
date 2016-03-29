@@ -609,7 +609,7 @@ VIEW(STRUCT(MKPOLS((verts, triangles))))
 @D To compute the boundary (d-1)-chain of a given d-chain
 @{
 def boundaryOfChain(cells,facets):
-	csrBoundaryMat = boundary(cells,facets)
+	csrBoundaryMat = larBoundary(cells,facets)
 	csrChain = zeros((len(cells),1))
 	def boundaryOfChain0(chain):
 		for cell in chain:  csrChain[cell,0]=1.0

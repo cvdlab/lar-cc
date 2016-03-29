@@ -26,7 +26,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,1.5))
 """ 2-cell with high topological genus 2. """
 
 # LAR data structures
-csrBoundaryMat = boundary(FV,EV)
+csrBoundaryMat = larBoundary(FV,EV)
 boundaryChain = chain2BoundaryChain(csrBoundaryMat)([1])
 triangleSet = larTriangulation( (V,EV) )
 

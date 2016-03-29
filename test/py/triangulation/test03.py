@@ -11,7 +11,7 @@ polylines = [[V[EV[e][1]] if e>0 else V[EV[-e][0]] for e in cycle ] for cycle in
 polygons = [polyline + [polyline[0]] for polyline in polylines]
 
 complex = SOLIDIFY(STRUCT(AA(POLYLINE)(polygons)))
-csrBoundaryMat = boundary(FV,EV)
+csrBoundaryMat = larBoundary(FV,EV)
 
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 

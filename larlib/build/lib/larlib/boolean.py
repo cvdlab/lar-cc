@@ -72,15 +72,21 @@ def lar2boxes(model,qualifier=0):
     return boxes
 
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
-import larcc
+import boundary
 
 def MKTRIANGLES(model,color=False):
     V,FV,EV = model
     lenV = len(V)
     VV = AA(LIST)(range(len(V)))
-    FE = larcc.crossRelation(FV,EV,VV)
+    
+    boundaryOperator = boundary.larSignedBoundary2(V,FV,EV)
+    FEbasis = boundary.signedBasis(boundaryOperator)
+    FE,signs = TRANS(FEbasis)
+    
     if len(V[0]) == 2: V=[v+[0] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
+    triangleSet = [[(p1,p2,p3) if sign==1 else (p2,p1,p3) for p1,p2,p3 in triangleSet] 
+                    for sign,triangleSet in zip(signs,triangleSets)]
     if color:
         colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GREEN,GRAY,ORANGE,BLACK,BLUE,PURPLE,BROWN]
         return [ COLOR(colors[k%12])(STRUCT([MKPOL([verts,[[3,2,1]],None]) 
@@ -100,6 +106,33 @@ def MKSOLID(*model):
     triangleSets = boundaryTriangulation(V,faces,EV,FE)
     return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
         for face in CAT(triangleSets) ])
+        
+def BREP (model,color=False):
+    V,FV,EV = model
+    VV = AA(LIST)(range(len(V)))
+    
+    boundaryOperator = boundary.larSignedBoundary2(V,FV,EV)
+    FEbasis = boundary.signedBasis(boundaryOperator)
+    FE,signs = TRANS(FEbasis)
+   
+    csrBoundary3,CF,signedBoundary = boundary.larSignedBoundary3((V,FV,EV))
+    cells,signs = TRANS(signedBoundary)
+    fv = [FV[f] for f in cells]
+    ev = [EV[e] for e in set(CAT([[e for e in FE[f]] for f in cells])) ]
+    fe = larcc.crossRelation(fv,ev,VV)
+
+    triangleSets = boundaryTriangulation(V,fv,ev,fe) 
+    triangleSet = [[(p1,p2,p3) if sign==1 else (p2,p1,p3) for p1,p2,p3 in triangleSet]
+                    for sign,triangleSet in zip(signs,triangleSets)]
+    if color:
+        colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GREEN,GRAY,ORANGE,BLACK,BLUE,PURPLE,BROWN]
+        return [ COLOR(colors[k%12])(STRUCT([MKPOL([verts,[[3,2,1]],None]) 
+            for verts in triangledFace])) for k,triangledFace in enumerate(triangleSets) ]
+    else:
+        return [ STRUCT([MKPOL([verts,[[3,2,1]],None])  for verts in triangledFace])
+             if sign==-1 else 
+             STRUCT([MKPOL([verts,[[1,2,3]],None])  for verts in triangledFace])
+        for sign,triangledFace in zip(signs,triangleSets) ]
 
 
 
@@ -373,12 +406,13 @@ def boundaryTriangulation(V,FV,EV,FE):
 
         thePolygons = filtering(polygons)
         setsOfTriangles = triangulation.polygons2TriangleSet(W,thePolygons)
-        trias = [[p+[1],q+[1],r+[1]] for p,q,r in setsOfTriangles[0]]
-        
-        inverseMap = transform.I
-        trias = AA(mapVerts(inverseMap))(trias)
-        triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
-        triangleSet += [triangledFace]
+        if setsOfTriangles != []:
+            trias = [[p+[1],q+[1],r+[1]] for p,q,r in setsOfTriangles[0]]
+            
+            inverseMap = transform.I
+            trias = AA(mapVerts(inverseMap))(trias)
+            triangledFace += [[v[:-1] for v in triangle] for triangle in trias]
+            triangleSet += [triangledFace]
     return triangleSet
 
 def triangleIndices(triangleSet,W):
@@ -427,35 +461,36 @@ def faceSlopeOrdering(model,FE):
     ET,ET_angle = invertRelation(TE),[]
     #import pdb; pdb.set_trace()
     for e,et in enumerate(ET):
-        v1,v2 = EV[e]
-        v1v2 = set([v1,v2])
-        et_angle = []
-        t0 = et[0]
-        tverts = [v1,v2] + list(set(TV[t0]).difference(v1v2))
-        e3 = UNITVECT(VECTDIFF([ V[tverts[1]], V[tverts[0]] ]))
-        e1 = UNITVECT(VECTDIFF([ V[tverts[2]], V[tverts[0]] ]))
-        e2 = cross(array(e1),e3).tolist()
-        basis = mat([e1,e2,e3]).T
-        transform = basis.I
-        normals = []
-        Tvs = []
-        for triangle in et:
-            verts = TV[triangle]
-            vertSet = set(verts).difference(v1v2)
-            tvs = [v1,v2] + list(vertSet)
-            Tvs += [tvs]
-            w1 = UNITVECT(VECTDIFF([ V[tvs[2]], V[tvs[0]] ]))
-            w2 = (transform * mat([w1]).T).T
-            w3 = cross(array([0,0,1]),w2).tolist()[0]
-            normals += [w3]
-        normals = mat(normals)
-        for k,t in enumerate(et):
-            angle = math.atan2(normals[k,1],normals[k,0])
-            et_angle += [angle]
-        pairs = sorted(zip(et_angle,et,Tvs))
-        sortedTrias = [pair[1] for pair in pairs]
-        triasVerts = [pair[2] for pair in pairs]
-        ET_angle += [sortedTrias]
+        if et != []:
+            v1,v2 = EV[e]
+            v1v2 = set([v1,v2])
+            et_angle = []
+            t0 = et[0]
+            tverts = [v1,v2] + list(set(TV[t0]).difference(v1v2))
+            e3 = UNITVECT(VECTDIFF([ V[tverts[1]], V[tverts[0]] ]))
+            e1 = UNITVECT(VECTDIFF([ V[tverts[2]], V[tverts[0]] ]))
+            e2 = cross(array(e1),e3).tolist()
+            basis = mat([e1,e2,e3]).T
+            transform = basis.I
+            normals = []
+            Tvs = []
+            for triangle in et:
+                verts = TV[triangle]
+                vertSet = set(verts).difference(v1v2)
+                tvs = [v1,v2] + list(vertSet)
+                Tvs += [tvs]
+                w1 = UNITVECT(VECTDIFF([ V[tvs[2]], V[tvs[0]] ]))
+                w2 = (transform * mat([w1]).T).T
+                w3 = cross(array([0,0,1]),w2).tolist()[0]
+                normals += [w3]
+            normals = mat(normals)
+            for k,t in enumerate(et):
+                angle = math.atan2(normals[k,1],normals[k,0])
+                et_angle += [angle]
+            pairs = sorted(zip(et_angle,et,Tvs))
+            sortedTrias = [pair[1] for pair in pairs]
+            triasVerts = [pair[2] for pair in pairs]
+            ET_angle += [sortedTrias]
     EF_angle = ET_to_EF_incidence(TV,FV,FT, ET_angle)
     return EF_angle, ET,TV,FT
 
@@ -601,7 +636,7 @@ def extendEV(EV,ET,TV):
 """ Signed boundary operator for a general LAR 2-complex """
 def larSignedBoundary(larModel,triaModel,FT):
     inputOp = signedSimplicialBoundary(*triaModel)
-    outputOp = boundary(*larModel)
+    outputOp = larBoundary(*larModel)
     (n,m),(p,q) = inputOp.shape, outputOp.shape
     
     for h in range(p):   # for each LAR face

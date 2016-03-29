@@ -257,7 +257,7 @@ class Struct:
         return newObj
     def set_category(self,category):
         self.category = str(category)
-    def boundary(self):
+    def larBoundary(self):
         data = struct2lar(self)
         if len(data) == 3:
             V,FV,EV = data

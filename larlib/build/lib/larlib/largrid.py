@@ -93,7 +93,7 @@ if __name__=="__main__":
 
 def gridBoundaryMatrices(shape):
    skeletons = gridSkeletons(shape)
-   boundaryMatrices = [boundary(skeletons[k+1],faces) 
+   boundaryMatrices = [larBoundary(skeletons[k+1],faces) 
                    for k,faces in enumerate(skeletons[:-1])]
    return boundaryMatrices
    

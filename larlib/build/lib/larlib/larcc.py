@@ -136,14 +136,14 @@ def invertRelation(CV):
         for v in cell: VC[v] += [k]
     return VC
 
-from boundary import boundary
+from boundary import larBoundary
 
 def coboundary(cells,facets):
-    Boundary = boundary(cells,facets)
+    Boundary = larBoundary(cells,facets)
     return csrTranspose(Boundary)
 
 def coboundary1(cells,facets):
-    Boundary = boundary(cells,facets)
+    Boundary = larBoundary(cells,facets)
     return csrTranspose(Boundary)
 
 """ Computation of topological relation """
@@ -171,7 +171,7 @@ def crossRelation(XV,YV,ZV):
 
 def signedSimplicialBoundary (CV,FV):
     # compute the set of pairs of indices to [boundary face,incident coface]
-    coo = boundary(CV,FV).tocoo()
+    coo = larBoundary(CV,FV).tocoo()
     pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
 
     # compute the [face, coface] pair as vertex lists
@@ -265,21 +265,21 @@ def larIncidence(cells,facets):
 
 """ Cell-Face incidence operator """
 def csrCellFaceIncidence(CV,FV):
-    return boundary(FV,CV)
+    return larBoundary(FV,CV)
 
 def larCellFace(CV,FV):
     return larIncidence(CV,FV)
 
 """ Cell-Edge incidence operator """
 def csrCellEdgeIncidence(CV,EV):
-     return boundary(EV,CV)
+     return larBoundary(EV,CV)
 
 def larCellEdge(CV,EV):
     return larIncidence(CV,EV)
 
 """ Face-Edge incidence operator """
 def csrFaceEdgeIncidence(FV,EV):
-    return boundary(EV,FV)
+    return larBoundary(EV,FV)
 
 def larFaceEdge(FV,EV):
     return larIncidence(FV,EV)
@@ -341,7 +341,7 @@ def incidenceChain(bases):
 
 """ Signed boundary matrix for polytopal complexes """
 def signedCellularBoundary(V,bases):
-    coo = boundary(bases[-1],bases[-2]).tocoo()
+    coo = larBoundary(bases[-1],bases[-2]).tocoo()
     pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
     signs = []
     dim = len(bases)-1

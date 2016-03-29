@@ -1019,22 +1019,23 @@ def cycles2triangles(polygon):
 def polygons2TriangleSet(V,polygons):
     triangleSets = []
     for polygon in polygons:
-        if len(set(CAT(polygon))) == len(CAT(polygon)):
-            pol = [[V[v] for v in cycle] for cycle in polygon]
-            triangleSets += cycles2triangles(pol)
-        else:
-            cycles = []
-            vcycles = []
-            for cycle in polygon:
-                if len(set(cycle)) == len(cycle):
-                    if nonDoubled(cycles,cycle):
+        if polygon != []:
+            if len(set(CAT(polygon))) == len(CAT(polygon)):
+                pol = [[V[v] for v in cycle] for cycle in polygon]
+                triangleSets += cycles2triangles(pol)
+            else:
+                cycles = []
+                vcycles = []
+                for cycle in polygon:
+                    if len(set(cycle)) == len(cycle):
+                        if nonDoubled(cycles,cycle):
+                            cycles += [cycle]
+                            vcycles += [[V[v] for v in cycle]]
+                    else:
+                        vcycle = makeManifold(V,cycle)
                         cycles += [cycle]
-                        vcycles += [[V[v] for v in cycle]]
-                else:
-                    vcycle = makeManifold(V,cycle)
-                    cycles += [cycle]
-                    vcycles += [vcycle]
-            triangleSets += cycles2triangles(vcycles)
+                        vcycles += [vcycle]
+                triangleSets += cycles2triangles(vcycles)
     return triangleSets
 @}
 %-------------------------------------------------------------------------------
@@ -1404,7 +1405,7 @@ def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     #csrBoundaryMat = larUnsignedBoundary2(FV,EV,VV)
-    csrBoundaryMat = boundary.boundary(FV,EV)
+    csrBoundaryMat = boundary.larBoundary(FV,EV)
     def larComplexChain0(chain):
         boundaryChain = larcc.chain2BoundaryChain(csrBoundaryMat)(chain)
         outModel = V,[EV[e] for e in boundaryChain]
@@ -1703,7 +1704,7 @@ edges = [CAT([FE[cycle] for cycle in cell]) for cell in cells]
 FVs = [[CV[cycle] for cycle in cell] for cell in cells]
 FV = AA(CAT)(FVs)
 cycles = STRUCT(MKPOLS((V,EV)))
-csrBoundaryMat = boundary(FV,EV)
+csrBoundaryMat = larBoundary(FV,EV)
 
 n = len(cells)
 chains = allBinarySubsetsOfLenght(n)
@@ -1781,7 +1782,7 @@ polylines = [[V[EV[e][1]] if e>0 else V[EV[-e][0]] for e in cycle ] for cycle in
 polygons = [polyline + [polyline[0]] for polyline in polylines]
 
 complex = SOLIDIFY(STRUCT(AA(POLYLINE)(polygons)))
-csrBoundaryMat = boundary(FV,EV)
+csrBoundaryMat = larBoundary(FV,EV)
 
 for chain in chains:
     chainBoundary = COLOR(RED)(STRUCT(MKPOLS((V,[EV[e] 

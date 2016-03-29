@@ -709,7 +709,7 @@ The list of boundary matrices \texttt{CSR($[\partial_k]$)} ($1\leq k\leq d$) is 
 \begin{list}{}{} \item
 \mbox{}\verb@def gridBoundaryMatrices(shape):@\\
 \mbox{}\verb@   skeletons = gridSkeletons(shape)@\\
-\mbox{}\verb@   boundaryMatrices = [boundary(skeletons[k+1],faces) @\\
+\mbox{}\verb@   boundaryMatrices = [larBoundary(skeletons[k+1],faces) @\\
 \mbox{}\verb@                   for k,faces in enumerate(skeletons[:-1])]@\\
 \mbox{}\verb@   return boundaryMatrices@\\
 \mbox{}\verb@   @\\
@@ -792,7 +792,7 @@ The file \texttt{test/py/largrid/test04.py} gives an example of computation of t
 \mbox{}\verb@                  for k in boundaryCells]@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))@\\
 \mbox{}\verb@submodel = STRUCT(MKPOLS((V,orientedBoundary)))@\\
-\mbox{}\verb@VIEW(larModelNumbering(V,bases,submodel))@\\
+\mbox{}\verb@VIEW(larModelNumbering()(V,bases,submodel))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}
@@ -821,7 +821,7 @@ how to use the components of the LAR cell stack, computed as \texttt{larSimplici
 \mbox{}\verb@orientedBoundary = [FV[-k] if k<0 else swap(list(FV[k])) for k in boundaryCells]@\\
 \mbox{}\verb@VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,orientedBoundary))))@\\
 \mbox{}\verb@submodel = EXPLODE(1.05,1.05,1.05)(MKPOLS((V,orientedBoundary)))@\\
-\mbox{}\verb@VIEW(larModelNumbering(V,bases,submodel))@\\
+\mbox{}\verb@VIEW(larModelNumbering()(V,bases,submodel))@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-2ex}

@@ -98,7 +98,7 @@ def larImage(shape):
 
 def boundaryOps(skeletons):
    """ CSR matrices of boundary operators from list of skeletons """
-   return [boundary(skeletons[k+1],faces) 
+   return [larBoundary(skeletons[k+1],faces) 
       for k,faces in enumerate(skeletons[:-1])]
 
 

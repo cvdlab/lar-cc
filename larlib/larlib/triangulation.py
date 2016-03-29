@@ -515,22 +515,23 @@ def cycles2triangles(polygon):
 def polygons2TriangleSet(V,polygons):
     triangleSets = []
     for polygon in polygons:
-        if len(set(CAT(polygon))) == len(CAT(polygon)):
-            pol = [[V[v] for v in cycle] for cycle in polygon]
-            triangleSets += cycles2triangles(pol)
-        else:
-            cycles = []
-            vcycles = []
-            for cycle in polygon:
-                if len(set(cycle)) == len(cycle):
-                    if nonDoubled(cycles,cycle):
+        if polygon != []:
+            if len(set(CAT(polygon))) == len(CAT(polygon)):
+                pol = [[V[v] for v in cycle] for cycle in polygon]
+                triangleSets += cycles2triangles(pol)
+            else:
+                cycles = []
+                vcycles = []
+                for cycle in polygon:
+                    if len(set(cycle)) == len(cycle):
+                        if nonDoubled(cycles,cycle):
+                            cycles += [cycle]
+                            vcycles += [[V[v] for v in cycle]]
+                    else:
+                        vcycle = makeManifold(V,cycle)
                         cycles += [cycle]
-                        vcycles += [[V[v] for v in cycle]]
-                else:
-                    vcycle = makeManifold(V,cycle)
-                    cycles += [cycle]
-                    vcycles += [vcycle]
-            triangleSets += cycles2triangles(vcycles)
+                        vcycles += [vcycle]
+                triangleSets += cycles2triangles(vcycles)
     return triangleSets
 
 """ Return a list of colored HPCs for the faces in FV """
@@ -694,7 +695,7 @@ def larComplexChain(model):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     #csrBoundaryMat = larUnsignedBoundary2(FV,EV,VV)
-    csrBoundaryMat = boundary.boundary(FV,EV)
+    csrBoundaryMat = boundary.larBoundary(FV,EV)
     def larComplexChain0(chain):
         boundaryChain = larcc.chain2BoundaryChain(csrBoundaryMat)(chain)
         outModel = V,[EV[e] for e in boundaryChain]

@@ -1,13 +1,14 @@
-\documentclass[11pt,oneside]{article}	%use"amsart"insteadof"article"forAMSLaTeXformat
-\usepackage{geometry}		%Seegeometry.pdftolearnthelayoutoptions.Therearelots.
-\geometry{letterpaper}		%...ora4paperora5paperor...
-%\geometry{landscape}		%Activateforforrotatedpagegeometry
-%\usepackage[parfill]{parskip}		%Activatetobeginparagraphswithanemptylineratherthananindent
-\usepackage{graphicx}				%Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
-								%TeXwillautomaticallyconverteps-->pdfinpdflatex		
+\documentclass[11pt,oneside]{article}    %use"amsart"insteadof"article"forAMSLaTeXformat
+\usepackage{geometry}        %Seegeometry.pdftolearnthelayoutoptions.Therearelots.
+\geometry{letterpaper}        %...ora4paperora5paperor...
+%\geometry{landscape}        %Activateforforrotatedpagegeometry
+%\usepackage[parfill]{parskip}        %Activatetobeginparagraphswithanemptylineratherthananindent
+\usepackage{graphicx}                %Usepdf,png,jpg,orepsßwithpdflatex;useepsinDVImode
+                                %TeXwillautomaticallyconverteps-->pdfinpdflatex        
 \usepackage{amssymb}
 \usepackage[colorlinks]{hyperref}
-\usepackage{algorithm}\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 %----macros begin---------------------------------------------------------------
 \usepackage{color}
@@ -44,7 +45,7 @@
 \footnote{This document is part of the \emph{Linear Algebraic Representation with CoChains} (LAR-CC) framework~\cite{cclar-proj:2013:00}. \today}
 }
 \author{Alberto Paoluzzi}
-%\date{}							%Activatetodisplayagivendateornodate
+%\date{}                            %Activatetodisplayagivendateornodate
 
 \begin{document}
 \maketitle
@@ -99,7 +100,7 @@ Notice that both the computation of \texttt{facetCoboundary} contents, and the o
 %-------------------------------------------------------------------------------
 @D convex-cells boundary operator
 @{""" convex-cells boundary operator --- best implementation """
-def boundary(cells,facets):
+def larBoundary(cells,facets):
     lenV = max(max(CAT(cells)),max(CAT(facets)))+1
     csrCV = csrCreate(cells,lenV)
     csrFV = csrCreate(facets,lenV)
@@ -129,12 +130,12 @@ where---more in general embedded in $\mathbf{E}^d$---they stand for the (binary 
 @D path-connected-cells boundary operator
 @{""" path-connected-cells boundary operator """
 def larUnsignedBoundary2(CV,FV,EV):
-    out = boundary(CV,FV)
+    out = larBoundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
     unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
     if unreliable != []:
-        csrBBMat = boundary(FV,EV) * boundary(CV,FV)
+        csrBBMat = larBoundary(FV,EV) * larBoundary(CV,FV)
         lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
         FE = larcc.crossRelation0(lenV,FV,EV)
         out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
@@ -144,7 +145,7 @@ def boundary3(CV,FV,EV):
     out = larUnsignedBoundary2(CV,FV,EV)
     lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
     VV = AA(LIST)(range(lenV))
-    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * larUnsignedBoundary2(CV,FV,EV))
+    csrBBMat = scipy.sparse.csc_matrix(larBoundary(FV,EV) * larUnsignedBoundary2(CV,FV,EV))
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
     unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
@@ -212,7 +213,7 @@ def csrBoundaryFilter3(unreliable,out,csrBBMat,cells,FE):
     return csr_matrix(len(cells)*[[1]])
 
 def boundaryCells(cells,facets):
-    csrBoundaryMat = boundary(cells,facets)
+    csrBoundaryMat = larBoundary(cells,facets)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
@@ -578,7 +579,7 @@ def larFaces2Faces(FV,EV):
 
 def larEdges2Edges(EV,VV):
     lenV = len(VV)
-    csrMat = boundary(EV,VV)
+    csrMat = larBoundary(EV,VV)
     csrEE = csrMat.T * csrMat
     def larFaces2Faces0(chain):
         chainCoords = csc_matrix((csrEE.shape[1],1),dtype='b')
@@ -603,20 +604,20 @@ It is computed using also the $M_2$ and $M_1$ characteristic matrices, or --- be
 @D Signed 2-boundary
 @{""" Signed 2-boundary """
 def larSignedBoundary2(FV,EV):
-	efOp = larFaces2Edges(FV,EV)
-	FE = [efOp([k]) for k in range(len(FV))]
-	data,row,col = [],[],[]
-	for f in range(len(FE)):
-		cycle_data = find_cycles(V,[EV[e] for e in FE[f]])
-		coefficients = [cycle_data['ev_mapping'][k]['direction'] 
-		      for k in range(len(cycle_data['ev_mapping']))]
-		ecycle = FE[f]
-		data += coefficients
-		row += ecycle
-		col += [f]*len(ecycle)
-		#print f,len(data),len(row),len(col)
-	signedBoundary2 = coo_matrix((data,(row,col)), shape=(len(EV),len(FV)),dtype='b')
-	return csr_matrix(signedBoundary2)
+    efOp = larFaces2Edges(FV,EV)
+    FE = [efOp([k]) for k in range(len(FV))]
+    data,row,col = [],[],[]
+    for f in range(len(FE)):
+        cycle_data = find_cycles(V,[EV[e] for e in FE[f]])
+        coefficients = [cycle_data['ev_mapping'][k]['direction'] 
+              for k in range(len(cycle_data['ev_mapping']))]
+        ecycle = FE[f]
+        data += coefficients
+        row += ecycle
+        col += [f]*len(ecycle)
+        #print f,len(data),len(row),len(col)
+    signedBoundary2 = coo_matrix((data,(row,col)), shape=(len(EV),len(FV)),dtype='b')
+    return csr_matrix(signedBoundary2)
 @}
 %-------------------------------------------------------------------------------
 
@@ -669,12 +670,15 @@ def adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation):
         elif orientation < 0:  edgeLoop = EF_angle[edge]
         edgeLoop = edgeLoop + [edgeLoop[0]]  # all positive indices
         
-        pivotFace = set([f for f,_ in faceChainOrientation]).intersection(edgeLoop).pop()
-        if pivotFace in edgeLoop:
-            pivotIndex = edgeLoop.index(pivotFace)
-        else:
-            pivotIndex = edgeLoop.index(-pivotFace)
-        adjacentFace = edgeLoop[pivotIndex+1]
+        candidates = set([f for f,_ in faceChainOrientation]).intersection(edgeLoop)
+        if candidates != set([]):
+            pivotFace = candidates.pop()
+            if pivotFace in edgeLoop:
+                pivotIndex = edgeLoop.index(pivotFace)
+            else:
+                pivotIndex = edgeLoop.index(-pivotFace)
+            adjacentFace = edgeLoop[pivotIndex+1]
+        else: return None
         
         theSign = boundaryOperator[edge,adjacentFace]
         return adjacentFace, -(theSign*orientation)
@@ -704,13 +708,15 @@ def chooseStartFace(FV,faceCounter):
 @D Extract the signed representation of a basis element
 @{""" Extract the signed representation of a basis element """
 def signedBasis(boundaryOperator):
-	facesByEdges = csc_matrix(boundaryOperator)
-	m,n = facesByEdges.shape
-	edges,signs = [],[]
-	for i in range(n):
-		edges += [facesByEdges.indices[facesByEdges.indptr[i]:facesByEdges.indptr[i+1]].tolist()]
-		signs += [facesByEdges.data[facesByEdges.indptr[i]:facesByEdges.indptr[i+1]].tolist()]
-	return zip(edges,signs)
+    facesByEdges = csc_matrix(boundaryOperator)
+    m,n = facesByEdges.shape
+    edges,signs = [],[]
+    for i in range(n):
+        edges += [facesByEdges.indices[facesByEdges.indptr[
+                              i]:facesByEdges.indptr[i+1]].tolist()]
+        signs += [facesByEdges.data[facesByEdges.indptr[
+                              i]:facesByEdges.indptr[i+1]].tolist()]
+    return zip(edges,signs)
 @}
 %-------------------------------------------------------------------------------
 
@@ -719,25 +725,36 @@ def signedBasis(boundaryOperator):
 The algorithm to compute the signed boundary matrix of a 3-complex is given below in pseudocode.
 
 %-------------------------------------------------------------------------------
-\begin{algorithm}\caption{Compute the signed boundary matrix of a 3-complex}\begin{algorithmic}[1]\Function {larSignedBoundary3}{LarModel}
-    \State $V,FV,EV \leftarrow LarModel$	\State sort on angles the co-boundaries of 1-cells (loops of signed faces)
-	\State $\delta_2 \leftarrow []$  (boundary 2-faces of 3-cells by row)
-	\While {set of non-worked faces $\not= \emptyset$} 
-		\State $F \leftarrow [f]$ (Take an elementary 2-chain)
-		\State $E \leftarrow \partial_2(F)$ (loop of signed edges)
-		\While {$E \not= \emptyset$ }
-			\For {each edge on $E$}
-				\State {assemble all the $g_i$ with $F \in$ new 2-chain:}
-			    \State {$F \leftarrow F \cup [g_i]$}
-			    \State {update the non-worked faces}
-			\EndFor
-			\State {compute the new oriented 1-boundary}
-		    \State {put signed F elements in a new column of $\partial_3$ (new row of $\delta_2$)}
-    	\EndWhile
+\begin{algorithm}
+\caption{Compute the signed $\partial_3$ matrix of a 3-complex, from 2-skeleton}
+\begin{algorithmic}[1]
+\Function {larSignedBoundary3}{LarModel}
+    \State {$V,FV,EV \leftarrow {}$LarModel}
+    \State {$[\partial_2]\equiv[\delta_1]^t  \leftarrow {}$\textsc{larSignedBoundary2}(LarModel)}
+    \State {$sort: EV\to FV\to \R^*: e\mapsto \delta_1(e)$ (ordered loops of signed 2-faces)}
+    \State {$[\partial_3]\equiv[\delta_2]^t \leftarrow []$  (boundary 2-faces of 3-cells by row)}
+    \State {$S = {}$indices\ of\ 2-faces}
+    \While {$S \not= \emptyset$ (set of non-traversed 2-faces) } 
+        \State {$f \leftarrow \textsc{choose}(S)$ (first 2-face, reversing previous sign)}
+        \State $F \leftarrow \{f\}$ (singleton 2-chain)
+        \While {$\partial_2(F) \not= \emptyset$} ($F$ non closed)
+            \State $E \leftarrow \partial_2(F) $ (1-cycle of signed edges)
+            \While {$E \not= \emptyset$}
+                \For {each $e \in E$}
+                    \State {$f_i \leftarrow next(f)(sort(\delta_1(e)))$}
+                    \State {$F \leftarrow F \cup \{f_i\}$}
+                    \State {$S \leftarrow S - \{f_i\}$ (non-traversed 2-faces)}
+                    \State {$E \leftarrow E - \{e\}$}
+                \EndFor
+                \State {$E \leftarrow \partial_2(F) $ (new oriented 1-cycle)}
+            \EndWhile
+        \EndWhile
+        \State {$[\partial_3] \leftarrow [\partial_3]+[F]$ (put F in new $[\partial_3]$ column, i.e.~new $[\delta_2]$ row)}
     \EndWhile 
-    \State \Return {$\partial_3$ matrix}
+    \State \Return {$[\partial_3]$ (operator's matrix)}
     \EndFunction 
-\end{algorithmic}\end{algorithm}
+\end{algorithmic}
+\end{algorithm}
 %-------------------------------------------------------------------------------
 
 
@@ -746,52 +763,81 @@ The algorithm to compute the signed boundary matrix of a 3-complex is given belo
 %-------------------------------------------------------------------------------
 @D Return the signed boundary matrix of a 3-complex
 @{""" Return the signed boundary matrix of a 3-complex """
+import boolean
 def larSignedBoundary3((V,FV,EV)):
-	model = V,FV,EV
-	faceCounter = zeros((len(FV),2),dtype='b')
-	CF,m = [],len(FV)
-	efOp = larFaces2Edges(V,FV,EV)
-	FE = [efOp([k]) for k in range(len(FV))]
-	EF_angle, _,_,_ = faceSlopeOrdering(model,FE)
-	nonWorkedFaces,coboundary_2,cellNumber = set(range(m)),[],0
-	boundaryOperator = larSignedBoundary2(V,FV,EV)
-	FEbasis = signedBasis(boundaryOperator)
-	row,col,data = [],[],[]
-	while True:
-		startFace,orientation = chooseStartFace(FV,faceCounter)
-		if startFace == -1: break
-		nonWorkedFaces = nonWorkedFaces.difference({startFace})
-		faceChainOrientation = {(startFace,orientation)}
-		vect = csc_matrix((m,1),dtype='b')
-		for face,orientation in faceChainOrientation:  
-		    vect[face] = orientation
-		edgeCycleCoords = boundaryOperator * vect
-		edgeCycle = coords2chain(edgeCycleCoords)
-		while edgeCycle != []:
-			look4face = adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation)
-			for edge,orientation in edgeCycle:
-				adjacentFace,orientation = look4face(edge,orientation)
-				faceChainOrientation = faceChainOrientation.union(
-				    [(adjacentFace,orientation)])
-				nonWorkedFaces = nonWorkedFaces.difference([adjacentFace])
-			vect = csc_matrix((m,1),dtype='b')
-			for face,orientation in faceChainOrientation:  
-			    vect[face] = orientation
-			edgeCycleCoords = boundaryOperator * vect
-			edgeCycle = coords2chain(edgeCycleCoords)
-		row += [face for face,_ in faceChainOrientation]
-		col += [cellNumber for face,orientation in faceChainOrientation]
-		data += [orientation for _,orientation in faceChainOrientation]
-		for face,orientation in faceChainOrientation:
-		    if orientation == 1: faceCounter[face,0]+=1
-		    elif orientation == -1: faceCounter[face,1]+=1
-		CF += [[face for face,_ in faceChainOrientation]]
-		cellNumber += 1		    
-	outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
-	return csr_matrix(outMatrix),CF,faceCounter
+    model = V,FV,EV
+    faceCounter = zeros((len(FV),2),dtype='b')
+    CF,m = [],len(FV)
+    efOp = larFaces2Edges(V,FV,EV)
+    FE = [efOp([k]) for k in range(len(FV))]
+    EF_angle, _,_,_ = boolean.faceSlopeOrdering(model,FE)
+    nonWorkedFaces,coboundary_2,cellNumber = set(range(m)),[],0
+    boundaryOperator = larSignedBoundary2(V,FV,EV)
+    FEbasis = signedBasis(boundaryOperator)
+    row,col,data = [],[],[]
+    longestrow,longestcol,longestdata,longestLength = [],[],[],0
+    while True:
+        startFace,orientation = chooseStartFace(FV,faceCounter)
+        if startFace == -1: break
+        nonWorkedFaces = nonWorkedFaces.difference({startFace})
+        faceChainOrientation = {(startFace,orientation)}
+        vect = csc_matrix((m,1),dtype='b')
+        for face,orientation in faceChainOrientation:  
+            vect[face] = orientation
+        edgeCycleCoords = boundaryOperator * vect
+        edgeCycle = coords2chain(edgeCycleCoords)
+        while edgeCycle != []:
+            look4face = adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation)
+            for edge,orientation in edgeCycle:
+                outPair = look4face(edge,orientation)
+                if outPair != None:
+                    adjacentFace,orientation = outPair
+                    faceChainOrientation = faceChainOrientation.union(
+                        [(adjacentFace,orientation)])
+                    nonWorkedFaces = nonWorkedFaces.difference([adjacentFace])
+            vect = csc_matrix((m,1),dtype='b')
+            for face,orientation in faceChainOrientation:  
+                vect[face] = orientation
+            edgeCycleCoords = boundaryOperator * vect
+            edgeCycle = coords2chain(edgeCycleCoords)
+        for face,orientation in faceChainOrientation:
+            if orientation == 1: faceCounter[face,0]+=1
+            elif orientation == -1: faceCounter[face,1]+=1
+            
+        lastrow = [face for face,_ in faceChainOrientation]
+        lastcol = [cellNumber for face,orientation in faceChainOrientation]
+        lastdata = [orientation for _,orientation in faceChainOrientation]
+        lastlength = len(lastrow)
+                
+        if lastlength >= longestLength:
+            lastrow,longestrow = longestrow,lastrow
+            lastcol,longestcol = longestcol,lastcol
+            lastdata,longestdata = longestdata,lastdata
+            lastlength,longestLength = longestLength,lastlength
+        if lastlength != 0:
+            row += lastrow
+            col += lastcol
+            data += lastdata
+            CF += [lastrow]
+            cellNumber += 1            
+    outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
+    signedBoundary = zip(longestrow,longestdata)
+    return csr_matrix(outMatrix),CF,signedBoundary
 @}
 %-------------------------------------------------------------------------------
 
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.295\linewidth]{images/signbound-0} 
+   %\includegraphics[width=0.245\linewidth]{images/signbound-2} 
+   \includegraphics[width=0.385\linewidth]{images/signbound-3} 
+   \includegraphics[width=0.30\linewidth]{images/signbound-4} 
+   \caption{Arrangment of 3-complexes: (a) 1-skeleton of the fragmented (union) 3-complex; (b) view from the interior of the boundary 2-complex; (c) view from the exterior of the 3-complex.
+   Notice that the colour patches correspond to the chain of 2-faces of the boundary of 3-complex.
+   }
+   \label{fig:signbound}
+\end{figure}
 
 \paragraph{Test the signed boundary matrix of a 3-complex}
 %-------------------------------------------------------------------------------
@@ -799,13 +845,12 @@ def larSignedBoundary3((V,FV,EV)):
 @{""" Test the signed boundary matrix of a 3-complex """
 if __name__=="__main__":
 
-	V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
-	cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
-	cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
+    V,[VV,EV,FV,CV] = larCuboids([2,2,2],True)
+    cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+    cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
 
-	V,FV,EV = struct2Marshal(cubeGrids)
-	csrmat,CF,faceCounter = larSignedBoundary3((V,FV,EV))
-	print csrmat.todense()
+    V,FV,EV = struct2Marshal(cubeGrids)
+    VIEW(EXPLODE(1.2,1.2,1.2)(BREP((V,FV,EV),color=False) ))
 @}
 %-------------------------------------------------------------------------------
 
@@ -865,7 +910,7 @@ from larlib import *
 
 \paragraph{Correct boundary extraction example}
 
-The \texttt{boundary()} operator is applied here to a cellular 2-complex of convex cells, producing correct result. It is worth noting that the operator is dimension-independent, and must be appliad to the \emph{pair} of compressed characteristic matrices $M_d$ and $M_{d-1}$, that --- in list format --- we call either \texttt{CV,FV} or  \texttt{FV,EV}, depending on the dimension (either 3 or 2) of the embedding space.
+The \texttt{larBoundary()} operator is applied here to a cellular 2-complex of convex cells, producing correct result. It is worth noting that the operator is dimension-independent, and must be appliad to the \emph{pair} of compressed characteristic matrices $M_d$ and $M_{d-1}$, that --- in list format --- we call either \texttt{CV,FV} or  \texttt{FV,EV}, depending on the dimension (either 3 or 2) of the embedding space.
 
 %-------------------------------------------------------------------------------
 @O test/py/boundary/test01.py
@@ -894,7 +939,7 @@ for k in range(1,len(FV)+1):
 
 \paragraph{Wrong boundary extraction example}
 
-The \texttt{boundary()} operator, applied  to a cellular 2-complex wih some non-convex cells, produces incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. In order to get always a correct result, use the \texttt{larUnsignedBoundary2} operator.
+The \texttt{larBoundary()} operator, applied  to a cellular 2-complex wih some non-convex cells, produces incorrect results. In such cases a correct result may be produced only by chance (sometimes this happens). So, be careful to use it only when the precondition (of cell convexity) is everywhere verified. In order to get always a correct result, use the \texttt{larUnsignedBoundary2} operator.
 
 %-------------------------------------------------------------------------------
 @O test/py/boundary/test02.py
@@ -912,7 +957,7 @@ submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.2))
 
 boundaryOp = larUnsignedBoundary2(FV,EV,VV)  # <<======  NB
-#boundaryOp = boundary(FV,EV)  # <<======  NB
+#boundaryOp = larBoundary(FV,EV)  # <<======  NB
 BF = chain2BoundaryChain(boundaryOp)([1]*len(FV))
 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,[EV[e] for e in BF])))) 
@@ -941,7 +986,7 @@ for k in range(1,len(FV)+1):
 \end{figure}
 
 \paragraph{Example}
-Comparison of two implementations of the $\partial$ operator. Notice the difference between the penultimate rows. In particular, the penultimate row of the matrix generated by \texttt{boundary(FV,EV)} is plain wrong. It means that the edge $e_{10}$ is shared by all the (three) 2-cells of the complex. Conversely, it is well known that, for a solid complex, i.e.~a $d$-complex embedded in $\mathbb{E}^d$, every $(d-1)$-facet may be shared by no more than 2 $d$-cells. The resulting boundary of the total chain $[f_0, f_1, f_2]$ codified in coordinates as $[1,1,1]$, and shown in Figure~\ref{fig:boundary-test02}d, is sonsequently incorrect.
+Comparison of two implementations of the $\partial$ operator. Notice the difference between the penultimate rows. In particular, the penultimate row of the matrix generated by \texttt{larBoundary(FV,EV)} is plain wrong. It means that the edge $e_{10}$ is shared by all the (three) 2-cells of the complex. Conversely, it is well known that, for a solid complex, i.e.~a $d$-complex embedded in $\mathbb{E}^d$, every $(d-1)$-facet may be shared by no more than 2 $d$-cells. The resulting boundary of the total chain $[f_0, f_1, f_2]$ codified in coordinates as $[1,1,1]$, and shown in Figure~\ref{fig:boundary-test02}d, is sonsequently incorrect.
 \\[3mm]
 
 %-------------------------------------------------------------------------------
@@ -949,7 +994,7 @@ Comparison of two implementations of the $\partial$ operator. Notice the differe
 \begin{minipage}[c]{0.5\linewidth}
 \centering
 \begin{verbatim}
-In [1]: boundary(FV,EV).todense()
+In [1]: larBoundary(FV,EV).todense()
 Out[1]: 
 matrix([[0, 1, 0],
         [0, 0, 1],
@@ -1096,6 +1141,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV,CV],hpc,0.6))
 @D Visualization of a 2-chain of a 3-complex
 @{""" Visualization of the boundary 2-chain of a 3-complex """
 
+"""
 V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)(len(CV)*[1])
 VIEW(STRUCT(MKTRIANGLES((V,BF,EV),color=True)))
 VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,EV)) )))
@@ -1104,6 +1150,7 @@ boundaryEdges = chain2BoundaryChain(larUnsignedBoundary2(FV,EV,VV))
 edgeChain = boundaryEdges(29*[0]+[1]+[1]) 
 VIEW(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain]),color=True)))
 VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeChain])))))
+"""
 @}
 %-------------------------------------------------------------------------------
 
@@ -1112,6 +1159,7 @@ VIEW(SKEL_1(EXPLODE(1.2,1.2,1.2)(MKTRIANGLES((V,FV[29:31],[EV[e] for e in edgeCh
 @D Visualization of a 3-chain of a 3-complex
 @{""" Visualization of a 3-chain of a 3-complex """
 
+print "\n****** ECCOMI"
 V,BF,BE = larUnsignedBoundary3(V,CV,FV,EV)([0,0,0,0,1,1])
 VIEW(STRUCT(MKTRIANGLES((V,BF,BE))))
 VIEW(SKEL_1(STRUCT(MKTRIANGLES((V,BF,BE)) )))

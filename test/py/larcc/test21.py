@@ -24,7 +24,7 @@ EV = [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[0,2],[1,3],[4,6],[5,7],
 [20,22],[21,23],[12,16],[13,17],[14,18],[15,19],[16,20],[17,21],[18,22],
 [19,23]]
 
-csrBoundaryMat = boundary(CV,FV)
+csrBoundaryMat = larBoundary(CV,FV)
 print "wrong boundary matrix =",csrBoundaryMat.todense()
 csrBoundaryMat = larUnsignedBoundary2(CV,FV,EV)
 print "right boundary matrix =",csrBoundaryMat.todense()

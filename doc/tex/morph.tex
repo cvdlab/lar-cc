@@ -530,7 +530,7 @@ The function \texttt{boundaryOps} takes the array of \texttt{BRC} reprs of chara
 \begin{list}{}{} \item
 \mbox{}\verb@def boundaryOps(skeletons):@\\
 \mbox{}\verb@   """ CSR matrices of boundary operators from list of skeletons """@\\
-\mbox{}\verb@   return [boundary(skeletons[k+1],faces) @\\
+\mbox{}\verb@   return [larBoundary(skeletons[k+1],faces) @\\
 \mbox{}\verb@      for k,faces in enumerate(skeletons[:-1])]@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}

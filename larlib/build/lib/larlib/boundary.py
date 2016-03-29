@@ -1,7 +1,7 @@
 """ boundary operators """
 from larlib import *
 """ convex-cells boundary operator --- best implementation """
-def boundary(cells,facets):
+def larBoundary(cells,facets):
     lenV = max(max(CAT(cells)),max(CAT(facets)))+1
     csrCV = csrCreate(cells,lenV)
     csrFV = csrCreate(facets,lenV)
@@ -18,12 +18,12 @@ def boundary(cells,facets):
 
 """ path-connected-cells boundary operator """
 def larUnsignedBoundary2(CV,FV,EV):
-    out = boundary(CV,FV)
+    out = larBoundary(CV,FV)
     def csrRowSum(h): 
         return sum(out.data[out.indptr[h]:out.indptr[h+1]])    
     unreliable = [h for h in range(len(FV)) if csrRowSum(h) > 2]
     if unreliable != []:
-        csrBBMat = boundary(FV,EV) * boundary(CV,FV)
+        csrBBMat = larBoundary(FV,EV) * larBoundary(CV,FV)
         lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
         FE = larcc.crossRelation0(lenV,FV,EV)
         out = csrBoundaryFilter2(unreliable,out,csrBBMat,CV,FE)
@@ -33,7 +33,7 @@ def boundary3(CV,FV,EV):
     out = larUnsignedBoundary2(CV,FV,EV)
     lenV = max(max(CAT(CV)),max(CAT(FV)),max(CAT(EV)))+1
     VV = AA(LIST)(range(lenV))
-    csrBBMat = scipy.sparse.csc_matrix(boundary(FV,EV) * larUnsignedBoundary2(CV,FV,EV))
+    csrBBMat = scipy.sparse.csc_matrix(larBoundary(FV,EV) * larUnsignedBoundary2(CV,FV,EV))
     def csrColCheck(h): 
         return any([val for val in csrBBMat.data[csrBBMat.indptr[h]:csrBBMat.indptr[h+1]] if val>2])    
     unreliable = [h for h in range(len(CV)) if csrColCheck(h)]
@@ -72,7 +72,7 @@ def totalChain(cells):
     return csr_matrix(len(cells)*[[1]])
 
 def boundaryCells(cells,facets):
-    csrBoundaryMat = boundary(cells,facets)
+    csrBoundaryMat = larBoundary(cells,facets)
     csrChain = csr_matrix(totalChain(cells))
     csrBoundaryChain = csrBoundaryMat * csrChain
     out = [k for k,val in enumerate(csrBoundaryChain.data.tolist()) if val == 1]
@@ -214,7 +214,7 @@ def larFaces2Faces(FV,EV):
 
 def larEdges2Edges(EV,VV):
     lenV = len(VV)
-    csrMat = boundary(EV,VV)
+    csrMat = larBoundary(EV,VV)
     csrEE = csrMat.T * csrMat
     def larFaces2Faces0(chain):
         chainCoords = csc_matrix((csrEE.shape[1],1),dtype='b')
@@ -235,12 +235,15 @@ def adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation):
         elif orientation < 0:  edgeLoop = EF_angle[edge]
         edgeLoop = edgeLoop + [edgeLoop[0]]  # all positive indices
         
-        pivotFace = set([f for f,_ in faceChainOrientation]).intersection(edgeLoop).pop()
-        if pivotFace in edgeLoop:
-            pivotIndex = edgeLoop.index(pivotFace)
-        else:
-            pivotIndex = edgeLoop.index(-pivotFace)
-        adjacentFace = edgeLoop[pivotIndex+1]
+        candidates = set([f for f,_ in faceChainOrientation]).intersection(edgeLoop)
+        if candidates != set([]):
+            pivotFace = candidates.pop()
+            if pivotFace in edgeLoop:
+                pivotIndex = edgeLoop.index(pivotFace)
+            else:
+                pivotIndex = edgeLoop.index(-pivotFace)
+            adjacentFace = edgeLoop[pivotIndex+1]
+        else: return None
         
         theSign = boundaryOperator[edge,adjacentFace]
         return adjacentFace, -(theSign*orientation)
@@ -256,67 +259,85 @@ def chooseStartFace(FV,faceCounter):
 
 """ Extract the signed representation of a basis element """
 def signedBasis(boundaryOperator):
-   facesByEdges = csc_matrix(boundaryOperator)
-   m,n = facesByEdges.shape
-   edges,signs = [],[]
-   for i in range(n):
-      edges += [facesByEdges.indices[facesByEdges.indptr[i]:facesByEdges.indptr[i+1]].tolist()]
-      signs += [facesByEdges.data[facesByEdges.indptr[i]:facesByEdges.indptr[i+1]].tolist()]
-   return zip(edges,signs)
+    facesByEdges = csc_matrix(boundaryOperator)
+    m,n = facesByEdges.shape
+    edges,signs = [],[]
+    for i in range(n):
+        edges += [facesByEdges.indices[facesByEdges.indptr[
+                              i]:facesByEdges.indptr[i+1]].tolist()]
+        signs += [facesByEdges.data[facesByEdges.indptr[
+                              i]:facesByEdges.indptr[i+1]].tolist()]
+    return zip(edges,signs)
 
 """ Return the signed boundary matrix of a 3-complex """
+import boolean
 def larSignedBoundary3((V,FV,EV)):
-   model = V,FV,EV
-   faceCounter = zeros((len(FV),2),dtype='b')
-   CF,m = [],len(FV)
-   efOp = larFaces2Edges(V,FV,EV)
-   FE = [efOp([k]) for k in range(len(FV))]
-   EF_angle, _,_,_ = faceSlopeOrdering(model,FE)
-   nonWorkedFaces,coboundary_2,cellNumber = set(range(m)),[],0
-   boundaryOperator = larSignedBoundary2(V,FV,EV)
-   FEbasis = signedBasis(boundaryOperator)
-   row,col,data = [],[],[]
-   while True:
-      startFace,orientation = chooseStartFace(FV,faceCounter)
-      if startFace == -1: break
-      nonWorkedFaces = nonWorkedFaces.difference({startFace})
-      faceChainOrientation = {(startFace,orientation)}
-      vect = csc_matrix((m,1),dtype='b')
-      for face,orientation in faceChainOrientation:  
-          vect[face] = orientation
-      edgeCycleCoords = boundaryOperator * vect
-      edgeCycle = coords2chain(edgeCycleCoords)
-      while edgeCycle != []:
-         look4face = adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation)
-         for edge,orientation in edgeCycle:
-            adjacentFace,orientation = look4face(edge,orientation)
-            faceChainOrientation = faceChainOrientation.union(
-                [(adjacentFace,orientation)])
-            nonWorkedFaces = nonWorkedFaces.difference([adjacentFace])
-         vect = csc_matrix((m,1),dtype='b')
-         for face,orientation in faceChainOrientation:  
-             vect[face] = orientation
-         edgeCycleCoords = boundaryOperator * vect
-         edgeCycle = coords2chain(edgeCycleCoords)
-      row += [face for face,_ in faceChainOrientation]
-      col += [cellNumber for face,orientation in faceChainOrientation]
-      data += [orientation for _,orientation in faceChainOrientation]
-      for face,orientation in faceChainOrientation:
-          if orientation == 1: faceCounter[face,0]+=1
-          elif orientation == -1: faceCounter[face,1]+=1
-      CF += [[face for face,_ in faceChainOrientation]]
-      cellNumber += 1          
-   outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
-   return csr_matrix(outMatrix),CF,faceCounter
+    model = V,FV,EV
+    faceCounter = zeros((len(FV),2),dtype='b')
+    CF,m = [],len(FV)
+    efOp = larFaces2Edges(V,FV,EV)
+    FE = [efOp([k]) for k in range(len(FV))]
+    EF_angle, _,_,_ = boolean.faceSlopeOrdering(model,FE)
+    nonWorkedFaces,coboundary_2,cellNumber = set(range(m)),[],0
+    boundaryOperator = larSignedBoundary2(V,FV,EV)
+    FEbasis = signedBasis(boundaryOperator)
+    row,col,data = [],[],[]
+    longestrow,longestcol,longestdata,longestLength = [],[],[],0
+    while True:
+        startFace,orientation = chooseStartFace(FV,faceCounter)
+        if startFace == -1: break
+        nonWorkedFaces = nonWorkedFaces.difference({startFace})
+        faceChainOrientation = {(startFace,orientation)}
+        vect = csc_matrix((m,1),dtype='b')
+        for face,orientation in faceChainOrientation:  
+            vect[face] = orientation
+        edgeCycleCoords = boundaryOperator * vect
+        edgeCycle = coords2chain(edgeCycleCoords)
+        while edgeCycle != []:
+            look4face = adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation)
+            for edge,orientation in edgeCycle:
+                outPair = look4face(edge,orientation)
+                if outPair != None:
+                    adjacentFace,orientation = outPair
+                    faceChainOrientation = faceChainOrientation.union(
+                        [(adjacentFace,orientation)])
+                    nonWorkedFaces = nonWorkedFaces.difference([adjacentFace])
+            vect = csc_matrix((m,1),dtype='b')
+            for face,orientation in faceChainOrientation:  
+                vect[face] = orientation
+            edgeCycleCoords = boundaryOperator * vect
+            edgeCycle = coords2chain(edgeCycleCoords)
+        for face,orientation in faceChainOrientation:
+            if orientation == 1: faceCounter[face,0]+=1
+            elif orientation == -1: faceCounter[face,1]+=1
+            
+        lastrow = [face for face,_ in faceChainOrientation]
+        lastcol = [cellNumber for face,orientation in faceChainOrientation]
+        lastdata = [orientation for _,orientation in faceChainOrientation]
+        lastlength = len(lastrow)
+                
+        if lastlength >= longestLength:
+            lastrow,longestrow = longestrow,lastrow
+            lastcol,longestcol = longestcol,lastcol
+            lastdata,longestdata = longestdata,lastdata
+            lastlength,longestLength = longestLength,lastlength
+        if lastlength != 0:
+            row += lastrow
+            col += lastcol
+            data += lastdata
+            CF += [lastrow]
+            cellNumber += 1            
+    outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
+    signedBoundary = zip(longestrow,longestdata)
+    return csr_matrix(outMatrix),CF,signedBoundary
 
 """ Test the signed boundary matrix of a 3-complex """
 if __name__=="__main__":
 
-   V,[VV,EV,FV,CV] = larCuboids([2,1,1],True)
-   cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
-   cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
+    V,[VV,EV,FV,CV] = larCuboids([2,2,2],True)
+    cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+    cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
 
-   V,FV,EV = struct2Marshal(cubeGrids)
-   csrmat,CF,faceCounter = larSignedBoundary3((V,FV,EV))
-   print csrmat.todense()
+    V,FV,EV = struct2Marshal(cubeGrids)
+    VIEW(EXPLODE(1.2,1.2,1.2)(BREP((V,FV,EV),color=False) ))
 

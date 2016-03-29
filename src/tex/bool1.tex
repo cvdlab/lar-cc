@@ -1495,7 +1495,7 @@ def larBool(arg1,arg2, brep=False):
 	W,CX,FX = larVertexRemoval(W,CX,FX)
 	chain1,chain2 = TRANS(CXbits)
 	
-	boundaryMat = boundary(CX,FX)
+	boundaryMat = larBoundary(CX,FX)
 
 	def theBoundary(boundaryMat,CX,coords):
 		if TRACE: global tracing;tracing = mytrace(tracing+1,">theBoundary")

@@ -1,11 +1,10 @@
-
 """ sysml library """
 from larlib import *
 DRAW = COMP([VIEW,STRUCT,MKPOLS])
 
 
 def boundaryOfChain(cells,facets):
-   csrBoundaryMat = boundary(cells,facets)
+   csrBoundaryMat = larBoundary(cells,facets)
    csrChain = zeros((len(cells),1))
    def boundaryOfChain0(chain):
       for cell in chain:  csrChain[cell,0]=1.0

@@ -16,7 +16,7 @@ def fixedPrec(PRECISION):
         return str(out)
     return fixedPrec0
     
-def vcode (vect,PRECISION=4): 
+def vcode (vect,PRECISION=4):
     """
     To generate a string representation of a number array.
     Used to generate the vertex keys in PointSet dictionary, and other similar operations.
@@ -265,7 +265,7 @@ class Struct:
         return newObj
     def set_category(self,category):
         self.category = str(category)
-    def boundary(self):
+    def larBoundary(self):
         data = struct2lar(self)
         if len(data) == 3:
             V,FV,EV = data
