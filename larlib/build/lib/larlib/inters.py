@@ -11,7 +11,7 @@ def allBinarySubsetsOfLenght(n):
 
 """ Generation of a random point """
 def rpoint2d():
-    return eval( vcode([ random.random(), random.random() ]) )
+    return eval( vcode(4)([ random.random(), random.random() ]) )
 
 """ Generation of a random line segment """
 def redge(scaling):
@@ -20,7 +20,7 @@ def redge(scaling):
     pos = rpoint2d()
     v1 = (v1-c)*scaling + pos
     v2 = (v2-c)*scaling + pos
-    return tuple(eval(vcode(v1))), tuple(eval(vcode(v2)))
+    return tuple(eval(vcode(4)(v1))), tuple(eval(vcode(4)(v2)))
 
 """ Transformation of a 2D box into a closed polyline """    
 def box2rect(box):
@@ -64,7 +64,7 @@ def randomLines(numberOfLines=200,scaling=0.3):
 
 """ Containment boxes """
 def containment2DBoxes(randomLineArray):
-    boxes = [eval(vcode([min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2)]))
+    boxes = [eval(vcode(4)([min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2)]))
             for ((x1,y1),(x2,y2)) in randomLineArray]
     return boxes
 
@@ -122,12 +122,12 @@ def boxBuckets(boxes):
 def segmentIntersect(boxes,lineArray,pointStorage):
     def segmentIntersect0(h):
         p1,p2 = lineArray[h]
-        line1 = '['+ vcode(p1) +','+ vcode(p2) +']'
+        line1 = '['+ vcode(4)(p1) +','+ vcode(4)(p2) +']'
         (x1,y1),(x2,y2) = p1,p2
         B1,B2,B3,B4 = boxes[h]
         def segmentIntersect1(k):
             p3,p4 = lineArray[k]
-            line2 = '['+ vcode(p3) +','+ vcode(p4) +']'
+            line2 = '['+ vcode(4)(p3) +','+ vcode(4)(p4) +']'
             (x3,y3),(x4,y4) = p3,p4
             b1,b2,b3,b4 = boxes[k]
             if not (b3<B1 or B3<b1 or b4<B2 or B4<b2):
@@ -160,7 +160,7 @@ def lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage):
     for line in bucket:
         point = intersect1(line)
         if point != None: 
-            intersectionPoints.append(eval(vcode(point)))
+            intersectionPoints.append(eval(vcode(4)(point)))
     return intersectionPoints
 
 """ Accelerate intersection of lines """
@@ -171,7 +171,7 @@ def lineIntersection(lineArray):
     pointStorage = defaultdict(list)
     for line in lineArray:
         p1,p2 = line
-        key = '['+ vcode(p1) +','+ vcode(p2) +']'
+        key = '['+ vcode(4)(p1) +','+ vcode(4)(p2) +']'
         pointStorage[key] = []
 
     boxes = containment2DBoxes(lineArray)
@@ -182,7 +182,7 @@ def lineIntersection(lineArray):
         intersectionPoints = intersectionPoints.union(AA(tuple)(pointBucket))
 
     frags = AA(eval)(pointStorage.keys())
-    params = AA(COMP([sorted,list,set,tuple,eval,vcode]))(pointStorage.values())
+    params = AA(COMP([sorted,list,set,tuple,eval,vcode(4)]))(pointStorage.values())
         
     return intersectionPoints,params,frags  ### GOOD: 1, WRONG: 2 !!!
 
@@ -195,13 +195,13 @@ def lines2lar(lineArray):
     index,defaultValue,V,EV = -1,-1,[],[]
     
     for k,(p1,p2) in enumerate(frags):
-        outline = [vcode(p1)]
+        outline = [vcode(4)(p1)]
         if params[k] != []:
             for alpha in params[k]:
                 if alpha != 0.0 and alpha != 1.0:
                     p = list(array(p1)+alpha*(array(p2)-array(p1)))
-                    outline += [vcode(p)]
-        outline += [vcode(p2)]
+                    outline += [vcode(4)(p)]
+        outline += [vcode(4)(p2)]
     
         edge = []
         for key in outline:
@@ -411,7 +411,7 @@ def svg2lines(filename,containmentBox=[],rect2lines=True):
           for [[x1,y1],[x2,y2]] in lines]
     
     # line vertices set to fixed resolution
-    lines = eval("".join(['['+ vcode(p1) +','+ vcode(p2) +'], ' for p1,p2 in lines]))
+    lines = eval("".join(['['+ vcode(4)(p1) +','+ vcode(4)(p2) +'], ' for p1,p2 in lines]))
     
     containmentBox = box
     

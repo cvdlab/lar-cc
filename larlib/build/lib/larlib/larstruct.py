@@ -16,12 +16,14 @@ def fixedPrec(PRECISION):
         return str(out)
     return fixedPrec0
     
-def vcode (vect,PRECISION=4):
-    """
-    To generate a string representation of a number array.
-    Used to generate the vertex keys in PointSet dictionary, and other similar operations.
-    """
-    return prepKey(AA(fixedPrec(PRECISION))(vect))
+def vcode (PRECISION=4):
+    def vcode0 (vect):
+        """
+        To generate a string representation of a number array.
+        Used to generate the vertex keys in PointSet dictionary, and other similar operations.
+        """
+        return prepKey(AA(fixedPrec(PRECISION))(vect))
+    return vcode0
 
 def t(*args): 
     d = len(args)
@@ -173,7 +175,7 @@ def larRemoveVertices(V,FV):
     for k,incell in enumerate(FV):
         outcell = []
         for v in incell:
-            key = vcode(V[v])
+            key = vcode(4)(V[v])
             if vertDict.get(key,defaultValue) == defaultValue:
                 index += 1
                 vertDict[key] = index
@@ -301,7 +303,7 @@ def struct2lar(structure,metric=ID):
         for k,incell in enumerate(FV):
             outcell = []
             for v in incell:
-                key = vcode(V[v])
+                key = vcode(4)(V[v])
                 if vertDict.get(key,defaultValue) == defaultValue:
                     index += 1
                     vertDict[key] = index
@@ -314,7 +316,7 @@ def struct2lar(structure,metric=ID):
             for k,incell in enumerate(EV):
                 outcell = []
                 for v in incell:
-                    key = vcode(V[v])
+                    key = vcode(4)(V[v])
                     if vertDict.get(key,defaultValue) == defaultValue:
                         index += 1
                         vertDict[key] = index

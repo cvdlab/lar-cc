@@ -8,7 +8,7 @@ DEBUG = False
 global count
 """ Generation of a random 3D point """
 def rpoint3d():
-    return eval( vcode([ random.random(), random.random(), random.random() ]) )
+    return eval( vcode(4)([ random.random(), random.random(), random.random() ]) )
 
 """ Generation of random triangles """
 def randomTriangles(numberOfTriangles=400,scaling=0.3):
@@ -36,20 +36,20 @@ def rtriangle(scaling):
     v1 = (v1-c)*scaling + pos
     v2 = (v2-c)*scaling + pos
     v3 = (v3-c)*scaling + pos
-    return tuple(eval(vcode(v1))), tuple(eval(vcode(v2))), tuple(eval(vcode(v3)))
+    return tuple(eval(vcode(4)(v1))), tuple(eval(vcode(4)(v2))), tuple(eval(vcode(4)(v3)))
 
 """ Containment boxes """
 def containmentBoxes(randomPointArray,qualifier=0):
     if len(randomPointArray[0])==2:
-        boxes = [eval(vcode([min(x1,x2), min(y1,y2), min(z1,z2), 
+        boxes = [eval(vcode(4)([min(x1,x2), min(y1,y2), min(z1,z2), 
                              max(x1,x2), max(y1,y2), max(z1,z2)]))+[qualifier]
                 for ((x1,y1,z1),(x2,y2,z2)) in randomPointArray]
     elif len(randomPointArray[0])==3:
-        boxes = [eval(vcode([min(x1,x2,x3), min(y1,y2,y3), min(z1,z2,z3), 
+        boxes = [eval(vcode(4)([min(x1,x2,x3), min(y1,y2,y3), min(z1,z2,z3), 
                              max(x1,x2,x3), max(y1,y2,y3), max(z1,z2,z3)]))+[qualifier]
                 for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3)) in randomPointArray]
     elif len(randomPointArray[0])==4:
-        boxes = [eval(vcode([min(x1,x2,x3,x4), min(y1,y2,y3,y4), min(z1,z2,z3,z4), 
+        boxes = [eval(vcode(4)([min(x1,x2,x3,x4), min(y1,y2,y3,y4), min(z1,z2,z3,z4), 
                              max(x1,x2,x3,x4), max(y1,y2,y3,y4), max(z1,z2,z3,z4)]))+[qualifier]
                 for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3),(x4,y4,z4)) in randomPointArray]
     return boxes
@@ -68,7 +68,7 @@ def lar2boxes(model,qualifier=0):
         verts = [V[v] for v in cell]
         x1,y1,z1 = [min(coord) for coord in TRANS(verts)]
         x2,y2,z2 = [max(coord) for coord in TRANS(verts)]
-        boxes += [eval(vcode([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))+[(qualifier,k)]]
+        boxes += [eval(vcode(4)([min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2)]))+[(qualifier,k)]]
     return boxes
 
 """ Generation of a list of HPCs from a LAR model with non-convex faces """
@@ -106,33 +106,76 @@ def MKSOLID(*model):
     triangleSets = boundaryTriangulation(V,faces,EV,FE)
     return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
         for face in CAT(triangleSets) ])
-        
+
+""" Generation of LAR B-rep from a LAR model with non-convex faces """
+def dict2fun(d):
+    def dict2fun0(k): return d[k]
+    return dict2fun0 
+""" Generation of LAR B-rep from a LAR model with non-convex faces """
 def BREP (model,color=False):
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
     
     boundaryOperator = boundary.larSignedBoundary2(V,FV,EV)
     FEbasis = boundary.signedBasis(boundaryOperator)
-    FE,signs = TRANS(FEbasis)
+    FE,facesigns = TRANS(FEbasis)
    
     csrBoundary3,CF,signedBoundary = boundary.larSignedBoundary3((V,FV,EV))
-    cells,signs = TRANS(signedBoundary)
+    cells,cellsigns = TRANS(signedBoundary)
+    vdict = OrderedDict([ (vcode(v),k) for k,v in enumerate(V)  ])
+    
     fv = [FV[f] for f in cells]
     ev = [EV[e] for e in set(CAT([[e for e in FE[f]] for f in cells])) ]
     fe = larcc.crossRelation(fv,ev,VV)
 
     triangleSets = boundaryTriangulation(V,fv,ev,fe) 
-    triangleSet = [[(p1,p2,p3) if sign==1 else (p2,p1,p3) for p1,p2,p3 in triangleSet]
-                    for sign,triangleSet in zip(signs,triangleSets)]
+        
+    vdict = OrderedDict([ (vcode(3)(v),k) for k,v in enumerate(V)  ])
+    edict = OrderedDict([ (edge,k) for k,edge in enumerate(EV) ])
+    
+    triaVerts = [[AA(dict2fun(vdict))(AA(vcode(3))(t)) for t in triangleSet] 
+                 for triangleSet in triangleSets]
+    
+    triaEdges = []
+    for triangles in triaVerts:
+        tria2edgs = []
+        for v0,v1,v2 in triangles:
+            tris = []
+            if (v0,v1) in edict: tris += [edict[(v0,v1)]]
+            if (v1,v2) in edict: tris += [edict[(v1,v2)]]
+            if (v2,v0) in edict: tris += [edict[(v2,v0)]]
+            tria2edgs += [tris]
+        triaEdges += [CAT(tria2edgs)[0] if CAT(tria2edgs)[0]!=0 else CAT(tria2edgs)[1]]
+    
+    orientations = zip(triaEdges,[[sign,FEbasis[f]] for f,sign in signedBoundary])
+    
+    tests = [set([triaEdges]).intersection((sign*array(signes)*array(edgechain)).tolist()) 
+        for triaEdges,(sign,(edgechain,signes)) in orientations]
+        
+    theSigns = [1 if val!= set([]) else -1 for val in tests]
+    
     if color:
         colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GREEN,GRAY,ORANGE,BLACK,BLUE,PURPLE,BROWN]
-        return [ COLOR(colors[k%12])(STRUCT([MKPOL([verts,[[3,2,1]],None]) 
-            for verts in triangledFace])) for k,triangledFace in enumerate(triangleSets) ]
+        return [ COLOR(colors[k%12])(
+                 STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace])
+             if sign==-1 else 
+             STRUCT([MKPOL([verts,[[1,2,3]],None])  for verts in triangledFace])
+                 ) 
+        for k,triangledFace in enumerate(triangleSets) ]
     else:
         return [ STRUCT([MKPOL([verts,[[3,2,1]],None])  for verts in triangledFace])
              if sign==-1 else 
              STRUCT([MKPOL([verts,[[1,2,3]],None])  for verts in triangledFace])
-        for sign,triangledFace in zip(signs,triangleSets) ]
+        for sign,triangledFace in zip(theSigns,triangleSets) ]
+""" Generation of LAR B-rep from a LAR model with non-convex faces """
+if __name__=="__main__":
+
+    V,[VV,EV,FV,CV] = larCuboids([2,2,2],True)
+    cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+    cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
+
+    V,FV,EV = struct2Marshal(cubeGrids)
+    VIEW(EXPLODE(1.2,1.2,1.2)(BREP((V,FV,EV),color=False) ))
 
 
 
@@ -272,7 +315,7 @@ def removeExternals(M,V,EV,fe, z,fz,ez):
     (Z,FZ,EZ) = copy((z,fz,ez))
     inputFace = Struct([(V,[EV[e] for e in fe])])
     verts,ev = larApply(M)(struct2lar(inputFace))
-    pol = [eval(vcode(vert[:-1])) for vert in verts],ev
+    pol = [eval(vcode(4)(vert[:-1])) for vert in verts],ev
     out = []
     classify = triangulation.pointInPolygonClassification(pol)
     for k,point in enumerate(Z):
@@ -341,7 +384,7 @@ def spacePartition(V,FV,EV, parts):
         pointsPerFace = [set(face).intersection(points.keys()) for face in edgesPerFace]
         lines = [[points[e][:2] for e in face] for face in pointsPerFace]
         lines = [line for line in lines if line!=[]]
-        vpoints = [[(vcode(point),k) for k,point in enumerate(line)] for line in lines]
+        vpoints = [[(vcode(4)(point),k) for k,point in enumerate(line)] for line in lines]
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
         lines = [[line[0],line[-1]]  if len(line)>2 else line for line in lines]
         #VIEW(STRUCT(AA(POLYLINE)(lines) + [red]))

@@ -130,9 +130,9 @@ def vertexSieve(model1, model2):
 
 
    vdict1 = defaultdict(list)
-   for k,v in enumerate(V1): vdict1[vcode(v)].append(k) 
+   for k,v in enumerate(V1): vdict1[vcode(4)(v)].append(k) 
    vdict2 = defaultdict(list)
-   for k,v in enumerate(V2): vdict2[vcode(v)].append(k+n) 
+   for k,v in enumerate(V2): vdict2[vcode(4)(v)].append(k+n) 
    
    vertdict = defaultdict(list)
    for point in vdict1.keys(): vertdict[point] += vdict1[point]

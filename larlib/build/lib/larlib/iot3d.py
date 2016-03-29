@@ -18,7 +18,7 @@ def polyline2lar(polylines):
    for k,polyline in enumerate(polylines):
       cell = []
       for vert in polyline:
-         key = vcode(vert)
+         key = vcode(4)(vert)
          if Vdict.get(key,defaultValue) == defaultValue:
             index += 1
             Vdict[key] = index
@@ -90,7 +90,7 @@ def printModelObject(theFile,tabs, i,name,category,verts,cells,father,tvect=[0,0
    print >> theFile, tab, "geometry:" 
    print >> theFile, tab+tab, "type:", "Polygon"
    print >> theFile, tab+tab, "coordinates:" 
-   print >> theFile, tab+tab+tab, AA(eval)(AA(vcode)(verts))
+   print >> theFile, tab+tab+tab, AA(eval)(AA(vcode(4))(verts))
    print >> theFile, tab, "properties:"
    print >> theFile, tab+tab, "class:", category
    print >> theFile, tab+tab, "parent:", father
@@ -281,7 +281,7 @@ def print_model(out, obj, parent_id):
    print >> out, indent, "type:", "Feature"
    print >> out, indent, "geometry:" 
    print >> out, indent+indent, "type:", "Polygon"
-   print >> out, indent+indent, "coordinates:", AA(eval)(AA(vcode)(verts))
+   print >> out, indent+indent, "coordinates:", AA(eval)(AA(vcode(4))(verts))
    print >> out, indent, "properties:"
    print >> out, indent+indent, "class:", category
    print >> out, indent+indent, "parent:", parent_id
