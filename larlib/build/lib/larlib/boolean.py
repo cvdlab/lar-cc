@@ -107,35 +107,17 @@ def MKSOLID(*model):
     return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
         for face in CAT(triangleSets) ])
 
-""" Generation of LAR B-rep from a LAR model with non-convex faces """
+""" Utility to transform a dictionary to a function on the keys """
 def dict2fun(d):
     def dict2fun0(k): return d[k]
     return dict2fun0 
-""" Generation of LAR B-rep from a LAR model with non-convex faces """
-def BREP (model,color=False):
-    V,FV,EV = model
-    VV = AA(LIST)(range(len(V)))
-    
-    boundaryOperator = boundary.larSignedBoundary2(V,FV,EV)
-    FEbasis = boundary.signedBasis(boundaryOperator)
-    FE,facesigns = TRANS(FEbasis)
-   
-    csrBoundary3,CF,signedBoundary = boundary.larSignedBoundary3((V,FV,EV))
-    cells,cellsigns = TRANS(signedBoundary)
-    vdict = OrderedDict([ (vcode(v),k) for k,v in enumerate(V)  ])
-    
-    fv = [FV[f] for f in cells]
-    ev = [EV[e] for e in set(CAT([[e for e in FE[f]] for f in cells])) ]
-    fe = larcc.crossRelation(fv,ev,VV)
 
-    triangleSets = boundaryTriangulation(V,fv,ev,fe) 
-        
+""" Coherent orientation of boundary 2-faces """
+def boundaryOrientation(V,EV,FEbasis,signedBoundary,triangleSets):            
     vdict = OrderedDict([ (vcode(3)(v),k) for k,v in enumerate(V)  ])
     edict = OrderedDict([ (edge,k) for k,edge in enumerate(EV) ])
-    
     triaVerts = [[AA(dict2fun(vdict))(AA(vcode(3))(t)) for t in triangleSet] 
                  for triangleSet in triangleSets]
-    
     triaEdges = []
     for triangles in triaVerts:
         tria2edgs = []
@@ -149,11 +131,34 @@ def BREP (model,color=False):
     
     orientations = zip(triaEdges,[[sign,FEbasis[f]] for f,sign in signedBoundary])
     
-    tests = [set([triaEdges]).intersection((sign*array(signes)*array(edgechain)).tolist()) 
-        for triaEdges,(sign,(edgechain,signes)) in orientations]
+    tests = [set([triaEdges]).intersection((sign*array(signs)*array(edgechain)).tolist()) 
+        for triaEdges,(sign,(edgechain,signs)) in orientations]
         
     theSigns = [1 if val!= set([]) else -1 for val in tests]
+    return triangleSets,theSigns
+
+""" Generation of LAR B-rep from a LAR model with non-convex faces """
+
+def BREP (model,color=False):
+    # intrinsic orientation of input 2-faces
+    V,FV,EV = model
+    VV = AA(LIST)(range(len(V)))
+    boundaryOperator = boundary.larSignedBoundary2(V,FV,EV)
+    FEbasis = boundary.signedBasis(boundaryOperator)
+    FE,facesigns = TRANS(FEbasis)
     
+    # computation of boundary 2-faces
+    csrBoundary3,CF,signedBoundary = boundary.larSignedBoundary3((V,FV,EV))
+    cells,_ = TRANS(signedBoundary)
+    fv = [FV[f] for f in cells]
+    ev = [EV[e] for e in set(CAT([[e for e in FE[f]] for f in cells])) ]
+    fe = larcc.crossRelation(fv,ev,VV)
+    triangleSets = boundaryTriangulation(V,fv,ev,fe) 
+    
+    # computation of coherent orientation of boundary 2-faces
+    triangleSets,theSigns = boundaryOrientation(V,EV,FEbasis,signedBoundary,triangleSets)
+
+    # visualization of boundary
     if color:
         colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GREEN,GRAY,ORANGE,BLACK,BLUE,PURPLE,BROWN]
         return [ COLOR(colors[k%12])(
@@ -161,7 +166,7 @@ def BREP (model,color=False):
              if sign==-1 else 
              STRUCT([MKPOL([verts,[[1,2,3]],None])  for verts in triangledFace])
                  ) 
-        for k,triangledFace in enumerate(triangleSets) ]
+        for k,(sign,triangledFace) in enumerate(zip(theSigns,triangleSets)) ]
     else:
         return [ STRUCT([MKPOL([verts,[[3,2,1]],None])  for verts in triangledFace])
              if sign==-1 else 
@@ -175,7 +180,9 @@ if __name__=="__main__":
     cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
 
     V,FV,EV = struct2Marshal(cubeGrids)
-    VIEW(EXPLODE(1.2,1.2,1.2)(BREP((V,FV,EV),color=False) ))
+    VIEW(EXPLODE(1.2,1.2,1.2)(BREP((V,FV,EV),color=True) ))
+    VIEW(EXPLODE(1.2,1.2,1.2)(BREP((V,FV,EV)) ))
+    VIEW(STRUCT(BREP((V,FV,EV)) ))
 
 
 
