@@ -9,7 +9,6 @@ triangleSet = larTriangulation( (V,EV) )
 VIEW(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))))
 VIEW(SKEL_1(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet))))))
 
-"""
 model = V,EV
 W,FW = lar2boundaryPolygons(model)
 polygons = [[W[u] for u in poly] for poly in FW]
@@ -26,4 +25,3 @@ for polygon in polygons:
     triangles = cdt.triangulate()
     trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
     triangleSet += [AA(REVERSE)(trias)]
-"""

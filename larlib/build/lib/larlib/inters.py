@@ -417,6 +417,39 @@ def svg2lines(filename,containmentBox=[],rect2lines=True):
     
     return lines
 
+""" Simplified SVG parsing and normalization """
+def lines2lines(filename):
+    stringLines = [line.strip() for line in open(filename)]
+    lines = [AA(eval)(string.split(',')) for string in stringLines]
+    lines = [[[x1,y1],[x2,y2]] for x1,y1,x2,y2 in lines]
+        
+    """ SVG input normalization transformation """
+    # window-viewport transformation
+    xs,ys = TRANS(CAT(lines))
+    box = [min(xs), min(ys), max(xs), max(ys)]
+    
+    # viewport aspect-ratio checking, setting a computed-viewport 'b'
+    b = [None for k in range(4)]
+    if (box[2]-box[0])/(box[3]-box[1]) > 1:  
+        b[0]=0; b[2]=1; bm=(box[3]-box[1])/(box[2]-box[0]); b[1]=.5-bm/2; b[3]=.5+bm/2
+    else: 
+        b[1]=0; b[3]=1; bm=(box[2]-box[0])/(box[3]-box[1]); b[0]=.5-bm/2; b[2]=.5+bm/2
+    
+    # isomorphic 'box -> b' transform to standard unit square
+    lines = [[[ 
+    ((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
+    ((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1], [
+    ((x2-box[0])*(b[2]-b[0]))/(box[2]-box[0]), 
+    ((y2-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]]  
+          for [[x1,y1],[x2,y2]] in lines]
+    
+    # line vertices set to fixed resolution
+    lines = eval("".join(['['+ vcode(4)(p1) +','+ vcode(4)(p2) +'], ' for p1,p2 in lines]))
+        
+    
+    containmentBox = box
+    return lines
+
 
 """ Transformation of an array of lines in a 2D LAR complex """
 def larFromLines(lines):
@@ -438,7 +471,7 @@ from scipy.spatial import cKDTree
 def pruneVertices(pts,radius=0.001):
     tree = cKDTree(pts)
     a = cKDTree.sparse_distance_matrix(tree,tree,radius)
-    print a.keys()
+    #print a.keys()
     close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
     import networkx as nx
     G=nx.Graph()

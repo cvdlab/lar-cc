@@ -373,7 +373,7 @@ def cellsFromCycles (latticeArray):
 """ Transforming to polar coordinates """
 def cartesian2polar(V):    
     Z = [[sqrt(x*x + y*y),math.atan2(y,x)] for x,y in V]
-    VIEW(STRUCT(MKPOLS((Z,EV))))
+    #VIEW(STRUCT(MKPOLS((Z,EV))))
     return Z
 
 """ Scan line algorithm """
@@ -419,6 +419,8 @@ def connectTheDots(model):
     return cells,bridgeEdges
 
 """ Orientation of component cycles of unconnected boundaries """
+import integr
+
 def rotatePermutation(inputPermutation,transpositionNumber):
     n = transpositionNumber
     perm = inputPermutation
@@ -447,7 +449,7 @@ def orientBoundaryCycles(model,cells):
     rotations = [cycle.index(min(cycle)) for cycle in vertexCycles]
     theCycles = sorted([rotatePermutation(perm,n) for perm,n in zip(vertexCycles,rotations)])
     CVs = [[theCycles[cycle] for cycle in cell] for cell in cells]
-    areas = signedSurfIntegration((V,theCycles,EV),signed=True)
+    areas = integr.signedSurfIntegration((V,theCycles,EV),signed=True)
     
     for h,cell in enumerate(cells):
         for k,cycle in enumerate(cell):

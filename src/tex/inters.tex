@@ -613,7 +613,7 @@ from scipy.spatial import cKDTree
 def pruneVertices(pts,radius=0.001):
     tree = cKDTree(pts)
     a = cKDTree.sparse_distance_matrix(tree,tree,radius)
-    print a.keys()
+    #print a.keys()
     close = list(set(AA(tuple)(AA(sorted)(a.keys()))))
     import networkx as nx
     G=nx.Graph()
@@ -832,7 +832,6 @@ triangleSet = larTriangulation( (V,EV) )
 VIEW(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet)))))
 VIEW(SKEL_1(STRUCT(AA(JOIN)(AA(AA(MK))(CAT(triangleSet))))))
 
-"""
 model = V,EV
 W,FW = lar2boundaryPolygons(model)
 polygons = [[W[u] for u in poly] for poly in FW]
@@ -849,7 +848,6 @@ for polygon in polygons:
     triangles = cdt.triangulate()
     trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] for t in triangles ]
     triangleSet += [AA(REVERSE)(trias)]
-"""
 @}
 %-------------------------------------------------------------------------------
 
@@ -879,6 +877,7 @@ from scipy import mat
 @< Ordered incidence relationship of vertices and edges @>
 @< Faces from biconnected components @>
 @< SVG input parsing and transformation @>
+@< Simplified SVG parsing and normalization @>
 @< Transformation of an array of lines in a 2D LAR complex @>
 @< Pruning away clusters of close vertices @>
 @< Return a simplified LAR model @>
@@ -1166,7 +1165,26 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV],submodel,0.1))
    \label{fig:ortho}
 \end{figure}
 
+\paragraph{Simplified SVG parsing and normalization}
+The easiest method for the input of SVG primitives, to be transformed into a \emph{line soup}, in order to subsiquently generate a 2D cellular complex, mainly oriented to sudent use, is to drag a SVG file into the input window of the web service \href{ http://cvdlab.github.io/svg2lines}{ http://cvdlab.github.io/svg2lines}.
+The file is transformed into quadruples of comma-separated numbers, each corresponding to the pair of extreme point coordinates of a line.
+This text may be saved into a text file, possibly decorated with the suffix \texttt{.lines}, to be read and normalized into the coordinate space $[0,1] \times [0,1]$ by the following function \texttt{lines2lines}, and then used by other 
+\texttt{larlib} functions (for example, by \texttt{lines2lar} (see \texttt{test/py/inters/test10.py}).
 
+%-------------------------------------------------------------------------------
+@D Simplified SVG parsing and normalization
+@{""" Simplified SVG parsing and normalization """
+def lines2lines(filename):
+    stringLines = [line.strip() for line in open(filename)]
+    lines = [AA(eval)(string.split(',')) for string in stringLines]
+    lines = [[[x1,y1],[x2,y2]] for x1,y1,x2,y2 in lines]
+        
+    @< SVG input normalization transformation @>    
+    
+    containmentBox = box
+    return lines
+@}
+%-------------------------------------------------------------------------------
 
 
 \paragraph{SVG input parsing and transformation}
@@ -1263,7 +1281,37 @@ from larlib import *
 filename = "test/svg/inters/plan.svg"
 #filename = "test/py/inters/building.svg"
 #filename = "test/py/inters/complex.svg"
+print 
 lines = svg2lines(filename)
+VIEW(STRUCT(AA(POLYLINE)(lines)))
+    
+V,FV,EV,polygons = larFromLines(lines)
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV[:-1]+EV)) + AA(MK)(V)))
+
+VV = AA(LIST)(range(len(V)))
+submodel = STRUCT(MKPOLS((V,EV)))
+VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV[:-1]],submodel,0.05))
+
+
+verts,faces,edges = polyline2lar([[ V[v] for v in FV[-1] ]])
+VIEW(STRUCT(MKPOLS((verts,edges))))
+@}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+@O test/py/inters/test10a.py
+@{""" Biconnected components from orthogonal LAR model """
+from larlib import *
+
+print "\n drag your SVG file to  http://cvdlab.github.io/svg2lines"
+print "then save it to <path/filename>.lines"
+filename = raw_input('filename =')
+
+#filename = "test/svg/inters/plan.lines"
+#filename = "test/py/inters/building.svg"
+#filename = "test/py/inters/complex.svg"
+
+lines = lines2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
 V,FV,EV,polygons = larFromLines(lines)

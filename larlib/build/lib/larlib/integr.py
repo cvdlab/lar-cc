@@ -119,7 +119,7 @@ def surfIntegration(model,signed=False):
 
 def signedSurfIntegration(model,signed=False):
     V,FV,EV = model
-    V = [v+[0.0] for v in V]
+    V = [v+[0.0] if len(v)==2 else v for v in V]
     cochain = []
     for face in FV:
         triangles = AA(C(AL)(face[0]))(TRANS([face[1:-1],face[2:]]))

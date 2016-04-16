@@ -476,7 +476,7 @@ def triangleIndices(triangleSet,W):
             TV += [vertices]
             ft += [t]
         FT += [ft]
-    VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,TV))))
+    #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,TV))))
     return TV,FT
 
 
@@ -501,10 +501,10 @@ def planeProjection(normals):
 
 def faceSlopeOrdering(model,FE):
     V,FV,EV = model
-    VIEW(COLOR(YELLOW)(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV)))))
+    #VIEW(COLOR(YELLOW)(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,EV)))))
     triangleSet = boundaryTriangulation(V,FV,EV,FE) # corrected with non-contractible faces
-    VIEW(EXPLODE(1.2,1.2,1.2)(AA(JOIN)( AA(POLYLINE)(CAT(triangleSet)) )))
-    VIEW(EXPLODE(1.2,1.2,1.2)( AA(POLYLINE)(AA(lambda tri: tri+[tri[0]])(CAT(triangleSet))) ))
+    #VIEW(EXPLODE(1.2,1.2,1.2)(AA(JOIN)( AA(POLYLINE)(CAT(triangleSet)) )))
+    #VIEW(EXPLODE(1.2,1.2,1.2)( AA(POLYLINE)(AA(lambda tri: tri+[tri[0]])(CAT(triangleSet))) ))
     TV,FT = triangleIndices(triangleSet,V) 
     VV = AA(LIST)(range(len(V)))
     TE = crossRelation(TV,EV,VV)
@@ -564,7 +564,7 @@ def facesFromComponents(model,FE,EF_angle):
         edges = list(set(CE[-1]).difference(accumulated))
         accumulated = CE[-1]
         submodel = STRUCT(MKPOLS((V,[EV[k] for k in edges])))
-        VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,1))
+        #VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,1))
 
     print "\nECCOMI\n"
     # initialization
@@ -717,7 +717,7 @@ def getSolidCell(FE,face,visitedCell,boundaryLoop,EV,EF_angle,V,FV):
         boundaryLoop = cyclesOrient(boundaryLoop,FE[nextFace],EV)
         cf += [nextFace] 
         face = nextFace
-        VIEW(STRUCT( MKPOLS((V,[EV[h] for f in cf for h in FE[f]])) )) #add EV!
+        #VIEW(STRUCT( MKPOLS((V,[EV[h] for f in cf for h in FE[f]])) )) #add EV!
     return cf,coe
 
 """ Main procedure of arrangement partitioning """

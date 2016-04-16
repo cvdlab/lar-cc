@@ -250,10 +250,23 @@ def adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation):
     return adjFace0
 
 """ Choose the start facet in extracting the facet representation of a cell """
+
+def chooseStartFace(FV,faceCounter):
+    if faceCounter[0,0]==0: return (0,1)
+    for f in range(len(FV)):
+        if faceCounter[f,0]==1 and faceCounter[f,1]==0: return (f,-1)
+        elif faceCounter[f,0]==0 and faceCounter[f,1]==1: return (f,1)
+    for f in range(len(FV)):
+        if faceCounter[f,0]==0 and faceCounter[f,1]==0: return (f,1)
+    if sum(array(faceCounter))==2*len(FV): return (-1,999)
+    else: print "ERROR: chooseStartFace"
+
 def chooseStartFace(FV,faceCounter):
     for f in range(len(FV)):
         if faceCounter[f,0]==1 and faceCounter[f,1]==0: return (f,-1)
         elif faceCounter[f,0]==0 and faceCounter[f,1]==1: return (f,1)
+    for f in range(len(FV)):
+        if faceCounter[f,0]==0 and faceCounter[f,1]==0: return (f,1)
     if sum(array(faceCounter))==2*len(FV): return (-1,999)
     else: return (0,1)
 
@@ -307,10 +320,12 @@ def larSignedBoundary3((V,FV,EV)):
                 vect[face] = orientation
             edgeCycleCoords = boundaryOperator * vect
             edgeCycle = coords2chain(edgeCycleCoords)
+            #if edgeCycle!=[]: VIEW(STRUCT(MKPOLS((V,[EV[e] for e in TRANS(edgeCycle)[0]]))))
         for face,orientation in faceChainOrientation:
             if orientation == 1: faceCounter[face,0]+=1
             elif orientation == -1: faceCounter[face,1]+=1
-            
+        #VIEW(STRUCT(MKPOLS((V,[FV[f] for f in TRANS(faceChainOrientation)[0]]))))
+        
         lastrow = [face for face,_ in faceChainOrientation]
         lastcol = [cellNumber for face,orientation in faceChainOrientation]
         lastdata = [orientation for _,orientation in faceChainOrientation]
@@ -326,15 +341,70 @@ def larSignedBoundary3((V,FV,EV)):
             col += lastcol
             data += lastdata
             CF += [lastrow]
-            cellNumber += 1            
+            cellNumber += 1 
+        print "\nfaceCounter =",faceCounter      
     outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
     signedBoundary = zip(longestrow,longestdata)
     return csr_matrix(outMatrix),CF,signedBoundary
+""" Return the signed boundary matrix of a 3-complex """
+import boolean
+def larSignedBoundary3((V,FV,EV)):
+    model = V,FV,EV
+    faceCounter = zeros((len(FV),2),dtype='b')
+    CF,m = [],len(FV)
+    efOp = larFaces2Edges(V,FV,EV)
+    FE = [efOp([k]) for k in range(len(FV))]
+    EF_angle, _,_,_ = boolean.faceSlopeOrdering(model,FE)
+    nonWorkedFaces,coboundary_2,cellNumber = set(range(m)),[],0
+    boundaryOperator = larSignedBoundary2(V,FV,EV)
+    FEbasis = signedBasis(boundaryOperator)
+    row,col,data = [],[],[]
+    while True:
+        startFace,orientation = chooseStartFace(FV,faceCounter)
+        if startFace == -1: break
+        nonWorkedFaces = nonWorkedFaces.difference({startFace})
+        faceChainOrientation = {(startFace,orientation)}
+        vect = csc_matrix((m,1),dtype='b')
+        for face,orientation in faceChainOrientation:  
+            vect[face] = orientation
+        edgeCycleCoords = boundaryOperator * vect
+        edgeCycle = coords2chain(edgeCycleCoords)
+        while edgeCycle != []:
+            look4face = adjFace(boundaryOperator,EV,EF_angle,faceChainOrientation)
+            for edge,orientation in edgeCycle:
+                outPair = look4face(edge,orientation)
+                if outPair != None:
+                    adjacentFace,orientation = outPair
+                    faceChainOrientation = faceChainOrientation.union(
+                        [(adjacentFace,orientation)])
+                    nonWorkedFaces = nonWorkedFaces.difference([adjacentFace])
+            vect = csc_matrix((m,1),dtype='b')
+            for face,orientation in faceChainOrientation:  
+                vect[face] = orientation
+            edgeCycleCoords = boundaryOperator * vect
+            edgeCycle = coords2chain(edgeCycleCoords)
+            #if edgeCycle!=[]: VIEW(STRUCT(MKPOLS((V,[EV[e] for e in TRANS(edgeCycle)[0]]))))
+        row += [face for face,_ in faceChainOrientation]
+        col += [cellNumber for face,orientation in faceChainOrientation]
+        data += [orientation for _,orientation in faceChainOrientation]
+        cellNumber += 1
+        
+        for face,orientation in faceChainOrientation:
+          if orientation == 1: faceCounter[face,0]+=1
+          elif orientation == -1: faceCounter[face,1]+=1
+        print "faceChainOrientation =",faceChainOrientation   
+        print "faceCounter =",faceCounter   
+          
+        CF += [[face for face,_ in faceChainOrientation]]
+        print "CF =",CF
+        print "\nfaceCounter =",faceCounter      
+    outMatrix = coo_matrix((data, (row,col)), shape=(m,cellNumber),dtype='b')
+    return csr_matrix(outMatrix),CF,faceCounter
 
 """ Test the signed boundary matrix of a 3-complex """
 if __name__=="__main__":
 
-    V,[VV,EV,FV,CV] = larCuboids([2,2,2],True)
+    V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
     cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
     cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
 

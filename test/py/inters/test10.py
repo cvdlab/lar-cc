@@ -4,6 +4,7 @@ from larlib import *
 filename = "test/svg/inters/plan.svg"
 #filename = "test/py/inters/building.svg"
 #filename = "test/py/inters/complex.svg"
+print 
 lines = svg2lines(filename)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
     
