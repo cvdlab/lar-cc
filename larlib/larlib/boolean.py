@@ -83,7 +83,7 @@ def MKTRIANGLES(model,color=False):
     FEbasis = boundary.signedBasis(boundaryOperator)
     FE,signs = TRANS(FEbasis)
     
-    if len(V[0]) == 2: V=[v+[0] for v in V]
+    if len(V[0]) == 2: V=[v+[0.] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     triangleSet = [[(p1,p2,p3) if sign==1 else (p2,p1,p3) for p1,p2,p3 in triangleSet] 
                     for sign,triangleSet in zip(signs,triangleSets)]

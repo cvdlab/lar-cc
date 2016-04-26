@@ -268,7 +268,7 @@ A fourth stage identifies the possibly duplicated edges. Some of these could app
 @{""" Create the LAR of fragmented lines """
 from scipy import spatial
 
-def lines2lar(lineArray):
+def lines2lar(lineArray,normalize=False):
     _,params,frags = lineIntersection(lineArray)
     vertDict = dict()
     index,defaultValue,V,EV = -1,-1,[],[]
@@ -294,6 +294,8 @@ def lines2lar(lineArray):
             EV.extend([[edge[k],edge[k+1]] for k,v in enumerate(edge[:-1])])
     
     model = (V,EV)
+    if normalize == True:
+         model = larModelNormalization(model)
     return larSimplify(model)
 @}
 %-------------------------------------------------------------------------------
@@ -579,14 +581,14 @@ The whole transformation of an array of lines into a two-dimensional \texttt{LAR
 %-------------------------------------------------------------------------------
 @D Transformation of an array of lines in a 2D LAR complex @{
 """ Transformation of an array of lines in a 2D LAR complex """
-def larFromLines(lines):
+def larFromLines(lines,normalize=False):
     def larPairSimplify((V,EV)):
         V,EVs = biconnectedComponent((V,EV))
         EV = CAT(EVs)
         V,EV = larRemoveVertices(V,EV)
         return V,EV
     
-    V,EV = lines2lar(lines)
+    V,EV = lines2lar(lines,normalize)
     V,EV = larPairSimplify((V,EV))  #TODO:  toggle to check the generated FV
     V,polygons,EV = larPair2Triple((V,EV))
     FV = AA(list)(AA(set)(AA(CAT)(polygons)))
@@ -878,6 +880,7 @@ from scipy import mat
 @< Faces from biconnected components @>
 @< SVG input parsing and transformation @>
 @< Simplified SVG parsing and normalization @>
+@< LAR 2D model normalization @>
 @< Transformation of an array of lines in a 2D LAR complex @>
 @< Pruning away clusters of close vertices @>
 @< Return a simplified LAR model @>
@@ -1177,11 +1180,17 @@ This text may be saved into a text file, possibly decorated with the suffix \tex
 def lines2lines(filename):
     stringLines = [line.strip() for line in open(filename)]
     lines = [AA(eval)(string.split(',')) for string in stringLines]
-    lines = [[[x1,y1],[x2,y2]] for x1,y1,x2,y2 in lines]
+    lines = [[[x1,-y1],[x2,-y2]] for x1,y1,x2,y2 in lines]  # overturning y axis
+    def stretch(line):
+        c = CCOMB(line)
+        L = mat(line)
+        return (((L-c)*1.001)+c).tolist()
+    lines  = [stretch(line) for line in lines]
         
-    @< SVG input normalization transformation @>    
+    #< SVG input normalization transformation #>    
     
-    containmentBox = box
+    #V,EV = lines2lar(lines,normalize=True)
+    #lines = [[ eval(vcode(5)(V[u])), eval(vcode(5)(V[v])) ] for u,v in EV]
     return lines
 @}
 %-------------------------------------------------------------------------------
@@ -1226,14 +1235,62 @@ def svg2lines(filename,containmentBox=[],rect2lines=True):
             lines += CAT([[[[x,y],[x+w,y]],[[x+w,y],[x+w,y+h]],[[x+w,y+h],[x,y+h]],[[x,y+h],[x,y]]] for [x,y],[w,h] in rects])
         else: 
             lines += [[[x,y],[x+w,y+h]] for [x,y],[w,h] in rects]
+            
+    lines = [[[p1[0],-p1[1]],[p2[0],-p2[1]]] for [p1,p2] in lines]  # overturning y axis
     
-    @< SVG input normalization transformation @>
+    #< SVG input normalization transformation #>
+    #V,EV = larModelNormalization(lines2lar(lines))
+    #lines = [[V[u],V[v]] for u,v in EV]
+    
     containmentBox = box
     
     return lines
 @}
 %-------------------------------------------------------------------------------
     
+\paragraph{LAR 2D model normalization}
+%-------------------------------------------------------------------------------
+@D LAR 2D model normalization
+@{""" LAR 2D model normalization """
+def larModelNormalization(model):
+    V,EV = model
+    xs,ys = TRANS(V)
+    box = [min(xs), min(ys), max(xs), max(ys)]
+    
+    # viewport aspect-ratio checking, setting a computed-viewport 'b'
+    b = [None for k in range(4)]
+    if (box[2]-box[0])/(box[3]-box[1]) > 1:  
+        b[0]=0; b[2]=1; 
+        bm=(box[3]-box[1])/(box[2]-box[0]); 
+        b[1]=.5-bm/2; b[3]=.5+bm/2
+    else: 
+        b[1]=0; b[3]=1; 
+        bm=(box[2]-box[0])/(box[3]-box[1]); 
+        b[0]=.5-bm/2; b[2]=.5+bm/2
+    
+    # isomorphic 'box -> b' transform to standard unit square
+    W = [[ ((x1-box[0])*(b[2]-b[0]))/(box[2]-box[0]) , 
+           ((y1-box[1])*(b[3]-b[1]))/(box[1]-box[3]) + 1]
+        for [x1,y1] in V]
+    return W,EV
+
+def larModelNormalization(model):
+    V,EV = model
+    xs,ys = TRANS(V)
+    w0,w1,w2,w3 = [min(xs), min(ys), max(xs), max(ys)]
+    
+    # viewport aspect-ratio checking, setting a computed-viewport 'v'
+    ar = (w2-w0)/(w3-w1)
+    if ar >1 : v0,v1,v2,v3 = 0,0,1,1./ar
+    else: v0,v1,v2,v3 = 0,0,ar,1
+    
+    a,b,c,d = v2*w0, v3*w1, w2-w0, w3-w1
+    W = [[(v2*x - a)/c, (v3*y - b)/d] for x,y in V]
+    return W,EV
+@}
+%------------------------------------------------------------------------------- 
+
+
     
 \paragraph{SVG input normalization transformation}
 The normalization transformation maps the input \texttt{lines} to the $[0,1]^2$ viewport, i.e. to the standard unit square.
