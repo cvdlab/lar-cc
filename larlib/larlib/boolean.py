@@ -54,6 +54,13 @@ def containmentBoxes(randomPointArray,qualifier=0):
                 for ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3),(x4,y4,z4)) in randomPointArray]
     return boxes
 
+def containmentBoxes(randomPointArray,qualifier=0):
+    def minmax(pointArray):
+        coords = TRANS(pointArray)
+        return AA(min)(coords) + AA(max)(coords)
+    boxes = [eval(vcode(4)( minmax(pointArray) ))+[qualifier] for pointArray in randomPointArray]
+    return boxes
+
 """ Transformation of a 3D box into an hexahedron """    
 def box2exa(box):
     x1,y1,z1,x2,y2,z2,type = box
@@ -83,7 +90,7 @@ def MKTRIANGLES(model,color=False):
     FEbasis = boundary.signedBasis(boundaryOperator)
     FE,signs = TRANS(FEbasis)
     
-    if len(V[0]) == 2: V=[v+[0.] for v in V]
+    if len(V[0]) == 2: V=[v+[0] for v in V]
     triangleSets = boundaryTriangulation(V,FV,EV,FE)
     triangleSet = [[(p1,p2,p3) if sign==1 else (p2,p1,p3) for p1,p2,p3 in triangleSet] 
                     for sign,triangleSet in zip(signs,triangleSets)]
@@ -148,7 +155,10 @@ def BREP (model,color=False):
     FE,facesigns = TRANS(FEbasis)
     
     # computation of boundary 2-faces
-    csrBoundary3,CF,signedBoundary = boundary.larSignedBoundary3((V,FV,EV))
+    csrBoundary3,CF,_ = boundary.larSignedBoundary3((V,FV,EV))
+    
+    signedBoundary = csrBoundary3 * (len(CF)*[[1]])  ## TODO !!
+    
     cells,_ = TRANS(signedBoundary)
     fv = [FV[f] for f in cells]
     ev = [EV[e] for e in set(CAT([[e for e in FE[f]] for f in cells])) ]
@@ -246,20 +256,32 @@ def COVECTOR(points):
     return [plane.get(I) for I in range(0,pointdim+1)]
 
 def faceTransformations(facet):
+    #print "\nfacet =",facet
     covector = COVECTOR(facet)
+    #print "\ncovector =",covector
     translVector = facet[0]
+    #print "translVector =",translVector
     # translation 
     newFacet = [ VECTDIFF([v,translVector]) for v in facet ]
+    #print "newFacet =",newFacet
     # linear transformation: boundaryFacet -> standard (d-1)-simplex
-    d = len(facet[0])
-    m = mat( newFacet[1:d] + [covector[1:]] )
-    if abs(det(m))<0.0001:
-        for k in range(len(facet)-2):
-            m = mat( newFacet[1+k+1:d+k+1] + [covector[1:]] )
-            if abs(det(m))>0.0001: break
+    if isclose(0.,covector[1]) and isclose(0.,covector[2]): ## x and y components ! (hpc format)
+        m = mat(np.eye(3))
+    else:
+        d = len(facet[0])
+        #print "d =",d
+        m = mat( newFacet[1:d] + [covector[1:]] )
+        #print "m =",m
+        if abs(det(m))<0.0001:
+            for k in range(len(facet)-2):
+                m = mat( newFacet[1+k+1:d+k+1] + [covector[1:]] )
+                #print "\nm =",m
+                if abs(det(m))>0.0001: break
     transformMat = m.T.I
+    #print "transformMat =",transformMat
     # transformation in the subspace x_d = 0
     out = (transformMat * (mat(newFacet).T)).T.tolist()
+    #print "out =",out
     return transformMat
 
 """ Submanifold mapping computation """
@@ -312,36 +334,45 @@ def computeSegments(line):
     return segments
 
 """ Remove intersection points external to a submanifold face """
-def veryClose(p,q):
-    out = False
-    if VECTNORM(VECTDIFF([p,q])) <= 0.002:
-        out = True
-    return out
-
-def removeExternals(M,V,EV,fe, z,fz,ez):
-    (Z,FZ,EZ) = copy((z,fz,ez))
-    inputFace = Struct([(V,[EV[e] for e in fe])])
-    verts,ev = larApply(M)(struct2lar(inputFace))
-    pol = [eval(vcode(4)(vert[:-1])) for vert in verts],ev
+def veryClose(edge,p):
+    ((x1,y1),(x2,y2)),(x0,y0) = edge,p
+    distance = ABS((y2-y1)*x0 - (x2-x1)*y0 + x2*y1 - y2*x1) / VECTNORM(VECTDIFF([(x1,y1),(x2,y2)]))
+    if distance <= 0.00001: return True
+    return False
+    
+def removeExternals(M,V,EV,fe,fv, z,fz,ez):
+    w,fw,ew = struct2lar(Struct([larApply(M)((V,[fv],[EV[e] for e in fe]))])) # part mapped to 2D
+    print "\norigin","\nz,fz,ez =",z,",",fz,",",ez
+    print "\ndestination","\nw,fw,ew =",w,",",fw,",",ew
+    pol = [v[:-1] for v in w],ew
     out = []
     classify = triangulation.pointInPolygonClassification(pol)
-    for k,point in enumerate(Z):
+    for k,point in enumerate(z):
         if classify(point)=="p_out":  out += [k]
+    print "out =",out
 
     # verify all v in out w.r.t. pol[0]
     trueOut = []
-    for v in out: 
+    w = pol[0]
+    for k in out: 
+        p = z[k]
         onBoundary = False
-        for p in pol[0]:
-            if veryClose(Z[v],p):
-                print "v,p,'close'", Z[v],p
+        for u,v in pol[1]:
+            print "u,v =",u,v
+            if veryClose((w[u],w[v]),p):
+                print "(w[u],w[v]),p,'close'", (w[u],w[v]),p
                 onBoundary = True
-                Z[v] = p
-        if not onBoundary: trueOut += [v]
+                z[k] = p
+        if not onBoundary: trueOut += [k]
+    print "trueOut =",trueOut
     
-    FW = [f for f in FZ if not any([v in trueOut for v in f])]  # trueOut
-    EW = [e for e in EZ if not any([v in trueOut for v in e])]  # trueOut
-    return Z,FW,EW
+    fw = [f for f in fz if not any([v in trueOut for v in f])]  # trueOut
+    ew = [e for e in ez if not any([v in trueOut for v in e])]  # trueOut
+    return z,fw,ew
+        
+#VIEW(STRUCT(AA(MK)([z[k] for k in set(range(len(z))).difference(out)])))
+#VIEW(STRUCT(AA(MK)(z)))
+#VIEW(EXPLODE(1.2,1.2,1)(AA(COLOR(CYAN))(MKPOLS((z,ez)))+AA(COLOR(YELLOW))(MKPOLS((w,ew)))))
 
 """ Space partitioning via submanifold mapping """
 import larcc
@@ -352,9 +383,11 @@ def spacePartition(V,FV,EV, parts):
     FE = larcc.crossRelation(FV,EV,VV)
     submodel0 = submodel(V,FV,EV)
     out = []
+
     
     """ input: face index f; candidate incident faces F[f]; """
     for f,F in enumerate(parts):
+        print "\n\nf,F =",f,F
         """ Selection of the LAR submodel S(f) := (V,FV,EV)(f) restricted to [f]+F[f] """    
         fF,fE = submodel0(f,F)
         subModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
@@ -378,11 +411,19 @@ def spacePartition(V,FV,EV, parts):
         edgesPerFace = [ [e for e in sFE[k] if meetZero(sW, sEW[e])] 
                     for k,face in enumerate(sFW) ]
         edges = list(set(CAT(edgesPerFace)))
-        WW = AA(LIST)(range(len(sW)))
+        
+        
+        #zW = (mat(sW)*[[1,0,0],[0,1,0],[0,0,300]]).tolist()
+        #submodel = STRUCT(MKPOLS((zW,sEW)))
+        #WW = AA(LIST)(range(len(zW)))
+        #VIEW(larModelNumbering(1,1,1)(zW,[WW,sFW,sEW],submodel,1))
+
+        
         wires = [sEW[e] for e in edges]
         #VIEW(STRUCT(MKPOLS((sW,wires)) + [red]))
         
         """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
+        
         points = collections.OrderedDict()
         lines = [[sW[w1],sW[w2]] for w1,w2 in wires]
         for k,(p,q) in enumerate(lines): 
@@ -394,14 +435,18 @@ def spacePartition(V,FV,EV, parts):
         vpoints = [[(vcode(4)(point),k) for k,point in enumerate(line)] for line in lines]
         lines = [AA(eval)(dict(line).keys()) for line in vpoints]
         lines = [[line[0],line[-1]]  if len(line)>2 else line for line in lines]
-        #VIEW(STRUCT(AA(POLYLINE)(lines) + [red]))
+        """
+        lines += [[sW[w1][:2],sW[w2][:2]] for w1,w2 in wires 
+                if sW[w1][2]==sW[w2][2] and isclose(0.0, sW[w2][2])]  # alternate to the last block
+        """
+        #VIEW(EXPLODE(1.2,1.2,1)(AA(POLYLINE)(lines) + [red]))
                 
         """ Construction of the planar set FX,EX of faces and lines """
         u,fu,eu,polygons = inters.larFromLines(lines)
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((u,fu+eu))))
         
         """ Remove external vertices """
-        w,fw,ew = removeExternals(M,V,EV,FE[f], u,fu,eu)
+        w,fw,ew = removeExternals(M,V,EV,FE[f],FV[f], u,fu,eu)  # BUG !!!!  <<<<<<<<<<
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,fw+ew))))
         struct = Struct([(w,fw,ew)])
         z,fz,ez = struct2lar(struct)
@@ -409,6 +454,7 @@ def spacePartition(V,FV,EV, parts):
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
         
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
+        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,fw+ew))))
         out += [Struct([(w,fw,ew)])]
     return struct2lar(Struct(out))
 

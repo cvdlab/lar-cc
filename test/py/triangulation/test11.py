@@ -3,7 +3,7 @@ from larlib import *
 
 filename = "test/svg/triangulation/facade.svg"
 lines = inters.svg2lines(filename)
-V,FV,EV,polygons = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines,True)
 
 VV = AA(LIST)(range(len(V)))
 hpc = STRUCT(MKPOLS((V,EV)))        

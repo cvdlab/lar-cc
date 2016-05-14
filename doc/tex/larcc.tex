@@ -1288,8 +1288,8 @@ The following function return the \texttt{hpc} of the drawing with arrows of the
 \mbox{}\verb@        vx,vy = DIFF([ v1, v0 ])@\\
 \mbox{}\verb@        nx,ny = [-vy, vx]@\\
 \mbox{}\verb@        v2 = SUM([ v0, times(0.66)([vx,vy]) ])@\\
-\mbox{}\verb@        v3 = SUM([ v0, times(0.6-frac)([vx,vy]), times(frac)([nx,ny]) ])@\\
-\mbox{}\verb@        v4 = SUM([ v0, times(0.6-frac)([vx,vy]), times(-frac)([nx,ny]) ])@\\
+\mbox{}\verb@        v3 = SUM([ v0, times(0.66-frac)([vx,vy]), times(frac)([nx,ny]) ])@\\
+\mbox{}\verb@        v4 = SUM([ v0, times(0.66-frac)([vx,vy]), times(-frac)([nx,ny]) ])@\\
 \mbox{}\verb@        verts,cells = [v0,v1,v2,v3,v4],[[1,2],[3,4],[3,5]]@\\
 \mbox{}\verb@        hpcs += [MKPOL([verts,cells,None])]@\\
 \mbox{}\verb@    hpc = STRUCT(hpcs)@\\

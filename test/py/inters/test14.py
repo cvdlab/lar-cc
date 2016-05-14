@@ -3,7 +3,7 @@ from larlib import *
 filename = "test/svg/inters/closepoints.svg"
 lines = svg2lines(filename)
 
-V,EV = lines2lar(lines)
+V,EV = lines2lar(lines,True)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV))))
 pts = V
 RADIUS = 0.05
@@ -13,7 +13,7 @@ convexes = [JOIN(AA(MK)([pts[v] for v in cluster])) for cluster in clusters]
 W = COLOR(CYAN)(STRUCT(AA(MK)(V)))
 VIEW(STRUCT(AA(COLOR(RED))(convexes)+AA(MK)(pts)+AA(COLOR(YELLOW))(circles)+[W]))
 
-V,FV,EV,polygons = larFromLines(lines)
+V,FV,EV,polygons = larFromLines(lines,True)
 VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,FV+EV)) + AA(MK)(V)))
 VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
