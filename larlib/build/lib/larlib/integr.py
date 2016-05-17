@@ -50,8 +50,6 @@ def InertiaMoment(P):
 
 """ Basic integration functions """
 def II(P, alpha, beta, gamma, signed):
-    print "P =",P
-    print "alpha, beta, gamma =",alpha, beta, gamma
     w = 0
     V, FV = P
     for i in range(len(FV)):

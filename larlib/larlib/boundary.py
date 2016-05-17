@@ -111,53 +111,34 @@ def larSignedBoundary2(V,FV,EV):
     FE = [efOp([k]) for k in range(len(FV))]
     data,row,col = [],[],[]
     for f in range(len(FE)):
-        cycle_data = triangulation.find_cycles(V,[EV[e] for e in FE[f]])
-        vcycles = cycle_data['v_cycles']
-        ecycles = cycle_data['e_cycles']
-        pairs = zip(vcycles,ecycles)
-        vertEdgeCycles = [zip(vcycle,[FE[f][e] for e in ecycle]) for vcycle,ecycle in pairs]
-        vertEdgeCycles = sorted(vertEdgeCycles,key=len)[:-1]
-        coefficients = [1 if v == EV[e][0] else -1 for cycle in vertEdgeCycles for (v,e) in cycle]
-        ecycle = [e for cycle in vertEdgeCycles for (v,e) in cycle]
-        data += coefficients
-        row += ecycle
-        col += [f]*len(ecycle)
-        #print f,len(data),len(row),len(col)
-    signedBoundary2 = coo_matrix((data,(row,col)), shape=(len(EV),len(FV)),dtype='b')
-    return csr_matrix(signedBoundary2)
-    
-def larSignedBoundary2(V,FV,EV):
-    efOp = larFaces2Edges(V,FV,EV)
-    FE = [efOp([k]) for k in range(len(FV))]
-    data,row,col = [],[],[]
-    for f in range(len(FE)):
             
         Vcycles,Ecycles = triangulation.makeCycles((V,[EV[e] for e in FE[f]]))
-        print "\nVcycles =",Vcycles
-        print "Ecycles =",Ecycles
         Ecycles = [[FE[f][e] for e in cycle] for cycle in Ecycles]
-        print "Ecycles =",Ecycles
         areas = integr.signedSurfIntegration((V,Vcycles,EV),signed=True)
-        print "areas =",areas
         sortedAreas = sorted((area,k) for k,area in enumerate(areas))
-        print "sortedAreas =",sortedAreas
         innerLoops = [zip(Vcycles[k],Ecycles[k]) for area,k in sortedAreas[1:] if area<0]
-        print "innerLoops =",innerLoops
         outerLoop = [zip(Vcycles[sortedAreas[-1][1]],Ecycles[sortedAreas[-1][1]])]
-        print "outerLoop =",outerLoop
         orientedFaceLoops = CAT(outerLoop+innerLoops)
-        print "orientedFaceLoops =",orientedFaceLoops
         coefficients = [1 if v==EV[e][0] else -1 for v,e in orientedFaceLoops]
-        print "coefficients =",coefficients
-        
+      
         ecycle = [e for v,e in orientedFaceLoops]
-        print "ecycle =",ecycle
         data += coefficients
         row += ecycle
         col += [f]*len(ecycle)
         #print f,len(data),len(row),len(col)
     signedBoundary2 = coo_matrix((data,(row,col)), shape=(len(EV),len(FV)),dtype='b')
     return csr_matrix(signedBoundary2)
+
+""" Compute any signed 1-boundary chain """
+def larSignedBoundary2Cells(V,FV,EV):
+   def larSignedBoundary2Cells0(chain):
+      boundaryMat = larSignedBoundary2(V,FV,EV)
+      chainCoords = csc_matrix((len(FV), 1))
+      for cell in chain: chainCoords[cell,0] = 1
+      boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+      orientations = list((boundaryMat * chainCoords).tocoo().data)
+      return orientations,boundaryCells
+   return larSignedBoundary2Cells0
 
 """ Boundary of a 3-complex """
 import larcc

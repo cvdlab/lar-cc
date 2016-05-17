@@ -96,10 +96,10 @@ def MKTRIANGLES(model,color=False):
                     for sign,triangleSet in zip(signs,triangleSets)]
     if color:
         colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GREEN,GRAY,ORANGE,BLACK,BLUE,PURPLE,BROWN]
-        return [ COLOR(colors[k%12])(STRUCT([MKPOL([verts,[[3,2,1]],None]) 
+        return [ COLOR(colors[k%12])(STRUCT([MKPOL([verts,[[1,2,3]],None]) 
             for verts in triangledFace])) for k,triangledFace in enumerate(triangleSets) ]
     else:
-        return [ STRUCT([MKPOL([verts,[[3,2,1]],None]) for verts in triangledFace])
+        return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace])
                 for triangledFace in triangleSets ]
 
 def MKSOLID(*model): 
