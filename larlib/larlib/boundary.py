@@ -140,6 +140,60 @@ def larSignedBoundary2Cells(V,FV,EV):
       return orientations,boundaryCells
    return larSignedBoundary2Cells0
 
+""" Offset of 2-faces of a 2D complex """
+from scipy.linalg.basic import det
+
+def larOffset2D (model,offset=0.001):
+    V,FV,EV = model
+    newVertices,newEdges = [],[]
+
+    for f in range(len(FV)):
+        # pair of arrays (signs, edges) of f face
+        orientations,boundaryCells = larSignedBoundary2Cells(V,FV,EV)([f])
+        # array of pairs (sign, edge) of f face
+        edges = zip(orientations,boundaryCells)
+        
+        # array of pairs (begin_vertex, end_vertex) of oriented edges of f face
+        orientedEdges = [tuple(EV[e]) if sign==1 else tuple(REVERSE(EV[e])) 
+            for sign,e in edges]
+        # array of unit tangentVectors of  f face
+        tangentVectors = [UNITVECT(VECTDIFF([ V[edge[1]],V[edge[0]] ])) 
+            for edge in orientedEdges]
+        # array of unit normalVectors of   f face
+        normalVectors = [ SCALARVECTPROD([ offset,[vect[1],-vect[0]] ]) 
+            for vect in tangentVectors]
+        # array of pairs of moved vertices  of oriented edges of f face
+        movedEdgesOffLine = [[VECTSUM([V[v],n]) for v in orientedEdges[k]] 
+            for k,n in enumerate(normalVectors)]
+        # successor map ( succ[first] := second ) for verts of oriented edges of $f$ 
+        succ = dict(orientedEdges)
+        # dictionary of numerals of oriented edges of $f$ (key = pair of vertices)
+        edgeDict = dict([(edge,k) for k,edge in enumerate(orientedEdges)])
+        # array of pairs of numerals of intersecting edges
+        intersections = [[ edgeDict[(u,v)], edgeDict[(v,succ[v])] ] 
+            for k,(u,v) in enumerate(orientedEdges)]
+        # coupling of data points of intersecting pairs
+        linepairs = [[movedEdgesOffLine[l1],movedEdgesOffLine[l2]] 
+            for l1,l2 in intersections]
+        # prepare data for line pairs
+        linedata = [[ax,ay,bx,by,cx,cy,dx,dy] 
+            for [[(ax,ay),(bx,by)],[(cx,cy),(dx,dy)]] in linepairs]
+        # assemble intersection determinants
+        determinants = [ det(mat([[ax-bx,dx-cx], [ay-by,dy-cy]])) 
+            for [ax,ay,bx,by,cx,cy,dx,dy] in linedata]
+        # parameter pairs by Cramer's rule (for oriented edges of f face)
+        alpha = [det(mat([[dx-bx,dx-cx],[dy-by,dy-cy]]))/D 
+            for D,(ax,ay,bx,by,cx,cy,dx,dy) in zip(determinants,linedata)]
+        # intersection points
+        newvert = [ (a*mat(p1)+(1-a)*mat(p2)).tolist()[0] 
+            for a,[[p1,p2],[q1,q2]] in zip(alpha,linepairs)]
+        newedges = [[newvert[u],newvert[v]] for u,v in intersections]
+
+        newVertices += [newvert]
+        newEdges += newedges  
+    return newEdges
+
+
 """ Boundary of a 3-complex """
 import larcc
 """  WHY wrong ????  TOCHECK !!

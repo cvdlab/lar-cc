@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = larcc
+NAME = boundary
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 
