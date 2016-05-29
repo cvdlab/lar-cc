@@ -101,7 +101,8 @@ def TT(tau, alpha, beta, gamma, signed=False):
                * POWER([vo[2], gamma-m]) * s2
    c = VECTPROD([a, b])
    if not signed: return sl * VECTNORM(c)
-   elif a[2]==b[2]==0.0: return sl * VECTNORM(c) * SIGN(c[2])
+   elif isclose(a[2],0.0) and isclose(b[2],0.0):
+      return sl * VECTNORM(c) * SIGN(c[2])
    else: print "error: in signed surface integration"
 
 from integr import *

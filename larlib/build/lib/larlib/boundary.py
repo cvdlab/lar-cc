@@ -100,7 +100,7 @@ def struct2Marshal(struct):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boolean.boxBuckets3d(boolean.containmentBoxes(quadArray))
     Z,FZ,EZ = boolean.spacePartition(W,FW,EW, parts)
-    V,FV,EV = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
+    V,FV,EV = inters.larSimplify((Z,FZ,EZ),radius=0.001)
     return V,FV,EV
 
 """ Compute the signed 2-boundary matrix """
@@ -145,7 +145,7 @@ from scipy.linalg.basic import det
 
 def larOffset2D (model,offset=0.001):
     V,FV,EV = model
-    newVertices,newEdges = [],[]
+    newVertices,lines = [],[]
 
     for f in range(len(FV)):
         # pair of arrays (signs, edges) of f face
@@ -182,7 +182,7 @@ def larOffset2D (model,offset=0.001):
         determinants = [ det(mat([[ax-bx,dx-cx], [ay-by,dy-cy]])) 
             for [ax,ay,bx,by,cx,cy,dx,dy] in linedata]
         # parameter pairs by Cramer's rule (for oriented edges of f face)
-        alpha = [det(mat([[dx-bx,dx-cx],[dy-by,dy-cy]]))/D 
+        alpha = [det(mat([[dx-bx,dx-cx],[dy-by,dy-cy]]))/D  if abs(D)>.00001 else 0 
             for D,(ax,ay,bx,by,cx,cy,dx,dy) in zip(determinants,linedata)]
         # intersection points
         newvert = [ (a*mat(p1)+(1-a)*mat(p2)).tolist()[0] 
@@ -190,8 +190,8 @@ def larOffset2D (model,offset=0.001):
         newedges = [[newvert[u],newvert[v]] for u,v in intersections]
 
         newVertices += [newvert]
-        newEdges += newedges  
-    return newEdges
+        lines += newedges  
+    return lines
 
 
 """ Boundary of a 3-complex """

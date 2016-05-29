@@ -295,6 +295,34 @@ def submanifoldMapping(pivotFace):
     transform = mapping * transl
     return transform
 
+def submanifoldMapping(pivotFace):
+    tx,ty,tz = pivotFace[0]
+    transl = mat([[1,0,0,-tx],[0,1,0,-ty],[0,0,1,-tz],[0,0,0,1]])
+    facet = [ VECTDIFF([v,pivotFace[0]]) for v in pivotFace ]
+    normal = UNITVECT(COVECTOR(facet)[1:])
+    a = normal
+    b = [0,0,1]
+    axis = UNITVECT(VECTPROD([a,b]))
+    angle = math.atan2(VECTNORM(cross(a,b)), dot(a,b))    
+    
+    # general 3D rotation (Rodrigues' rotation formula)    
+    m = scipy.identity(4)
+    cos = COS(angle); sin = SIN(angle)
+    I = scipy.identity(3) ; u = axis
+    Ux = scipy.array([
+        [0,        -u[2],      u[1]],
+        [u[2],        0,     -u[0]],
+        [-u[1],     u[0],         0]])
+    UU = scipy.array([
+        [u[0]*u[0],    u[0]*u[1],    u[0]*u[2]],
+        [u[1]*u[0],    u[1]*u[1],    u[1]*u[2]],
+        [u[2]*u[0],    u[2]*u[1],    u[2]*u[2]]])
+    m[:3,:3] = cos*I + sin*Ux + (1.0-cos)*UU
+    
+    mapping = mat(m)
+    transform = mapping * transl
+    return transform
+
 """ Helper functions for spacePartition """
 import larcc
 def submodel(V,FV,EV):
@@ -334,6 +362,8 @@ def computeSegments(line):
     return segments
 
 """ Remove intersection points external to a submanifold face """
+import boundary,inters
+
 def veryClose(edge,p):
     ((x1,y1),(x2,y2)),(x0,y0) = edge,p
     distance = ABS((y2-y1)*x0 - (x2-x1)*y0 + x2*y1 - y2*x1) / VECTNORM(VECTDIFF([(x1,y1),(x2,y2)]))
@@ -344,7 +374,14 @@ def removeExternals(M,V,EV,fe,fv, z,fz,ez):
     w,fw,ew = struct2lar(Struct([larApply(M)((V,[fv],[EV[e] for e in fe]))])) # part mapped to 2D
     print "\norigin","\nz,fz,ez =",z,",",fz,",",ez
     print "\ndestination","\nw,fw,ew =",w,",",fw,",",ew
-    pol = [v[:-1] for v in w],ew
+    newEdges = boundary.larOffset2D(([v[:-1] for v in w],fw,ew),offset=0.0001)
+
+    #w,fw,ew,_ = inters.larFromLines(newEdges)
+    w,ew = bruteForceIntersect(newEdges)
+    w,polygons,ew = triangulation.larPair2Triple((w,ew))
+    fw = AA(list)(AA(set)(AA(CAT)(polygons)))
+
+    pol = w,ew
     out = []
     classify = triangulation.pointInPolygonClassification(pol)
     for k,point in enumerate(z):
@@ -374,8 +411,76 @@ def removeExternals(M,V,EV,fe,fv, z,fz,ez):
 #VIEW(STRUCT(AA(MK)(z)))
 #VIEW(EXPLODE(1.2,1.2,1)(AA(COLOR(CYAN))(MKPOLS((z,ez)))+AA(COLOR(YELLOW))(MKPOLS((w,ew)))))
 
+""" Compute face intersections with z=0 """
+def computeCrossingLines(edges,sW,sFW,sEW,sFE):
+   crossEdges = [e for e in edges if not (isclose(0,sW[sEW[e][0]][2]) or isclose(0,sW[sEW[e][1]][2]))]
+   if crossEdges != []:
+      #VIEW(STRUCT(MKPOLS((sW,[sEW[e] for e in crossEdges]))))
+      sEF = invertRelation(sFE)
+      crossFaces = list(set(CAT([sEF[e] for e in crossEdges])))
+      #VIEW(STRUCT(MKPOLS((sW,[sFW[f] for f in crossFaces]+[sEW[e] for e in edges]))))
+      edgeCrossPairs = [list(set(crossEdges).intersection(sFE[f])) for f in crossFaces]
+      crossingVertPairs = [[sEW[e1],sEW[e2]] for e1,e2 in edgeCrossPairs]
+      zpairs = [[[sW[u][2],sW[v][2]],[sW[w][2],sW[z][2]]] for (u,v),(w,z) in crossingVertPairs]
+      params = [[[zs[1]/(zs[1]-zs[0])]  for zs in edgepair] for edgepair in zpairs]
+      ppairs = [[[sW[u][:2],sW[v][:2]],[sW[w][:2],sW[z][:2]]] for (u,v),(w,z) in crossingVertPairs]
+
+      thePoints = [[(a[0]*mat(p)+(1-a[0])*mat(q)).tolist()[0] for a,(p,q) in zip(par,points)] 
+               for par,points in zip(params,ppairs)]
+      crossingLines = [AA(COMP([eval,vcode(4)]))(line) for line in thePoints]
+      #VIEW(STRUCT(MKPOLS((sW,[sFW[f] for f in crossFaces]+[sEW[e] for e in edges]))+AA(POLYLINE)(crossingLines)))
+      return crossingLines
+   else: return []
+
+""" Brute-force intersection of 2D lines """
+def bruteForceIntersect(lines):
+    n = len(lines)
+    verts = list(set([tuple(eval(vcode(4)(v))) for line in lines for v in line]))
+    vertdict = OrderedDict([(key,k) for k,key in enumerate(verts)])
+    EV = [[vertdict[tuple(eval(vcode(4)(p)))] for p in line] for line in lines]
+    pairs = [(h,k) for h in range(n) for k in range(h+1,n)]
+    linepairs = [[lines[h],lines[k]] for h,k in pairs]
+    # prepare data for line pairs
+    linedata = [[ax,ay,bx,by,cx,cy,dx,dy] 
+        for [[(ax,ay),(bx,by)],[(cx,cy),(dx,dy)]] in linepairs]
+    # assemble intersection determinants
+    determinants = [ det(mat([[ax-bx,dx-cx], [ay-by,dy-cy]])) 
+        for [ax,ay,bx,by,cx,cy,dx,dy] in linedata]
+    # parameter pairs by Cramer's rule (for oriented edges of f face)
+    alpha = [det(mat([[dx-bx,dx-cx],[dy-by,dy-cy]]))/D  if abs(D)>.00001 else 0 
+        for D,(ax,ay,bx,by,cx,cy,dx,dy) in zip(determinants,linedata)]
+    beta = [det(mat([[ax-bx,dx-bx],[ay-by,dy-by]]))/D  if abs(D)>.00001 else 0 
+        for D,(ax,ay,bx,by,cx,cy,dx,dy) in zip(determinants,linedata)]
+    # intersection points
+    vdata,edata = defaultdict(list),defaultdict(list)
+    newverts = [ tuple(AA(COMP([tuple,eval,vcode(4)]))([ 
+        (a*mat(p1)+(1-a)*mat(p2)).tolist()[0], [a,b,h,k] ]))
+        for (a,b,(h,k)),[[p1,p2],[q1,q2]] in zip(zip(alpha,beta,pairs),linepairs) 
+        if 0<=a<=1 and 0<=b<=1 ]
+    for vert,datum in newverts:
+       vdata[vert] += [datum]
+    for k,(key,datum) in enumerate(vdata.items()):
+        for a,b,edge1,edge2 in datum:
+            edata[int(edge1)] += [a]
+            edata[int(edge2)] += [b]
+    edgeParameters = [sorted(set(edge)) for k,edge in edata.items()]
+    points = [[(a*mat(verts[p])+(1-a)*mat(verts[q])).tolist()[0] 
+            for a in params] for params,(p,q) in zip(edgeParameters,EV)]
+    m = len(vertdict)
+    for point in CAT(points):
+        vertex = tuple(eval(vcode(4)(point)))
+        if not vertex in vertdict:
+            vertdict[vertex] = m
+            m += 1
+    edgeVerts = [[vertdict[tuple(eval(vcode(4)(point)))] for point in edge] 
+        for edge in points]
+    V = AA(list)(vertdict.keys())
+    edges = [[[v,part[k+1]] for k,v in enumerate(part[:-1])] for part in edgeVerts]
+    EV = sorted(set(AA(tuple)(AA(sorted)(CAT(edges)))))
+    return V,EV
+
 """ Space partitioning via submanifold mapping """
-import larcc
+import larcc,inters,triangulation
 from larcc import *
 
 def spacePartition(V,FV,EV, parts):
@@ -406,52 +511,33 @@ def spacePartition(V,FV,EV, parts):
         
         """ filtering of EW edges traversing z=0, giving EZ edges and incident faces FZEZ """
         sFE = larcc.crossRelation0(len(V),sFW,sEW)    
-        edges = list(set([ e for k,face in enumerate(sFW)  for e in sFE[k] 
+        alledges = list(set([ e for k,face in enumerate(sFW)  for e in sFE[k] 
                     if meetZero(sW, sEW[e]) ]))
         edgesPerFace = [ [e for e in sFE[k] if meetZero(sW, sEW[e])] 
                     for k,face in enumerate(sFW) ]
         edges = list(set(CAT(edgesPerFace)))
-        
-        
-        #zW = (mat(sW)*[[1,0,0],[0,1,0],[0,0,300]]).tolist()
-        #submodel = STRUCT(MKPOLS((zW,sEW)))
-        #WW = AA(LIST)(range(len(zW)))
-        #VIEW(larModelNumbering(1,1,1)(zW,[WW,sFW,sEW],submodel,1))
-
         
         wires = [sEW[e] for e in edges]
         #VIEW(STRUCT(MKPOLS((sW,wires)) + [red]))
         
         """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
         
-        points = collections.OrderedDict()
-        lines = [[sW[w1],sW[w2]] for w1,w2 in wires]
-        for k,(p,q) in enumerate(lines): 
-            point = segmentIntersection(p,q)
-            if point != None: points[edges[k]] = point
-        pointsPerFace = [set(face).intersection(points.keys()) for face in edgesPerFace]
-        lines = [[points[e][:2] for e in face] for face in pointsPerFace]
-        lines = [line for line in lines if line!=[]]
-        vpoints = [[(vcode(4)(point),k) for k,point in enumerate(line)] for line in lines]
-        lines = [AA(eval)(dict(line).keys()) for line in vpoints]
-        lines = [[line[0],line[-1]]  if len(line)>2 else line for line in lines]
-        """
-        lines += [[sW[w1][:2],sW[w2][:2]] for w1,w2 in wires 
-                if sW[w1][2]==sW[w2][2] and isclose(0.0, sW[w2][2])]  # alternate to the last block
-        """
-        #VIEW(EXPLODE(1.2,1.2,1)(AA(POLYLINE)(lines) + [red]))
-                
-        """ Construction of the planar set FX,EX of faces and lines """
-        u,fu,eu,polygons = inters.larFromLines(lines)
-        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((u,fu+eu))))
+        edges2D = [[w1,w2] for w1,w2 in wires if (isclose(0,sW[w1][2]) and isclose(0,sW[w2][2]))]
+        lines2D = [[sW[u][:-1],sW[v][:-1]] for u,v in edges2D] + computeCrossingLines(
+                    edges,sW,sFW,sEW,sFE)
         
-        """ Remove external vertices """
-        w,fw,ew = removeExternals(M,V,EV,FE[f],FV[f], u,fu,eu)  # BUG !!!!  <<<<<<<<<<
-        #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,fw+ew))))
-        struct = Struct([(w,fw,ew)])
-        z,fz,ez = struct2lar(struct)
+        #VIEW(STRUCT(AA(POLYLINE)(lines2D) ))#+ [red]))
+        print "\nlines2D =",lines2D
+
+        u,eu = bruteForceIntersect(lines2D)
+        u,polygons,eu = triangulation.larPair2Triple((u,eu))
+        fu = AA(list)(AA(set)(AA(CAT)(polygons)))
         
+        z,fz,ez = u,fu,eu
+        """ Remove external vertices 
+        z,fz,ez = removeExternals(M,V,EV,FE[f],FV[f], u,fu,eu)  # BUG !!!!  <<<<<<<<<<
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
+        """
         
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,fw+ew))))
