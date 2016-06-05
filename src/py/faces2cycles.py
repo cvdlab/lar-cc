@@ -23,10 +23,6 @@ def larCuboidsFacets(cells,dim=3):
       facets += AA(AA(LAST))(CAT([[pair[:n],pair[n:]] for pair in doubleFacets]))
       out += CAT([[tuple(face[:n/2]),tuple(face[n/2:])] for face in facets if face!=[]])
    return sorted(set(out)) # remove duplicates
-t1 = time.clock()
-_=larCuboidsFacets(FV)
-t2 = time.clock()
-print "method 0 =", t2-t1
 
 FV = list(set(AA(triangle2quad(vdict))(FV)))
 VIEW(STRUCT(MKPOLS((V,FV))))
@@ -42,8 +38,19 @@ for i in range(10):
 
 VIEW(STRUCT(MKPOLS((V,EV))))
 
+def larBoundary(FV,EV):
+	m,n = len(FV),len(EV)
+	cooEF = (csrCreate(EV)*csrCreate(FV).T).tocoo()
+	data = 2*[1]*n
+	row = CAT([2*[k] for k in range(n)])
+	col = [cooEF.col[k] for k in range(len(cooEF.data)) if cooEF.data[k]==2]
+	return coo_matrix((data,(row,col)),shape=(n,m),dtype='b').tocsr()
+
+t1 = time.clock()
 csr_mat = larBoundary(FV,EV)  # 59 secs
-assert len(EV)*2 == csr_mat.shape[0]*2 == csr_mat.nnz
+t2 = time.clock()
+print "\ncsr_mat =",t2-t1
+assert len(EV)*2 == csr_mat.shape[0]*2 == csr_mat.shape[1]*4 == csr_mat.nnz
 
 assert AA(max)(TRANS(V)) == [261, 299, 50]
 
@@ -51,23 +58,13 @@ BF = set([k for k,f in enumerate(FV) if all([V[v][2]==50 for v in f])])
 VIEW(SKEL_1(STRUCT(MKPOLS((V,[FV[k] for k in BF ])))))
 BE = set([])
 
-t1 = time.clock()
-f_col = csr_matrix((len(FV),1),dtype='b')
-for h in BF: f_col[h,0] = 1
-t2 = time.clock()
-print "f_col =", t2-t1
-
-t1 = time.clock()
+# f_col = csr_matrix((len(FV),1),dtype='b')
+# for h in BF: f_col[h,0] = 1
 f_col = coo_matrix(([1]*len(BF),(list(BF),[0]*len(BF))),shape=(len(FV),1),dtype='b').tocsr()
-t2 = time.clock()
-print "f_col =", t2-t1
-t1 = time.clock()
 e_col = csr_mat * f_col
-t2 = time.clock()
-print "e_col =", t2-t1
 edges = [e for e in e_col.nonzero()[0].tolist() if e_col[e,0]==1 ]  
 delta_edges = edges
-VIEW(STRUCT(MKPOLS((V,[EV[e] for e in delta_edges]))))
+#VIEW(STRUCT(MKPOLS((V,[EV[e] for e in delta_edges]))))
 for i in range(50):
 	# e_row = csr_matrix((1,len(EV)),dtype='b')
 	# for k in delta_edges: e_row[0,k] = 1
