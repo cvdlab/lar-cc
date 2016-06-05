@@ -14,55 +14,19 @@ def triangle2quad(vdict):
 		return tuple(sorted([vdict[coords] for coords in quad]))
 	return triangle2quad0
 
-def larCuboidsFacets(cells,dim=2):
-   n = int(2**(dim-1))
-   facets = []
+def larCuboidsFacets(cells,dim=3):
+   n,out = int(2**(dim-1)),[]
    for cell in cells:
+      facets = []
       coords = [AR([V[v],v]) for v in cell] # decorate coords with vertex index
       doubleFacets = [sorted(coords,key=(lambda x: x[k])) for k in range(dim)]
       facets += AA(AA(LAST))(CAT([[pair[:n],pair[n:]] for pair in doubleFacets]))
-   return sorted(set(AA(tuple)(facets))) # remove duplicates
+      out += CAT([[tuple(face[:n/2]),tuple(face[n/2:])] for face in facets if face!=[]])
+   return sorted(set(out)) # remove duplicates
 t1 = time.clock()
 _=larCuboidsFacets(FV)
 t2 = time.clock()
 print "method 0 =", t2-t1
-
-def larCuboidsFacets(FV):
-	triplesOfCoords = [[V[v] for v in quad] for quad in FV]
-	maxmins = AA(COMP([ CONS([ AA(min),AA(max) ]),TRANS ]))(triplesOfCoords)
-	def edge2verts(args): 
-		coords1,coords2 = args
-		return sorted([vdict[coords1],vdict[coords2]])
-	edges = set()
-	for (x,y,z),(X,Y,Z) in maxmins:
-		if x==X: edges = edges.union(AA(tuple)(AA(edge2verts)( 
-			[((x,y,z),(x,Y,z)),((x,Y,z),(x,Y,Z)),((x,Y,Z), (x,y,Z)),((x,y,Z),(x,y,z))])))
-		elif y==Y: edges = edges.union(AA(tuple)(AA(edge2verts)( 
-			[((x,y,z),(X,y,z)),((X,y,z),(X,y,Z)),((X,y,Z), (x,y,Z)),((x,y,Z),(x,y,z))])))
-		elif z==Z: edges = edges.union(AA(tuple)(AA(edge2verts)( 
-			[((x,y,z),(X,y,z)),((X,y,z),(X,Y,z)),((X,Y,z), (x,Y,z)),((x,Y,z),(x,y,z))])))
-	return sorted(edges)
-t1 = time.clock()
-_=larCuboidsFacets(FV)
-t2 = time.clock()
-print "method 1 =", t2-t1
-
-def larCuboidsFacets(FV):
-	triplesOfCoords = [[V[v] for v in quad] for quad in FV]
-	maxmins = AA(COMP([ CONS([ AA(min),AA(max) ]),TRANS ]))(triplesOfCoords)
-	out = set(CAT([AA(tuple)(AA(edge2verts)( 
-		[((x,y,z),(x,Y,z)),((x,Y,z),(x,Y,Z)),((x,Y,Z), (x,y,Z)),((x,y,Z),(x,y,z))]))
-	if x==X else AA(tuple)(AA(edge2verts)( 
-		[((x,y,z),(X,y,z)),((X,y,z),(X,y,Z)),((X,y,Z), (x,y,Z)),((x,y,Z),(x,y,z))]))
-	if y==Y else AA(tuple)(AA(edge2verts)( 
-		[((x,y,z),(X,y,z)),((X,y,z),(X,Y,z)),((X,Y,z), (x,Y,z)),((x,Y,z),(x,y,z))]))
-	for (x,y,z),(X,Y,Z) in maxmins]))
-	return sorted(out)
-t1 = time.clock()
-_=larCuboidsFacets(FV)
-t2 = time.clock()
-print "method 2 =", t2-t1
-
 
 FV = list(set(AA(triangle2quad(vdict))(FV)))
 VIEW(STRUCT(MKPOLS((V,FV))))
