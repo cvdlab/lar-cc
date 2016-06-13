@@ -1,7 +1,8 @@
 from larlib import *
 %run out_cl_alberto.lar
+
 t1 = time.clock()
-FV = [[v-1 for v in f] for f in FV if not all([v<=8 for v in f])]
+FV = [[v-1 for v in f] for f in FV]
 vdict = {tuple(v):k for k,v in enumerate(V)}
 t2 = time.clock()
 print "\n> vertex dictionary: time =",t2-t1
@@ -24,7 +25,8 @@ if __name__=="__main__":
 	FV = list(set(AA(triangle2quad(vdict))(FV)))
 	t2 = time.clock()
 	print "\n> transformation to quads: time =",t2-t1
-	VIEW(STRUCT(MKPOLS((V,FV))))
+
+VIEW(STRUCT(MKPOLS((V,FV))))
 
 #
 # Computation of edges of quads
@@ -46,6 +48,7 @@ if __name__=="__main__":
 	VV = [[u for e in edges for u in EV[e] if u!=k] for k,edges in enumerate(VE)]
 	t2 = time.clock()
 	print "\n> Computation of topological relations: time =",t2-t1
+
 	VIEW(STRUCT(MKPOLS((V,EV))))
 
 #
@@ -69,12 +72,20 @@ if __name__=="__main__":
 #
 # Example of brick boundary discovery 
 #
-assert AA(max)(TRANS(V)) == [261, 299, 50]
+max_x,max_y,max_z = AA(max)(TRANS(V))
+min_x,min_y,min_z = AA(min)(TRANS(V))
 
 #
 # Initialisation of boundary cycle BF (on brick face) 
 #
-BF = set([k for k,f in enumerate(FV) if all([V[v][2]==50 for v in f])])
+BF = set([k for k,f in enumerate(FV) if 
+	all([V[v][0]==max_x for v in f]) or
+	all([V[v][1]==max_y for v in f]) or
+	all([V[v][2]==max_z for v in f]) or
+	all([V[v][0]==min_x for v in f]) or
+	all([V[v][1]==min_y for v in f]) or
+	all([V[v][2]==min_z for v in f])
+	])
 VIEW(SKEL_1(STRUCT(MKPOLS((V,[FV[k] for k in BF ])))))
 
 #
@@ -83,9 +94,9 @@ VIEW(SKEL_1(STRUCT(MKPOLS((V,[FV[k] for k in BF ])))))
 def boundaryCycles(BF,FV,EV,csr_mat):
 	f_col = coo_matrix(([1]*len(BF),(list(BF),[0]*len(BF))),shape=(len(FV),1),dtype='b').tocsr()
 	e_col = csr_mat * f_col
-	edges = [e for e in e_col.nonzero()[0].tolist() if e_col[e,0]==1 ]  
-	delta_edges = edges
-	for i in range(50):
+	edgeStrata = [[e for e in e_col.nonzero()[0].tolist() if e_col[e,0]==1 ]]
+	delta_edges = edgeStrata[0]
+	for i in range(100):
 		e_row = coo_matrix(( [1]*len(delta_edges), ([0]*len(delta_edges), delta_edges) ),
 					shape=(1,len(EV)), dtype='b').tocsr()
 		f_row = e_row * csr_mat 
@@ -94,12 +105,12 @@ def boundaryCycles(BF,FV,EV,csr_mat):
 		f_col = coo_matrix(([1]*len(BF),(list(BF),[0]*len(BF))),shape=(len(FV),1),dtype='b').tocsr()
 		e_col = csr_mat * f_col
 		delta_edges = [ e for e in e_col.nonzero()[0].tolist() if e_col[e,0]==1 ]
-		if i%10 == 9: edges += delta_edges
-	return edges,BF
+		if i%10 == 9: edgeStrata += [delta_edges]
+	return edgeStrata,BF
 
 if __name__=="__main__":
 	t1 = time.clock()
-	edges,BF = boundaryCycles(BF,FV,EV,csr_mat)
+	edgeStrata,BF = boundaryCycles(BF,FV,EV,csr_mat)
 	t2 = time.clock()
 	print "\n> Computation of boundary cycles: time =",t2-t1
 
@@ -123,7 +134,18 @@ if __name__=="__main__":
 # Visualisation of set of cycles and partial surfaces 
 #
 if __name__=="__main__":
-	VIEW(STRUCT(MKPOLS((W,[EV[e] for e in edges]))))
+	VIEW(STRUCT(MKPOLS((V,[EV[e] for e in CAT(edgeStrata)]))))
+	
+	colors = [CYAN,MAGENTA,WHITE,RED,YELLOW,GREEN,GRAY,ORANGE,BLACK,BLUE,PURPLE,BROWN]
+	VIEW(STRUCT([COLOR(colors[k%12])(STRUCT(MKPOLS((V,[EV[e] for e in curve])))) 
+		for k,curve in enumerate(edgeStrata)]))
+		
+	layers = [COLOR(colors[k%12])(STRUCT(MKPOLS((V,[EV[e] for e in curve])))) 
+		for k,curve in enumerate(edgeStrata)]
+			
+	for h in range(1,len(layers)): VIEW(STRUCT(layers[:h]))
+		
+		
 	VIEW(STRUCT(MKPOLS((W,[FV[f] for f in BF]))))
 
 #
@@ -131,5 +153,47 @@ if __name__=="__main__":
 #
 if __name__=="__main__":
 	TV = CAT([[(FV[f][0],FV[f][1],FV[f][2]),(FV[f][2],FV[f][1],FV[f][3])]  for f in BF])
-	VIEW(STRUCT(MKPOLS((V,TV))))
+	VIEW(STRUCT(MKPOLS((W,TV))))
+
+#
+# Simplification of stratified surface
+#
+
+vcycleStrata = [makeCycles((V,[EV[e] for e in edgeStratum]))[0] for edgeStratum in edgeStrata]
+simpleVertexCycles = [[[v for h,v in enumerate(vcycle) if h%10==0]+[vcycle[0]] 
+	for k,vcycle in enumerate(vcycleStratum) if k%2==0] 
+		for vcycleStratum in vcycleStrata]
+
+simpleVertexCycles = [[cycle for cycle in level if cycle!=[1,1]] for level  in simpleVertexCycles]
+
+VIEW(STRUCT([ COLOR(colors[k%12])( STRUCT([ POLYLINE([V[v] for v in polyline ]) 
+	for polyline in level ])) for k,level in enumerate(simpleVertexCycles)]))
+
+oldEdges = [CAT([[ (u,v) for u,v in  zip(polyline[:-1],polyline[1:])+[(polyline[-1],polyline[0])]] 
+	for polyline in level if len(polyline)>2]) for level in simpleVertexCycles]
+
+vertsPerLevel = AA(CAT)(simpleVertexCycles)
+vertsPerLevel = AA(sorted)((AA(set)(vertsPerLevel)))
+trees = [spatial.KDTree(AA(np.array)([V[v] for v in vlevel]))
+	for vlevel in vertsPerLevel]
+
+stripes = zip(trees[:-1],trees[1:])
+newEdges = []
+for k,(tree1,tree2) in enumerate(stripes):
+
+	nearest = tree1.query(tree2.data)[1]
+	verts1 = vertsPerLevel[k+1]
+	verts2 = [vertsPerLevel[k][h] for h in nearest]
+	newEdges += [AA(sorted)(zip(verts1,verts2))]
+
+	nearest = tree2.query(tree1.data)[1]
+	verts1 = vertsPerLevel[k]
+	verts2 = [vertsPerLevel[k+1][h] for h in nearest]
+	newEdges += [AA(sorted)(zip(verts1,verts2))]
+	
+newEdges = sorted(set(CAT(newEdges)))
+
+VIEW(STRUCT(AA(POLYLINE)([[V[u],V[v]] for u,v in newEdges+CAT(oldEdges)])))
+
+
 
