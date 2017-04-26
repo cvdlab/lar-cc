@@ -1,7 +1,7 @@
 """ LAR of random line arrangement """
 from larlib import *
 
-lines = randomLines(300,0.2)
+lines = randomLines(30,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 intersectionPoints,params,frags = lineIntersection(lines)

@@ -182,26 +182,6 @@ def lineIntersection(lineArray):
     params = AA(COMP([sorted,list,set,tuple,eval,vcode(4)]))(pointStorage.values())      
     return intersectionPoints,params,frags  ### GOOD: 1, WRONG: 2 !!!
 
-def lineIntersection(lineArray):
-    lineArray = [line for line in lineArray if len(line)>1]
-    from collections import defaultdict
-    pointStorage = defaultdict(list)
-    for line in lineArray:
-        p1,p2 = line
-        key = '['+ vcode(4)(p1) +','+ vcode(4)(p2) +']'
-        pointStorage[key] = []
-    #boxes = containment2DBoxes(lineArray)
-    #buckets = boxBuckets(boxes)
-    boxes = [CAT(CONS([MIN([1,2]),MAX([1,2])])(STRUCT(AA(POLYLINE)(lineArray))))]
-    buckets = range(len(lineArray))
-    intersectionPoints = set()
-    for h,bucket in enumerate(buckets):
-        pointBucket = lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage)
-        intersectionPoints = intersectionPoints.union(AA(tuple)(pointBucket))
-    frags = AA(eval)(pointStorage.keys())
-    params = AA(COMP([sorted,list,set,tuple,eval,vcode(4)]))(pointStorage.values())      
-    return intersectionPoints,params,frags  ### GOOD: 1, WRONG: 2 !!!
-
 """ Create the LAR of fragmented lines """
 from scipy import spatial
 

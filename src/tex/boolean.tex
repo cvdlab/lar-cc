@@ -414,7 +414,7 @@ def spacePartition(V,FV,EV, parts):
     FE = larcc.crossRelation(FV,EV,VV)
     submodel0 = submodel(V,FV,EV)
     out = []
-
+    def isClose(a,b): return abs(a-b)<10**-5
     
     """ input: face index f; candidate incident faces F[f]; """
     for f,F in enumerate(parts):
@@ -448,14 +448,14 @@ def spacePartition(V,FV,EV, parts):
         
         """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
         
-        edges2D = [[w1,w2] for w1,w2 in wires if (isclose(0,sW[w1][2]) and isclose(0,sW[w2][2]))]
+        edges2D = [[w1,w2] for w1,w2 in wires if (isClose(0,sW[w1][2]) and isClose(0,sW[w2][2]))]
         lines2D = [[sW[u][:-1],sW[v][:-1]] for u,v in edges2D] + computeCrossingLines(
                     edges,sW,sFW,sEW,sFE)
         
-        #VIEW(STRUCT(AA(POLYLINE)(lines2D) ))#+ [red]))
         print "\nlines2D =",lines2D
+        #VIEW(STRUCT(AA(POLYLINE)(lines2D) ))#+ [red]))
         
-        u,eu = bruteForceIntersect(lines2D)
+        u,fu,eu,fus = inters.larFromLines(lines2D)
         u,polygons,eu = triangulation.larPair2Triple((u,eu))
         fu = AA(list)(AA(set)(AA(CAT)(polygons)))
         
@@ -478,22 +478,63 @@ def spacePartition(V,FV,EV, parts):
 @D Compute face intersections with z=0
 @{""" Compute face intersections with z=0 """
 def computeCrossingLines(edges,sW,sFW,sEW,sFE):
-	crossEdges = [e for e in edges if not (isclose(0,sW[sEW[e][0]][2]) or isclose(0,sW[sEW[e][1]][2]))]
+	print "edges =",edges
+	print "sW =",sW
+	print "sFW =",sFW
+	print "sEW =",sEW
+	print "sFE =",sFE
+	crossEdges = []
+	def isClose(a,b): return abs(a-b)<10**-5
+	for e in edges:
+		z1,z2 = sW[sEW[e][0]][2], sW[sEW[e][1]][2]
+		cross = False
+		if isClose(z1,z2):	cross=False
+		elif z1*z2 < 0:		cross=True
+		elif isClose(0.,z1*z2): cross=True
+		else: cross = False
+		if cross: crossEdges += [e]	
 	if crossEdges != []:
 		#VIEW(STRUCT(MKPOLS((sW,[sEW[e] for e in crossEdges]))))
 		sEF = invertRelation(sFE)
 		crossFaces = list(set(CAT([sEF[e] for e in crossEdges])))
-		#VIEW(STRUCT(MKPOLS((sW,[sFW[f] for f in crossFaces]+[sEW[e] for e in edges]))))
-		edgeCrossPairs = [list(set(crossEdges).intersection(sFE[f])) for f in crossFaces]
-		crossingVertPairs = [[sEW[e1],sEW[e2]] for e1,e2 in edgeCrossPairs]
-		zpairs = [[[sW[u][2],sW[v][2]],[sW[w][2],sW[z][2]]] for (u,v),(w,z) in crossingVertPairs]
-		params = [[[zs[1]/(zs[1]-zs[0])]  for zs in edgepair] for edgepair in zpairs]
-		ppairs = [[[sW[u][:2],sW[v][:2]],[sW[w][:2],sW[z][:2]]] for (u,v),(w,z) in crossingVertPairs]
+		print "crossFaces =",crossFaces
+		print "crossEdges =",crossEdges
+		#VIEW(STRUCT(MKPOLS((sW,[sFW[f] for f in crossFaces]+[sEW[e] for e in crossEdges]))))
+		#VIEW(STRUCT(MKPOLS((sW,[sEW[e] for e in crossEdges]))))
+		print "[sFE[f] for f in crossFaces] =", [sFE[f] for f in crossFaces]
+		edgeCrossSets = [list(set(crossEdges).intersection(sFE[f])) for f in crossFaces]		
+		print "edgeCrossSets =",edgeCrossSets
+		
+		def points2lines(pointSet):
+			#	preconditions:
+			#	1.	len(pointSet) > 2;
+			#	2.	2D points in pointSet are aligned.
+			pointSet = list(set(AA(tuple)(AA(eval)(AA(vcode(6))(pointSet)))))
+			# postcondition: pointSet has even length
+			if len(pointSet) == 2: return [pointSet]
+			lines = []
+			p1,p2 = pointSet[:2]
+			# TODO: multiple lines
+			return lines
 
-		thePoints = [[(a[0]*mat(p)+(1-a[0])*mat(q)).tolist()[0] for a,(p,q) in zip(par,points)] 
-					for par,points in zip(params,ppairs)]
-		crossingLines = [AA(COMP([eval,vcode(4)]))(line) for line in thePoints]
-		#VIEW(STRUCT(MKPOLS((sW,[sFW[f] for f in crossFaces]+[sEW[e] for e in edges]))+AA(POLYLINE)(crossingLines)))
+		pointSets2d = []
+		for Set in edgeCrossSets:
+			pts2d = []
+			for edge in Set:
+				v1,v2 = [sW[v] for v in sEW[edge]]
+				[x1,y1,z1], [x2,y2,z2] = v1, v2
+				u = z1/(z1-z2)
+				p2d = x1 + u*(x2-x1), y1 + u*(y2-y1)
+				pts2d += [p2d]
+			pointSets2d += [pts2d]
+
+		crossingLines = []
+		for pointSet in pointSets2d:
+			if len(pointSet)==2:
+				crossingLines += [pointSet]
+			else:
+				crossingLines += points2lines(pointSet)
+
 		return crossingLines
 	else: return []
 @}
@@ -789,9 +830,10 @@ passed through the \texttt{orientedEdges} variable. We can formalize the problem
 %-------------------------------------------------------------------------------
 @D Cycles orientation
 @{""" Cycles orientation """
+import triangulation
 def cyclesOrient(pcycles,fcycle,EV):
     if set(AA(ABS)(pcycles)).difference(fcycle)==set(): return []
-    ofcycle,_ = boundaryCycles(fcycle,EV) # oriented 
+    ofcycle,_ = triangulation.boundaryCycles(fcycle,EV) # oriented 
     ofcycle = ofcycle[0] # oriented 
     if type(pcycles[0])==list: opcycle = CAT(pcycles)
     else: opcycle = pcycles
@@ -828,7 +870,9 @@ The test for completeness of the extraction is done by computing the current bou
 %-------------------------------------------------------------------------------
 @D Cells from $(d-1)$-dimensional LAR model
 @{""" Cells from $(d-1)$-dimensional LAR model """
+
 def facesFromComponents(model,FE,EF_angle):
+    import triangulation
 
     accumulated = []
     def viewStep (CF,CV,CE,COE,accumulated):
@@ -843,7 +887,7 @@ def facesFromComponents(model,FE,EF_angle):
     V,FV,EV = model
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
     face = 0
-    boundaryLoop,_ = boundaryCycles(FE[face],EV)
+    boundaryLoop,_ = triangulation.boundaryCycles(FE[face],EV)
     boundaryLoop = boundaryLoop[0]
     firstEdge = boundaryLoop[0]
     #import pdb; pdb.set_trace()
@@ -863,7 +907,7 @@ def facesFromComponents(model,FE,EF_angle):
         face, edge = startCell(visitedCell,FE,EV)
         print "face, edge =",face, edge
         if face == -1: break
-        boundaryLoop,_ = boundaryCycles(FE[face],EV)
+        boundaryLoop,_ = triangulation.boundaryCycles(FE[face],EV)
         boundaryLoop = boundaryLoop[0]
         if edge not in boundaryLoop:
             boundaryLoop = reverseOrientation(boundaryLoop)
@@ -912,6 +956,8 @@ In particular, the orientation of the 2-face is equivalent to the embedded orien
 %-------------------------------------------------------------------------------
 @D Face orientations storage
 @{""" Face orientations storage """
+import triangulation
+
 def reverseOrientation(chain):
     return REVERSE([-cell for cell in chain])
 
@@ -920,7 +966,7 @@ def faceOrientation(boundaryLoop,face,FE,EV,cf):
     if theBoundary.intersection(FE[face])==set() and theBoundary.difference(FE[face])!=set(): ##BOH!!
         coboundaryFaces = [f for f in cf if set(FE[f]).intersection(theBoundary)!=set()]
         face = coboundaryFaces[0]            
-    faceLoop,_ = boundaryCycles(FE[face],EV)
+    faceLoop,_ = triangulation.boundaryCycles(FE[face],EV)
     faceLoop = faceLoop[0]
     commonEdges = set(faceLoop).intersection(boundaryLoop)
     if commonEdges == set() or commonEdges == {0}: 
@@ -989,7 +1035,7 @@ def doubleCheckFaceBoundaries(FE,V,FV,EV):
 %-------------------------------------------------------------------------------
 @D Main procedure of arrangement partitioning
 @{""" Main procedure of arrangement partitioning """
-import inters
+import inters,triangulation
 
 @< Double check the faces boundaries made of edges @>
 
@@ -1008,7 +1054,6 @@ def thePartition(W,FW,EW):
     FE = crossRelation(FZ,EZ,ZZ) ## to be double checked !!
     EF_angle, ET,TV,FT = faceSlopeOrdering(model,FE)
     
-    V,CV,FV,EV,CF,CE,COE = cellsFromComponents((Z,FZ,EZ),FE,EF_angle, ET,TV,FT)
     V,CV,FV,EV,CF,CE,COE = facesFromComponents((Z,FZ,EZ),FE,EF_angle)
     return V,CV,FV,EV,CF,CE,COE,FE
 @}
@@ -1216,6 +1261,7 @@ DEBUG = False
 @< Signed boundary operator for a general LAR 2-complex @>
 @< Get single solid cell @>
 @< Main procedure of arrangement partitioning @>
+@< First steps of the Merge algorithm @>
 @}
 %-------------------------------------------------------------------------------
     
@@ -2076,6 +2122,97 @@ def lar2boxes(model,qualifier=0):
     return boxes
 @}
 %-------------------------------------------------------------------------------
+
+
+\section{Boolean (Merge) procedure review}
+
+In this added section we like to store some testing material, added while performing a deep review of the code of this module, in order to rewrite the variadic \emph{Merge} of cellular complexes, according to paper~\cite{2017arXiv170400142P}.
+
+\paragraph{First steps of the Merge algorithm}
+Some functions for the computation of the sparse matrices of both the \emph{unsigned} and the \emph{signed} boundary operator $\partial_2$ are given here.
+%-------------------------------------------------------------------------------
+@D First steps of the Merge algorithm
+@{""" First steps of the Merge algorithm """    
+def partition(W,FW,EW):
+    quadArray = [[W[v] for v in face] for face in FW]
+    parts = boxBuckets3d(containmentBoxes(quadArray))
+    Z,FZ,EZ = spacePartition(W,FW,EW, parts)
+    Z,FZ,EZ = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
+    model = Z,FZ,EZ
+    return model
+
+def UBoundary2(EV,FV):
+	UB2 = (coo2Csr(brc2Coo(EV)) * coo2Csr(brc2Coo(FV)).T).tocoo()
+	data,i,j = TRANS([(1,i,j) for (d,i,j) in zip(UB2.data,UB2.row,UB2.col) if d==2])
+	return coo_matrix((data,(i,j))).tocsc()
+
+def SBoundary2(EV,FV):
+	SB_2 = UBoundary2(EV,FV)
+	for f in range(len(FV)):
+		ind = defaultdict(list)
+		chain_1 = list(SB_2[:,f].tocoo().row)
+		print f,chain_1
+		chain_0 = zeros((2,len(chain_1)),dtype=int)
+		for h,e in enumerate(chain_1):
+			v1 = EV[e][0]
+			v2 = EV[e][1]
+			chain_0[0,h] = v1
+			chain_0[1,h] = v2
+			ind[v1] += [h]
+			ind[v2] += [h]
+		print chain_0
+		# tracking of ordered 0-chains
+		k = 0
+		while True:
+			v1,v2 = chain_0[:,k]
+			k = set(ind[v2]).difference([k]).pop()
+			if k == 0: break
+			if chain_0[0,k] == v2:
+				v1,v2 = chain_0[:,k]
+			else:
+				chain_0[0,k],chain_0[1,k] = chain_0[1,k],chain_0[0,k]
+		# TODO: 0-chains with multiple cycles ...
+		print chain_0
+		# sign computation
+		sign = []
+		for h,e in enumerate(chain_1):
+			v1,v2 = chain_0[:,h]
+			if v1 < v2:
+				sign += [1]
+			else:
+				sign += [-1]
+		print sign,"\n"
+		# update SB_2
+		for h,e in enumerate(chain_1):
+			SB_2[e,f] = sign[h]
+	return SB_2
+@}
+%-------------------------------------------------------------------------------
+
+\paragraph{Test example: ``A Gentle introduction"}
+%-------------------------------------------------------------------------------
+@O test/py/boolean/test00.py
+@{""" A Gentle introduction to first steps of 3D Merge algorithm """
+from larlib import *
+
+V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+#cubeGrids = Struct(2*[cubeGrid,t(.5,.0,.5),r(0,0,PI/6)])
+cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
+
+V,FV,EV = struct2lar(cubeGrids)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
+W,FW,EW = partition(V,FV,EV)
+
+WW = AA(LIST)(range(len(W)))
+submodel = STRUCT(MKPOLS((W,EW)))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6)) 
+
+SB_2 = SBoundary2(EW,FW)
+SB_2.todense()
+@}
+%-------------------------------------------------------------------------------
+
 
 \bibliographystyle{amsalpha}
 \bibliography{boolean}

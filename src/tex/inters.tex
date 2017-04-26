@@ -148,7 +148,6 @@ def boxBuckets(boxes):
         finalBuckets = list(set(AA(tuple)(finalBuckets)))
     parts = geomPartitionate(boxes,finalBuckets)
     return AA(sorted)(parts)
-    #return finalBuckets
 @}
 %-------------------------------------------------------------------------------
 
@@ -379,6 +378,7 @@ def DFV_visit( VV,out,count,visited,parent,d,low,stack,u ):
             DFV_visit( VV,out,count,visited,parent,d,low,stack, v )
             if low[v] >= d[u]:
                 out += [outputComp(stack,u,v)]
+                print("out =",out)
             low[u] = min( low[u], low[v] )
         else:
             if not (parent[u]==v) and (d[v] < d[u]):
@@ -437,9 +437,11 @@ after being sorted on their angles $\alpha$, and associated with the angle diffe
 %-------------------------------------------------------------------------------
 @D Slope of edges
 @{""" Circular ordering of edges around vertices """
+from larcc import *
+
 def edgeSlopeOrdering(model):
     V,EV = model
-    VE,VE_angle = invertRelation(EV),[]
+    VE,VE_angle = larcc.invertRelation(EV),[]
     for v,ve in enumerate(VE):
         ve_angle = []
         if ve != []:
@@ -963,7 +965,7 @@ VIEW(STRUCT(sets))
 @{""" LAR of random line arrangement """
 from larlib import *
 
-lines = randomLines(300,0.2)
+lines = randomLines(30,0.2)
 VIEW(STRUCT(AA(POLYLINE)(lines)))
 
 intersectionPoints,params,frags = lineIntersection(lines)

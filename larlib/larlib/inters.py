@@ -116,7 +116,6 @@ def boxBuckets(boxes):
         finalBuckets = list(set(AA(tuple)(finalBuckets)))
     parts = geomPartitionate(boxes,finalBuckets)
     return AA(sorted)(parts)
-    #return finalBuckets
 
 """ Intersection of two line segments """
 def segmentIntersect(boxes,lineArray,pointStorage):
@@ -174,26 +173,6 @@ def lineIntersection(lineArray):
         pointStorage[key] = []
     boxes = containment2DBoxes(lineArray)
     buckets = boxBuckets(boxes)
-    intersectionPoints = set()
-    for h,bucket in enumerate(buckets):
-        pointBucket = lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage)
-        intersectionPoints = intersectionPoints.union(AA(tuple)(pointBucket))
-    frags = AA(eval)(pointStorage.keys())
-    params = AA(COMP([sorted,list,set,tuple,eval,vcode(4)]))(pointStorage.values())      
-    return intersectionPoints,params,frags  ### GOOD: 1, WRONG: 2 !!!
-
-def lineIntersection(lineArray):
-    lineArray = [line for line in lineArray if len(line)>1]
-    from collections import defaultdict
-    pointStorage = defaultdict(list)
-    for line in lineArray:
-        p1,p2 = line
-        key = '['+ vcode(4)(p1) +','+ vcode(4)(p2) +']'
-        pointStorage[key] = []
-    #boxes = containment2DBoxes(lineArray)
-    #buckets = boxBuckets(boxes)
-    boxes = [CAT(CONS([MIN([1,2]),MAX([1,2])])(STRUCT(AA(POLYLINE)(lineArray))))]
-    buckets = range(len(lineArray))
     intersectionPoints = set()
     for h,bucket in enumerate(buckets):
         pointBucket = lineBucketIntersect(boxes,lineArray, h,bucket, pointStorage)
@@ -282,6 +261,7 @@ def DFV_visit( VV,out,count,visited,parent,d,low,stack,u ):
             DFV_visit( VV,out,count,visited,parent,d,low,stack, v )
             if low[v] >= d[u]:
                 out += [outputComp(stack,u,v)]
+                print("out =",out)
             low[u] = min( low[u], low[v] )
         else:
             if not (parent[u]==v) and (d[v] < d[u]):
@@ -299,9 +279,11 @@ def outputComp(stack,u,v):
 
 
 """ Circular ordering of edges around vertices """
+from larcc import *
+
 def edgeSlopeOrdering(model):
     V,EV = model
-    VE,VE_angle = invertRelation(EV),[]
+    VE,VE_angle = larcc.invertRelation(EV),[]
     for v,ve in enumerate(VE):
         ve_angle = []
         if ve != []:

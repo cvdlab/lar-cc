@@ -230,7 +230,8 @@ class Struct:
         if data==None or data==[]:
             self.body = []
         else:
-            self.body = [item for item in data if item != None]
+            #self.body = [item for item in data if item != None]
+            self.body = [item for item in data]
             self.box = box(self) 
             self.dim = len(self.box[0])
         if name != None: 

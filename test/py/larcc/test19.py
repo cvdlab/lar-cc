@@ -23,7 +23,7 @@ submodel = mkSignedEdges((V,EV))
 VIEW(submodel)
 VIEW(larModelNumbering(scalx=1,scaly=1,scalz=1)(V,[VV,EV,FV],submodel,2))
 
-orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])
+orientedBoundary = larSignedBoundary2Cells(V,FV,EV)(range(len(FV)))
 cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]
 submodel = mkSignedEdges((V,cells))
 VIEW(submodel)

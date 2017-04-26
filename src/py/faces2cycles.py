@@ -93,7 +93,6 @@ def larQuadEdges(cells,dim=3):
 if __name__=="__main__":
 	t1 = time.clock()
 	EV = larQuadEdges(FV)
-	edict = {tuple(e):k for k,e in enumerate(EV)}
 	VE = invertRelation(EV)
 	VV = [[u for e in edges for u in EV[e] if u!=k] for k,edges in enumerate(VE)]
 	t2 = time.clock()
@@ -106,7 +105,7 @@ if __name__=="__main__":
 #
 def larBoundary(FV,EV):
 	m,n = len(FV),len(EV)
-	#cooEF = (csrCreate(EV)*csrCreate(FV).T).tocoo()
+	edict = {tuple(e):k for k,e in enumerate(EV)}
 	data = 2*[1]*n
 	row = []; [row.extend([ edict[(f[i],f[j])] for i in range(4) for j in range(i+1,4) 
 			if (f[i],f[j]) in edict ]) for f in FV]

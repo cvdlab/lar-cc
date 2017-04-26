@@ -1357,7 +1357,7 @@ An example of drawing of oriented edges is given in \texttt{test/py/larcc/test11
 \mbox{}\verb@VIEW(submodel)@\\
 \mbox{}\verb@VIEW(larModelNumbering(scalx=1,scaly=1,scalz=1)(V,[VV,EV,FV],submodel,2))@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@orientedBoundary = signedCellularBoundaryCells(V,[VV,EV,FV])@\\
+\mbox{}\verb@orientedBoundary = larSignedBoundary2Cells(V,FV,EV)(range(len(FV)))@\\
 \mbox{}\verb@cells = [EV[e] if sign==1 else REVERSE(EV[e]) for (sign,e) in zip(*orientedBoundary)]@\\
 \mbox{}\verb@submodel = mkSignedEdges((V,cells))@\\
 \mbox{}\verb@VIEW(submodel)@\\
@@ -1825,8 +1825,8 @@ In the script below it is necessary to guarantee that both \texttt{csrFV} and \t
 
 \subsubsection{Oriented operators}
 
-Two $d$-cells are said \emph{coherently oriented} when their common $(d-1)$-facet has opposite orientations with respect to the two cells. When the boundary of an orientable solid partitionates its affine hull in two subsets corresponding to the \emph{interior} and the \emph{exterior} of the solid, then the boundary cells can be coherently oriented. This task is performed by the function \texttt{signedBoundaryCells} and \texttt{signedCellularBoundaryCells} in the following scripts.
-The sparse matricial structures returned by the functions \texttt{signedSimplicialBoundary} and \texttt{signedCellularBoundary} take values in the Abelian group $\{-1,0,1\}$. We call them \emph{signed} matrices, and call \emph{signed} operators the corresponding boundary and coboundary.
+Two $d$-cells are said \emph{coherently oriented} when their common $(d-1)$-facet has opposite orientations with respect to the two cells. When the boundary of an orientable solid partitionates its affine hull in two subsets corresponding to the \emph{interior} and the \emph{exterior} of the solid, then the boundary cells can be coherently oriented. This task is performed by the function \texttt{larSignedBoundary2} and \texttt{larSignedBoundary2Cells} in the following scripts.
+The sparse matricial structures returned by the functions \texttt{signedSimplicialBoundary} and \texttt{larSignedBoundary2} take values in the Abelian group $\{-1,0,1\}$. We call them \emph{signed} matrices, and call \emph{signed} operators the corresponding boundary and coboundary.
 
 
 \paragraph{Signed boundary matrix for simplicial complexes}
@@ -2023,7 +2023,7 @@ The \texttt{larCuboids} function, when applied to a \texttt{shape} parameter and
 \mbox{}\verb@VIEW(submodel)@\\
 \mbox{}\verb@VIEW(larModelNumbering(scalx=1,scaly=1,scalz=1)(V,bases,submodel,1))@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@orientedBoundary = signedCellularBoundaryCells(V,bases)@\\
+\mbox{}\verb@orientedBoundary = larSignedBoundary2Cells(V,FV,EV)(range(len(FV)))@\\
 \mbox{}\verb@FV = [EV[e] if sign==1 else REVERSE(EV[e])  for (sign,e) in zip(*orientedBoundary)]@\\
 \mbox{}\verb@submodel = mkSignedEdges((V,FV))@\\
 \mbox{}\verb@VIEW(submodel)@\\
