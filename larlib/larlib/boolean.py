@@ -970,3 +970,82 @@ def SBoundary2(EV,FV):
          SB_2[e,f] = sign[h]
    return SB_2
 
+""" Next steps of the Merge algorithm """    
+def chain2coords(chain,n):
+   data,i,j = TRANS([(code,cell,0) for (cell,code) in chain])
+   coordVect = coo_matrix((data,(i,j)),(n,1))
+   return coordVect
+   
+def coords2chainDict(coords):
+   return dict(coords2chain(coords))
+
+def next(cyclicPerm):
+   def next1(pivot):
+      ind = cyclicPerm.index(pivot)
+      nextIndex = (ind + 1) % len(cyclicPerm)
+      return cyclicPerm[nextIndex]
+   return next1
+
+def prev(cyclicPerm):
+   def prev1(pivot):
+      ind = cyclicPerm.index(pivot)
+      nextIndex = (ind - 1) % len(cyclicPerm)
+      return cyclicPerm[nextIndex]
+   return prev1
+
+def SBoundary3(W,EW,FW):
+   SB_2 = SBoundary2(EW,FW)
+   D,I,J = [],[],[]
+   m,n = SB_2.shape
+   marks = [0 for k in range(n)]
+   # permutation subgroups of edges
+   FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]
+   EF_angle, ET,TW,FT = faceSlopeOrdering((W,FW,EW),FE)
+   cellCount = -1
+
+   while sum(marks) < 2*n:
+      for f in range(len(marks)):
+         if marks[f] < 2:  break 
+      
+      # start 2-chain extraction from f root
+      if marks[f] == 0: c_2 = [(f,1)] 
+      elif marks[f] == 1: c_2 = [(f,-1)] 
+      Stripe_2 = coo_matrix(([],([],[])),(n,1))
+   
+      # computation of c_2 boundary
+      C_2 = chain2coords(c_2,n).tocsc() + Stripe_2
+      C_1 = SB_2 * C_2
+
+      while C_1.nnz != 0:  
+         stripe = dict()
+         # computation of coboundaries of c_2 boundary
+         dict_C_1 = coords2chainDict(C_1)
+         for cell,code in dict_C_1.items():
+            C1 = chain2coords([(cell,code)],m)
+            C2 = C1.T * SB_2
+            subgroup = list(C2.tocoo().col)
+            pivot = (set(subgroup).intersection(C_2.tocoo().row)).pop()
+            pivotcode = C_2[pivot,0]
+            if code == 1: 
+               supcell = next(EF_angle[cell])(pivot)
+            elif code == -1:
+               supcell = prev(EF_angle[cell])(pivot)
+            if SB_2[cell,supcell] == SB_2[cell,pivot] :
+               stripe[supcell] = -1 * pivotcode
+            else:
+               stripe[supcell] = 1 * pivotcode
+         Stripe_2 = chain2coords(stripe.items(),n).tocsc()
+         C_2 += Stripe_2
+         C_1 = SB_2 * C_2
+      
+      cellCount += 1
+      facets = list(C_2.tocoo().row)
+      coeffs = list(C_2.tocoo().data)
+      cells = [cellCount for k in range(len(coeffs))]
+      for facet in facets: marks[facet] += 1
+      D += coeffs
+      I += facets
+      J += cells
+
+   return coo_matrix((D,(I,J)),dtype=int).tocsc()
+

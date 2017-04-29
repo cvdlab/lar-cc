@@ -1242,6 +1242,7 @@ DEBUG = False
 @< Get single solid cell @>
 @< Main procedure of arrangement partitioning @>
 @< First steps of the Merge algorithm @>
+@< Next steps of the Merge algorithm @>
 @}
 %-------------------------------------------------------------------------------
     
@@ -2108,6 +2109,8 @@ def lar2boxes(model,qualifier=0):
 
 In this added section we like to store some testing material, added while performing a deep review of the code of this module, in order to rewrite the variadic \emph{Merge} of cellular complexes, according to paper~\cite{2017arXiv170400142P}.
 
+\subsection{First steps of the Merge algorithm}
+
 \paragraph{First steps of the Merge algorithm}
 Some functions for the computation of the sparse matrices of both the \emph{unsigned} and the \emph{signed} boundary operator $\partial_2$ are given here.
 %-------------------------------------------------------------------------------
@@ -2165,10 +2168,99 @@ def SBoundary2(EV,FV):
 @}
 %-------------------------------------------------------------------------------
 
-\paragraph{Test example: ``A Gentle introduction"}
+\subsection{Next steps of the Merge algorithm}
+
+\paragraph{Next steps of the Merge algorithm}
+Some functions for the computation of the sparse matrix of the \emph{signed} boundary operator $\partial_3$ are given here. Of course its columns provide the (oriented) boundary representation of the 3-cells.
 %-------------------------------------------------------------------------------
-@O test/py/boolean/test00.py
-@{""" A Gentle introduction to first steps of 3D Merge algorithm """
+@D Next steps of the Merge algorithm
+@{""" Next steps of the Merge algorithm """    
+def chain2coords(chain,n):
+	data,i,j = TRANS([(code,cell,0) for (cell,code) in chain])
+	coordVect = coo_matrix((data,(i,j)),(n,1))
+	return coordVect
+	
+def coords2chainDict(coords):
+	return dict(coords2chain(coords))
+
+def next(cyclicPerm):
+	def next1(pivot):
+		ind = cyclicPerm.index(pivot)
+		nextIndex = (ind + 1) % len(cyclicPerm)
+		return cyclicPerm[nextIndex]
+	return next1
+
+def prev(cyclicPerm):
+	def prev1(pivot):
+		ind = cyclicPerm.index(pivot)
+		nextIndex = (ind - 1) % len(cyclicPerm)
+		return cyclicPerm[nextIndex]
+	return prev1
+
+def SBoundary3(W,EW,FW):
+	SB_2 = SBoundary2(EW,FW)
+	D,I,J = [],[],[]
+	m,n = SB_2.shape
+	marks = [0 for k in range(n)]
+	# permutation subgroups of edges
+	FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]
+	EF_angle, ET,TW,FT = faceSlopeOrdering((W,FW,EW),FE)
+	cellCount = -1
+
+	while sum(marks) < 2*n:
+		for f in range(len(marks)):
+			if marks[f] < 2:  break	
+		
+		# start 2-chain extraction from f root
+		if marks[f] == 0: c_2 = [(f,1)] 
+		elif marks[f] == 1: c_2 = [(f,-1)] 
+		Stripe_2 = coo_matrix(([],([],[])),(n,1))
+	
+		# computation of c_2 boundary
+		C_2 = chain2coords(c_2,n).tocsc() + Stripe_2
+		C_1 = SB_2 * C_2
+
+		while C_1.nnz != 0:	
+			stripe = dict()
+			# computation of coboundaries of c_2 boundary
+			dict_C_1 = coords2chainDict(C_1)
+			for cell,code in dict_C_1.items():
+				C1 = chain2coords([(cell,code)],m)
+				C2 = C1.T * SB_2
+				subgroup = list(C2.tocoo().col)
+				pivot = (set(subgroup).intersection(C_2.tocoo().row)).pop()
+				pivotcode = C_2[pivot,0]
+				if code == 1: 
+					supcell = next(EF_angle[cell])(pivot)
+				elif code == -1:
+					supcell = prev(EF_angle[cell])(pivot)
+				if SB_2[cell,supcell] == SB_2[cell,pivot] :
+					stripe[supcell] = -1 * pivotcode
+				else:
+					stripe[supcell] = 1 * pivotcode
+			Stripe_2 = chain2coords(stripe.items(),n).tocsc()
+			C_2 += Stripe_2
+			C_1 = SB_2 * C_2
+		
+		cellCount += 1
+		facets = list(C_2.tocoo().row)
+		coeffs = list(C_2.tocoo().data)
+		cells = [cellCount for k in range(len(coeffs))]
+		for facet in facets: marks[facet] += 1
+		D += coeffs
+		I += facets
+		J += cells
+
+	return coo_matrix((D,(I,J)),dtype=int).tocsc()
+@}
+%-------------------------------------------------------------------------------
+
+
+
+\paragraph{Test example: ``A Gentle introduction". Part 1.}
+%-------------------------------------------------------------------------------
+@O test/py/boolean/test00a.py
+@{""" A Gentle introduction to first steps of 3D Merge algorithm. Part 1. """
 from larlib import *
 
 V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
@@ -2186,6 +2278,40 @@ VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6))
 
 SB_2 = SBoundary2(EW,FW)
 SB_2.todense()
+@}
+%-------------------------------------------------------------------------------
+
+
+\paragraph{Test example: ``A Gentle introduction". Part 2.}
+%-------------------------------------------------------------------------------
+@O test/py/boolean/test00b.py
+@{""" A Gentle introduction to first steps of 3D Merge algorithm. Part 2. """
+from larlib import *
+
+V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
+#cubeGrids = Struct(2*[cubeGrid,t(.5,.0,.5),r(0,0,PI/6)])
+cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
+
+V,FV,EV = struct2lar(cubeGrids)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((V,FV))))
+W,FW,EW = partition(V,FV,EV)
+
+WW = AA(LIST)(range(len(W)))
+submodel = STRUCT(MKPOLS((W,EW)))
+VIEW(larModelNumbering(1,1,1)(W,[WW,EW,FW],submodel,0.6)) 
+
+SB_2 = SBoundary2(EW,FW)
+SB_2.todense()
+
+FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]
+triangleSet = boundaryTriangulation(W,FW,EW,FE)
+TW,FT = triangleIndices(triangleSet,W)
+VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,TW))))
+
+SB_3 = SBoundary3(W,EW,FW)
+print SB_3.todense()
+
 @}
 %-------------------------------------------------------------------------------
 
