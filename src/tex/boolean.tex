@@ -2174,14 +2174,16 @@ def SBoundary2(EV,FV):
 Some functions for the computation of the sparse matrix of the \emph{signed} boundary operator $\partial_3$ are given here. Of course its columns provide the (oriented) boundary representation of the 3-cells.
 %-------------------------------------------------------------------------------
 @D Next steps of the Merge algorithm
-@{""" Next steps of the Merge algorithm """    
+@{""" Next steps of the Merge algorithm """  
+import boundary
+  
 def chain2coords(chain,n):
 	data,i,j = TRANS([(code,cell,0) for (cell,code) in chain])
 	coordVect = coo_matrix((data,(i,j)),(n,1))
 	return coordVect
 	
 def coords2chainDict(coords):
-	return dict(coords2chain(coords))
+	return dict(boundary.coords2chain(coords))
 
 def next(cyclicPerm):
 	def next1(pivot):
@@ -2263,7 +2265,7 @@ def SBoundary3(W,EW,FW):
 @{""" A Gentle introduction to first steps of 3D Merge algorithm. Part 1. """
 from larlib import *
 
-V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
 #cubeGrids = Struct(2*[cubeGrid,t(.5,.0,.5),r(0,0,PI/6)])
 cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
@@ -2288,7 +2290,7 @@ SB_2.todense()
 @{""" A Gentle introduction to first steps of 3D Merge algorithm. Part 2. """
 from larlib import *
 
-V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
 #cubeGrids = Struct(2*[cubeGrid,t(.5,.0,.5),r(0,0,PI/6)])
 cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])

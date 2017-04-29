@@ -970,14 +970,16 @@ def SBoundary2(EV,FV):
          SB_2[e,f] = sign[h]
    return SB_2
 
-""" Next steps of the Merge algorithm """    
+""" Next steps of the Merge algorithm """  
+import boundary
+  
 def chain2coords(chain,n):
    data,i,j = TRANS([(code,cell,0) for (cell,code) in chain])
    coordVect = coo_matrix((data,(i,j)),(n,1))
    return coordVect
    
 def coords2chainDict(coords):
-   return dict(coords2chain(coords))
+   return dict(boundary.coords2chain(coords))
 
 def next(cyclicPerm):
    def next1(pivot):
