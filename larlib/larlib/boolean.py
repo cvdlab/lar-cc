@@ -372,8 +372,6 @@ def veryClose(edge,p):
     
 def removeExternals(M,V,EV,fe,fv, z,fz,ez):
     w,fw,ew = struct2lar(Struct([larApply(M)((V,[fv],[EV[e] for e in fe]))])) # part mapped to 2D
-    print "\norigin","\nz,fz,ez =",z,",",fz,",",ez
-    print "\ndestination","\nw,fw,ew =",w,",",fw,",",ew
     newEdges = boundary.larOffset2D(([v[:-1] for v in w],fw,ew),offset=0.0001)
 
     #w,fw,ew,_ = inters.larFromLines(newEdges)
@@ -386,7 +384,6 @@ def removeExternals(M,V,EV,fe,fv, z,fz,ez):
     classify = triangulation.pointInPolygonClassification(pol)
     for k,point in enumerate(z):
         if classify(point)=="p_out":  out += [k]
-    print "out =",out
 
     # verify all v in out w.r.t. pol[0]
     trueOut = []
@@ -395,13 +392,10 @@ def removeExternals(M,V,EV,fe,fv, z,fz,ez):
         p = z[k]
         onBoundary = False
         for u,v in pol[1]:
-            print "u,v =",u,v
             if veryClose((w[u],w[v]),p):
-                print "(w[u],w[v]),p,'close'", (w[u],w[v]),p
                 onBoundary = True
                 z[k] = p
         if not onBoundary: trueOut += [k]
-    print "trueOut =",trueOut
     
     fw = [f for f in fz if not any([v in trueOut for v in f])]  # trueOut
     ew = [e for e in ez if not any([v in trueOut for v in e])]  # trueOut
@@ -413,11 +407,6 @@ def removeExternals(M,V,EV,fe,fv, z,fz,ez):
 
 """ Compute face intersections with z=0 """
 def computeCrossingLines(edges,sW,sFW,sEW,sFE):
-   print "edges =",edges
-   print "sW =",sW
-   print "sFW =",sFW
-   print "sEW =",sEW
-   print "sFE =",sFE
    crossEdges = []
    def isClose(a,b): return abs(a-b)<10**-5
    for e in edges:
@@ -432,13 +421,9 @@ def computeCrossingLines(edges,sW,sFW,sEW,sFE):
       #VIEW(STRUCT(MKPOLS((sW,[sEW[e] for e in crossEdges]))))
       sEF = invertRelation(sFE)
       crossFaces = list(set(CAT([sEF[e] for e in crossEdges])))
-      print "crossFaces =",crossFaces
-      print "crossEdges =",crossEdges
       #VIEW(STRUCT(MKPOLS((sW,[sFW[f] for f in crossFaces]+[sEW[e] for e in crossEdges]))))
       #VIEW(STRUCT(MKPOLS((sW,[sEW[e] for e in crossEdges]))))
-      print "[sFE[f] for f in crossFaces] =", [sFE[f] for f in crossFaces]
       edgeCrossSets = [list(set(crossEdges).intersection(sFE[f])) for f in crossFaces]    
-      print "edgeCrossSets =",edgeCrossSets
       
       def points2lines(pointSet):
          #  preconditions:
@@ -505,7 +490,6 @@ def bruteForceIntersect(lines):
    for vert,datum in newverts:
       vdata[vert] += [datum]
    for k,(key,datum) in enumerate(vdata.items()):
-      print k,(key,datum)
       for a,b,edge1,edge2 in datum:
          edata[int(edge1)] += [a]
          edata[int(edge2)] += [b]
@@ -538,7 +522,7 @@ def spacePartition(V,FV,EV, parts):
     
     """ input: face index f; candidate incident faces F[f]; """
     for f,F in enumerate(parts):
-        print "\n\nf,F =",f,F
+        #print "\n\nf,F =",f,F
         """ Selection of the LAR submodel S(f) := (V,FV,EV)(f) restricted to [f]+F[f] """    
         fF,fE = submodel0(f,F)
         subModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
@@ -572,7 +556,6 @@ def spacePartition(V,FV,EV, parts):
         lines2D = [[sW[u][:-1],sW[v][:-1]] for u,v in edges2D] + computeCrossingLines(
                     edges,sW,sFW,sEW,sFE)
         
-        print "\nlines2D =",lines2D
         #VIEW(STRUCT(AA(POLYLINE)(lines2D) ))#+ [red]))
         
         u,fu,eu,fus = inters.larFromLines(lines2D)
@@ -747,7 +730,6 @@ def facesFromComponents(model,FE,EF_angle):
         submodel = STRUCT(MKPOLS((V,[EV[k] for k in edges])))
         #VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,1))
 
-    print "\nECCOMI\n"
     # initialization
     V,FV,EV = model
     visitedCell = [[ None, None ] for k in range(len(FV)) ]
@@ -770,7 +752,6 @@ def facesFromComponents(model,FE,EF_angle):
     #import pdb; pdb.set_trace()
     while True:
         face, edge = startCell(visitedCell,FE,EV)
-        print "face, edge =",face, edge
         if face == -1: break
         boundaryLoop,_ = triangulation.boundaryCycles(FE[face],EV)
         boundaryLoop = boundaryLoop[0]
@@ -957,7 +938,6 @@ def SBoundary2(EV,FV):
    for f in range(len(FV)):
       ind = defaultdict(list)
       chain_1 = list(SB_2[:,f].tocoo().row)
-      print f,chain_1
       chain_0 = zeros((2,len(chain_1)),dtype=int)
       for h,e in enumerate(chain_1):
          v1 = EV[e][0]
@@ -966,7 +946,6 @@ def SBoundary2(EV,FV):
          chain_0[1,h] = v2
          ind[v1] += [h]
          ind[v2] += [h]
-      print chain_0
       # tracking of ordered 0-chains
       k = 0
       while True:
@@ -978,7 +957,6 @@ def SBoundary2(EV,FV):
          else:
             chain_0[0,k],chain_0[1,k] = chain_0[1,k],chain_0[0,k]
       # TODO: 0-chains with multiple cycles ...
-      print chain_0
       # sign computation
       sign = []
       for h,e in enumerate(chain_1):
@@ -987,7 +965,6 @@ def SBoundary2(EV,FV):
             sign += [1]
          else:
             sign += [-1]
-      print sign,"\n"
       # update SB_2
       for h,e in enumerate(chain_1):
          SB_2[e,f] = sign[h]

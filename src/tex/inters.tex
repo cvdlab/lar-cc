@@ -378,7 +378,6 @@ def DFV_visit( VV,out,count,visited,parent,d,low,stack,u ):
             DFV_visit( VV,out,count,visited,parent,d,low,stack, v )
             if low[v] >= d[u]:
                 out += [outputComp(stack,u,v)]
-                print("out =",out)
             low[u] = min( low[u], low[v] )
         else:
             if not (parent[u]==v) and (d[v] < d[u]):

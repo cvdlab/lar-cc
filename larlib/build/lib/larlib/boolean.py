@@ -372,8 +372,6 @@ def veryClose(edge,p):
     
 def removeExternals(M,V,EV,fe,fv, z,fz,ez):
     w,fw,ew = struct2lar(Struct([larApply(M)((V,[fv],[EV[e] for e in fe]))])) # part mapped to 2D
-    print "\norigin","\nz,fz,ez =",z,",",fz,",",ez
-    print "\ndestination","\nw,fw,ew =",w,",",fw,",",ew
     newEdges = boundary.larOffset2D(([v[:-1] for v in w],fw,ew),offset=0.0001)
 
     #w,fw,ew,_ = inters.larFromLines(newEdges)
@@ -386,7 +384,6 @@ def removeExternals(M,V,EV,fe,fv, z,fz,ez):
     classify = triangulation.pointInPolygonClassification(pol)
     for k,point in enumerate(z):
         if classify(point)=="p_out":  out += [k]
-    print "out =",out
 
     # verify all v in out w.r.t. pol[0]
     trueOut = []
@@ -397,11 +394,9 @@ def removeExternals(M,V,EV,fe,fv, z,fz,ez):
         for u,v in pol[1]:
             print "u,v =",u,v
             if veryClose((w[u],w[v]),p):
-                print "(w[u],w[v]),p,'close'", (w[u],w[v]),p
                 onBoundary = True
                 z[k] = p
         if not onBoundary: trueOut += [k]
-    print "trueOut =",trueOut
     
     fw = [f for f in fz if not any([v in trueOut for v in f])]  # trueOut
     ew = [e for e in ez if not any([v in trueOut for v in e])]  # trueOut

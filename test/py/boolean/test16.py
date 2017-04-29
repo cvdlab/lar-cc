@@ -31,4 +31,3 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EW,TV],submodel,0.6))
 
 triaModel, larModel = (TV,EW), (FV,EV)
 op = larSignedBoundary(larModel,triaModel,FT)
-print op.todense()
