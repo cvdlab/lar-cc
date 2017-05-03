@@ -1051,3 +1051,37 @@ def SBoundary3(W,EW,FW):
 
    return coo_matrix((D,(I,J)),dtype=int).tocsc()
 
+""" Final steps of the Merge algorithm """  
+def Boundary3(W,EW,FW):
+   SB_3 = SBoundary3(W,EW,FW)
+   vertDict = dict([(tuple(v),k) for k,v in enumerate(W)])
+   vdict = sorted(vertDict)
+   first, last = vertDict[vdict[0]], vertDict[vdict[-1]]
+   WF = invertRelation(FW)
+   fmins, fmaxs = set(WF[first]), set(WF[last])
+   CF = [list(SB_3[:,c].tocoo().row) for c in range(SB_3.shape[1])]
+   exterior = [k for k,cell in enumerate(CF) if (fmins.intersection(cell) == fmins) 
+      and (fmaxs.intersection(cell) == fmaxs)][0]
+   # TODO: generalize the test for the other coordinates, to treat the (very) unlikely cases that this test doesn't work
+   m,n = SB_3.shape
+   coo = coo_matrix(SB_3)
+   triples = []
+   for (d,i,j) in zip(coo.data,coo.row,coo.col):
+      if j < exterior:
+         triples += [(d,i,j)]
+      if j > exterior:
+         triples += [(d,i,j-1)]
+   data,row,col = TRANS(triples)
+   return csc_matrix((data,(row,col)),dtype=int)
+
+def MKSOLID(W,FW,EW):
+   SB_2 = SBoundary2(EW,FW)
+   FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]
+   triangleSet = boundaryTriangulation(W,FW,EW,FE)
+   TW,FT = triangleIndices(triangleSet,W)
+   B_3 = Boundary3(W,FW,EW)
+   CF = [list(B_3[:,c].tocoo().row) for c in range(B_3.shape[1])]
+   CT = [CAT([FT[f] for f in cell]) for cell in CF] 
+   VIEW(EXPLODE(1.5,1.5,1.5)(AA(COMP([SOLIDIFY,STRUCT,MKPOLS]))(DISTL([ W, 
+      [[TW[t] for t in cell] for cell in CT] ]))))
+
