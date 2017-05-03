@@ -101,7 +101,7 @@ def MKTRIANGLES(model,color=False):
     else:
         return [ STRUCT([MKPOL([verts,[[1,2,3]],None]) for verts in triangledFace])
                 for triangledFace in triangleSets ]
-
+"""
 def MKSOLID(*model): 
     V,FV,EV = model
     VV = AA(LIST)(range(len(V)))
@@ -113,6 +113,7 @@ def MKSOLID(*model):
     triangleSets = boundaryTriangulation(V,faces,EV,FE)
     return XOR([ MKPOL([face+[pivot], [range(1,len(face)+2)],None])
         for face in CAT(triangleSets) ])
+"""
 
 """ Utility to transform a dictionary to a function on the keys """
 def dict2fun(d):
@@ -1079,7 +1080,7 @@ def MKSOLID(W,FW,EW):
    FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]
    triangleSet = boundaryTriangulation(W,FW,EW,FE)
    TW,FT = triangleIndices(triangleSet,W)
-   B_3 = Boundary3(W,FW,EW)
+   B_3 = Boundary3(W,EW,FW)
    CF = [list(B_3[:,c].tocoo().row) for c in range(B_3.shape[1])]
    CT = [CAT([FT[f] for f in cell]) for cell in CF] 
    VIEW(EXPLODE(1.5,1.5,1.5)(AA(COMP([SOLIDIFY,STRUCT,MKPOLS]))(DISTL([ W, 
