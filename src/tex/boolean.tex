@@ -403,6 +403,14 @@ the function \texttt{spacePartition}, given in the below script, takes as input 
 import larcc,inters,triangulation
 from larcc import *
 
+def lineExtend(epsilon):
+	def lineExtend1(line):
+		((x1,y1),(x2,y2)) = line
+		def x(a): return x1 + a*(x2-x1)
+		def y(a): return y1 + a*(y2-y1)
+		return ((x(-epsilon),y(-epsilon)),(x(1+epsilon),y(1+epsilon)))
+	return lineExtend1
+
 def spacePartition(V,FV,EV, parts):
     VV = AA(LIST)(range(len(V)))
     FE = larcc.crossRelation(FV,EV,VV)
@@ -412,11 +420,11 @@ def spacePartition(V,FV,EV, parts):
     
     """ input: face index f; candidate incident faces F[f]; """
     for f,F in enumerate(parts):
-        #print "\n\nf,F =",f,F
+        print "\n\nf,F =",f,F
         """ Selection of the LAR submodel S(f) := (V,FV,EV)(f) restricted to [f]+F[f] """    
         fF,fE = submodel0(f,F)
-        subModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
-        sV,sFV,sEV = struct2lar(subModel)
+        sbModel = Struct([(V,[FV[g] for g in fF],[EV[h] for h in fE])])
+        sV,sFV,sEV = struct2lar(sbModel)
         #VIEW(STRUCT(MKPOLS((sV,sFV+sEV)) + [COLOR(RED)(STRUCT(MKPOLS((V,[FV[f]]))))]))
         
         """ Computation of submanifold map M moving f to z=0 """
@@ -443,21 +451,24 @@ def spacePartition(V,FV,EV, parts):
         """ for each face in FZEZ, computation of the aligned set of points p(z=0) """
         
         edges2D = [[w1,w2] for w1,w2 in wires if (isClose(0,sW[w1][2]) and isClose(0,sW[w2][2]))]
-        lines2D = [[sW[u][:-1],sW[v][:-1]] for u,v in edges2D] + computeCrossingLines(
+        lines2d = [[sW[u][:-1],sW[v][:-1]] for u,v in edges2D] + computeCrossingLines(
                     edges,sW,sFW,sEW,sFE)
-        
+                    
+        lines2D = AA(lineExtend(0.0001))(lines2d)
+        #lines2D = AA(AA(COMP([eval,vcode(0.0000000000001)])))(lines2d)          
+
         #VIEW(STRUCT(AA(POLYLINE)(lines2D) ))#+ [red]))
         
-        u,fu,eu,fus = inters.larFromLines(lines2D)
+        u,fu,eu,_ = inters.larFromLines(lines2D)
         u,polygons,eu = triangulation.larPair2Triple((u,eu))
         fu = AA(list)(AA(set)(AA(CAT)(polygons)))
         
         z,fz,ez = u,fu,eu
-        """ 
+        
         #Remove external vertices 
         z,fz,ez = removeExternals(M,V,EV,FE[f],FV[f], u,fu,eu)  # BUG !!!!  <<<<<<<<<<
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
-        """
+        
         
         w,fw,ew = larApply(M.I)(([v+[0.0] for v in z],fz,ez))
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((w,fw+ew))))
@@ -2122,7 +2133,7 @@ def partition(W,FW,EW):
     quadArray = [[W[v] for v in face] for face in FW]
     parts = boxBuckets3d(containmentBoxes(quadArray))
     Z,FZ,EZ = spacePartition(W,FW,EW, parts)
-    Z,FZ,EZ = inters.larSimplify((Z,FZ,EZ),radius=0.0001)
+    Z,FZ,EZ = inters.larSimplify((Z,FZ,EZ),radius=0.001)
     model = Z,FZ,EZ
     return model
 
@@ -2201,23 +2212,28 @@ def prev(cyclicPerm):
 		return cyclicPerm[nextIndex]
 	return prev1
 
+def Choose(marks):
+	try: return marks.index(1)
+	except ValueError: return marks.index(0)
+
 def SBoundary3(W,EW,FW):
 	SB_2 = SBoundary2(EW,FW)
 	D,I,J = [],[],[]
 	m,n = SB_2.shape
 	marks = [0 for k in range(n)]
+	store = [0 for k in range(n)]
 	# permutation subgroups of edges
 	FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]
 	EF_angle, ET,TW,FT = faceSlopeOrdering((W,FW,EW),FE)
 	cellCount = -1
 
 	while sum(marks) < 2*n:
-		for f in range(len(marks)):
-			if marks[f] < 2:  break	
+		# choose f
+		f = Choose(marks)
 		
-		# start 2-chain extraction from f root
+		# start 2-chain extraction from f seed
 		if marks[f] == 0: c_2 = [(f,1)] 
-		elif marks[f] == 1: c_2 = [(f,-1)] 
+		elif marks[f] == 1: c_2 = [(f,-store[f])] 	
 		Stripe_2 = coo_matrix(([],([],[])),(n,1))
 	
 		# computation of c_2 boundary
@@ -2226,6 +2242,7 @@ def SBoundary3(W,EW,FW):
 
 		while C_1.nnz != 0:	
 			stripe = dict()
+			
 			# computation of coboundaries of c_2 boundary
 			dict_C_1 = coords2chainDict(C_1)
 			for cell,code in dict_C_1.items():
@@ -2233,15 +2250,14 @@ def SBoundary3(W,EW,FW):
 				C2 = C1.T * SB_2
 				subgroup = list(C2.tocoo().col)
 				pivot = (set(subgroup).intersection(C_2.tocoo().row)).pop()
-				pivotcode = C_2[pivot,0]
 				if code == 1: 
-					supcell = next(EF_angle[cell])(pivot)
+					adj = next(EF_angle[cell])(pivot)
 				elif code == -1:
-					supcell = prev(EF_angle[cell])(pivot)
-				if SB_2[cell,supcell] == SB_2[cell,pivot] :
-					stripe[supcell] = -1 * pivotcode
+					adj = prev(EF_angle[cell])(pivot)
+				if SB_2[cell,adj] == SB_2[cell,pivot] :
+					stripe[adj] = -1 * C_2[pivot,0]
 				else:
-					stripe[supcell] = 1 * pivotcode
+					stripe[adj] = 1 * C_2[pivot,0]
 			Stripe_2 = chain2coords(stripe.items(),n).tocsc()
 			C_2 += Stripe_2
 			C_1 = SB_2 * C_2
@@ -2249,12 +2265,13 @@ def SBoundary3(W,EW,FW):
 		cellCount += 1
 		facets = list(C_2.tocoo().row)
 		coeffs = list(C_2.tocoo().data)
-		cells = [cellCount for k in range(len(coeffs))]
-		for facet in facets: marks[facet] += 1
+		cells = [cellCount] * len(coeffs)
+		for k,facet in enumerate(facets): 
+			marks[facet] += 1
+			store[facet] += coeffs[k]
 		D += coeffs
 		I += facets
 		J += cells
-
 	return coo_matrix((D,(I,J)),dtype=int).tocsc()
 @}
 %-------------------------------------------------------------------------------
