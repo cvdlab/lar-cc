@@ -578,6 +578,7 @@ The whole transformation of an array of lines into a two-dimensional \texttt{LAR
 %-------------------------------------------------------------------------------
 @D Transformation of an array of lines in a 2D LAR complex @{
 """ Transformation of an array of lines in a 2D LAR complex """
+"""
 def larFromLines(lines,normalize=False):
     def larPairSimplify((V,EV)):
         V,EVs = biconnectedComponent((V,EV))
@@ -590,6 +591,41 @@ def larFromLines(lines,normalize=False):
     V,polygons,EV = larPair2Triple((V,EV))
     FV = AA(list)(AA(set)(AA(CAT)(polygons)))
     return V,FV,EV,polygons
+"""
+def normalize(lines):
+	vs = CAT(lines)
+	xs,ys = TRANS(vs)
+	w0,w1,w2,w3 = [min(xs), min(ys), max(xs), max(ys)]
+	# viewport aspect-ratio checking, setting a computed-viewport 'v'
+	ar = (w2-w0)/(w3-w1)
+	if ar >1 : v0,v1,v2,v3 = 0,0,1,1./ar
+	else: v0,v1,v2,v3 = 0,0,ar,1
+	a,b,c,d = v2*w0, v3*w1, w2-w0, w3-w1
+	M = mat(
+	[[	v2/c,	0,	0 ],
+	 [	0,	 v3/d,	0 ],
+	 [	-a/c,-b/d,	1 ]])
+	ws = [[x,y,1] for x,y in vs]
+	W = (array(ws) * M)[:,:2].tolist()
+	myLines = [[W[2*k],W[2*k+1]] for k in range(len(W)/2)]
+	return myLines, M
+	
+def larFromLines(lines,normal=False):
+    def larPairSimplify((V,EV)):
+        V,EVs = biconnectedComponent((V,EV))
+        EV = CAT(EVs)
+        V,EV = larRemoveVertices(V,EV)
+        return V,EV
+    
+    theLines,M = normalize(lines)
+    V,EV = lines2lar(theLines,False)
+    V,EV = larPairSimplify((V,EV))  #TODO:  toggle to check the generated FV
+    V,polygons,EV = larPair2Triple((V,EV))
+    FV = AA(list)(AA(set)(AA(CAT)(polygons)))
+    if not normal:
+    	W = (array([v+[1.0] for v in V]) * M.I)[:,:2].tolist()
+    else: W = V
+    return W,FV,EV,polygons
 @}
 %-------------------------------------------------------------------------------
 

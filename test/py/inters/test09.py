@@ -2,19 +2,10 @@
 from larlib import *
 colors = [CYAN, MAGENTA, YELLOW, RED, GREEN, ORANGE, PURPLE, WHITE, BLACK, BLUE]
 
-lines = randomLines(300,.4)
+lines = randomLines(100,.8)
 V,EV = lines2lar(lines)
 model = V,EV
 VIEW(STRUCT(AA(POLYLINE)(lines)))
-
-
-boxes = containment2DBoxes(lines)
-rects= AA(box2rect)(boxes)
-cyan = COLOR(CYAN)(STRUCT(AA(POLYLINE)(lines)))
-yellow = COLOR(YELLOW)(STRUCT(AA(POLYLINE)(rects)))
-VIEW(STRUCT([cyan,yellow]))
-
-
 
 V,EVs = biconnectedComponent(model)
 HPCs = [STRUCT(MKPOLS((V,EV))) for EV in EVs]
@@ -29,7 +20,7 @@ boundaryArea = max(areas)
 FV = [FV[f] for f,area in enumerate(areas) if area!=boundaryArea]
 
 polylines = [[V[v] for v in face+[face[0]]] for face in FV]
-VIEW(EXPLODE(1.2,1.2,1)( AA(FAN)(polylines) + AA(COLOR(CYAN))(MKPOLS((V,EV))) + AA(COLOR(RED))(AA(MK)(V)) ))
+VIEW(EXPLODE(1.2,1.2,1)(MKPOLS((V,EV)) + AA(MK)(V) + AA(FAN)(polylines) ))
 
 colors = [CYAN, MAGENTA, WHITE, RED, YELLOW, GRAY, GREEN, ORANGE, BLACK, BLUE, PURPLE, BROWN]
 sets = [COLOR(colors[k%12])(FAN(pol)) for k,pol in enumerate(polylines)]
