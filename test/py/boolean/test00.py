@@ -1,7 +1,7 @@
 """ A Gentle introduction to first steps of 3D Merge algorithm """
 from larlib import *
 
-V,[VV,EV,FV,CV] = larCuboids([2,2,1],True)
+V,[VV,EV,FV,CV] = larCuboids([1,1,1],True)
 cubeGrid = Struct([(V,FV,EV)],"cubeGrid")
 #cubeGrids = Struct(2*[cubeGrid,t(.5,.0,.5),r(0,0,PI/6)])
 cubeGrids = Struct(2*[cubeGrid,t(.5,.5,.5),r(0,0,PI/6)])
