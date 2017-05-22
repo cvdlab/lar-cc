@@ -455,7 +455,6 @@ def larModelNormalization(model):
 
 
 """ Transformation of an array of lines in a 2D LAR complex """
-"""
 def larFromLines(lines,normalize=False):
     def larPairSimplify((V,EV)):
         V,EVs = biconnectedComponent((V,EV))
@@ -503,6 +502,7 @@ def larFromLines(lines,normal=False):
       W = (array([v+[1.0] for v in V]) * M.I)[:,:2].tolist()
     else: W = V
     return W,FV,EV,polygons
+"""
 
 """ Pruning away clusters of close vertices """
 from scipy.spatial import cKDTree

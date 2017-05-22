@@ -565,19 +565,19 @@ def spacePartition(V,FV,EV, parts):
         lines2d = [[sW[u][:-1],sW[v][:-1]] for u,v in edges2D] + computeCrossingLines(
                     edges,sW,sFW,sEW,sFE)
                     
-        lines2D = AA(lineExtend(0.0001))(lines2d)
+        #lines2D = AA(lineExtend(0.0001))(lines2d)
         #lines2D = AA(AA(COMP([eval,vcode(0.0000000000001)])))(lines2d)          
 
         #VIEW(STRUCT(AA(POLYLINE)(lines2D) ))#+ [red]))
         
-        u,fu,eu,_ = inters.larFromLines(lines2D)
+        u,fu,eu,_ = inters.larFromLines(lines2d)
         u,polygons,eu = triangulation.larPair2Triple((u,eu))
         fu = AA(list)(AA(set)(AA(CAT)(polygons)))
         
         z,fz,ez = u,fu,eu
         
         #Remove external vertices 
-        z,fz,ez = removeExternals(M,V,EV,FE[f],FV[f], u,fu,eu)  # BUG !!!!  <<<<<<<<<<
+        #z,fz,ez = removeExternals(M,V,EV,FE[f],FV[f], u,fu,eu)  # BUG !!!!  <<<<<<<<<<
         #VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((z,fz+ez))))
         
         
@@ -1100,6 +1100,7 @@ def MKSOLID(W,FW,EW):
    B_3 = Boundary3(W,EW,FW)
    CF = [list(B_3[:,c].tocoo().row) for c in range(B_3.shape[1])]
    CT = [CAT([FT[f] for f in cell]) for cell in CF] 
-   VIEW(EXPLODE(1.5,1.5,1.5)(AA(COMP([SOLIDIFY,STRUCT,MKPOLS]))(DISTL([ W, 
-      [[TW[t] for t in cell] for cell in CT] ]))))
+   cells = AA(COMP([SOLIDIFY,STRUCT,MKPOLS]))(DISTL([ W, 
+      [[TW[t] for t in cell] for cell in CT] ]))
+   VIEW(EXPLODE(1.5,1.5,1.5)(cells))
 
