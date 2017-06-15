@@ -24,4 +24,3 @@ VIEW(EXPLODE(1.2,1.2,1.2)(MKPOLS((W,TW))))
 
 SB_3 = SBoundary3(W,EW,FW)
 print SB_3.todense()
-

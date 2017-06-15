@@ -114,17 +114,6 @@ def larBoundary(cells,facets):
     indices = CAT(facetCoboundary)
     data = [1]*len(indices)
     return csr_matrix((data,indices,indptr),shape=(m,n),dtype='b')
-"""
-# hopefully faster implementation (TODO: test extensively)
-def larBoundary(FV,EV):
-	m,n = len(FV),len(EV)
-	edict = {tuple(e):k for k,e in enumerate(EV)}
-	data = 2*[1]*n
-	row = []; [row.extend([ edict[(f[i],f[j])] for i in range(4) for j in range(i+1,4) 
-			if (f[i],f[j]) in edict ]) for f in FV]
-	col = []; [col.extend([k,k,k,k]) for k in range(m)]
-	return coo_matrix((data,(row,col)),shape=(n,m),dtype='b').tocsr()
-"""
 @}
 %-------------------------------------------------------------------------------
 

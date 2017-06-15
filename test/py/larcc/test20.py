@@ -11,7 +11,7 @@ VV = AA(LIST)(range(len(V)))
 submodel = STRUCT(MKPOLS((V,EV)))
 VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,.5)) 
 
-csrBoundaryMat = larBoundary(FV,EV)
+csrBoundaryMat = boundary.larBoundary(FV,EV)
 print "wrong boundary matrix =",csrBoundaryMat.todense()
 csrBoundaryMat = larUnsignedBoundary2(FV,EV,VV)  # <<<<< NOTE !!
 print "right boundary matrix =",csrBoundaryMat.todense()

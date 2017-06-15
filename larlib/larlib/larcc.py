@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Basic LARCC library """
 from larlib import *
+import boundary
 from boundary import larUnsignedBoundary2,boundary3
 
 
@@ -139,11 +140,11 @@ def invertRelation(CV):
 from boundary import larBoundary
 
 def coboundary(cells,facets):
-    Boundary = larBoundary(cells,facets)
+    Boundary = boundary.larBoundary(cells,facets)
     return csrTranspose(Boundary)
 
 def coboundary1(cells,facets):
-    Boundary = larBoundary(cells,facets)
+    Boundary = boundary.larBoundary(cells,facets)
     return csrTranspose(Boundary)
 
 """ Computation of topological relation """
@@ -171,7 +172,7 @@ def crossRelation(XV,YV,ZV):
 
 def signedSimplicialBoundary (CV,FV):
     # compute the set of pairs of indices to [boundary face,incident coface]
-    coo = larBoundary(CV,FV).tocoo()
+    coo = boundary.larBoundary(CV,FV).tocoo()
     pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
 
     # compute the [face, coface] pair as vertex lists
@@ -265,21 +266,21 @@ def larIncidence(cells,facets):
 
 """ Cell-Face incidence operator """
 def csrCellFaceIncidence(CV,FV):
-    return larBoundary(FV,CV)
+    return boundary.larBoundary(FV,CV)
 
 def larCellFace(CV,FV):
     return larIncidence(CV,FV)
 
 """ Cell-Edge incidence operator """
 def csrCellEdgeIncidence(CV,EV):
-     return larBoundary(EV,CV)
+     return boundary.larBoundary(EV,CV)
 
 def larCellEdge(CV,EV):
     return larIncidence(CV,EV)
 
 """ Face-Edge incidence operator """
 def csrFaceEdgeIncidence(FV,EV):
-    return larBoundary(EV,FV)
+    return boundary.larBoundary(EV,FV)
 
 def larFaceEdge(FV,EV):
     return larIncidence(FV,EV)
@@ -340,8 +341,9 @@ def incidenceChain(bases):
     return REVERSE(relations)
 
 """ Signed boundary matrix for polytopal complexes """
+
 def signedCellularBoundary(V,bases):
-    coo = larBoundary(bases[-1],bases[-2]).tocoo()
+    coo = boundary.larBoundary(bases[-1],bases[-2]).tocoo()
     pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
     signs = []
     dim = len(bases)-1

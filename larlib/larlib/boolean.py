@@ -687,6 +687,7 @@ def faceSlopeOrdering(model,FE):
     for e,et in enumerate(ET):
         if et != []:
             v1,v2 = EV[e]
+            if v1>v2: v1,v2 = v2,v1
             v1v2 = set([v1,v2])
             et_angle = []
             t0 = et[0]
@@ -962,7 +963,10 @@ def SBoundary2(EV,FV):
       k = 0
       while True:
          v1,v2 = chain_0[:,k]
-         k = set(ind[v2]).difference([k]).pop()
+         diff = set(ind[v2]).difference([k])
+         if diff != set():
+            k = diff.pop()
+         else: break
          if k == 0: break
          if chain_0[0,k] == v2:
             v1,v2 = chain_0[:,k]
@@ -1102,5 +1106,5 @@ def MKSOLID(W,FW,EW):
    CT = [CAT([FT[f] for f in cell]) for cell in CF] 
    cells = AA(COMP([SOLIDIFY,STRUCT,MKPOLS]))(DISTL([ W, 
       [[TW[t] for t in cell] for cell in CT] ]))
-   VIEW(EXPLODE(1.5,1.5,1.5)(cells))
+   return cells
 
