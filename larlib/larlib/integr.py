@@ -67,7 +67,8 @@ def III(P, alpha, beta, gamma):
         a = VECTDIFF([va,vo])
         b = VECTDIFF([vb,vo])
         c = VECTPROD([a,b])
-        w += (c[0]/VECTNORM(c)) * TT(tau, alpha+1, beta, gamma)
+        det = VECTNORM(c)
+        if det != 0: w += (c[0]/det) * TT(tau, alpha+1, beta, gamma)
     return w/(alpha + 1)
 
 def M(alpha, beta):
