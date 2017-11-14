@@ -1,6 +1,6 @@
 """ LAR model input and handling """
 
-from mapper import *
+from larlib import *
 V = [[3,-3],
 [9,-3],[0,0],[3,0],[9,0],[15,0],
 [3,3],[6,3],[9,3],[15,3],[21,3], 

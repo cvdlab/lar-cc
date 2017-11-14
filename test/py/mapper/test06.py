@@ -1,6 +1,6 @@
 """ Example of nested structures with translation and rotations """
 
-from mapper import *
+from larlib import *
 square = larCuboids([1,1])
 square = Model(square)
 table = larApply( t(-.5,-.5) )(square)
