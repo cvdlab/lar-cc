@@ -1847,7 +1847,7 @@ Finally, the $\pm 1$ (signed) incidence coefficients are computed and stored in 
 \protect\makebox[0ex][r]{\NWtarget{nuweb31}{\rule{0ex}{0ex}}\hspace{1em}}$\langle\,$Signed boundary matrix for simplicial models\nobreak\ {\footnotesize 31}$\,\rangle\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@def signedSimplicialBoundary (CV,FV):@\\
+\mbox{}\verb@def signedSimplicialBoundary (V,CV,FV):@\\
 \mbox{}\verb@    # compute the set of pairs of indices to [boundary face,incident coface]@\\
 \mbox{}\verb@    coo = boundary.larBoundary(CV,FV).tocoo()@\\
 \mbox{}\verb@    pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]@\\
@@ -1902,9 +1902,10 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \begin{list}{}{} \item
 \mbox{}\verb@def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@def boundaryCellsCocells(cells,facets):@\\
-\mbox{}\verb@    csrSignedBoundaryMat = signedSimplicialBoundary(V,cells,facets)@\\
-\mbox{}\verb@    csrTotalChain = totalChain(cells)@\\
+\mbox{}\verb@import boundary@\\
+\mbox{}\verb@def boundaryCellsCocells(verts,cells,facets):@\\
+\mbox{}\verb@    csrSignedBoundaryMat = signedSimplicialBoundary(verts,cells,facets)@\\
+\mbox{}\verb@    csrTotalChain = boundary.totalChain(cells)@\\
 \mbox{}\verb@    csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)@\\
 \mbox{}\verb@    cooCells = csrBoundaryChain.tocoo()    @\\
 \mbox{}\verb@    boundaryCells = []@\\
@@ -1917,7 +1918,7 @@ homogeneous coordinates. The list of signed face indices \texttt{orientedBoundar
 \mbox{}\verb@    return boundaryCells,boundaryCocells@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@def signedBoundaryCells(verts,cells,facets):@\\
-\mbox{}\verb@    boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)        @\\
+\mbox{}\verb@    boundaryCells,boundaryCocells = boundaryCellsCocells(verts,cells,facets)        @\\
 \mbox{}\verb@    boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]@\\
 \mbox{}\verb@    boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))@\\
 \mbox{}\verb@    orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))@\\
@@ -2955,7 +2956,6 @@ The explicit definition of the LAR of the 2-complex shown in Figura~\ref{fig:squ
 %-------------------------------------------------------------------------------
 
 \section{Unit tests}
-
 
 %-------------------------------------------------------------------------------
 \begin{flushleft} \small \label{scrap82}

@@ -2,7 +2,7 @@
 # Makefile for LARCC framework
 #
 
-NAME = integr
+NAME = mapper
 LANGUAGE = py
 BIBFILE = $(NAME).bib
 

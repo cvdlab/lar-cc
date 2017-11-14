@@ -29,3 +29,8 @@ print B_3.todense()
 
 hpcCells = MKSOLID(W,FW,EW)
 VIEW(EXPLODE(1.5,1.5,1.5)(hpcCells))
+
+FC = B_3.todense()
+cell2faces = TRANS(FC.tolist())
+CV = [set(CAT([FW[f] for (f,val) in enumerate(cell) if val!=0])) for cell in cell2faces]
+

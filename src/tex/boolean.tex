@@ -624,20 +624,22 @@ def boundaryTriangulation(V,FV,EV,FE):
         return mapVerts0
         
     for f,face in enumerate(FV):
+        print "f,face =",f,face
         triangledFace = []
-        EW = [EV[e] for e in FE[f]]
+        EW_ = [EV[e] for e in FE[f]]
         pivotFace = [V[v] for v in face]
         vertdict = dict([(w,v) for v,w in enumerate(face)])
-        EW = [[vertdict[w] for w in edge] for edge in EW]
+        EW_ = [[vertdict[w] for w in edge] for edge in EW_]
         transform = submanifoldMapping(pivotFace)
         mappedVerts = (transform * (mat([p+[1.0] for p in pivotFace]).T)).T.tolist()
         verts2D = [point[:-2] for point in mappedVerts] 
               
         # Construction of CDT (Constrained Delaunay Triangulation) for LAR face
-        model = (verts2D,[range(len(verts2D))],EW)
-        struct = Struct([model])
-        U,EU = triangulation.structBoundaryModel(struct)
-        W,FW,EW,polygons = inters.larFromLines([[U[u],U[v]] for u,v in EU])
+        #model = (verts2D,[range(len(verts2D))],EW_)
+        #struct = Struct([model])
+        #U,EU = triangulation.structBoundaryModel(struct)
+        U,EU = verts2D,EW_
+        W_,FW_,EW_,polygons = inters.larFromLines([[U[u],U[v]] for u,v in EU])
 
         def filtering(polygons):
             if len(polygons)>1 and max(AA(len)(polygons))==1:
@@ -647,7 +649,7 @@ def boundaryTriangulation(V,FV,EV,FE):
             else: return polygons
 
         thePolygons = filtering(polygons)
-        setsOfTriangles = triangulation.polygons2TriangleSet(W,thePolygons)
+        setsOfTriangles = triangulation.polygons2TriangleSet(W_,thePolygons)
         if setsOfTriangles != []:
             trias = [[p+[1],q+[1],r+[1]] for p,q,r in setsOfTriangles[0]]
             
@@ -704,7 +706,7 @@ def edgesTriangles(EF, FW, TW, EW):
    \centering
    \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/edgeTriangles1} 
    \includegraphics[height=0.325\linewidth,width=0.325\linewidth]{images/edgeTriangles} 
-   \caption{The triangles around an edge: \texttt{VIEW(STRUCT(MKPOLS((W,ET[35]))))}.}
+\caption{The triangles around an edge: \texttt{VIEW(STRUCT(MKPOLS((W,ET[35]))))}.}
    \label{fig:3Dtriangulation}
 \end{figure}
 
@@ -2138,14 +2140,15 @@ def partition(W,FW,EW):
     model = Z,FZ,EZ
     return model
 
-def UBoundary2(EV,FV):
-	UB2 = (coo2Csr(brc2Coo(EV)) * coo2Csr(brc2Coo(FV)).T).tocoo()
+def UBoundary2(ev,fv):
+	UB2 = (coo2Csr(brc2Coo(ev)) * coo2Csr(brc2Coo(fv)).T).tocoo()
 	data,i,j = TRANS([(1,i,j) for (d,i,j) in zip(UB2.data,UB2.row,UB2.col) if d==2])
 	return coo_matrix((data,(i,j))).tocsc()
 
 def SBoundary2(EV,FV):
 	SB_2 = UBoundary2(EV,FV)
 	for f in range(len(FV)):
+		print "f =",f
 		ind = defaultdict(list)
 		chain_1 = list(SB_2[:,f].tocoo().row)
 		chain_0 = zeros((2,len(chain_1)),dtype=int)
@@ -2227,8 +2230,12 @@ def SBoundary3(W,EW,FW):
    marks = [0 for k in range(n)]
    store = [0 for k in range(n)]
    # permutation subgroups of edges
-   FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]
-   EF_angle, ET,TW,FT = faceSlopeOrdering((W,FW,EW),FE)
+   WW = AA(LIST)(W)
+   FE = crossRelation0(len(W),FW,EW)
+   #FE = [list(SB_2[:,f].tocoo().row) for f in range(SB_2.shape[1])]  # KO !!!
+   import copy
+   model = copy.deepcopy((W,FW,EW))
+   EF_angle, ET,TW,FT = faceSlopeOrdering(model,FE)
    cellCount = -1
 
    while sum(marks) < 2*n:

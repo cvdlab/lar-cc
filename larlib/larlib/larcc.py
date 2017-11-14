@@ -170,7 +170,7 @@ def crossRelation(XV,YV,ZV):
           for j in range(len(csrXY.indptr)-1)]
     return XY
 
-def signedSimplicialBoundary (CV,FV):
+def signedSimplicialBoundary (V,CV,FV):
     # compute the set of pairs of indices to [boundary face,incident coface]
     coo = boundary.larBoundary(CV,FV).tocoo()
     pairs = [[coo.row[k],coo.col[k]] for k,val in enumerate(coo.data) if val != 0]
@@ -201,9 +201,10 @@ def signedSimplicialBoundary (CV,FV):
 
 def swap(mylist): return [mylist[1]]+[mylist[0]]+mylist[2:]
 
-def boundaryCellsCocells(cells,facets):
-    csrSignedBoundaryMat = signedSimplicialBoundary(V,cells,facets)
-    csrTotalChain = totalChain(cells)
+import boundary
+def boundaryCellsCocells(verts,cells,facets):
+    csrSignedBoundaryMat = signedSimplicialBoundary(verts,cells,facets)
+    csrTotalChain = boundary.totalChain(cells)
     csrBoundaryChain = matrixProduct(csrSignedBoundaryMat, csrTotalChain)
     cooCells = csrBoundaryChain.tocoo()    
     boundaryCells = []
@@ -216,7 +217,7 @@ def boundaryCellsCocells(cells,facets):
     return boundaryCells,boundaryCocells
 
 def signedBoundaryCells(verts,cells,facets):
-    boundaryCells,boundaryCocells = boundaryCellsCocells(cells,facets)        
+    boundaryCells,boundaryCocells = boundaryCellsCocells(verts,cells,facets)        
     boundaryCofaceMats = [[verts[v]+[1] for v in cells[c]] for c in boundaryCocells]
     boundaryCofaceSigns = AA(SIGN)(AA(np.linalg.det)(boundaryCofaceMats))
     orientedBoundaryCells = list(array(boundaryCells)*array(boundaryCofaceSigns))
