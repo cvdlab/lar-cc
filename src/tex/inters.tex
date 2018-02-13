@@ -660,7 +660,8 @@ def pruneVertices(pts,radius=0.001):
     V = [None for subgraph in subgraphs]
     vmap = [None for k in xrange(len(pts))]
     for k,subgraph in enumerate(subgraphs):
-        group = subgraph.nodes()
+        #group = subgraph.nodes()
+        group = list(subgraph.nodes())
         if len(group)>1: 
             V[k] = CCOMB([pts[v] for v in group])
             for v in group: vmap[v] = k
@@ -903,7 +904,6 @@ from scipy import mat
 @< Generation of random lines @>
 @< Containment boxes @>
 @< Splitting the input above and below a threshold @>
-@< Box metadata computation @>
 @< Iterative splitting of box buckets @>
 @< Intersection of two line segments @>
 @< Brute force bucket intersection @>
