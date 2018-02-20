@@ -988,31 +988,7 @@ def nonDoubled(cycles,cycle):
 \paragraph{From a non-contractible polygon to a list of triangles}
 %-------------------------------------------------------------------------------
 @D From a non-contractible polygon to a list of triangles 
-@{#""" From a non-contractible polygon to a list of triangles """
-#def cycles2triangles(polygon): 
-#    triangleSet,triangledFace = [],[]
-#    externalCycle = polygon[0]
-#    triangledCycle = []
-#    polyline = []
-#    for p in externalCycle:
-#        polyline.append(Point(p[0],p[1]))
-#    cdt = CDT(polyline)
-#
-#    internalCycles = polygon[1:]
-#    for cycle in internalCycles:
-#        hole = []
-#        for p in cycle:
-#            hole.append(Point(p[0],p[1]))
-#        cdt.add_hole(hole)
-#
-#    triangles = cdt.triangulate()
-#    trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] 
-#        for t in triangles ]
-#    
-#    triangleSet += [AA(REVERSE)(trias)]
-#    return triangleSet
-
-""" From a non-contractible polygon to a list of triangles """
+@{""" From a non-contractible polygon to a list of triangles """
 from triangle import triangulate
 from architectural import face2edge
 
@@ -1020,10 +996,13 @@ def cycles2triangles(polygon):
     triangleSet = []
 
     vertices = []
+    stringVertices = set()
     for cycle in polygon:
         for vertex in cycle:
-            if (vertex not in vertices):
+            stringVertex = str(vertex)
+            if (stringVertex not in stringVertices):
                 vertices.append(vertex)
+                stringVertices.add(stringVertex)
 
     edges = []
     externalCycle = polygon[0]
