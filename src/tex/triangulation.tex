@@ -989,27 +989,46 @@ def nonDoubled(cycles,cycle):
 %-------------------------------------------------------------------------------
 @D From a non-contractible polygon to a list of triangles 
 @{""" From a non-contractible polygon to a list of triangles """
-def cycles2triangles(polygon): 
-    triangleSet,triangledFace = [],[]
+from triangle import triangulate
+from architectural import face2edge
+
+def cycles2triangles(polygon):
+    triangleSet = []
+
+    vertices = []
+    stringVertices = set()
+    for cycle in polygon:
+        for vertex in cycle:
+            stringVertex = str(vertex)
+            if (stringVertex not in stringVertices):
+                vertices.append(vertex)
+                stringVertices.add(stringVertex)
+
+    edges = []
     externalCycle = polygon[0]
-    triangledCycle = []
-    polyline = []
-    for p in externalCycle:
-        polyline.append(Point(p[0],p[1]))
-    cdt = CDT(polyline)
+    edges += face2edge([[vertices.index(vertex) for vertex in externalCycle]])
 
+    holeEdges = []
+    holeInnerPoints = []
     internalCycles = polygon[1:]
-    for cycle in internalCycles:
-        hole = []
-        for p in cycle:
-            hole.append(Point(p[0],p[1]))
-        cdt.add_hole(hole)
+    for hole in internalCycles:
+        holeEdges += face2edge([[vertices.index(vertex) for vertex in hole]])
+        holeInnerPoints.append(internalTo(hole,holeEdges))
+        edges += holeEdges
 
-    triangles = cdt.triangulate()
-    trias = [ [[t.a.x,t.a.y,0],[t.c.x,t.c.y,0],[t.b.x,t.b.y,0]] 
-        for t in triangles ]
+    if holeInnerPoints != []:
+        triangulation = triangulate({"vertices":vertices,"segments":edges,"holes":holeInnerPoints},'p')
+    else:
+        triangulation = triangulate({"vertices": vertices, "segments": edges}, 'p')
+
+    vertices = triangulation['vertices'].tolist()
+    triangles = triangulation['triangles'].tolist()
+
+    trias = [[vertices[index] for index in triangle] for triangle in triangles]
+    trias = [[[vertex[0], vertex[1], 0.0] for vertex in tri] for tri in trias]
+
+    triangleSet += [trias]
     
-    triangleSet += [AA(REVERSE)(trias)]
     return triangleSet
 @}
 %-------------------------------------------------------------------------------

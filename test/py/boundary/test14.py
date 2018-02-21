@@ -10,7 +10,7 @@ VIEW(larModelNumbering(1,1,1)(V,[VV,EV,FV],submodel,0.25))
 
 orientations,boundaryCells = larSignedBoundary2Cells(V,FV,EV)([1,2])
 orientedBoundaryCells = [EV[e] if sign==1 else REVERSE(EV[e]) 
-                  for sign,e in zip(orientations,boundaryCells)]
+                                                for sign,e in zip(orientations,boundaryCells)]
 
 VIEW(STRUCT(MKTRIANGLES((V,FV[1:3],EV),color=True)))
 VIEW(mkSignedEdges((V,orientedBoundaryCells)))

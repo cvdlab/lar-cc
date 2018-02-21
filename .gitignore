@@ -48,6 +48,9 @@ __pycache__/
 *.lof
 *.lot
 *.maf
+
+#IDE
+.idea
 *.mtc
 *.mtc1
 *.out

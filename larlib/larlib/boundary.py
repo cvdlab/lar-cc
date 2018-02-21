@@ -114,13 +114,14 @@ def larSignedBoundary2(V,FV,EV):
             
         Vcycles,Ecycles = triangulation.makeCycles((V,[EV[e] for e in FE[f]]))
         Ecycles = [[FE[f][e] for e in cycle] for cycle in Ecycles]
-        areas = integr.signedSurfIntegration((V,Vcycles,EV),signed=True)
+        #areas = integr.signedSurfIntegration((V,Vcycles,EV),signed=True)
+        areas = integr.signedSurfIntegration((V, Vcycles, EV), False)
         sortedAreas = sorted((area,k) for k,area in enumerate(areas))
         innerLoops = [zip(Vcycles[k],Ecycles[k]) for area,k in sortedAreas[1:] if area<0]
         outerLoop = [zip(Vcycles[sortedAreas[-1][1]],Ecycles[sortedAreas[-1][1]])]
         orientedFaceLoops = CAT(outerLoop+innerLoops)
         coefficients = [1 if v==EV[e][0] else -1 for v,e in orientedFaceLoops]
-      
+                
         ecycle = [e for v,e in orientedFaceLoops]
         data += coefficients
         row += ecycle
@@ -131,14 +132,14 @@ def larSignedBoundary2(V,FV,EV):
 
 """ Compute any signed 1-boundary chain """
 def larSignedBoundary2Cells(V,FV,EV):
-   def larSignedBoundary2Cells0(chain):
-      boundaryMat = larSignedBoundary2(V,FV,EV)
-      chainCoords = csc_matrix((len(FV), 1))
-      for cell in chain: chainCoords[cell,0] = 1
-      boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
-      orientations = list((boundaryMat * chainCoords).tocoo().data)
-      return orientations,boundaryCells
-   return larSignedBoundary2Cells0
+        def larSignedBoundary2Cells0(chain):
+                boundaryMat = larSignedBoundary2(V,FV,EV)
+                chainCoords = csc_matrix((len(FV), 1))
+                for cell in chain: chainCoords[cell,0] = 1
+                boundaryCells = list((boundaryMat * chainCoords).tocoo().row)
+                orientations = list((boundaryMat * chainCoords).tocoo().data)
+                return orientations,boundaryCells
+        return larSignedBoundary2Cells0
 
 """ Offset of 2-faces of a 2D complex """
 from scipy.linalg.basic import det
